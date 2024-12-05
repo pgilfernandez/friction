@@ -137,6 +137,7 @@ public:
     void selectedPathsExclusion();
 
     void centerPivotForSelected();
+    void xxxPivotForSelected();
     void resetSelectedScale();
     void resetSelectedTranslation();
     void resetSelectedRotation();

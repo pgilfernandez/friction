@@ -148,6 +148,17 @@ void MainWindow::setupMenuExtras()
         });
         cmdAddAction(act);
     }
+    // align pivot to right
+    {
+        const auto act = menu->addAction(QIcon::fromTheme("pivot-align-center"),
+                                         tr("Align to right"));
+        connect(act, &QAction::triggered, this, [this]() {
+            const auto scene = *mDocument.fActiveScene;
+            if (!scene) { return; }
+            scene->xxxPivotForSelected();
+        });
+        cmdAddAction(act);
+    }
     // create link
     {
         const auto act = menu->addAction(QIcon::fromTheme("linked"),

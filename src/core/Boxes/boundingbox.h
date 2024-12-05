@@ -136,6 +136,8 @@ public:
 
     void centerPivotPositionAction();
     void centerPivotPosition();
+    void xxxPivotPositionAction();
+    void xxxPivotPosition();
     virtual QPointF getRelCenterPosition();
 
     virtual void selectAndAddContainedPointsToList(

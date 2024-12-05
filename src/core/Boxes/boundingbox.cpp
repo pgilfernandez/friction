@@ -204,6 +204,29 @@ void BoundingBox::planCenterPivotPosition() {
     mCenterPivotPlanned = true;
 }
 
+void BoundingBox::xxxPivotPosition() {
+    auto settings = getStrokeSettings();
+    auto strokeWidth = settings->getCurrentStrokeWidth();
+
+    QPointF currentPivot = mTransformAnimator->getPivot();
+    QPointF center = getRelCenterPosition();
+    // center.setX(center.x() * 2);
+    center.setX(0 - strokeWidth/2);
+    center.setY(currentPivot.y());
+    mTransformAnimator->setPivotFixedTransform(center);
+    requestGlobalPivotUpdateIfSelected();
+}
+
+void BoundingBox::xxxPivotPositionAction() {
+    const auto pos = mTransformAnimator->getPosAnimator();
+    const auto pivot = mTransformAnimator->getPivotAnimator();
+    pos->prp_startTransform();
+    pivot->prp_startTransform();
+    xxxPivotPosition();
+    pos->prp_finishTransform();
+    pivot->prp_finishTransform();
+}
+
 void BoundingBox::blendSetup(ChildRenderData &data,
                              const int index, const qreal relFrame,
                              QList<ChildRenderData> &delayed) const {
@@ -797,8 +820,14 @@ void BoundingBox::setupCanvasMenu(PropertyMenu * const menu)
     menu->addPlainAction(QIcon::fromTheme("linked"), tr("Create Link"), [pScene]() {
         pScene->createLinkBoxForSelected();
     });
-    menu->addPlainAction(QIcon::fromTheme("pivot-align-center"), tr("Center Pivot"), [pScene]() {
+    auto pivotAlignmentMenu = menu->addMenu(QIcon::fromTheme("pivot-align-center"), tr("Pivot Alignment"));
+
+    pivotAlignmentMenu->addPlainAction(QIcon::fromTheme("pivot-align-center"), tr("Center Pivot"), [pScene]() {
         pScene->centerPivotForSelected();
+    });
+
+    pivotAlignmentMenu->addPlainAction(QIcon::fromTheme("pivot-align-right"), tr("Align to right"), [pScene]() {
+        pScene->xxxPivotForSelected();
     });
 
     menu->addSeparator();

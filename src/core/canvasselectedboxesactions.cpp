@@ -437,6 +437,12 @@ void Canvas::centerPivotForSelected() {
         box->centerPivotPositionAction();
 }
 
+void Canvas::xxxPivotForSelected() {
+    pushUndoRedoName("Align to right");
+    for(const auto &box : mSelectedBoxes)
+        box->xxxPivotPositionAction();
+}
+
 void Canvas::removeSelectedBoxesAndClearList() {
     while(!mSelectedBoxes.isEmpty()) {
         const auto &box = mSelectedBoxes.last();
