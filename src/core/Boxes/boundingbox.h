@@ -301,9 +301,9 @@ public:
     void alignGeometry(const Qt::Alignment align, const QRectF& to);
     void alignPivot(const Qt::Alignment align, const QRectF& to);
     void alignPivotItself(const Qt::Alignment align,
-                     const QRectF& to,
-                     const AlignRelativeTo relativeTo,
-                     const QPointF lastPivotAbsPos);
+                          const QRectF& to,
+                          const AlignRelativeTo relativeTo,
+                          const QPointF lastPivotAbsPos);
 
     QMatrix getTotalTransform() const;
 
@@ -461,9 +461,6 @@ protected:
     void setRelBoundingRect(const QRectF& relRect);
 
     uint mStateId = 0;
-
-    int mWidth;
-    int mHeight;
 
     int mNReasonsNotToApplyUglyTransform = 0;
 protected:

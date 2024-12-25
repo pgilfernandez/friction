@@ -866,14 +866,10 @@ void BoundingBox::alignPivot(const Qt::Alignment align, const QRectF& to) {
 }
 
 void BoundingBox::alignPivotItself(const Qt::Alignment align,
-                              const QRectF& to,
-                              const AlignRelativeTo relativeTo,
-                              const QPointF lastPivotAbsPos) {
-    auto settings = getStrokeSettings();
-    auto strokeWidth = settings->getCurrentStrokeWidth();
-    
-    auto boundingBox2 = getAbsBoundingRect();
-    auto toAbsBoundingRect = getTotalTransform().mapRect(to);
+                                   const QRectF& to,
+                                   const AlignRelativeTo relativeTo,
+                                   const QPointF lastPivotAbsPos)
+{
     QPointF currentPivot = mTransformAnimator->getPivot();
     QPointF currentPivotAbsPos = getPivotAbsPos();
 

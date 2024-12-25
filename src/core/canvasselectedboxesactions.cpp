@@ -851,8 +851,9 @@ void Canvas::selectedPathsCombine() {
 
 void Canvas::alignSelectedBoxes(const Qt::Alignment align,
                                 const AlignPivot pivot,
-                                const AlignRelativeTo relativeTo) {
-    if(mSelectedBoxes.isEmpty()) return;
+                                const AlignRelativeTo relativeTo)
+{
+    if (mSelectedBoxes.isEmpty()) { return; }
     QRectF geometry;
     BoundingBox* skip = nullptr;
     switch(relativeTo) {
@@ -860,14 +861,15 @@ void Canvas::alignSelectedBoxes(const Qt::Alignment align,
         geometry = QRectF(0., 0., mWidth, mHeight);
         break;
     case AlignRelativeTo::lastSelected:
-        if(!mLastSelectedBox) return;
+        if (!mLastSelectedBox) { return; }
         skip = mLastSelectedBox;
         geometry = mLastSelectedBox->getAbsBoundingRect();
         break;
     case AlignRelativeTo::lastSelectedPivot:
-        if(!mLastSelectedBox) return;
+        if(!mLastSelectedBox) { return; }
         skip = mLastSelectedBox;
-        geometry = QRectF(mLastSelectedBox->getPivotAbsPos(),mLastSelectedBox->getPivotAbsPos());
+        geometry = QRectF(mLastSelectedBox->getPivotAbsPos(),
+                          mLastSelectedBox->getPivotAbsPos());
         break;
     case AlignRelativeTo::boundingBox:
         geometry = QRectF(0., 0., mWidth, mHeight); // TODO: not using it?
@@ -876,7 +878,7 @@ void Canvas::alignSelectedBoxes(const Qt::Alignment align,
 
     pushUndoRedoName("align");
     for(const auto &box : mSelectedBoxes) {
-        if(box == skip) continue;
+        if (box == skip) { continue; }
         switch(pivot) {
         case AlignPivot::pivot:
             box->alignPivot(align, geometry);
@@ -885,7 +887,10 @@ void Canvas::alignSelectedBoxes(const Qt::Alignment align,
             box->alignGeometry(align, geometry);
             break;
         case AlignPivot::pivotItself:
-            box->alignPivotItself(align, geometry, relativeTo, mLastSelectedBox->getPivotAbsPos());
+            box->alignPivotItself(align,
+                                  geometry,
+                                  relativeTo,
+                                  mLastSelectedBox->getPivotAbsPos());
             break;
         }
     }
