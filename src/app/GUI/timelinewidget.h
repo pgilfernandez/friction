@@ -34,9 +34,11 @@
 
 #include "smartPointers/stdselfref.h"
 #include "framerange.h"
-#include "ReadWrite/basicreadwrite.h"
 #include "widgets/fakemenubar.h"
 #include "XML/runtimewriteid.h"
+
+#include "ReadWrite/ereadstream.h"
+#include "ReadWrite/ewritestream.h"
 
 class SWT_Abstraction;
 class FrameScrollBar;
@@ -64,6 +66,7 @@ public:
                             QWidget * const menu,
                             QWidget *parent);
 
+    ~TimelineWidget();
     Canvas* getCurrrentScene() const {
         return mCurrentScene;
     }
@@ -80,6 +83,9 @@ public:
                       RuntimeIdToWriteId& objListIdConv);
     void writeStateXEV(QDomElement& ele, QDomDocument& doc,
                        RuntimeIdToWriteId& objListIdConv) const;
+    void readSettings(ChangeWidthWidget *chww);
+    void writeSettings();
+
 private:
     void setViewedFrameRange(const FrameRange &range);
     void setCanvasFrameRange(const FrameRange &range);

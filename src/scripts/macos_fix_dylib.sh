@@ -1,4 +1,4 @@
-/*
+#!/bin/bash
 #
 # Friction - https://friction.graphics
 #
@@ -17,10 +17,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# See 'README.md' for more information.
-#
-*/
 
-// Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
+set -e -x
 
-#include "cubicnode.h"
+BASEPATH=`pwd`
+
+for lib in *.dylib; do
+    DY=`otool -L ${lib} | grep ${BASEPATH}`
+    for dylib in $DY; do
+        if [ -f "${dylib}" ]; then
+            BASE=`basename ${dylib}`
+            if [ "${BASE}" = "${lib}" ]; then
+                install_name_tool -id @rpath/${BASE} ${lib}
+            else
+                install_name_tool -change ${dylib} @rpath/${BASE} ${lib}
+            fi
+        fi
+    done
+done

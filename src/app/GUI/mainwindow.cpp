@@ -161,6 +161,8 @@ MainWindow::MainWindow(Document& document,
     , mRenderWindow(nullptr)
     , mRenderWindowAct(nullptr)
     , mColorPickLabel(nullptr)
+    , mToolBarMainAct(nullptr)
+    , mToolBarColorAct(nullptr)
 {
     Q_ASSERT(!sInstance);
     sInstance = this;
@@ -572,7 +574,9 @@ void MainWindow::setupMenuBar()
         const auto qAct = new NoShortcutAction(tr("Duplicate", "MenuBar_Edit"));
         mEditMenu->addAction(qAct);
         qAct->setIcon(QIcon::fromTheme("duplicate"));
+#ifndef Q_OS_MAC
         qAct->setShortcut(Qt::CTRL + Qt::Key_D);
+#endif
         mActions.duplicateAction->connect(qAct);
         cmdAddAction(qAct);
     }
@@ -581,7 +585,9 @@ void MainWindow::setupMenuBar()
         const auto qAct = new NoShortcutAction(tr("Delete", "MenuBar_Edit"));
         qAct->setIcon(QIcon::fromTheme("trash"));
         mEditMenu->addAction(qAct);
+#ifndef Q_OS_MAC
         qAct->setShortcut(Qt::Key_Delete);
+#endif
         mActions.deleteAction->connect(qAct);
         cmdAddAction(qAct);
     }
@@ -1028,6 +1034,27 @@ void MainWindow::setupMenuBar()
         if (mShutdown) { return; }
         if (!triggered) { mRenderWindow->close(); }
         else { openRenderQueueWindow(); }
+    });
+
+    mToolBarMainAct = mViewMenu->addAction(tr("Main Toolbar"));
+    mToolBarMainAct->setCheckable(true);
+    connect(mToolBarMainAct, &QAction::triggered,
+            this, [this](bool triggered) {
+        if (!mToolbar) { return; }
+        mToolbar->setVisible(triggered);
+        AppSupport::setSettings("ui",
+                                "ToolBarMainVisible",
+                                triggered);
+    });
+    mToolBarColorAct = mViewMenu->addAction(tr("Color Toolbar"));
+    mToolBarColorAct->setCheckable(true);
+    connect(mToolBarColorAct, &QAction::triggered,
+            this, [this](bool triggered) {
+        if (!mColorToolBar) { return; }
+        mColorToolBar->setVisible(triggered);
+        AppSupport::setSettings("ui",
+                                "ToolBarColorVisible",
+                                triggered);
     });
 
     setupMenuExtras();
@@ -1617,6 +1644,30 @@ bool MainWindow::processKeyEvent(QKeyEvent *event)
     return false;
 }
 
+#ifdef Q_OS_MAC
+bool MainWindow::processBoxesListKeyEvent(QKeyEvent *event)
+{
+    if (event->type() == QEvent::ShortcutOverride) { return false; }
+    const bool ctrl = event->modifiers() & Qt::ControlModifier;
+    if (ctrl && event->key() == Qt::Key_V) {
+        if (event->isAutoRepeat()) { return false; }
+        (*mActions.pasteAction)();
+    } else if (ctrl && event->key() == Qt::Key_C) {
+        if (event->isAutoRepeat()) { return false; }
+        (*mActions.copyAction)();
+    } else if (ctrl && event->key() == Qt::Key_D) {
+        if (event->isAutoRepeat()) { return false; }
+        (*mActions.duplicateAction)();
+    } else if (ctrl && event->key() == Qt::Key_X) {
+        if (event->isAutoRepeat()) { return false; }
+        (*mActions.cutAction)();
+    } else if (event->key() == Qt::Key_Delete) {
+        (*mActions.deleteAction)();
+    } else { return false; }
+    return true;
+}
+#endif
+
 void MainWindow::readSettings(const QString &openProject)
 {
     mUI->readSettings();
@@ -1637,6 +1688,17 @@ void MainWindow::readSettings(const QString &openProject)
     bool isRenderWindow = AppSupport::getSettings("ui",
                                                   "RenderWindow",
                                                   false).toBool();
+
+    const bool visibleToolBarMain = AppSupport::getSettings("ui",
+                                                            "ToolBarMainVisible",
+                                                            true).toBool();
+    const bool visibleToolBarColor = AppSupport::getSettings("ui",
+                                                             "ToolBarColorVisible",
+                                                             true).toBool();
+    mToolBarMainAct->setChecked(visibleToolBarMain);
+    mToolBarColorAct->setChecked(visibleToolBarColor);
+    mToolbar->setVisible(visibleToolBarMain);
+    mColorToolBar->setVisible(visibleToolBarColor);
 
     mViewFullScreenAct->blockSignals(true);
     mViewFullScreenAct->setChecked(isFull);
