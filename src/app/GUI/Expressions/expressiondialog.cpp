@@ -280,6 +280,10 @@ void addBasicDefs(QsciAPIs* const target) {
     target->add("Math.tan(x)");
     target->add("Math.tanh(x)");
     target->add("Math.trunc(x)");
+
+    // load expressions bundle
+    const auto bundle = eSettings::instance().expressionsBundle;
+    for (const auto &fun : bundle) { target->add(fun.first); }
 }
 
 ExpressionDialog::ExpressionDialog(QrealAnimator* const target,

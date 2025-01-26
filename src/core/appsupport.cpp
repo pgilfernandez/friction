@@ -1120,3 +1120,28 @@ const QString AppSupport::filterId(const QString &input)
 {
     return QString(input).simplified().replace(" ", "");
 }
+
+const QList<QPair<QString, QString> > AppSupport::getExpressionsBundle()
+{
+    QStringList functions;
+    functions << "clamp";
+
+    QList<QPair<QString, QString> > result;
+    for (const auto &fun : functions) {
+        const QString funConf = QString(":/expressions/%1.conf").arg(fun);
+        const QString funJs = QString(":/expressions/%1.js").arg(fun);
+        if (!QFile::exists(funConf) || !QFile::exists(funJs)) { continue; }
+        QPair<QString,QString> expr;
+        QSettings conf(funConf, QSettings::IniFormat);
+        expr.first = conf.value("target").toString();
+        QFile funFile(funJs);
+        if (funFile.open(QIODevice::Text | QIODevice::ReadOnly)) {
+            expr.second = funFile.readAll();
+            funFile.close();
+        }
+        if (expr.first.isEmpty() || expr.second.isEmpty()) { continue; }
+        qDebug() << "adding expression function" << expr.first;
+        result << expr;
+    }
+    return result;
+}

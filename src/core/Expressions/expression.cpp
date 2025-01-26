@@ -26,6 +26,7 @@
 #include "expression.h"
 
 #include "exceptions.h"
+#include "Private/esettings.h"
 
 Expression::ResultTester Expression::sQrealAnimatorTester =
         [](const QJSValue& val) {
@@ -60,8 +61,14 @@ void throwIfError(const QJSValue& value, const QString& name) {
 }
 
 void Expression::sAddDefinitionsTo(const QString& definitionsStr,
-                                   QJSEngine& e) {
-    const auto defRet = e.evaluate(definitionsStr);
+                                   QJSEngine& e)
+{
+    QString defs;
+    const auto bundle = eSettings::instance().expressionsBundle;
+    for (const auto &fun : bundle) { defs.append(fun.second); }
+    defs.append(definitionsStr);
+
+    const auto defRet = e.evaluate(defs);
     throwIfError(defRet, "Definitions");
 }
 
