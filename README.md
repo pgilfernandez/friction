@@ -8,7 +8,7 @@
 
 ## Contribute
 
-We accept any contributions, big or small. Before submitting a pull request it's recommended that you communicate with the developers first (on [GitHub](https://github.com/friction2d/friction/issues) or [Codeberg](https://codeberg.org/friction/friction/issues)).
+We accept any contributions, big or small. Before submitting a pull request it's recommended that you communicate with the developers first (on [GitHub](https://github.com/friction2d/friction/issues), [GitLab](https://gitlab.com/friction-graphics/friction/issues) or [Codeberg](https://codeberg.org/friction/friction/issues)).
 
 It's always preferred to submit pull requests against the `main` branch.
 
