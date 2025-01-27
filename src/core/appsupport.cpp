@@ -324,7 +324,7 @@ const QString AppSupport::getAppExPresetsPath()
     QString path1 = getAppPath();
     QString path2 = path1;
     path1.append(QString::fromUtf8("/plugins/expressions"));
-    path2.append(QString::fromUtf8("/../share/plugins/presets/expressions"));
+    path2.append(QString::fromUtf8("/../share/friction/plugins/expressions"));
     if (QFile::exists(path1)) { return path1; }
     if (QFile::exists(path2)) { return path2; }
     return QString();
