@@ -401,3 +401,10 @@ void Property::prp_selectionChangeTriggered(const bool shiftPressed) {
         mParentScene->addToSelectedProps(this);
     }
 }
+
+qreal Property::prp_getFPS() const {
+    if (mParentScene) {
+        return mParentScene->getFps();
+    }
+    return 0.0;
+}

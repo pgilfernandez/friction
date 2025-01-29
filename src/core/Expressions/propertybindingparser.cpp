@@ -28,6 +28,7 @@
 #include "exceptions.h"
 
 #include "framebinding.h"
+#include "fpsbinding.h"
 #include "valuebinding.h"
 #include "appsupport.h"
 
@@ -103,6 +104,10 @@ bool parseFrame(const QString& exp, int& pos) {
     return parse(exp, pos, "$frame");
 }
 
+bool parseFPS(const QString& exp, int& pos) {
+    return parse(exp, pos, "$fps");
+}
+
 void parseBinding(const QString& exp, int& pos, QString& binding) {
     while(pos < exp.count()) {
         const auto& c = exp.at(pos++);
@@ -128,6 +133,8 @@ qsptr<PropertyBindingBase> PropertyBindingParser::parseBinding(
     skipSpaces(exp, pos);
     if(parseFrame(exp, pos)) {
         result = FrameBinding::sCreate(context);
+    } else if(parseFPS(exp, pos)) {
+        result = FPSBinding::sCreate(context);
     } else if(parseValue(exp, pos)) {
         result = ValueBinding::sCreate(context);
     } else {

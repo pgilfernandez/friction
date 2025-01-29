@@ -38,7 +38,7 @@ add_definitions(-DPROJECT_BRANCH="${GIT_BRANCH}")
 
 add_definitions(-DCORE_LIBRARY)
 
-include_directories(
+include_directories(    
     #${QUAZIP_INCLUDE_DIRS}
     ${FFMPEG_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/../engine/skia
@@ -50,6 +50,7 @@ set(
     Boxes/nullobject.cpp
     Expressions/expression.cpp
     Expressions/framebinding.cpp
+    Expressions/fpsbinding.cpp
     Expressions/propertybinding.cpp
     Animators/SmartPath/listofnodes.cpp
     Animators/SmartPath/smartpath.cpp
@@ -126,6 +127,7 @@ set(
     CacheHandlers/tmpsaver.cpp
     CacheHandlers/usedrange.cpp
     Expressions/propertybindingbase.cpp
+    Expressions/scenebindingbase.cpp
     Expressions/propertybindingparser.cpp
     Expressions/valuebinding.cpp
     FileCacheHandlers/animationcachehandler.cpp
@@ -359,6 +361,7 @@ set(
     Boxes/nullobject.h
     Expressions/expression.h
     Expressions/framebinding.h
+    Expressions/fpsbinding.h
     Expressions/propertybinding.h
     Animators/SmartPath/listofnodes.h
     Animators/SmartPath/smartpath.h
@@ -440,6 +443,7 @@ set(
     CacheHandlers/usedrange.h
     CacheHandlers/usepointer.h
     Expressions/propertybindingbase.h
+    Expressions/scenebindingbase.h
     Expressions/propertybindingparser.h
     Expressions/valuebinding.h
     FileCacheHandlers/animationcachehandler.h
