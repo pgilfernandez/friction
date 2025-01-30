@@ -50,7 +50,7 @@ ExpressionHighlighter::ExpressionHighlighter(
                                        "\\s*=\\s*" + propPath);
     mFrameValueSetRegex = QRegularExpression("^\\s*"
                                                  "([A-Za-z_][A-Za-z0-9_]*)"
-                                             "\\s*=\\s*(\\$frame|\\$fps|\\$width|\\$height|\\$end|\\$start|\\$value)");
+                                             "\\s*=\\s*(\\$frame|\\$sceneFPS|\\$sceneWidth|\\$sceneHeight|\\$sceneEnd|\\$sceneStart|\\$value)");
 //    const auto propPathRegex = QRegularExpression(propPath);
 
     mPropPathFormat.setFontWeight(QFont::Bold);
@@ -62,11 +62,11 @@ ExpressionHighlighter::ExpressionHighlighter(
     const QStringList specs = {
         QStringLiteral("$value"),
         QStringLiteral("$frame"),
-        QStringLiteral("$fps"),
-        QStringLiteral("$width"),
-        QStringLiteral("$height"),
-        QStringLiteral("$end"),
-        QStringLiteral("$start")
+        QStringLiteral("$sceneFPS"),
+        QStringLiteral("$sceneWidth"),
+        QStringLiteral("$sceneHeight"),
+        QStringLiteral("$sceneEnd"),
+        QStringLiteral("$sceneStart")
     };
 
     QTextCharFormat specialFormat;

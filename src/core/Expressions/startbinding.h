@@ -23,22 +23,22 @@
 
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
-#ifndef WIDTHBINDING_H
-#define WIDTHBINDING_H
+#ifndef STARTBINDING_H
+#define STARTBINDING_H
 
 #include "propertybindingbase.h"
 
-class CORE_EXPORT WidthBinding : public PropertyBindingBase {
-    WidthBinding(const Property* const context);
+class CORE_EXPORT StartBinding : public PropertyBindingBase {
+    StartBinding(const Property* const context);
 public:
-    static qsptr<WidthBinding> sCreate(const Property* const context);
+    static qsptr<StartBinding> sCreate(const Property* const context);
 
     QJSValue getJSValue(QJSEngine& e);
     QJSValue getJSValue(QJSEngine& e, const qreal relFrame);
 
     FrameRange identicalRelRange(const int absFrame);
     FrameRange nextNonUnaryIdenticalRelRange(const int absFrame);
-    QString path() const { return "$sceneWidth"; }
+    QString path() const { return "$sceneStart"; }
 };
 
-#endif // WIDTHBINDING_H
+#endif // STARTBINDING_H

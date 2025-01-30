@@ -23,37 +23,37 @@
 
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
-#include "widthbinding.h"
+#include "startbinding.h"
 #include "../Properties/property.h"
 
-WidthBinding::WidthBinding(const Property* const context) :
+StartBinding::StartBinding(const Property* const context) :
     PropertyBindingBase(context) {}
 
-qsptr<WidthBinding> WidthBinding::sCreate(const Property* const context) {
-    const auto result = new WidthBinding(context);
-    return qsptr<WidthBinding>(result);
+qsptr<StartBinding> StartBinding::sCreate(const Property* const context) {
+    const auto result = new StartBinding(context);
+    return qsptr<StartBinding>(result);
 }
     
-QJSValue WidthBinding::getJSValue(QJSEngine& e) {
+QJSValue StartBinding::getJSValue(QJSEngine& e) {
     Q_UNUSED(e);
     if(mContext) {
-        double width = mContext->prp_getSceneWidth();
-        return QJSValue(width);
+        double start = mContext->prp_getSceneRangeMin();
+        return QJSValue(start);
     }
     return QJSValue::NullValue;
 }
 
-QJSValue WidthBinding::getJSValue(QJSEngine& e, const qreal width) {
-    Q_UNUSED(width);
+QJSValue StartBinding::getJSValue(QJSEngine& e, const qreal start) {
+    Q_UNUSED(start);
     return getJSValue(e);
 }
 
-FrameRange WidthBinding::identicalRelRange(const int absFrame) {
+FrameRange StartBinding::identicalRelRange(const int absFrame) {
     Q_UNUSED(absFrame);
     return FrameRange::EMINMAX;
 }
 
-FrameRange WidthBinding::nextNonUnaryIdenticalRelRange(const int absFrame) {
+FrameRange StartBinding::nextNonUnaryIdenticalRelRange(const int absFrame) {
     Q_UNUSED(absFrame);
     return FrameRange::EMINMAX;
 }

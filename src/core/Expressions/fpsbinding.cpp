@@ -24,7 +24,7 @@
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
 #include "fpsbinding.h"
-#include "../Properties/property.h" // Asegúrate de que esta clase tenga acceso a los FPS de la escena
+#include "../Properties/property.h"
 
 FPSBinding::FPSBinding(const Property* const context) :
     PropertyBindingBase(context) {}
@@ -35,6 +35,7 @@ qsptr<FPSBinding> FPSBinding::sCreate(const Property* const context) {
 }
     
 QJSValue FPSBinding::getJSValue(QJSEngine& e) {
+    Q_UNUSED(e);
     if(mContext) {
         double fps = mContext->prp_getSceneFPS();
         return QJSValue(fps);

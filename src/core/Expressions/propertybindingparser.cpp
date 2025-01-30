@@ -30,6 +30,9 @@
 #include "framebinding.h"
 #include "fpsbinding.h"
 #include "widthbinding.h"
+#include "heightbinding.h"
+#include "startbinding.h"
+#include "endbinding.h"
 #include "valuebinding.h"
 #include "appsupport.h"
 
@@ -86,7 +89,7 @@ QString parse(const QString& exp, int& pos, const int n) {
 
 bool parse(const QString& exp, int& pos, const QString& test) {
     int newPos = pos;
-    const auto value = parse(exp, newPos, QString("$value").count());
+    const auto value = parse(exp, newPos, test.count());
     if(value == test) {
         pos = newPos;
         return true;
@@ -106,23 +109,23 @@ bool parseFrame(const QString& exp, int& pos) {
 }
 
 bool parseSceneFPS(const QString& exp, int& pos) {
-    return parse(exp, pos, "$fps");
+    return parse(exp, pos, "$sceneFPS");
 }
 
 bool parseSceneWidth(const QString& exp, int& pos) {
-    return parse(exp, pos, "$width");
+    return parse(exp, pos, "$sceneWidth");
 }
 
 bool parseSceneHeight(const QString& exp, int& pos) {
-    return parse(exp, pos, "$height");
+    return parse(exp, pos, "$sceneHeight");
 }
 
 bool parseSceneRangeMax(const QString& exp, int& pos) {
-    return parse(exp, pos, "$end"); 
+    return parse(exp, pos, "$sceneEnd"); 
 }
 
 bool parseSceneRangeMin(const QString& exp, int& pos) {
-    return parse(exp, pos, "$start");
+    return parse(exp, pos, "$sceneStart");
 }
 
 void parseBinding(const QString& exp, int& pos, QString& binding) {
@@ -154,6 +157,12 @@ qsptr<PropertyBindingBase> PropertyBindingParser::parseBinding(
         result = FPSBinding::sCreate(context);
     } else if(parseSceneWidth(exp, pos)) {
         result = WidthBinding::sCreate(context);
+    } else if(parseSceneHeight(exp, pos)) {
+        result = HeightBinding::sCreate(context);
+    } else if(parseSceneRangeMin(exp, pos)) {
+        result = StartBinding::sCreate(context);
+    } else if(parseSceneRangeMax(exp, pos)) {
+        result = EndBinding::sCreate(context);
     } else if(parseValue(exp, pos)) {
         result = ValueBinding::sCreate(context);
     } else {
