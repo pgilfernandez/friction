@@ -29,6 +29,7 @@
 
 #include "framebinding.h"
 #include "fpsbinding.h"
+#include "widthbinding.h"
 #include "valuebinding.h"
 #include "appsupport.h"
 
@@ -151,6 +152,8 @@ qsptr<PropertyBindingBase> PropertyBindingParser::parseBinding(
         result = FrameBinding::sCreate(context);
     } else if(parseSceneFPS(exp, pos)) {
         result = FPSBinding::sCreate(context);
+    } else if(parseSceneWidth(exp, pos)) {
+        result = WidthBinding::sCreate(context);
     } else if(parseValue(exp, pos)) {
         result = ValueBinding::sCreate(context);
     } else {

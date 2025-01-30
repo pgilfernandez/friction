@@ -51,6 +51,7 @@ set(
     Expressions/expression.cpp
     Expressions/framebinding.cpp
     Expressions/fpsbinding.cpp
+    Expressions/widthbinding.cpp
     Expressions/propertybinding.cpp
     Animators/SmartPath/listofnodes.cpp
     Animators/SmartPath/smartpath.cpp
@@ -361,6 +362,7 @@ set(
     Expressions/expression.h
     Expressions/framebinding.h
     Expressions/fpsbinding.h
+    Expressions/widthbinding.h
     Expressions/propertybinding.h
     Animators/SmartPath/listofnodes.h
     Animators/SmartPath/smartpath.h
