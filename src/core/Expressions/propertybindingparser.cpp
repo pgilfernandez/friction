@@ -104,8 +104,24 @@ bool parseFrame(const QString& exp, int& pos) {
     return parse(exp, pos, "$frame");
 }
 
-bool parseFPS(const QString& exp, int& pos) {
+bool parseSceneFPS(const QString& exp, int& pos) {
     return parse(exp, pos, "$fps");
+}
+
+bool parseSceneWidth(const QString& exp, int& pos) {
+    return parse(exp, pos, "$scenex");
+}
+
+bool parseSceneHeight(const QString& exp, int& pos) {
+    return parse(exp, pos, "$sceney");
+}
+
+bool parseSceneRangeMax(const QString& exp, int& pos) {
+    return parse(exp, pos, "$scenemax"); 
+}
+
+bool parseSceneRangeMin(const QString& exp, int& pos) {
+    return parse(exp, pos, "$scenemin");
 }
 
 void parseBinding(const QString& exp, int& pos, QString& binding) {
@@ -133,7 +149,7 @@ qsptr<PropertyBindingBase> PropertyBindingParser::parseBinding(
     skipSpaces(exp, pos);
     if(parseFrame(exp, pos)) {
         result = FrameBinding::sCreate(context);
-    } else if(parseFPS(exp, pos)) {
+    } else if(parseSceneFPS(exp, pos)) {
         result = FPSBinding::sCreate(context);
     } else if(parseValue(exp, pos)) {
         result = ValueBinding::sCreate(context);

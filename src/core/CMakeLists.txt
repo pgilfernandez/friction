@@ -127,7 +127,6 @@ set(
     CacheHandlers/tmpsaver.cpp
     CacheHandlers/usedrange.cpp
     Expressions/propertybindingbase.cpp
-    Expressions/scenebindingbase.cpp
     Expressions/propertybindingparser.cpp
     Expressions/valuebinding.cpp
     FileCacheHandlers/animationcachehandler.cpp
@@ -443,7 +442,6 @@ set(
     CacheHandlers/usedrange.h
     CacheHandlers/usepointer.h
     Expressions/propertybindingbase.h
-    Expressions/scenebindingbase.h
     Expressions/propertybindingparser.h
     Expressions/valuebinding.h
     FileCacheHandlers/animationcachehandler.h

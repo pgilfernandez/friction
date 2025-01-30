@@ -39,6 +39,10 @@ public:
     FrameRange identicalRelRange(const int absFrame);
     FrameRange nextNonUnaryIdenticalRelRange(const int absFrame);
     QString path() const { return "$fps"; }
+    // QString path() const { return "$scenex"; }
+    // QString path() const { return "$sceney"; }
+    // QString path() const { return "$scenemax"; }
+    // QString path() const { return "$scenemin"; }
 };
 
 #endif // FPSBINDING_H

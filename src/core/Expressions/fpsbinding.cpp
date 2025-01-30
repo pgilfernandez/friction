@@ -36,7 +36,7 @@ qsptr<FPSBinding> FPSBinding::sCreate(const Property* const context) {
     
 QJSValue FPSBinding::getJSValue(QJSEngine& e) {
     if(mContext) {
-        double fps = mContext->prp_getFPS(); // Implementa este método en la clase Property
+        double fps = mContext->prp_getSceneFPS();
         return QJSValue(fps);
     }
     return QJSValue::NullValue;

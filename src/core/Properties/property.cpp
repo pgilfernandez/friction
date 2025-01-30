@@ -402,9 +402,37 @@ void Property::prp_selectionChangeTriggered(const bool shiftPressed) {
     }
 }
 
-qreal Property::prp_getFPS() const {
+qreal Property::prp_getSceneFPS() const {
     if (mParentScene) {
         return mParentScene->getFps();
     }
     return 0.0;
+}
+
+int Property::prp_getSceneWidth() const {
+    if (mParentScene) {
+        return mParentScene->getCanvasWidth();
+    }
+    return 0;
+}
+
+int Property::prp_getSceneHeight() const {
+    if (mParentScene) {
+        return mParentScene->getCanvasHeight();
+    }
+    return 0;
+}
+
+int Property::prp_getSceneRangeMin() const {
+    if (mParentScene) {
+        return mParentScene->getMinFrame();
+    }
+    return 0;
+}
+
+int Property::prp_getSceneRangeMax() const {
+    if (mParentScene) {
+        return mParentScene->getMaxFrame();
+    }
+    return 0;
 }
