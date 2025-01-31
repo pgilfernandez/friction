@@ -26,14 +26,9 @@
 #include "propertybindingparser.h"
 
 #include "exceptions.h"
-
 #include "framebinding.h"
-#include "fpsbinding.h"
-#include "widthbinding.h"
-#include "heightbinding.h"
-#include "startbinding.h"
-#include "endbinding.h"
 #include "valuebinding.h"
+#include "scenebinding.h"
 #include "appsupport.h"
 
 void skipSpaces(const QString& exp, int& position) {
@@ -154,15 +149,20 @@ qsptr<PropertyBindingBase> PropertyBindingParser::parseBinding(
     if(parseFrame(exp, pos)) {
         result = FrameBinding::sCreate(context);
     } else if(parseSceneFPS(exp, pos)) {
-        result = FPSBinding::sCreate(context);
+        result = SceneBinding::sCreate(context,
+                                       SceneBinding::SceneBindingFps);
     } else if(parseSceneWidth(exp, pos)) {
-        result = WidthBinding::sCreate(context);
+        result = SceneBinding::sCreate(context,
+                                       SceneBinding::SceneBindingWidth);
     } else if(parseSceneHeight(exp, pos)) {
-        result = HeightBinding::sCreate(context);
+        result = SceneBinding::sCreate(context,
+                                       SceneBinding::SceneBindingHeight);
     } else if(parseSceneRangeMin(exp, pos)) {
-        result = StartBinding::sCreate(context);
+        result = SceneBinding::sCreate(context,
+                                       SceneBinding::SceneBindingRangeMin);
     } else if(parseSceneRangeMax(exp, pos)) {
-        result = EndBinding::sCreate(context);
+        result = SceneBinding::sCreate(context,
+                                       SceneBinding::SceneBindingRangeMax);
     } else if(parseValue(exp, pos)) {
         result = ValueBinding::sCreate(context);
     } else {

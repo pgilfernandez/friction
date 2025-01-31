@@ -21,24 +21,38 @@
 #
 */
 
-// Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
-
-#ifndef ENDBINDING_H
-#define ENDBINDING_H
+#ifndef SCENE_BINDING_H
+#define SCENE_BINDING_H
 
 #include "propertybindingbase.h"
 
-class CORE_EXPORT EndBinding : public PropertyBindingBase {
-    EndBinding(const Property* const context);
+class CORE_EXPORT SceneBinding : public PropertyBindingBase
+{
 public:
-    static qsptr<EndBinding> sCreate(const Property* const context);
+    enum SceneBindingType {
+        SceneBindingFps,
+        SceneBindingWidth,
+        SceneBindingHeight,
+        SceneBindingRangeMin,
+        SceneBindingRangeMax
+    };
+
+    SceneBinding(const Property* const context,
+                 const SceneBindingType &binding);
+
+    static qsptr<SceneBinding> sCreate(const Property* const context,
+                                       const SceneBindingType &binding);
 
     QJSValue getJSValue(QJSEngine& e);
-    QJSValue getJSValue(QJSEngine& e, const qreal relFrame);
+    QJSValue getJSValue(QJSEngine& e,
+                        const qreal relFrame);
 
     FrameRange identicalRelRange(const int absFrame);
     FrameRange nextNonUnaryIdenticalRelRange(const int absFrame);
-    QString path() const { return "$sceneEnd"; }
+    QString path() const;
+
+private:
+    SceneBindingType mBindingType;
 };
 
-#endif // ENDBINDING_H
+#endif // SCENE_BINDING_H
