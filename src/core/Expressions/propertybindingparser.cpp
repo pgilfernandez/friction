@@ -28,6 +28,11 @@
 #include "exceptions.h"
 
 #include "framebinding.h"
+#include "fpsbinding.h"
+#include "widthbinding.h"
+#include "heightbinding.h"
+#include "startbinding.h"
+#include "endbinding.h"
 #include "valuebinding.h"
 #include "appsupport.h"
 
@@ -103,6 +108,26 @@ bool parseFrame(const QString& exp, int& pos) {
     return parse(exp, pos, "$frame");
 }
 
+bool parseSceneFPS(const QString& exp, int& pos) {
+    return parse(exp, pos, "$sceneFPS");
+}
+
+bool parseSceneWidth(const QString& exp, int& pos) {
+    return parse(exp, pos, "$sceneWidth");
+}
+
+bool parseSceneHeight(const QString& exp, int& pos) {
+    return parse(exp, pos, "$sceneHeight");
+}
+
+bool parseSceneRangeMax(const QString& exp, int& pos) {
+    return parse(exp, pos, "$sceneEnd"); 
+}
+
+bool parseSceneRangeMin(const QString& exp, int& pos) {
+    return parse(exp, pos, "$sceneStart");
+}
+
 void parseBinding(const QString& exp, int& pos, QString& binding) {
     while(pos < exp.count()) {
         const auto& c = exp.at(pos++);
@@ -128,6 +153,16 @@ qsptr<PropertyBindingBase> PropertyBindingParser::parseBinding(
     skipSpaces(exp, pos);
     if(parseFrame(exp, pos)) {
         result = FrameBinding::sCreate(context);
+    } else if(parseSceneFPS(exp, pos)) {
+        result = FPSBinding::sCreate(context);
+    } else if(parseSceneWidth(exp, pos)) {
+        result = WidthBinding::sCreate(context);
+    } else if(parseSceneHeight(exp, pos)) {
+        result = HeightBinding::sCreate(context);
+    } else if(parseSceneRangeMin(exp, pos)) {
+        result = StartBinding::sCreate(context);
+    } else if(parseSceneRangeMax(exp, pos)) {
+        result = EndBinding::sCreate(context);
     } else if(parseValue(exp, pos)) {
         result = ValueBinding::sCreate(context);
     } else {
