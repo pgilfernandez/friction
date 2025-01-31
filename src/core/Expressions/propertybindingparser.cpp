@@ -89,7 +89,7 @@ QString parse(const QString& exp, int& pos, const int n) {
 
 bool parse(const QString& exp, int& pos, const QString& test) {
     int newPos = pos;
-    const auto value = parse(exp, newPos, QString("$value").count());
+    const auto value = parse(exp, newPos, test.count());
     if(value == test) {
         pos = newPos;
         return true;
