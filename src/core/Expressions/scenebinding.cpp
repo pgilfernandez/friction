@@ -88,15 +88,15 @@ QString SceneBinding::path() const
 {
     switch (mBindingType) {
     case SceneBindingFps:
-        return "$sceneFPS";
+        return "$scene.fps";
     case SceneBindingWidth:
-        return "$sceneWidth";
+        return "$scene.width";
     case SceneBindingHeight:
-        return "$sceneHeight";
+        return "$scene.height";
     case SceneBindingRangeMin:
-        return "$sceneStart";
+        return "$scene.rangeMin";
     case SceneBindingRangeMax:
-        return "$sceneEnd";
+        return "$scene.rangeMax";
     }
     return QString();
 }
