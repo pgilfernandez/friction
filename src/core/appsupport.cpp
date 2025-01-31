@@ -332,7 +332,12 @@ const QString AppSupport::getAppExPresetsPath()
 
 const QString AppSupport::getAppUserExPresetsPath()
 {
-    QString path = QString::fromUtf8("%1/Expressions").arg(getAppConfigPath());
+    const QString def = QString::fromUtf8("%1/Expressions").arg(getAppConfigPath());
+    QString path = getSettings("settings",
+                               "CustomExpressionPath",
+                               def).toString();
+    if (path.isEmpty()) { path = def; }
+
     QDir dir(path);
     if (!dir.exists()) { dir.mkpath(path); }
     return path;
@@ -1129,8 +1134,9 @@ AppSupport::getExpressionsBundle()
 
     auto result = findExpressions(exprCore);
 
-    const auto exprApp = findExpressions(scanForExpressions(getAppExPresetsPath()));
-    for (const auto &expr : exprApp) { result << expr; }
+    // we don't plan to ship external expressions with Friction at this moment
+    //const auto exprApp = findExpressions(scanForExpressions(getAppExPresetsPath()));
+    //for (const auto &expr : exprApp) { result << expr; }
 
     const auto exprUsr = findExpressions(scanForExpressions(getAppUserExPresetsPath()));
     for (const auto &expr : exprUsr) { result << expr; }
