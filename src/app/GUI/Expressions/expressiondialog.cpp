@@ -24,6 +24,7 @@
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
 #include "expressiondialog.h"
+#include "../../../core/Animators/qrealanimator.h" // Asegúrate que la ruta es correcta
 
 #include <QLabel>
 #include <QCheckBox>
@@ -32,6 +33,7 @@
 #include <QApplication>
 #include <QButtonGroup>
 #include <QMessageBox>
+#include <QFileDialog>
 
 #include <Qsci/qscilexerjavascript.h>
 #include <Qsci/qsciapis.h>
@@ -401,6 +403,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     const auto applyButton = new QPushButton("Apply", this);
     const auto okButton = new QPushButton("Ok", this);
     const auto cancelButton = new QPushButton("Cancel", this);
+    const auto exportButton = new QPushButton("Export", this); // New export button
     const auto checkBox = new QCheckBox("Auto Apply", this);
     connect(checkBox, &QCheckBox::stateChanged,
             this, [this](const int state) {
@@ -420,6 +423,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     buttonsLayout->addWidget(applyButton);
     buttonsLayout->addWidget(okButton);
     buttonsLayout->addWidget(cancelButton);
+    buttonsLayout->addWidget(exportButton); // Add export button to layout
 
     mainLayout->addLayout(buttonsLayout);
 
@@ -440,6 +444,9 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     });
     connect(cancelButton, &QPushButton::released,
             this, &ExpressionDialog::reject);
+
+    connect(exportButton, &QPushButton::released,
+            this, &ExpressionDialog::exportProperty); // Connect export button signal
 
     connect(mScript, &QsciScintilla::SCN_FOCUSIN,
             this, [this]() {
@@ -638,4 +645,11 @@ bool ExpressionDialog::apply(const bool action) {
 
     Document::sInstance->actionFinished();
     return true;
+}
+
+void ExpressionDialog::exportProperty() {
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Export Property"), "", tr("JSON Files (*.json);;All Files (*)"));
+    if (!filePath.isEmpty()) {
+        mTarget->exportPropertyToFile(filePath);
+    }
 }

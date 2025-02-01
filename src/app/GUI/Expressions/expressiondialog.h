@@ -53,6 +53,8 @@ public:
     ExpressionDialog(QrealAnimator* const target,
                      QWidget * const parent = nullptr);
 
+    void exportProperty();
+
 private:
     using PropertyBindingMap = std::map<QString, QSharedPointer<PropertyBindingBase>>;
     bool getBindings(PropertyBindingMap& bindings);
