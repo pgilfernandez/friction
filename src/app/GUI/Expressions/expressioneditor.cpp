@@ -198,3 +198,8 @@ QString ExpressionEditor::textUnderCursor() const {
     return result;
 }
 
+void ExpressionEditor::setText(const QString& text) {
+    mFillerText = false;
+    QTextEdit::setText(text);
+}
+

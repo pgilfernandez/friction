@@ -404,6 +404,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     const auto okButton = new QPushButton("Ok", this);
     const auto cancelButton = new QPushButton("Cancel", this);
     const auto exportButton = new QPushButton("Export", this); // New export button
+    const auto importButton = new QPushButton("Import", this); // New import button
     const auto checkBox = new QCheckBox("Auto Apply", this);
     connect(checkBox, &QCheckBox::stateChanged,
             this, [this](const int state) {
@@ -424,6 +425,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     buttonsLayout->addWidget(okButton);
     buttonsLayout->addWidget(cancelButton);
     buttonsLayout->addWidget(exportButton); // Add export button to layout
+    buttonsLayout->addWidget(importButton); // Add import button to layout
 
     mainLayout->addLayout(buttonsLayout);
 
@@ -447,6 +449,8 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
     connect(exportButton, &QPushButton::released,
             this, &ExpressionDialog::exportProperty); // Connect export button signal
+    connect(importButton, &QPushButton::released,
+            this, &ExpressionDialog::importProperty); // Connect import button signal
 
     connect(mScript, &QsciScintilla::SCN_FOCUSIN,
             this, [this]() {
@@ -652,4 +656,38 @@ void ExpressionDialog::exportProperty() {
     if (!filePath.isEmpty()) {
         mTarget->exportPropertyToFile(filePath);
     }
+}
+
+void ExpressionDialog::importProperty() {
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Import Property"), "", tr("JSON Files (*.json);;All Files (*)"));
+    if (filePath.isEmpty()) {
+        return;
+    }
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning("Could not open file for reading: %s", qPrintable(filePath));
+        return;
+    }
+
+    QTextStream in(&file);
+    QString jsonContent = in.readAll();
+    file.close();
+
+    QJsonDocument doc = QJsonDocument::fromJson(jsonContent.toUtf8());
+    if (doc.isNull() || !doc.isObject()) {
+        qWarning("Invalid JSON content");
+        return;
+    }
+
+    QJsonObject obj = doc.object();
+    QString bindings = obj.value("bindings").toString();
+    QString calculate = obj.value("calculate").toString();
+    QString definitions = obj.value("definitions").toString();
+
+    mBindings->setText(bindings);
+    mScript->setText(calculate);
+    mDefinitions->setText(definitions);
+
+    updateAllScript();
 }

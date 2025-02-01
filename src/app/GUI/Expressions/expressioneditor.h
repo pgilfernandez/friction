@@ -51,6 +51,7 @@ public:
     void setCompleterList(const QStringList& values);
 
     QString text() const;
+    void setText(const QString& text); // Add this public method
     void setFillerText();
     void clearFillerText();
 
@@ -65,7 +66,7 @@ protected:
 private:
     using QTextEdit::toHtml;
     using QTextEdit::toPlainText;
-    using QTextEdit::setText;
+    // Remove this line to make setText public: 
     void showCompleter();
     void insertCompletion(const QString &completion);
     QString textUnderCursor() const;
