@@ -34,6 +34,7 @@
 #include <QComboBox>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
+#include <QDir>
 
 #include "conncontext.h"
 #include "dialogs/dialog.h"
@@ -64,6 +65,7 @@ private:
     void updateAllScript();
     void setCurrentTabId(const int id);
     bool apply(const bool action);
+    void updatePresetCombo();
 
     QrealAnimator* const mTarget;
 
@@ -94,6 +96,9 @@ private:
     QLabel* mScriptError;
 
     ConnContext mAutoApplyConn;
+
+    QDir mPresetsDir;
+    QComboBox* presetCombo;
 };
 
 #endif // EXPRESSIONDIALOG_H

@@ -295,6 +295,8 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     , mTarget(target)
     , mTab(nullptr)
     , mTabEditor(0)
+    , mPresetsDir("/Users/pablo/Library/Preferences/friction/ExpressionsPresets")
+    , presetCombo(new QComboBox(this))
 {
     setWindowTitle(tr("Expression %1").arg(target->prp_getName()));
 
@@ -315,26 +317,24 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     presetLayout->setContentsMargins(0, 0, 0, 10);
 
     const auto presetLabel = new QLabel("Presets:", this);
-    const auto presetCombo = new QComboBox(this);
     presetCombo->addItem("");
     presetCombo->setFixedHeight(24);
 
-    QDir presetsDir("/Users/pablo/Library/Preferences/friction/ExpressionsPresets");
-
-    if (!presetsDir.exists()) {
-        qWarning() << "Presets directory does not exist:" << presetsDir.absolutePath();
+    if (!mPresetsDir.exists()) {
+        qWarning() << "Presets directory does not exist:" << mPresetsDir.absolutePath();
     } else {
-        QStringList presetFiles = presetsDir.entryList(QStringList() << "*.json", QDir::Files);
+        QStringList presetFiles = mPresetsDir.entryList(QStringList() << "*.json", QDir::Files);
         for (const QString &presetFile : presetFiles) {
             qWarning() << "Adding preset:" << presetFile;
             presetCombo->addItem(presetFile.left(presetFile.lastIndexOf('.')));
         }
+        updatePresetCombo();
     }
 
-    connect(presetCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, presetCombo, presetsDir](int index) {
+    connect(presetCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
         if (index > 0) {
             QString presetName = presetCombo->itemText(index);
-            QString filePath = presetsDir.filePath(QString("%1.json").arg(presetName));
+            QString filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
             QFile file(filePath);
             if (file.exists()) {
                 importProperty(filePath);
@@ -747,6 +747,7 @@ void ExpressionDialog::exportProperty() {
 
         file.close();
     }
+    updatePresetCombo();
 }
 
 void ExpressionDialog::importProperty(const QString& filePath) {
@@ -784,4 +785,23 @@ void ExpressionDialog::importProperty(const QString& filePath) {
     mDefinitions->setText(definitions);
 
     updateAllScript();
+}
+
+void ExpressionDialog::updatePresetCombo() {
+    presetCombo->clear();
+    presetCombo->addItem("");
+
+    if (!mPresetsDir.exists()) {
+        qWarning() << "Presets directory does not exist:" << mPresetsDir.absolutePath();
+        if (!mPresetsDir.mkpath(".")) {
+            qWarning() << "Failed to create presets directory:" << mPresetsDir.absolutePath();
+            return;
+        }
+    } else {
+        QStringList presetFiles = mPresetsDir.entryList(QStringList() << "*.json", QDir::Files);
+        for (const QString &presetFile : presetFiles) {
+            qWarning() << "Adding preset:" << presetFile;
+            presetCombo->addItem(presetFile.left(presetFile.lastIndexOf('.')));
+        }
+    }
 }
