@@ -54,7 +54,7 @@ public:
     ExpressionDialog(QrealAnimator* const target,
                      QWidget * const parent = nullptr);
 
-    void exportProperty();
+    void exportProperty(const QString& presetName);
     void importProperty(const QString& filePath = QString());
 
 private:

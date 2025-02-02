@@ -34,6 +34,7 @@
 #include <QButtonGroup>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QLineEdit>
 #include <iostream>
 
 #include <Qsci/qscilexerjavascript.h>
@@ -383,6 +384,37 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
     mainLayout->addLayout(presetLayout);
 
+    connect(addPresetBtn, &QPushButton::released, this, [this]() {
+        QDialog dialog(this);
+        dialog.setWindowTitle(tr("New Preset"));
+
+        QVBoxLayout layout(&dialog);
+
+        QLabel label(tr("New Preset Name:"), &dialog);
+        layout.addWidget(&label);
+
+        QLineEdit lineEdit(&dialog);
+        layout.addWidget(&lineEdit);
+        lineEdit.setFocus();
+
+        QHBoxLayout buttonLayout;
+        QPushButton cancelButton(tr("Cancel"), &dialog);
+        QPushButton okButton(tr("OK"), &dialog);
+        buttonLayout.addWidget(&cancelButton);
+        buttonLayout.addWidget(&okButton);
+        layout.addLayout(&buttonLayout);
+
+        connect(&cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+        connect(&okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+
+        if (dialog.exec() == QDialog::Accepted) {
+            QString presetName = lineEdit.text().trimmed();
+            if (!presetName.isEmpty()) {
+                exportProperty(presetName);
+            }
+        }
+    });
+
     connect(removePresetBtn, &QPushButton::released, this, [this]() {
         int index = presetCombo->currentIndex();
         if (index > 0) {
@@ -398,12 +430,12 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
             } else {
                 qWarning() << "Preset file does not exist:" << filePath;
             }
-            // TODO: I'm not sure if we should also clear the fields...
-            // mBindings->clear();
-            // mScript->clear();
-            // mDefinitions->clear();
             updatePresetCombo();
         }
+    });
+
+    connect(exportPresetBtn, &QPushButton::released, this, [this]() {
+        exportProperty("");
     });
 
     const auto tabLayout = new QHBoxLayout;
@@ -542,8 +574,6 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     connect(cancelButton, &QPushButton::released,
             this, &ExpressionDialog::reject);
 
-    connect(exportPresetBtn, &QPushButton::released,
-            this, &ExpressionDialog::exportProperty);
     connect(importPresetBtn, &QPushButton::released,
             this, [this]() {
         importProperty();
@@ -748,8 +778,14 @@ bool ExpressionDialog::apply(const bool action) {
     return true;
 }
 
-void ExpressionDialog::exportProperty() {
-    QString filePath = QFileDialog::getSaveFileName(this, tr("Export Preset"), "", tr("JSON Files (*.json);;All Files (*)"));
+void ExpressionDialog::exportProperty(const QString& presetName) {
+    QString filePath;
+    if (presetName.isEmpty()) {
+        filePath = QFileDialog::getSaveFileName(this, tr("Export Preset"), "", tr("JSON Files (*.json);;All Files (*)"));
+    } else {
+        filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
+    }
+
     if (!filePath.isEmpty()) {
         QString bindings = mBindings->text();
         QString calculate = mScript->text();
