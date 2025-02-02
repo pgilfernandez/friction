@@ -383,6 +383,29 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
     mainLayout->addLayout(presetLayout);
 
+    connect(removePresetBtn, &QPushButton::released, this, [this]() {
+        int index = presetCombo->currentIndex();
+        if (index > 0) {
+            QString presetName = presetCombo->itemText(index);
+            QString filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
+            QFile file(filePath);
+            if (file.exists()) {
+                if (file.remove()) {
+                    qWarning() << "Preset file removed:" << filePath;
+                } else {
+                    qWarning() << "Failed to remove preset file:" << filePath;
+                }
+            } else {
+                qWarning() << "Preset file does not exist:" << filePath;
+            }
+            // TODO: I'm not sure if we should also clear the fields...
+            // mBindings->clear();
+            // mScript->clear();
+            // mDefinitions->clear();
+            updatePresetCombo();
+        }
+    });
+
     const auto tabLayout = new QHBoxLayout;
     tabLayout->setSpacing(0);
     tabLayout->setContentsMargins(0, 0, 0, 0);
