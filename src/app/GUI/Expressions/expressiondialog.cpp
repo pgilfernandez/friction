@@ -728,7 +728,24 @@ bool ExpressionDialog::apply(const bool action) {
 void ExpressionDialog::exportProperty() {
     QString filePath = QFileDialog::getSaveFileName(this, tr("Export Preset"), "", tr("JSON Files (*.json);;All Files (*)"));
     if (!filePath.isEmpty()) {
-        mTarget->exportPropertyToFile(filePath);
+        QString bindings = mBindings->text();
+        QString calculate = mScript->text();
+        QString definitions = mDefinitions->text();
+
+        QFile file(filePath);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            qWarning() << "Could not open file for writing:" << filePath;
+            return;
+        }
+
+        QTextStream out(&file);
+        out << "{\n";
+        out << "  \"bindings\": \"" << bindings << "\",\n";
+        out << "  \"calculate\": \"" << calculate << "\",\n";
+        out << "  \"definitions\": \"" << definitions << "\"\n";
+        out << "}\n";
+
+        file.close();
     }
 }
 
