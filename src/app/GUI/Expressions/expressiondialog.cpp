@@ -411,6 +411,10 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
             QString presetName = lineEdit.text().trimmed();
             if (!presetName.isEmpty()) {
                 exportProperty(presetName);
+                int index = presetCombo->findText(presetName);
+                if (index != -1) {
+                    presetCombo->setCurrentIndex(index);
+                }
             }
         }
     });
@@ -419,18 +423,39 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
         int index = presetCombo->currentIndex();
         if (index > 0) {
             QString presetName = presetCombo->itemText(index);
-            QString filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
-            QFile file(filePath);
-            if (file.exists()) {
-                if (file.remove()) {
-                    qWarning() << "Preset file removed:" << filePath;
+
+            QDialog dialog(this);
+            dialog.setWindowTitle(tr("Confirm Delete"));
+
+            QVBoxLayout layout(&dialog);
+
+            QLabel label(tr("Are you sure you want to remove '%1' Preset?").arg(presetName), &dialog);
+            layout.addWidget(&label);
+
+            QHBoxLayout buttonLayout;
+            QPushButton cancelButton(tr("Cancel"), &dialog);
+            QPushButton okButton(tr("OK"), &dialog);
+            buttonLayout.addWidget(&cancelButton);
+            buttonLayout.addWidget(&okButton);
+            layout.addLayout(&buttonLayout);
+
+            connect(&cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+            connect(&okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+
+            if (dialog.exec() == QDialog::Accepted) {
+                QString filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
+                QFile file(filePath);
+                if (file.exists()) {
+                    if (file.remove()) {
+                        qWarning() << "Preset file removed:" << filePath;
+                    } else {
+                        qWarning() << "Failed to remove preset file:" << filePath;
+                    }
                 } else {
-                    qWarning() << "Failed to remove preset file:" << filePath;
+                    qWarning() << "Preset file does not exist:" << filePath;
                 }
-            } else {
-                qWarning() << "Preset file does not exist:" << filePath;
+                updatePresetCombo();
             }
-            updatePresetCombo();
         }
     });
 
@@ -532,7 +557,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
     const auto buttonsLayout = new QHBoxLayout;
     const auto applyButton = new QPushButton("Apply", this);
-    const auto okButton = new QPushButton("Ok", this);
+    const auto okButton = new QPushButton("OK", this);
     const auto cancelButton = new QPushButton("Cancel", this);
     const auto checkBox = new QCheckBox("Auto Apply", this);
     connect(checkBox, &QCheckBox::stateChanged,
