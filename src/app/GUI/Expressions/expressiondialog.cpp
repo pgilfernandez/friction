@@ -34,6 +34,7 @@
 #include <QButtonGroup>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <iostream>
 
 #include <Qsci/qscilexerjavascript.h>
 #include <Qsci/qsciapis.h>
@@ -311,15 +312,38 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     // Add preset controls
     const auto presetLayout = new QHBoxLayout;
     presetLayout->setSpacing(2);
-    presetLayout->setContentsMargins(0, 0, 0, 10); // Cambiado el margen inferior a 10
+    presetLayout->setContentsMargins(0, 0, 0, 10);
 
     const auto presetLabel = new QLabel("Presets:", this);
     const auto presetCombo = new QComboBox(this);
     presetCombo->addItem("");
-    presetCombo->addItem("Preset 1");
-    presetCombo->addItem("Preset 2");
     presetCombo->setFixedHeight(24);
-    
+
+    QDir presetsDir("/Users/pablo/Library/Preferences/friction/ExpressionsPresets");
+
+    if (!presetsDir.exists()) {
+        qWarning() << "Presets directory does not exist:" << presetsDir.absolutePath();
+    } else {
+        QStringList presetFiles = presetsDir.entryList(QStringList() << "*.json", QDir::Files);
+        for (const QString &presetFile : presetFiles) {
+            qWarning() << "Adding preset:" << presetFile;
+            presetCombo->addItem(presetFile.left(presetFile.lastIndexOf('.')));
+        }
+    }
+
+    connect(presetCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this, presetCombo, presetsDir](int index) {
+        if (index > 0) {
+            QString presetName = presetCombo->itemText(index);
+            QString filePath = presetsDir.filePath(QString("%1.json").arg(presetName));
+            QFile file(filePath);
+            if (file.exists()) {
+                importProperty(filePath);
+            } else {
+                qWarning() << "Preset file does not exist:" << filePath;
+            }
+        }
+    });
+
     const auto addPresetBtn = new QPushButton(this);
     addPresetBtn->setIcon(QIcon::fromTheme("plus"));
     addPresetBtn->setToolTip(tr("Save Preset"));
@@ -331,17 +355,20 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     removePresetBtn->setFixedWidth(25);
     removePresetBtn->setContentsMargins(10, 0, 0, 0);
     const auto editPresetBtn = new QPushButton(this);
-    editPresetBtn->setIcon(QIcon::fromTheme("edit"));
+    // editPresetBtn->setIcon(QIcon::fromTheme("edit"));
+    editPresetBtn->setIcon(QIcon("/Users/pablo/GitHub/friction-icon-theme_pablo/hicolor/scalable/friction/edit.png"));
     editPresetBtn->setToolTip(tr("Edit Preset Name"));
     editPresetBtn->setFixedWidth(25);
     editPresetBtn->setContentsMargins(10, 0, 0, 0);
     const auto importPresetBtn = new QPushButton(this);
-    importPresetBtn->setIcon(QIcon::fromTheme("file-import"));
+    // importPresetBtn->setIcon(QIcon::fromTheme("file-import"));
+    importPresetBtn->setIcon(QIcon("/Users/pablo/GitHub/friction-icon-theme_pablo/hicolor/scalable/friction/file-import.png"));
     importPresetBtn->setToolTip(tr("Import Preset from file"));
     importPresetBtn->setFixedWidth(25);
     importPresetBtn->setContentsMargins(10, 0, 0, 0);
     const auto exportPresetBtn = new QPushButton(this);
-    exportPresetBtn->setIcon(QIcon::fromTheme("file-export"));
+    // exportPresetBtn->setIcon(QIcon::fromTheme("file-export"));
+    exportPresetBtn->setIcon(QIcon("/Users/pablo/GitHub/friction-icon-theme_pablo/hicolor/scalable/friction/file-export.png"));
     exportPresetBtn->setToolTip(tr("Export Preset to file"));
     exportPresetBtn->setFixedWidth(25);
     exportPresetBtn->setContentsMargins(10, 0, 0, 0);
@@ -495,7 +522,9 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     connect(exportPresetBtn, &QPushButton::released,
             this, &ExpressionDialog::exportProperty);
     connect(importPresetBtn, &QPushButton::released,
-            this, &ExpressionDialog::importProperty);
+            this, [this]() {
+        importProperty();
+    });
 
     connect(mScript, &QsciScintilla::SCN_FOCUSIN,
             this, [this]() {
@@ -703,15 +732,18 @@ void ExpressionDialog::exportProperty() {
     }
 }
 
-void ExpressionDialog::importProperty() {
-    QString filePath = QFileDialog::getOpenFileName(this, tr("Import Preset"), "", tr("JSON Files (*.json);;All Files (*)"));
-    if (filePath.isEmpty()) {
-        return;
+void ExpressionDialog::importProperty(const QString& filePath) {
+    QString path = filePath;
+    if (path.isEmpty()) {
+        path = QFileDialog::getOpenFileName(this, tr("Import Preset"), "", tr("JSON Files (*.json);;All Files (*)"));
+        if (path.isEmpty()) {
+            return;
+        }
     }
 
-    QFile file(filePath);
+    QFile file(path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning("Could not open file for reading: %s", qPrintable(filePath));
+        qWarning() << "Could not open file for reading:" << path;
         return;
     }
 
@@ -721,7 +753,7 @@ void ExpressionDialog::importProperty() {
 
     QJsonDocument doc = QJsonDocument::fromJson(jsonContent.toUtf8());
     if (doc.isNull() || !doc.isObject()) {
-        qWarning("Invalid JSON content");
+        qWarning() << "Invalid JSON content";
         return;
     }
 
@@ -732,7 +764,7 @@ void ExpressionDialog::importProperty() {
 
     mBindings->setText(bindings);
     mScript->setText(calculate);
-
+    mDefinitions->setText(definitions);
 
     updateAllScript();
 }

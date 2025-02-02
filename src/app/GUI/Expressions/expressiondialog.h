@@ -54,7 +54,7 @@ public:
                      QWidget * const parent = nullptr);
 
     void exportProperty();
-    void importProperty(); // New method for importing expressions
+    void importProperty(const QString& filePath = QString());
 
 private:
     using PropertyBindingMap = std::map<QString, QSharedPointer<PropertyBindingBase>>;

@@ -36,6 +36,7 @@
 #include "Properties/namedproperty.h"
 #include <QFile>
 #include <QTextStream>
+#include <iostream>
 
 QrealAnimator::QrealAnimator(const qreal iniVal,
                              const qreal minVal,
@@ -1021,7 +1022,7 @@ void QrealAnimator::exportPropertyToFile(const QString& filePath) const {
 
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning("Could not open file for writing: %s", qPrintable(filePath));
+        qWarning() << "Could not open file for writing:" << filePath;
         return;
     }
 
