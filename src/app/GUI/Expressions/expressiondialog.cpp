@@ -317,7 +317,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     presetLayout->setSpacing(2);
     presetLayout->setContentsMargins(0, 0, 0, 10);
 
-    const auto presetLabel = new QLabel("Presets:", this);
+    const auto presetLabel = new QLabel("Preset: ", this);
     presetCombo->addItem("");
     presetCombo->setFixedHeight(24);
 
@@ -347,18 +347,18 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
     const auto addPresetBtn = new QPushButton(this);
     addPresetBtn->setIcon(QIcon::fromTheme("plus"));
-    addPresetBtn->setToolTip(tr("Save Preset"));
+    addPresetBtn->setToolTip(tr("Save as New Preset"));
     addPresetBtn->setFixedWidth(25);
     addPresetBtn->setContentsMargins(10, 0, 0, 0);
     const auto removePresetBtn = new QPushButton(this);
     removePresetBtn->setIcon(QIcon::fromTheme("minus"));
-    removePresetBtn->setToolTip(tr("Delete Preset"));
+    removePresetBtn->setToolTip(tr("Remove Active Preset"));
     removePresetBtn->setFixedWidth(25);
     removePresetBtn->setContentsMargins(10, 0, 0, 0);
     const auto editPresetBtn = new QPushButton(this);
     // editPresetBtn->setIcon(QIcon::fromTheme("edit"));
     editPresetBtn->setIcon(QIcon("/Users/pablo/GitHub/friction-icon-theme_pablo/hicolor/scalable/friction/edit.png"));
-    editPresetBtn->setToolTip(tr("Edit Preset Name"));
+    editPresetBtn->setToolTip(tr("Edit Active Preset Name"));
     editPresetBtn->setFixedWidth(25);
     editPresetBtn->setContentsMargins(10, 0, 0, 0);
     const auto importPresetBtn = new QPushButton(this);
@@ -370,7 +370,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     const auto exportPresetBtn = new QPushButton(this);
     // exportPresetBtn->setIcon(QIcon::fromTheme("file-export"));
     exportPresetBtn->setIcon(QIcon("/Users/pablo/GitHub/friction-icon-theme_pablo/hicolor/scalable/friction/file-export.png"));
-    exportPresetBtn->setToolTip(tr("Export Preset to file"));
+    exportPresetBtn->setToolTip(tr("Export Active Preset to file"));
     exportPresetBtn->setFixedWidth(25);
     exportPresetBtn->setContentsMargins(10, 0, 0, 0);
 
@@ -390,7 +390,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
         QVBoxLayout layout(&dialog);
 
-        QLabel label(tr("New Preset Name:"), &dialog);
+        QLabel label(tr("<b>New</b> Preset Name:"), &dialog);
         layout.addWidget(&label);
 
         QLineEdit lineEdit(&dialog);
@@ -429,7 +429,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
             QVBoxLayout layout(&dialog);
 
-            QLabel label(tr("Are you sure you want to remove '%1' Preset?").arg(presetName), &dialog);
+            QLabel label(tr("Are you sure you want to <b>remove '%1'</b> Preset?").arg(presetName), &dialog);
             layout.addWidget(&label);
 
             QHBoxLayout buttonLayout;
@@ -455,6 +455,53 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
                     qWarning() << "Preset file does not exist:" << filePath;
                 }
                 updatePresetCombo();
+            }
+        }
+    });
+
+    connect(editPresetBtn, &QPushButton::released, this, [this]() {
+        int index = presetCombo->currentIndex();
+        if (index > 0) {
+            QString presetName = presetCombo->itemText(index);
+
+            QDialog dialog(this);
+            dialog.setWindowTitle(tr("Preset Name"));
+
+            QVBoxLayout layout(&dialog);
+
+            QLabel label(tr("<b>Edit</b> Preset Name:"), &dialog);
+            layout.addWidget(&label);
+
+            QLineEdit lineEdit(&dialog);
+            lineEdit.setText(presetName);
+            layout.addWidget(&lineEdit);
+            lineEdit.setFocus();
+
+            QHBoxLayout buttonLayout;
+            QPushButton cancelButton(tr("Cancel"), &dialog);
+            QPushButton okButton(tr("OK"), &dialog);
+            buttonLayout.addWidget(&cancelButton);
+            buttonLayout.addWidget(&okButton);
+            layout.addLayout(&buttonLayout);
+
+            connect(&cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
+            connect(&okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+
+            if (dialog.exec() == QDialog::Accepted) {
+                QString newPresetName = lineEdit.text().trimmed();
+                if (!newPresetName.isEmpty() && newPresetName != presetName) {
+                    QString oldFilePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
+                    QString newFilePath = mPresetsDir.filePath(QString("%1.json").arg(newPresetName));
+                    if (QFile::rename(oldFilePath, newFilePath)) {
+                        updatePresetCombo();
+                        int newIndex = presetCombo->findText(newPresetName);
+                        if (newIndex != -1) {
+                            presetCombo->setCurrentIndex(newIndex);
+                        }
+                    } else {
+                        qWarning() << "Failed to rename preset file:" << oldFilePath << "to" << newFilePath;
+                    }
+                }
             }
         }
     });
