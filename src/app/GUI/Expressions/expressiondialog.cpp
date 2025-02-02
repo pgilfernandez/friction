@@ -308,8 +308,57 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     mTabEditor = mTab->addTab(editorWidget, tr("Editor"));
     const auto mainLayout = new QVBoxLayout(editorWidget);
 
+    // Add preset controls
+    const auto presetLayout = new QHBoxLayout;
+    presetLayout->setSpacing(2);
+    presetLayout->setContentsMargins(0, 0, 0, 10); // Cambiado el margen inferior a 10
+
+    const auto presetLabel = new QLabel("Presets:", this);
+    const auto presetCombo = new QComboBox(this);
+    presetCombo->addItem("");
+    presetCombo->addItem("Preset 1");
+    presetCombo->addItem("Preset 2");
+    presetCombo->setFixedHeight(24);
+    
+    const auto addPresetBtn = new QPushButton(this);
+    addPresetBtn->setIcon(QIcon::fromTheme("plus"));
+    addPresetBtn->setToolTip(tr("Save Preset"));
+    addPresetBtn->setFixedWidth(25);
+    addPresetBtn->setContentsMargins(10, 0, 0, 0);
+    const auto removePresetBtn = new QPushButton(this);
+    removePresetBtn->setIcon(QIcon::fromTheme("minus"));
+    removePresetBtn->setToolTip(tr("Delete Preset"));
+    removePresetBtn->setFixedWidth(25);
+    removePresetBtn->setContentsMargins(10, 0, 0, 0);
+    const auto editPresetBtn = new QPushButton(this);
+    editPresetBtn->setIcon(QIcon::fromTheme("edit"));
+    editPresetBtn->setToolTip(tr("Edit Preset Name"));
+    editPresetBtn->setFixedWidth(25);
+    editPresetBtn->setContentsMargins(10, 0, 0, 0);
+    const auto importPresetBtn = new QPushButton(this);
+    importPresetBtn->setIcon(QIcon::fromTheme("file-import"));
+    importPresetBtn->setToolTip(tr("Import Preset from file"));
+    importPresetBtn->setFixedWidth(25);
+    importPresetBtn->setContentsMargins(10, 0, 0, 0);
+    const auto exportPresetBtn = new QPushButton(this);
+    exportPresetBtn->setIcon(QIcon::fromTheme("file-export"));
+    exportPresetBtn->setToolTip(tr("Export Preset to file"));
+    exportPresetBtn->setFixedWidth(25);
+    exportPresetBtn->setContentsMargins(10, 0, 0, 0);
+
+    presetLayout->addWidget(presetLabel);
+    presetLayout->addWidget(presetCombo, 1);
+    presetLayout->addWidget(addPresetBtn);
+    presetLayout->addWidget(removePresetBtn);
+    presetLayout->addWidget(editPresetBtn);
+    presetLayout->addWidget(importPresetBtn);
+    presetLayout->addWidget(exportPresetBtn);
+
+    mainLayout->addLayout(presetLayout);
+
     const auto tabLayout = new QHBoxLayout;
     tabLayout->setSpacing(0);
+    tabLayout->setContentsMargins(0, 0, 0, 0);
     tabLayout->setContentsMargins(0, 0, 0, 0);
     mBindingsButton = new QPushButton("Bindings && Script", this);
     mBindingsButton->setFocusPolicy(Qt::NoFocus);
@@ -403,8 +452,6 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     const auto applyButton = new QPushButton("Apply", this);
     const auto okButton = new QPushButton("Ok", this);
     const auto cancelButton = new QPushButton("Cancel", this);
-    const auto exportButton = new QPushButton("Export", this); // New export button
-    const auto importButton = new QPushButton("Import", this); // New import button
     const auto checkBox = new QCheckBox("Auto Apply", this);
     connect(checkBox, &QCheckBox::stateChanged,
             this, [this](const int state) {
@@ -424,8 +471,6 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     buttonsLayout->addWidget(applyButton);
     buttonsLayout->addWidget(okButton);
     buttonsLayout->addWidget(cancelButton);
-    buttonsLayout->addWidget(exportButton); // Add export button to layout
-    buttonsLayout->addWidget(importButton); // Add import button to layout
 
     mainLayout->addLayout(buttonsLayout);
 
@@ -447,10 +492,10 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     connect(cancelButton, &QPushButton::released,
             this, &ExpressionDialog::reject);
 
-    connect(exportButton, &QPushButton::released,
-            this, &ExpressionDialog::exportProperty); // Connect export button signal
-    connect(importButton, &QPushButton::released,
-            this, &ExpressionDialog::importProperty); // Connect import button signal
+    connect(exportPresetBtn, &QPushButton::released,
+            this, &ExpressionDialog::exportProperty);
+    connect(importPresetBtn, &QPushButton::released,
+            this, &ExpressionDialog::importProperty);
 
     connect(mScript, &QsciScintilla::SCN_FOCUSIN,
             this, [this]() {
@@ -652,14 +697,14 @@ bool ExpressionDialog::apply(const bool action) {
 }
 
 void ExpressionDialog::exportProperty() {
-    QString filePath = QFileDialog::getSaveFileName(this, tr("Export Property"), "", tr("JSON Files (*.json);;All Files (*)"));
+    QString filePath = QFileDialog::getSaveFileName(this, tr("Export Preset"), "", tr("JSON Files (*.json);;All Files (*)"));
     if (!filePath.isEmpty()) {
         mTarget->exportPropertyToFile(filePath);
     }
 }
 
 void ExpressionDialog::importProperty() {
-    QString filePath = QFileDialog::getOpenFileName(this, tr("Import Property"), "", tr("JSON Files (*.json);;All Files (*)"));
+    QString filePath = QFileDialog::getOpenFileName(this, tr("Import Preset"), "", tr("JSON Files (*.json);;All Files (*)"));
     if (filePath.isEmpty()) {
         return;
     }
@@ -687,7 +732,7 @@ void ExpressionDialog::importProperty() {
 
     mBindings->setText(bindings);
     mScript->setText(calculate);
-    mDefinitions->setText(definitions);
+
 
     updateAllScript();
 }
