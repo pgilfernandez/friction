@@ -65,7 +65,9 @@ private:
     void updateAllScript();
     void setCurrentTabId(const int id);
     bool apply(const bool action);
+    void loadPresetCombo();
     void updatePresetCombo();
+    bool checkPresetJSON(const QString& mPresetsDir, const QString& presetFile);
 
     QrealAnimator* const mTarget;
 
@@ -98,6 +100,7 @@ private:
     ConnContext mAutoApplyConn;
 
     QDir mPresetsDir;
+    QDir mPresetsDirUser;
     QComboBox* presetCombo;
 };
 
