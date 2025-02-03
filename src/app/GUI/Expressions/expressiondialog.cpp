@@ -916,6 +916,12 @@ void ExpressionDialog::importProperty(const QString& filePath) {
     mDefinitions->setText(definitions);
 
     updateAllScript();
+
+    QString presetName = QFileInfo(path).baseName();
+    int index = presetCombo->findText(presetName);
+    if (index != -1) {
+        presetCombo->setCurrentIndex(index);
+    }
 }
 
 void ExpressionDialog::updatePresetCombo() {
