@@ -24,7 +24,7 @@
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
 #include "expressiondialog.h"
-#include "../../../core/Animators/qrealanimator.h" // Asegúrate que la ruta es correcta
+#include "../../../core/Animators/qrealanimator.h"
 
 #include <QLabel>
 #include <QCheckBox>
@@ -338,6 +338,9 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
             QString filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
             QFile file(filePath);
             if (file.exists()) {
+                mBindings->clearFillerText();
+                mScript->clearFillerText();
+                mDefinitions->clearFillerText();
                 importProperty(filePath);
             } else {
                 qWarning() << "Preset file does not exist:" << filePath;
