@@ -413,6 +413,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
             QString presetName = lineEdit.text().trimmed();
             if (!presetName.isEmpty()) {
                 exportPreset(presetName);
+                updatePresetCombo();
                 int index = presetCombo->findText(presetName);
                 if (index != -1) {
                     presetCombo->setCurrentIndex(index);
@@ -501,8 +502,8 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
             if (dialog.exec() == QDialog::Accepted) {
                 QString newPresetName = lineEdit.text().trimmed();
                 if (!newPresetName.isEmpty() && newPresetName != presetName) {
-                    QString oldFilePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
-                    QString newFilePath = mPresetsDir.filePath(QString("%1.json").arg(newPresetName));
+                    QString oldFilePath = mPresetsDirUser.filePath(QString("%1.json").arg(presetName));
+                    QString newFilePath = mPresetsDirUser.filePath(QString("%1.json").arg(newPresetName));
                     if (QFile::rename(oldFilePath, newFilePath)) {
                         updatePresetCombo();
                         int newIndex = presetCombo->findText(newPresetName);
@@ -866,7 +867,7 @@ void ExpressionDialog::exportPreset(const QString& presetName) {
     if (presetName.isEmpty()) {
         filePath = QFileDialog::getSaveFileName(this, tr("Export Preset"), mPresetsDirUser.absolutePath(), tr("JSON Files (*.json);;All Files (*)"));
     } else {
-        filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
+        filePath = mPresetsDirUser.filePath(QString("%1.json").arg(presetName));
     }
 
     if (!filePath.isEmpty()) {
@@ -889,7 +890,14 @@ void ExpressionDialog::exportPreset(const QString& presetName) {
 
         file.close();
     }
+
     updatePresetCombo();
+    
+    int index = presetCombo->findText(presetName);
+    if (index != -1) {
+        presetCombo->setCurrentIndex(index);
+    }
+
 }
 
 void ExpressionDialog::importPreset(const QString& filePath) {
