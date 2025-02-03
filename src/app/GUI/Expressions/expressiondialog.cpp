@@ -335,12 +335,12 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
                 mBindings->clearFillerText();
                 mScript->clearFillerText();
                 mDefinitions->clearFillerText();
-                importProperty(filePath);
+                importPreset(filePath);
             } else if (fileUser.exists()) {
                 mBindings->clearFillerText();
                 mScript->clearFillerText();
                 mDefinitions->clearFillerText();
-                importProperty(filePathUser);
+                importPreset(filePathUser);
             } else {
                 qWarning() << "Preset file does not exist:" << filePath;
             }
@@ -412,7 +412,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
         if (dialog.exec() == QDialog::Accepted) {
             QString presetName = lineEdit.text().trimmed();
             if (!presetName.isEmpty()) {
-                exportProperty(presetName);
+                exportPreset(presetName);
                 int index = presetCombo->findText(presetName);
                 if (index != -1) {
                     presetCombo->setCurrentIndex(index);
@@ -509,7 +509,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     });
 
     connect(exportPresetBtn, &QPushButton::released, this, [this]() {
-        exportProperty("");
+        exportPreset("");
     });
 
     const auto tabLayout = new QHBoxLayout;
@@ -650,7 +650,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
     connect(importPresetBtn, &QPushButton::released,
             this, [this]() {
-        importProperty();
+        importPreset();
     });
 
     connect(mScript, &QsciScintilla::SCN_FOCUSIN,
@@ -852,10 +852,10 @@ bool ExpressionDialog::apply(const bool action) {
     return true;
 }
 
-void ExpressionDialog::exportProperty(const QString& presetName) {
+void ExpressionDialog::exportPreset(const QString& presetName) {
     QString filePath;
     if (presetName.isEmpty()) {
-        filePath = QFileDialog::getSaveFileName(this, tr("Export Preset"), "", tr("JSON Files (*.json);;All Files (*)"));
+        filePath = QFileDialog::getSaveFileName(this, tr("Export Preset"), mPresetsDirUser.absolutePath(), tr("JSON Files (*.json);;All Files (*)"));
     } else {
         filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
     }
@@ -883,10 +883,10 @@ void ExpressionDialog::exportProperty(const QString& presetName) {
     updatePresetCombo();
 }
 
-void ExpressionDialog::importProperty(const QString& filePath) {
+void ExpressionDialog::importPreset(const QString& filePath) {
     QString path = filePath;
     if (path.isEmpty()) {
-        path = QFileDialog::getOpenFileName(this, tr("Import Preset"), "", tr("JSON Files (*.json);;All Files (*)"));
+        path = QFileDialog::getOpenFileName(this, tr("Import Preset"), mPresetsDirUser.absolutePath(), tr("JSON Files (*.json);;All Files (*)"));
         if (path.isEmpty()) {
             return;
         }
@@ -986,7 +986,6 @@ bool ExpressionDialog::checkPresetJSON(const QString& mPresetsDir, const QString
     QJsonObject obj = doc.object();
     if (!obj.contains("bindings") || !obj.contains("calculate") || !obj.contains("definitions")) {
         qWarning() << "Preset file does not contain required keys:" << file.fileName();
-        std::cout << "Preset file does not contain required keys:" << file.fileName().toStdString() << std::endl;
         return false;
     }
 

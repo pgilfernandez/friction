@@ -54,8 +54,8 @@ public:
     ExpressionDialog(QrealAnimator* const target,
                      QWidget * const parent = nullptr);
 
-    void exportProperty(const QString& presetName);
-    void importProperty(const QString& filePath = QString());
+    void exportPreset(const QString& presetName);
+    void importPreset(const QString& filePath = QString());
 
 private:
     using PropertyBindingMap = std::map<QString, QSharedPointer<PropertyBindingBase>>;
