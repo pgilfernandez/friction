@@ -402,8 +402,8 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
         QHBoxLayout buttonLayout;
         QPushButton cancelButton(tr("Cancel"), &dialog);
         QPushButton okButton(tr("OK"), &dialog);
-        buttonLayout.addWidget(&cancelButton);
         buttonLayout.addWidget(&okButton);
+        buttonLayout.addWidget(&cancelButton);
         layout.addLayout(&buttonLayout);
 
         connect(&cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
@@ -437,8 +437,8 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
             QHBoxLayout buttonLayout;
             QPushButton cancelButton(tr("Cancel"), &dialog);
             QPushButton okButton(tr("OK"), &dialog);
-            buttonLayout.addWidget(&cancelButton);
             buttonLayout.addWidget(&okButton);
+            buttonLayout.addWidget(&cancelButton);
             layout.addLayout(&buttonLayout);
 
             connect(&cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
@@ -446,15 +446,24 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
             if (dialog.exec() == QDialog::Accepted) {
                 QString filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
+                QString filePathUser = mPresetsDirUser.filePath(QString("%1.json").arg(presetName));
                 QFile file(filePath);
+                QFile fileUser(filePathUser);
                 if (file.exists()) {
                     if (file.remove()) {
                         qWarning() << "Preset file removed:" << filePath;
                     } else {
                         qWarning() << "Failed to remove preset file:" << filePath;
                     }
+                } else if (fileUser.exists()) {
+                    if (fileUser.remove()) {
+                        qWarning() << "Preset file removed:" << filePathUser;
+                    } else {
+                        qWarning() << "Failed to remove preset file:" << filePathUser;
+                    }
                 } else {
-                    qWarning() << "Preset file does not exist:" << filePath;
+                    qWarning() << "Preset file does not exist in:" << filePath;
+                    qWarning() << "Preset file does not exist in:" << filePathUser;
                 }
                 updatePresetCombo();
             }
@@ -482,8 +491,8 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
             QHBoxLayout buttonLayout;
             QPushButton cancelButton(tr("Cancel"), &dialog);
             QPushButton okButton(tr("OK"), &dialog);
-            buttonLayout.addWidget(&cancelButton);
             buttonLayout.addWidget(&okButton);
+            buttonLayout.addWidget(&cancelButton);
             layout.addLayout(&buttonLayout);
 
             connect(&cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
