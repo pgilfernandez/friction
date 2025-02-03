@@ -386,6 +386,11 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
     mainLayout->addLayout(presetLayout);
 
+    connect(importPresetBtn, &QPushButton::released,
+            this, [this]() {
+        importPreset();
+    });
+
     connect(addPresetBtn, &QPushButton::released, this, [this]() {
         QDialog dialog(this);
         dialog.setWindowTitle(tr("New Preset"));
@@ -657,11 +662,6 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     });
     connect(cancelButton, &QPushButton::released,
             this, &ExpressionDialog::reject);
-
-    connect(importPresetBtn, &QPushButton::released,
-            this, [this]() {
-        importPreset();
-    });
 
     connect(mScript, &QsciScintilla::SCN_FOCUSIN,
             this, [this]() {
