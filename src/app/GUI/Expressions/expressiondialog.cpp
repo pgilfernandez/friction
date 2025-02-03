@@ -296,7 +296,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     , mTarget(target)
     , mTab(nullptr)
     , mTabEditor(0)
-    , mPresetsDir("/Users/pablo/Library/Preferences/friction/ExpressionsPresets")
+    , mPresetsDir(AppSupport::getAppUserExPresetsPath())
     , presetCombo(new QComboBox(this))
 {
     setWindowTitle(tr("Expression %1").arg(target->prp_getName()));
