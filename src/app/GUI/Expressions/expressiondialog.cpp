@@ -321,6 +321,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     const auto presetLabel = new QLabel("Preset: ", this);
     presetCombo->addItem("");
     presetCombo->setFixedHeight(24);
+    presetCombo->setToolTip(tr("Select a Preset from the list to fill Bindings, Definitions\nand Calculate fields. In case there is no Preset available,\nyou can create a new one by clicking on the '+' button."));
 
     updatePresetCombo();
 
@@ -526,7 +527,6 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
 
     const auto tabLayout = new QHBoxLayout;
     tabLayout->setSpacing(0);
-    tabLayout->setContentsMargins(0, 0, 0, 0);
     tabLayout->setContentsMargins(0, 0, 0, 0);
     mBindingsButton = new QPushButton("Bindings && Script", this);
     mBindingsButton->setFocusPolicy(Qt::NoFocus);
