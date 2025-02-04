@@ -64,6 +64,7 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     , mRenderProgressAct(nullptr)
     , mRenderProgress(nullptr)
     , mStepPreviewTimer(nullptr)
+    , mPlayBackType(PlayBackTypeCache)
     , mStepPreviewButton(nullptr)
 {
     connect(RenderHandler::sInstance, &RenderHandler::previewFinished,
@@ -132,30 +133,6 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
                               tr("Play Preview"),
                               this);
 
-    mStepPreviewTimer = new QTimer(this);
-    mStepPreviewButton = new QAction(QIcon::fromTheme("play"),
-                              tr("Step Preview"),
-                              this);
-
-    connect(mStepPreviewButton, &QAction::triggered, this, [this]() {
-        const auto scene = *mDocument.fActiveScene;
-        if (mStepPreviewTimer->isActive()) {
-            if (scene) { scene->setRenderingPreview(false); }
-            mStepPreviewTimer->stop();
-            mStepPreviewButton->setIcon(QIcon::fromTheme("play"));
-        } else {
-            const auto state = RenderHandler::sInstance->currentPreviewState();
-            if (state != PreviewState::stopped) { interruptPreview(); }
-            if (scene) {
-                int fps = scene->getFps();
-                mStepPreviewTimer->setInterval(1000 / fps);
-                scene->setRenderingPreview(true);
-            }
-            mStepPreviewTimer->start();
-            mStepPreviewButton->setIcon(QIcon::fromTheme("pause"));
-        }
-    });
-
     mStopButton = new QAction(QIcon::fromTheme("stop"),
                               tr("Stop Preview"),
                               this);
@@ -169,6 +146,18 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     mLoopButton->setCheckable(true);
     connect(mLoopButton, &QAction::triggered,
             this, &TimelineDockWidget::setLoop);
+
+    // TODO
+    mStepPreviewTimer = new QTimer(this);
+    mStepPreviewButton = new QAction(QIcon::fromTheme("seq_preview"),
+                                     tr("Step Preview"),
+                                     this);
+    mStepPreviewButton->setCheckable(true);
+    connect(mStepPreviewButton, &QAction::triggered, this, [this]() {
+        mPlayBackType = mStepPreviewButton->isChecked() ? PlayBackTypeRealTimeOverlay : PlayBackTypeCache;
+        interruptPreview();
+    });
+    //
 
     mFrameStartSpin = new FrameSpinBox(this);
     mFrameStartSpin->setKeyboardTracking(false);
@@ -284,9 +273,9 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     mCurrentFrameSpinAct = mToolBar->addWidget(mCurrentFrameSpin);
     mToolBar->addAction(mPlayFromBeginningButton);
     mToolBar->addAction(mPlayButton);
-    mToolBar->addAction(mStepPreviewButton);
     mToolBar->addAction(mStopButton);
     mToolBar->addAction(mLoopButton);
+    mToolBar->addAction(mStepPreviewButton);
 
     mMainWindow->cmdAddAction(mFrameRewindAct);
     mMainWindow->cmdAddAction(mPrevKeyframeAct);
@@ -371,8 +360,10 @@ bool TimelineDockWidget::processKeyPress(QKeyEvent *event)
     const auto mods = event->modifiers();
     const auto state = RenderHandler::sInstance->currentPreviewState();
     if (key == Qt::Key_Escape) { // stop playback
-        if (state == PreviewState::stopped) { return false; }
-        interruptPreview();
+        if (state != PreviewState::stopped ||
+            mStepPreviewTimer->isActive()) { interruptPreview(); }
+        else { return false; }
+
     } else if (key == Qt::Key_Space && (mods & Qt::ShiftModifier)) { // play from first frame
         /*const auto scene = *mDocument.fActiveScene;
         if (!scene) { return false; }
@@ -381,11 +372,16 @@ bool TimelineDockWidget::processKeyPress(QKeyEvent *event)
         renderPreview();*/
         if (!setPreviewFromStart(state)) { return false; }
     } else if (key == Qt::Key_Space) { // start/resume playback
-        switch (state) {
-            case PreviewState::stopped: renderPreview(); break;
-            case PreviewState::rendering: playPreview(); break;
-            case PreviewState::playing: pausePreview(); break;
-            case PreviewState::paused: resumePreview(); break;
+        if (mPlayBackType != PlayBackTypeCache) {
+            if (mStepPreviewTimer->isActive()) { setStepPreviewStart(); }
+            else { setStepPreviewStop(); }
+        } else {
+            switch (state) {
+                case PreviewState::stopped: renderPreview(); break;
+                case PreviewState::rendering: playPreview(); break;
+                case PreviewState::playing: pausePreview(); break;
+                case PreviewState::paused: resumePreview(); break;
+            }
         }
     } else if (key == Qt::Key_K) { // split clip
         splitClip();
@@ -525,7 +521,45 @@ bool TimelineDockWidget::setPrevKeyframe()
 
 void TimelineDockWidget::resumePreview()
 {
-    RenderHandler::sInstance->resumePreview();
+    if (mPlayBackType == PlayBackTypeCache) {
+        RenderHandler::sInstance->resumePreview();
+    } else { setStepPreviewStart(); }
+}
+
+void TimelineDockWidget::setStepPreviewStop()
+{
+    const auto scene = *mDocument.fActiveScene;
+    if (!scene) { return; }
+    const bool hasOverlay = mPlayBackType == PlayBackTypeRealTimeOverlay;
+    if (!hasOverlay) { scene->setRenderingPreview(false); }
+    mStepPreviewTimer->stop();
+    previewFinished();
+}
+
+void TimelineDockWidget::setStepPreviewStart()
+{
+    if (mPlayBackType == PlayBackTypeCache) { return; }
+
+    const auto scene = *mDocument.fActiveScene;
+    if (!scene) { return; }
+
+    const bool hasOverlay = mPlayBackType == PlayBackTypeRealTimeOverlay;
+
+    if (mStepPreviewTimer->isActive()) {
+        if (!hasOverlay) { scene->setRenderingPreview(false); }
+        mStepPreviewTimer->stop();
+    }
+
+    const auto state = RenderHandler::sInstance->currentPreviewState();
+    if (state != PreviewState::stopped) {
+        RenderHandler::sInstance->interruptPreview();
+    }
+
+    int fps = scene->getFps();
+    mStepPreviewTimer->setInterval(1000 / fps);
+    if (!hasOverlay) { scene->setRenderingPreview(true); }
+    mStepPreviewTimer->start();
+    previewBeingPlayed();
 }
 
 void TimelineDockWidget::updateButtonsVisibility(const CanvasMode mode)
@@ -535,22 +569,30 @@ void TimelineDockWidget::updateButtonsVisibility(const CanvasMode mode)
 
 void TimelineDockWidget::pausePreview()
 {
-    RenderHandler::sInstance->pausePreview();
+    if (mPlayBackType == PlayBackTypeCache) {
+        RenderHandler::sInstance->pausePreview();
+    } else { setStepPreviewStop(); }
 }
 
 void TimelineDockWidget::playPreview()
 {
-    RenderHandler::sInstance->playPreview();
+    if (mPlayBackType == PlayBackTypeCache) {
+        RenderHandler::sInstance->playPreview();
+    } else { setStepPreviewStart(); }
 }
 
 void TimelineDockWidget::renderPreview()
 {
-    RenderHandler::sInstance->renderPreview();
+    if (mPlayBackType == PlayBackTypeCache) {
+        RenderHandler::sInstance->renderPreview();
+    } else { setStepPreviewStart(); }
 }
 
 void TimelineDockWidget::interruptPreview()
 {
-    RenderHandler::sInstance->interruptPreview();
+    if (mPlayBackType == PlayBackTypeCache) {
+        RenderHandler::sInstance->interruptPreview();
+    } else { setStepPreviewStop(); }
 }
 
 void TimelineDockWidget::updateSettingsForCurrentCanvas(Canvas* const canvas)
@@ -675,7 +717,6 @@ void TimelineDockWidget::stepPreview()
             }
         } else {
             mStepPreviewTimer->stop();
-            mStepPreviewButton->setIcon(QIcon::fromTheme("play"));
             previewFinished();
             return;
         }
