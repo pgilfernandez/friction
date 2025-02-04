@@ -104,23 +104,23 @@ bool parseFrame(const QString& exp, int& pos) {
 }
 
 bool parseSceneFPS(const QString& exp, int& pos) {
-    return parse(exp, pos, "$scene.fps");
+    return parse(exp, pos, "scene.fps");
 }
 
 bool parseSceneWidth(const QString& exp, int& pos) {
-    return parse(exp, pos, "$scene.width");
+    return parse(exp, pos, "scene.width");
 }
 
 bool parseSceneHeight(const QString& exp, int& pos) {
-    return parse(exp, pos, "$scene.height");
+    return parse(exp, pos, "scene.height");
 }
 
 bool parseSceneRangeMax(const QString& exp, int& pos) {
-    return parse(exp, pos, "$scene.rangeMax");
+    return parse(exp, pos, "scene.rangeMax");
 }
 
 bool parseSceneRangeMin(const QString& exp, int& pos) {
-    return parse(exp, pos, "$scene.rangeMin");
+    return parse(exp, pos, "scene.rangeMin");
 }
 
 void parseBinding(const QString& exp, int& pos, QString& binding) {
