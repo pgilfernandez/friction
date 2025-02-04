@@ -138,16 +138,18 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
                               this);
 
     connect(mStepPreviewButton, &QAction::triggered, this, [this]() {
+        const auto scene = *mDocument.fActiveScene;
         if (mStepPreviewTimer->isActive()) {
+            if (scene) { scene->setRenderingPreview(false); }
             mStepPreviewTimer->stop();
             mStepPreviewButton->setIcon(QIcon::fromTheme("play"));
         } else {
             const auto state = RenderHandler::sInstance->currentPreviewState();
             if (state != PreviewState::stopped) { interruptPreview(); }
-            const auto scene = *mDocument.fActiveScene;
             if (scene) {
                 int fps = scene->getFps();
                 mStepPreviewTimer->setInterval(1000 / fps);
+                scene->setRenderingPreview(true);
             }
             mStepPreviewTimer->start();
             mStepPreviewButton->setIcon(QIcon::fromTheme("pause"));
