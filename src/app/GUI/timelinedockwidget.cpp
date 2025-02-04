@@ -27,6 +27,7 @@
 
 #include <QKeyEvent>
 #include <QScrollBar>
+#include <QTimer>
 
 #include "Private/document.h"
 #include "GUI/global.h"
@@ -62,6 +63,8 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     , mCurrentFrameSpin(nullptr)
     , mRenderProgressAct(nullptr)
     , mRenderProgress(nullptr)
+    , mStepPreviewTimer(nullptr)
+    , mStepPreviewButton(nullptr)
 {
     connect(RenderHandler::sInstance, &RenderHandler::previewFinished,
             this, &TimelineDockWidget::previewFinished);
@@ -128,6 +131,28 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     mPlayButton = new QAction(QIcon::fromTheme("play"),
                               tr("Play Preview"),
                               this);
+
+    mStepPreviewTimer = new QTimer(this);
+    mStepPreviewButton = new QAction(QIcon::fromTheme("play"),
+                              tr("Step Preview"),
+                              this);
+
+    connect(mStepPreviewButton, &QAction::triggered, this, [this]() {
+        if (mStepPreviewTimer->isActive()) {
+            mStepPreviewTimer->stop();
+            mStepPreviewButton->setIcon(QIcon::fromTheme("play"));
+        } else {
+            const auto state = RenderHandler::sInstance->currentPreviewState();
+            if (state != PreviewState::stopped) { interruptPreview(); }
+            const auto scene = *mDocument.fActiveScene;
+            if (scene) {
+                int fps = scene->getFps();
+                mStepPreviewTimer->setInterval(1000 / fps);
+            }
+            mStepPreviewTimer->start();
+            mStepPreviewButton->setIcon(QIcon::fromTheme("pause"));
+        }
+    });
 
     mStopButton = new QAction(QIcon::fromTheme("stop"),
                               tr("Stop Preview"),
@@ -257,6 +282,7 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     mCurrentFrameSpinAct = mToolBar->addWidget(mCurrentFrameSpin);
     mToolBar->addAction(mPlayFromBeginningButton);
     mToolBar->addAction(mPlayButton);
+    mToolBar->addAction(mStepPreviewButton);
     mToolBar->addAction(mStopButton);
     mToolBar->addAction(mLoopButton);
 
@@ -298,6 +324,9 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
 
     connect(&mDocument, &Document::activeSceneSet,
             this, &TimelineDockWidget::updateSettingsForCurrentCanvas);
+
+    connect(mStepPreviewTimer, &QTimer::timeout,
+            this, &TimelineDockWidget::stepPreview);
 
 }
 
@@ -388,6 +417,9 @@ bool TimelineDockWidget::processKeyPress(QKeyEvent *event)
             mDocument.setActiveSceneFrame(targetFrame);
         }*/
         if (!setNextKeyframe()) { return false; }
+    } else if (key == Qt::Key_M && (mods & Qt::ControlModifier)) {
+        if (state != PreviewState::stopped) { interruptPreview(); }
+        mStepPreviewTimer->start();
     } else {
         return false;
     }
@@ -540,6 +572,9 @@ void TimelineDockWidget::updateSettingsForCurrentCanvas(Canvas* const canvas)
         mCurrentFrameSpin->updateFps(fps);
         mFrameStartSpin->updateFps(fps);
         mFrameEndSpin->updateFps(fps);
+        if (mStepPreviewTimer->isActive()) {
+            mStepPreviewTimer->setInterval(1000 / fps);
+        }
     });
     connect(canvas, &Canvas::displayTimeCodeChanged,
             this, [this](const bool enabled) {
@@ -612,4 +647,37 @@ void TimelineDockWidget::splitClip()
     const auto scene = *mDocument.fActiveScene;
     if (!scene) { return; }
     scene->splitAction();
+}
+
+void TimelineDockWidget::stepPreview()
+{
+    const auto scene = *mDocument.fActiveScene;
+    if (!scene) { return; }
+    int currentFrame = scene->anim_getCurrentAbsFrame();
+    int nextFrame = currentFrame + 1;
+
+    if (scene->getFrameIn().enabled && currentFrame < scene->getFrameIn().frame) {
+        nextFrame = scene->getFrameIn().frame;
+    }
+
+    int frameOut = scene->getFrameRange().fMax;
+    if (scene->getFrameOut().enabled) {
+        frameOut = scene->getFrameOut().frame;
+    }
+
+    if (nextFrame > frameOut) {
+        if (mLoopButton->isChecked()) {
+            nextFrame = scene->getFrameRange().fMin;
+            if (scene->getFrameIn().enabled) {
+                nextFrame = scene->getFrameIn().frame;
+            }
+        } else {
+            mStepPreviewTimer->stop();
+            mStepPreviewButton->setIcon(QIcon::fromTheme("play"));
+            previewFinished();
+            return;
+        }
+    }
+    scene->anim_setAbsFrame(nextFrame);
+    mDocument.actionFinished();
 }

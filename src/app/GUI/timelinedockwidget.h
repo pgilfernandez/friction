@@ -42,6 +42,7 @@
 #include <QStackedWidget>
 #include <QToolButton>
 #include <QProgressBar>
+#include <QTimer>
 
 #include "smartPointers/ememory.h"
 #include "framerange.h"
@@ -74,6 +75,7 @@ public:
     void previewBeingPlayed();
     void previewBeingRendered();
     void previewPaused();
+    void stepPreview();
 
     bool setPreviewFromStart(PreviewState state);
     bool setNextKeyframe();
@@ -128,8 +130,12 @@ private:
     QAction *mRenderProgressAct;
     QProgressBar *mRenderProgress;
 
+    QTimer *mStepPreviewTimer;
+
     QList<TimelineWidget*> mTimelineWidgets;
     //AnimationDockWidget *mAnimationDockWidget;
+
+    QAction *mStepPreviewButton;
 };
 
 #endif // BOXESLISTANIMATIONDOCKWIDGET_H
