@@ -915,8 +915,7 @@ void ExpressionDialog::importPreset(const QString& filePath) {
         return;
     }
 
-    QTextStream in(&file);
-    QString jsonContent = in.readAll();
+    QString jsonContent = file.readAll();
     file.close();
 
     QJsonDocument doc = QJsonDocument::fromJson(jsonContent.toUtf8());
@@ -989,9 +988,8 @@ bool ExpressionDialog::checkPresetJSON(const QString& mPresetsDir, const QString
         qWarning() << "Could not open preset file for reading:" << file.fileName();
         return false;
     }
-
-    QTextStream in(&file);
-    QString jsonContent = in.readAll();
+    
+    QString jsonContent = file.readAll();
     file.close();
 
     QJsonDocument doc = QJsonDocument::fromJson(jsonContent.toUtf8());
