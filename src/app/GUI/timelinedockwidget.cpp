@@ -65,7 +65,6 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     , mRenderProgress(nullptr)
     , mStepPreviewTimer(nullptr)
     , mPlayBackType(PlayBackTypeCache)
-    , mStepPreviewButton(nullptr)
 {
     connect(RenderHandler::sInstance, &RenderHandler::previewFinished,
             this, &TimelineDockWidget::previewFinished);
@@ -148,14 +147,20 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
             this, &TimelineDockWidget::setLoop);
 
     mStepPreviewTimer = new QTimer(this);
-    mStepPreviewButton = new QAction(QIcon::fromTheme("seq_preview"), /* temp icon */
-                                     tr("Step Preview"),
-                                     this);
-    mStepPreviewButton->setCheckable(true);
-    connect(mStepPreviewButton, &QAction::triggered, this, [this]() {
+    const auto previewCache = new QAction(tr("Preview Cache"), this);
+    previewCache->setCheckable(true);
+    previewCache->setChecked(mPlayBackType == PlayBackTypeCache);
+    connect(previewCache, &QAction::triggered,
+            this, [this](bool checked) {
         interruptPreview();
-        mPlayBackType = mStepPreviewButton->isChecked() ? PlayBackTypeRealTime : PlayBackTypeCache;
+        mPlayBackType = checked ? PlayBackTypeCache : PlayBackTypeRealTime;
     });
+
+    const auto extraButton = new QToolButton(this);
+    extraButton->setObjectName("ToolButton");
+    extraButton->setIcon(QIcon::fromTheme("preferences")); // TODO: replace icon
+    extraButton->setPopupMode(QToolButton::InstantPopup);
+    extraButton->addAction(previewCache);
 
     mFrameStartSpin = new FrameSpinBox(this);
     mFrameStartSpin->setKeyboardTracking(false);
@@ -279,7 +284,7 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
 
     addBlankAction();
 
-    mToolBar->addAction(mStepPreviewButton);
+    mToolBar->addWidget(extraButton);
 
     addSpacer();
 

@@ -146,8 +146,6 @@ private:
     PlaybackType mPlayBackType;
     QList<TimelineWidget*> mTimelineWidgets;
     //AnimationDockWidget *mAnimationDockWidget;
-
-    QAction *mStepPreviewButton;
 };
 
 #endif // BOXESLISTANIMATIONDOCKWIDGET_H
