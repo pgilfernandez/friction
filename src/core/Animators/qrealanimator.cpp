@@ -36,7 +36,6 @@
 #include "Properties/namedproperty.h"
 #include <QFile>
 #include <QTextStream>
-#include <iostream>
 
 QrealAnimator::QrealAnimator(const qreal iniVal,
                              const qreal minVal,
