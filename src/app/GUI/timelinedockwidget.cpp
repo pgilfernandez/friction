@@ -154,7 +154,7 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
                                      this);
     mStepPreviewButton->setCheckable(true);
     connect(mStepPreviewButton, &QAction::triggered, this, [this]() {
-        mPlayBackType = mStepPreviewButton->isChecked() ? PlayBackTypeRealTimeOverlay : PlayBackTypeCache;
+        mPlayBackType = mStepPreviewButton->isChecked() ? PlayBackTypeRealTime : PlayBackTypeCache;
         interruptPreview();
     });
     //
@@ -373,8 +373,8 @@ bool TimelineDockWidget::processKeyPress(QKeyEvent *event)
         if (!setPreviewFromStart(state)) { return false; }
     } else if (key == Qt::Key_Space) { // start/resume playback
         if (mPlayBackType != PlayBackTypeCache) {
-            if (mStepPreviewTimer->isActive()) { setStepPreviewStart(); }
-            else { setStepPreviewStop(); }
+            if (mStepPreviewTimer->isActive()) { pausePreview(); }
+            else { playPreview(); }
         } else {
             switch (state) {
                 case PreviewState::stopped: renderPreview(); break;
@@ -526,14 +526,11 @@ void TimelineDockWidget::resumePreview()
     } else { setStepPreviewStart(); }
 }
 
-void TimelineDockWidget::setStepPreviewStop()
+void TimelineDockWidget::setStepPreviewStop(const bool pause)
 {
-    const auto scene = *mDocument.fActiveScene;
-    if (!scene) { return; }
-    const bool hasOverlay = mPlayBackType == PlayBackTypeRealTimeOverlay;
-    if (!hasOverlay) { scene->setRenderingPreview(false); }
     mStepPreviewTimer->stop();
-    previewFinished();
+    if (pause) { previewPaused(); }
+    else { previewFinished(); }
 }
 
 void TimelineDockWidget::setStepPreviewStart()
@@ -543,10 +540,7 @@ void TimelineDockWidget::setStepPreviewStart()
     const auto scene = *mDocument.fActiveScene;
     if (!scene) { return; }
 
-    const bool hasOverlay = mPlayBackType == PlayBackTypeRealTimeOverlay;
-
     if (mStepPreviewTimer->isActive()) {
-        if (!hasOverlay) { scene->setRenderingPreview(false); }
         mStepPreviewTimer->stop();
     }
 
@@ -557,7 +551,6 @@ void TimelineDockWidget::setStepPreviewStart()
 
     int fps = scene->getFps();
     mStepPreviewTimer->setInterval(1000 / fps);
-    if (!hasOverlay) { scene->setRenderingPreview(true); }
     mStepPreviewTimer->start();
     previewBeingPlayed();
 }

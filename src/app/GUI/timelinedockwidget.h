@@ -94,8 +94,7 @@ private:
     enum PlaybackType
     {
         PlayBackTypeCache,
-        PlayBackTypeRealTime,
-        PlayBackTypeRealTimeOverlay
+        PlayBackTypeRealTime
     };
 
     void setLoop(const bool loop);
@@ -105,7 +104,7 @@ private:
     void renderPreview();
     void pausePreview();
     void resumePreview();
-    void setStepPreviewStop();
+    void setStepPreviewStop(const bool pause = false);
     void setStepPreviewStart();
 
     void updateButtonsVisibility(const CanvasMode mode);
