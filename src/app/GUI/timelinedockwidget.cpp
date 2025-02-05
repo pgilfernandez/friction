@@ -147,17 +147,15 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     connect(mLoopButton, &QAction::triggered,
             this, &TimelineDockWidget::setLoop);
 
-    // TODO
     mStepPreviewTimer = new QTimer(this);
-    mStepPreviewButton = new QAction(QIcon::fromTheme("seq_preview"),
+    mStepPreviewButton = new QAction(QIcon::fromTheme("seq_preview"), /* temp icon */
                                      tr("Step Preview"),
                                      this);
     mStepPreviewButton->setCheckable(true);
     connect(mStepPreviewButton, &QAction::triggered, this, [this]() {
-        mPlayBackType = mStepPreviewButton->isChecked() ? PlayBackTypeRealTime : PlayBackTypeCache;
         interruptPreview();
+        mPlayBackType = mStepPreviewButton->isChecked() ? PlayBackTypeRealTime : PlayBackTypeCache;
     });
-    //
 
     mFrameStartSpin = new FrameSpinBox(this);
     mFrameStartSpin->setKeyboardTracking(false);
@@ -253,29 +251,42 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     mRenderProgress->setFixedWidth(mCurrentFrameSpin->width());
     mRenderProgress->setFormat(tr("Cache %p%"));
 
-    mToolBar->addWidget(mFrameStartSpin);
-
     eSizesUI::widget.add(mToolBar, [this](const int size) {
         //mRenderProgress->setFixedHeight(eSizesUI::button);
         mToolBar->setIconSize(QSize(size, size));
     });
 
-    QWidget *spacerWidget1 = new QWidget(this);
-    spacerWidget1->setSizePolicy(QSizePolicy::Expanding,
-                                 QSizePolicy::Minimum);
-    mToolBar->addWidget(spacerWidget1);
+    // start layout
+    mToolBar->addWidget(mFrameStartSpin);
+
+    addSpacer();
+
+    addBlankAction();
+    addBlankAction();
 
     mToolBar->addAction(mFrameRewindAct);
     mToolBar->addAction(mPrevKeyframeAct);
     mToolBar->addAction(mNextKeyframeAct);
     mToolBar->addAction(mFrameFastForwardAct);
+
     mRenderProgressAct = mToolBar->addWidget(mRenderProgress);
     mCurrentFrameSpinAct = mToolBar->addWidget(mCurrentFrameSpin);
+
     mToolBar->addAction(mPlayFromBeginningButton);
     mToolBar->addAction(mPlayButton);
     mToolBar->addAction(mStopButton);
     mToolBar->addAction(mLoopButton);
+
+    addBlankAction();
+
     mToolBar->addAction(mStepPreviewButton);
+
+    addSpacer();
+
+    mToolBar->addWidget(mFrameEndSpin);
+    // end layout
+
+    mRenderProgressAct->setVisible(false);
 
     mMainWindow->cmdAddAction(mFrameRewindAct);
     mMainWindow->cmdAddAction(mPrevKeyframeAct);
@@ -285,15 +296,6 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     mMainWindow->cmdAddAction(mPlayButton);
     mMainWindow->cmdAddAction(mStopButton);
     mMainWindow->cmdAddAction(mLoopButton);
-
-    mRenderProgressAct->setVisible(false);
-
-    QWidget *spacerWidget2 = new QWidget(this);
-    spacerWidget2->setSizePolicy(QSizePolicy::Expanding,
-                                 QSizePolicy::Minimum);
-    mToolBar->addWidget(spacerWidget2);
-
-    mToolBar->addWidget(mFrameEndSpin);
 
     mMainLayout->addWidget(mToolBar);
     mMainLayout->addSpacing(2);
@@ -347,6 +349,20 @@ void TimelineDockWidget::showRenderStatus(bool show)
     if (!show) { mRenderProgress->setValue(0); }
     mCurrentFrameSpinAct->setVisible(!show);
     mRenderProgressAct->setVisible(show);
+}
+
+void TimelineDockWidget::addSpacer()
+{
+    const auto spacer = new QWidget(this);
+    spacer->setSizePolicy(QSizePolicy::Expanding,
+                          QSizePolicy::Minimum);
+    mToolBar->addWidget(spacer);
+}
+
+void TimelineDockWidget::addBlankAction()
+{
+    const auto act = mToolBar->addAction(QString());
+    act->setEnabled(false);
 }
 
 void TimelineDockWidget::setLoop(const bool loop)

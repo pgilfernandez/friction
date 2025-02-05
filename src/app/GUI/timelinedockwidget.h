@@ -114,6 +114,9 @@ private:
 
     void showRenderStatus(bool show);
 
+    void addSpacer();
+    void addBlankAction();
+
     Document& mDocument;
     MainWindow* const mMainWindow;
     QStackedWidget* const mTimelineLayout;
