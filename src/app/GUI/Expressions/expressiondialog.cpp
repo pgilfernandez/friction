@@ -24,7 +24,6 @@
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
 #include "expressiondialog.h"
-// #include "../../../core/Animators/qrealanimator.h"
 
 #include <QLabel>
 #include <QCheckBox>
@@ -988,7 +987,7 @@ bool ExpressionDialog::checkPresetJSON(const QString& mPresetsDir, const QString
         qWarning() << "Could not open preset file for reading:" << file.fileName();
         return false;
     }
-    
+
     QString jsonContent = file.readAll();
     file.close();
 
