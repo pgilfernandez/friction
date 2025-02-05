@@ -24,7 +24,7 @@
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
 #include "expressiondialog.h"
-#include "../../../core/Animators/qrealanimator.h"
+// #include "../../../core/Animators/qrealanimator.h"
 
 #include <QLabel>
 #include <QCheckBox>
@@ -878,12 +878,15 @@ void ExpressionDialog::exportPreset(const QString& presetName) {
             return;
         }
 
-        QTextStream out(&file);
-        out << "{\n";
-        out << "  \"bindings\": \"" << bindings << "\",\n";
-        out << "  \"calculate\": \"" << calculate << "\",\n";
-        out << "  \"definitions\": \"" << definitions << "\"\n";
-        out << "}\n";
+        file.write(QString("{\n"
+                   "  \"bindings\": \"%1\",\n"
+                   "  \"calculate\": \"%2\",\n"
+                   "  \"definitions\": \"%3\"\n"
+                   "}\n")
+               .arg(bindings)
+               .arg(calculate)
+               .arg(definitions)
+               .toUtf8());
 
         file.close();
     }
