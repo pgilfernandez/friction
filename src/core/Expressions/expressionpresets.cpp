@@ -13,35 +13,57 @@ ExpressionPresets::ExpressionPresets(QObject *parent)
     scanAll();
 }
 
-void ExpressionPresets::scanAll(const bool &clear)
-{
-    if (clear) { mExpr.clear(); }
-    // TODO
-}
-
 const QList<ExpressionPresets::Expr> ExpressionPresets::getAll()
 {
     return mExpr;
 }
 
-const QList<ExpressionPresets::Expr> ExpressionPresets::getCore()
+const QList<ExpressionPresets::Expr> ExpressionPresets::getCore(const QString &category)
 {
     QList<ExpressionPresets::Expr> list;
     for (const auto &expr : mExpr) {
         if (!expr.valid || !expr.core) { continue; }
+        if (!category.isEmpty()) {
+            if (!expr.categories.contains(category)) { continue; }
+        }
         list.append(expr);
     }
     return list;
 }
 
-const QList<ExpressionPresets::Expr> ExpressionPresets::getUser()
+const QList<ExpressionPresets::Expr> ExpressionPresets::getCoreBindings()
+{
+    QList<ExpressionPresets::Expr> list;
+    for (const auto &expr : getCore()) {
+        if (!expr.bindings.isEmpty() &&
+            expr.definitions.isEmpty() &&
+            expr.script.isEmpty()) { list.append(expr); }
+    }
+    return list;
+}
+
+const QList<ExpressionPresets::Expr> ExpressionPresets::getUser(const QString &category)
 {
     QList<ExpressionPresets::Expr> list;
     for (const auto &expr : mExpr) {
         if (!expr.valid ||
             expr.core ||
             expr.path.startsWith(":")) { continue; }
+        if (!category.isEmpty()) {
+            if (!expr.categories.contains(category)) { continue; }
+        }
         list.append(expr);
+    }
+    return list;
+}
+
+const QList<ExpressionPresets::Expr> ExpressionPresets::getUserBindings()
+{
+    QList<ExpressionPresets::Expr> list;
+    for (const auto &expr : getUser()) {
+        if (!expr.bindings.isEmpty() &&
+            expr.definitions.isEmpty() &&
+            expr.script.isEmpty()) { list.append(expr); }
     }
     return list;
 }
@@ -57,6 +79,12 @@ bool ExpressionPresets::saveExpr(const int &index,
 {
     if (!hasExpr(index) || path.isEmpty()) { return false; }
     return saveExpr(mExpr.at(index), path);
+}
+
+bool ExpressionPresets::saveExpr(const QString &id,
+                                 const QString &path)
+{
+    return saveExpr(getExpr(id), path);
 }
 
 bool ExpressionPresets::saveExpr(const Expr &expr,
@@ -77,6 +105,16 @@ bool ExpressionPresets::hasExpr(const int &index)
     return false;
 }
 
+bool ExpressionPresets::hasExpr(const QString &id)
+{
+    if (id.isEmpty()) { return false; }
+    for (const auto &expr : mExpr) {
+        if (!expr.valid) { continue; }
+        if (expr.id == id) { return true; }
+    }
+    return false;
+}
+
 const ExpressionPresets::Expr
 ExpressionPresets::getExpr(const int &index)
 {
@@ -84,6 +122,29 @@ ExpressionPresets::getExpr(const int &index)
     Expr expr;
     expr.valid = false;
     return expr;
+}
+
+const ExpressionPresets::Expr ExpressionPresets::getExpr(const QString &id)
+{
+    Expr noExpr;
+    noExpr.valid = false;
+    if (id.isEmpty()) { return noExpr; }
+
+    for (const auto &expr : mExpr) {
+        if (!expr.valid) { continue; }
+        if (expr.id == id) { return expr; }
+    }
+
+    return noExpr;
+}
+
+int ExpressionPresets::getExprIndex(const QString &id)
+{
+    if (id.isEmpty()) { return -1; }
+    for (int i = 0; i < mExpr.count(); i++) {
+        if (mExpr.at(i).id == id) { return i; }
+    }
+    return -1;
 }
 
 void ExpressionPresets::addExpr(const Expr &expr)
@@ -102,4 +163,17 @@ void ExpressionPresets::remExpr(const int &index)
     mExpr.removeAt(index);
     // TODO
     qDebug() << "also remove" << path;
+}
+
+void ExpressionPresets::remExpr(const QString &id)
+{
+    const int index = getExprIndex(id);
+    if (index < 0) { return; }
+    remExpr(index);
+}
+
+void ExpressionPresets::scanAll(const bool &clear)
+{
+    if (clear) { mExpr.clear(); }
+    // TODO
 }
