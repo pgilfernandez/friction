@@ -22,7 +22,6 @@
         <file alias="value.frag">colorshaders/value.frag</file>
     </qresource>
     <qresource prefix="/expressions">
-        <file alias="clamp.conf">Expressions/functions/clamp.conf</file>
-        <file alias="clamp.js">Expressions/functions/clamp.js</file>
+        <file alias="clamp.fexpr">Expressions/presets/clamp.fexpr</file>
     </qresource>
 </RCC>
