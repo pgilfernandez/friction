@@ -65,6 +65,8 @@ namespace Friction
             void remExpr(const int &index);
             void remExpr(const QString &id);
 
+            bool isValidExprFile(const QString &path);
+
         private:
             QList<Expr> mExpr;
 

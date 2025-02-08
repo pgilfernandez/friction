@@ -91,8 +91,23 @@ bool ExpressionPresets::saveExpr(const Expr &expr,
                                  const QString &path)
 {
     if (!expr.valid || path.isEmpty()) { return false; }
-    // TODO
-    return false;
+
+    QSettings fexpr(path, QSettings::IniFormat);
+    fexpr.setValue("version", expr.version);
+    fexpr.setValue("id", expr.id);
+    fexpr.setValue("title", expr.title);
+    fexpr.setValue("author", expr.author);
+    fexpr.setValue("description", expr.description);
+    fexpr.setValue("url", expr.url);
+    fexpr.setValue("license", expr.license);
+    fexpr.setValue("categories", expr.categories);
+    fexpr.setValue("highlighters", expr.highlighters);
+    fexpr.setValue("definitions", expr.definitions);
+    fexpr.setValue("bindings", expr.bindings);
+    fexpr.setValue("script", expr.script);
+    fexpr.sync();
+
+    return isValidExprFile(path);
 }
 
 bool ExpressionPresets::hasExpr(const int &index)
@@ -170,6 +185,25 @@ void ExpressionPresets::remExpr(const QString &id)
     const int index = getExprIndex(id);
     if (index < 0) { return; }
     remExpr(index);
+}
+
+bool ExpressionPresets::isValidExprFile(const QString &path)
+{
+    if (!QFile::exists(path)) { return false; }
+
+    QSettings fexpr(path, QSettings::IniFormat);
+
+    const double version = fexpr.value("version").toDouble();
+    const bool hasId = !fexpr.value("id").toString().isEmpty();
+    const bool hasBindings = !fexpr.value("bindings").toString().isEmpty();
+    const bool hasDefinitions = !fexpr.value("definitions").toString().isEmpty();
+    const bool hasScript = !fexpr.value("script").toString().isEmpty();
+
+    if (version >= 0.1 &&
+        hasId &&
+        (hasBindings || hasDefinitions || hasScript)) { return true; }
+
+    return false;
 }
 
 void ExpressionPresets::scanAll(const bool &clear)
