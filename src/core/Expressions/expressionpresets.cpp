@@ -18,6 +18,14 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getAll()
     return mExpr;
 }
 
+const QList<ExpressionPresets::Expr> ExpressionPresets::getDefinitions()
+{
+    QList<ExpressionPresets::Expr> list;
+    for (const auto &expr : getCoreDefinitions()) { list << expr; }
+    for (const auto &expr : getUserDefinitions()) { list << expr; }
+    return list;
+}
+
 const QList<ExpressionPresets::Expr> ExpressionPresets::getCore(const QString &category)
 {
     QList<ExpressionPresets::Expr> list;
@@ -31,12 +39,12 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getCore(const QString &c
     return list;
 }
 
-const QList<ExpressionPresets::Expr> ExpressionPresets::getCoreBindings()
+const QList<ExpressionPresets::Expr> ExpressionPresets::getCoreDefinitions()
 {
     QList<ExpressionPresets::Expr> list;
     for (const auto &expr : getCore()) {
-        if (!expr.bindings.isEmpty() &&
-            expr.definitions.isEmpty() &&
+        if (expr.bindings.isEmpty() &&
+            !expr.definitions.isEmpty() &&
             expr.script.isEmpty()) { list.append(expr); }
     }
     return list;
@@ -57,12 +65,12 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getUser(const QString &c
     return list;
 }
 
-const QList<ExpressionPresets::Expr> ExpressionPresets::getUserBindings()
+const QList<ExpressionPresets::Expr> ExpressionPresets::getUserDefinitions()
 {
     QList<ExpressionPresets::Expr> list;
     for (const auto &expr : getUser()) {
-        if (!expr.bindings.isEmpty() &&
-            expr.definitions.isEmpty() &&
+        if (expr.bindings.isEmpty() &&
+            !expr.definitions.isEmpty() &&
             expr.script.isEmpty()) { list.append(expr); }
     }
     return list;
@@ -71,7 +79,42 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getUserBindings()
 void ExpressionPresets::loadExpr(const QString &path)
 {
     if (!QFile::exists(path)) { return; }
-    // TODO
+    qDebug() << "Load expression" << path;
+    if (!isValidExprFile(path)) {
+        qDebug() << "Bad expression" << path;
+        return;
+    }
+
+    QSettings fexpr(path, QSettings::IniFormat);
+    ExpressionPresets::Expr expr;
+    expr.core = path.startsWith(":");
+    expr.valid = true;
+    expr.enabled = true; // TODO (settings)
+    expr.version = fexpr.value("version").toDouble();
+    expr.id = fexpr.value("id").toString();
+    expr.path = path;
+    expr.title = fexpr.value("title").toString();
+    expr.author = fexpr.value("author").toString();
+    expr.description = fexpr.value("description").toString();
+    expr.url = fexpr.value("url").toString();
+    expr.license = fexpr.value("license").toString();
+    expr.categories = fexpr.value("categories").toStringList();
+    expr.highlighters = fexpr.value("highlighters").toStringList();
+    expr.definitions = fexpr.value("definitions").toString();
+    expr.bindings = fexpr.value("bindings").toString();
+    expr.script = fexpr.value("script").toString();
+
+    if (!hasExpr(expr.id)) {
+        qDebug() << "Added expression" << expr.title << expr.id;
+        mExpr << expr;
+    }
+}
+
+void ExpressionPresets::loadExpr(const QStringList &paths)
+{
+    for (const auto &path : paths) {
+        loadExpr(path);
+    }
 }
 
 bool ExpressionPresets::saveExpr(const int &index,
@@ -209,5 +252,15 @@ bool ExpressionPresets::isValidExprFile(const QString &path)
 void ExpressionPresets::scanAll(const bool &clear)
 {
     if (clear) { mExpr.clear(); }
-    // TODO
+
+    QStringList expressions;
+    expressions << ":/expressions/clamp.fexpr";
+
+    for (const auto &file : AppSupport::getFilesFromPath(AppSupport::getAppUserExPresetsPath(),
+                                                         QStringList() << "*.fexpr")) {
+        qDebug() << "Checking user expression" << file;
+        if (isValidExprFile(file)) { expressions << file; }
+    }
+
+    loadExpr(expressions);
 }

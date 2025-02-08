@@ -36,14 +36,16 @@ namespace Friction
             explicit ExpressionPresets(QObject *parent = nullptr);
 
             const QList<Expr> getAll();
+            const QList<Expr> getDefinitions();
 
             const QList<Expr> getCore(const QString &category = QString());
-            const QList<Expr> getCoreBindings();
+            const QList<Expr> getCoreDefinitions();
 
             const QList<Expr> getUser(const QString &category = QString());
-            const QList<Expr> getUserBindings();
+            const QList<Expr> getUserDefinitions();
 
             void loadExpr(const QString &path);
+            void loadExpr(const QStringList &paths);
 
             bool saveExpr(const int &index,
                           const QString &path);
