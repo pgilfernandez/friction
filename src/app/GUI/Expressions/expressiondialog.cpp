@@ -284,9 +284,14 @@ void addBasicDefs(QsciAPIs* const target) {
     target->add("Math.tanh(x)");
     target->add("Math.trunc(x)");
 
-    // load expressions bundle
-    const auto bundle = eSettings::instance().expressionsBundle;
-    for (const auto &fun : bundle) { target->add(fun.first); }
+    // add expressions presets
+    const auto expressions = eSettings::sInstance->fExpressions.getAll();
+    for (const auto &expr : expressions) {
+        if (!expr.enabled) { continue; }
+        for (const auto &highlight : expr.highlighters) {
+            target->add(highlight);
+        }
+    }
 }
 
 ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
