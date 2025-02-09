@@ -112,14 +112,13 @@ QrealAnimator* QrealAnimatorValueSlider::getTransformTargetSibling()
     return nullptr;
 }
 
-void QrealAnimatorValueSlider::mouseMoveEvent(QMouseEvent *event)
+void QrealAnimatorValueSlider::mouseMoveEvent(QMouseEvent *e)
 {
-    const bool uniform = event->modifiers() & Qt::ShiftModifier;
-    QDoubleSlider::mouseMoveEvent(event);
+    const bool uniform = e->modifiers() & Qt::ShiftModifier;
+    QDoubleSlider::mouseMoveEvent(e);
     if (uniform) {
         const auto other = getTransformTargetSibling();
         if (other) {
-            qDebug() << "other setCurrentBaseValue" << mTarget->getCurrentBaseValue();
             other->setCurrentBaseValue(mTarget->getCurrentBaseValue());
         }
     }
@@ -127,14 +126,12 @@ void QrealAnimatorValueSlider::mouseMoveEvent(QMouseEvent *event)
 
 void QrealAnimatorValueSlider::keyPressEvent(QKeyEvent *e)
 {
-    qDebug() << "keyPressEvent" << e;
     mUniform = e->modifiers() & Qt::ShiftModifier;
     QDoubleSlider::keyPressEvent(e);
 }
 
 void QrealAnimatorValueSlider::keyReleaseEvent(QKeyEvent *e)
 {
-    qDebug() << "keyReleaseEvent" << e;
     mUniform = e->modifiers() & Qt::ShiftModifier;
     QDoubleSlider::keyReleaseEvent(e);
 }
@@ -147,13 +144,11 @@ bool QrealAnimatorValueSlider::eventFilter(QObject *obj,
 
 void QrealAnimatorValueSlider::startTransform(const qreal value)
 {
-    qDebug() << "start transform";
     if (mTarget) {
         mTransformTarget = mTarget;
         mTransformTarget->prp_startTransform();
         const auto other = getTransformTargetSibling();
         if (other) {
-            qDebug() << "other start transform";
             other->prp_startTransform();
         }
     }
@@ -178,7 +173,6 @@ void QrealAnimatorValueSlider::setValue(const qreal value)
 
 void QrealAnimatorValueSlider::finishTransform(const qreal value)
 {
-    qDebug() << "finish transform";
     if (mTransformTarget) {
         mTransformTarget->prp_finishTransform();
         const auto other = getTransformTargetSibling();
@@ -188,7 +182,6 @@ void QrealAnimatorValueSlider::finishTransform(const qreal value)
                 other->setCurrentBaseValue(mTarget->getCurrentBaseValue());
                 mUniform = false;
             }
-            qDebug() << "other finish transform";
             other->prp_finishTransform();
         }
         mTransformTarget = nullptr;
@@ -198,12 +191,10 @@ void QrealAnimatorValueSlider::finishTransform(const qreal value)
 
 void QrealAnimatorValueSlider::cancelTransform()
 {
-    qDebug() << "cancel transform";
     if (mTransformTarget) {
         mTransformTarget->prp_cancelTransform();
         const auto other = getTransformTargetSibling();
         if (other) {
-            qDebug() << "other cancel transform";
             other->prp_cancelTransform();
         }
         mTransformTarget = nullptr;
@@ -218,6 +209,39 @@ qreal QrealAnimatorValueSlider::startSlideValue() const
     if (mTarget && mTarget->hasExpression()) { return mBaseValue; }
     else { return QDoubleSlider::startSlideValue(); }
 }
+
+#ifdef Q_OS_MAC
+void QrealAnimatorValueSlider::wheelEvent(QWheelEvent *e)
+{
+    QDoubleSlider::wheelEvent(e);
+
+    const bool alt = e->modifiers() & Qt::AltModifier;
+    const bool ctrl = e->modifiers() & Qt::ControlModifier;
+    const bool uniform = e->modifiers() & Qt::ShiftModifier;
+
+    if (!mTransformTarget || !uniform) { return; }
+    const auto other = getTransformTargetSibling();
+    if (!other) { return; }
+
+    if (e->phase() == Qt::NoScrollPhase && (alt || ctrl)) {
+        other->prp_startTransform();
+        other->setCurrentBaseValue(mTarget->getCurrentBaseValue());
+        other->prp_finishTransform();
+        return;
+    }
+    if (e->phase() == Qt::ScrollBegin) {
+        other->prp_startTransform();
+        return;
+    } else if (e->phase() == Qt::ScrollEnd) {
+        other->prp_finishTransform();
+        return;
+    }
+    if (e->angleDelta().x() == 0 ||
+        (e->phase() != Qt::ScrollUpdate &&
+         e->phase() != Qt::ScrollMomentum)) { return; }
+    other->setCurrentBaseValue(mTarget->getCurrentBaseValue());
+}
+#endif
 
 void QrealAnimatorValueSlider::paint(QPainter *p)
 {

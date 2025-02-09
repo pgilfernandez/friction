@@ -75,7 +75,10 @@ protected:
     void cancelTransform();
     qreal startSlideValue() const;
 
-    void mouseMoveEvent(QMouseEvent *event);
+#ifdef Q_OS_MAC
+    void wheelEvent(QWheelEvent *e);
+#endif
+    void mouseMoveEvent(QMouseEvent *e);
     void keyPressEvent(QKeyEvent *e);
     void keyReleaseEvent(QKeyEvent *e);
     bool eventFilter(QObject *obj,
