@@ -64,15 +64,21 @@ namespace Friction
 
             int getExprIndex(const QString &id);
 
-            void addExpr(const Expr &expr);
+            bool addExpr(const Expr &expr);
 
-            void remExpr(const int &index);
-            void remExpr(const QString &id);
+            bool remExpr(const int &index);
+            bool remExpr(const QString &id);
+
+            void setExprEnabled(const int &index,
+                                const bool &enabled);
+            void setExprEnabled(const QString &id,
+                                const bool &enabled);
 
             bool isValidExprFile(const QString &path);
 
         private:
             QList<Expr> mExpr;
+            QStringList mDisabled;
 
             void scanAll(const bool &clear = false);
         };

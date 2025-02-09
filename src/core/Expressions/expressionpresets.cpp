@@ -30,7 +30,7 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getCore(const QString &c
 {
     QList<ExpressionPresets::Expr> list;
     for (const auto &expr : mExpr) {
-        if (!expr.valid || !expr.core) { continue; }
+        if (!expr.valid || !expr.core || !expr.enabled) { continue; }
         if (!category.isEmpty()) {
             if (!expr.categories.contains(category)) { continue; }
         }
@@ -56,6 +56,7 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getUser(const QString &c
     for (const auto &expr : mExpr) {
         if (!expr.valid ||
             expr.core ||
+            !expr.enabled ||
             expr.path.startsWith(":")) { continue; }
         if (!category.isEmpty()) {
             if (!expr.categories.contains(category)) { continue; }
@@ -89,9 +90,9 @@ void ExpressionPresets::loadExpr(const QString &path)
     ExpressionPresets::Expr expr;
     expr.core = path.startsWith(":");
     expr.valid = true;
-    expr.enabled = true; // TODO (settings)
     expr.version = fexpr.value("version").toDouble();
     expr.id = fexpr.value("id").toString();
+    expr.enabled = !mDisabled.contains(expr.id);
     expr.path = path;
     expr.title = fexpr.value("title").toString();
     expr.author = fexpr.value("author").toString();
@@ -112,9 +113,7 @@ void ExpressionPresets::loadExpr(const QString &path)
 
 void ExpressionPresets::loadExpr(const QStringList &paths)
 {
-    for (const auto &path : paths) {
-        loadExpr(path);
-    }
+    for (const auto &path : paths) { loadExpr(path); }
 }
 
 bool ExpressionPresets::saveExpr(const int &index,
@@ -205,29 +204,59 @@ int ExpressionPresets::getExprIndex(const QString &id)
     return -1;
 }
 
-void ExpressionPresets::addExpr(const Expr &expr)
+bool ExpressionPresets::addExpr(const Expr &expr)
 {
-    if (!expr.valid) { return; }
-    // TODO
+    if (!expr.valid || hasExpr(expr.id)) { return false; }
+    mExpr << expr;
+    return true;
 }
 
-void ExpressionPresets::remExpr(const int &index)
+bool ExpressionPresets::remExpr(const int &index)
+{
+    if (!hasExpr(index)) { return false; }
+    const auto expr = mExpr.at(index);
+    if (expr.core) { return false; }
+
+    const auto path = expr.path;
+    mExpr.removeAt(index);
+
+    QFile file(path);
+    return file.remove();
+}
+
+bool ExpressionPresets::remExpr(const QString &id)
+{
+    const int index = getExprIndex(id);
+    if (index < 0) { return false; }
+    return remExpr(index);
+}
+
+void ExpressionPresets::setExprEnabled(const int &index,
+                                       const bool &enabled)
 {
     if (!hasExpr(index)) { return; }
-    const auto expr = mExpr.at(index);
-    if (expr.core) { return; }
+    mExpr[index].enabled = enabled;
 
-    const QString path = expr.path;
-    mExpr.removeAt(index);
-    // TODO
-    qDebug() << "also remove" << path;
+    const QString id = mExpr.at(index).id;
+    const auto disabled = AppSupport::getSettings("settings",
+                                                  "ExpressionsDisabled").toStringList();
+    if (enabled && disabled.contains(id)) {
+        QStringList list = disabled;
+        list.removeAll(id);
+        AppSupport::setSettings("settings", "ExpressionsDisabled", list);
+        mDisabled = list;
+    } else if (!enabled && !disabled.contains(id)) {
+        AppSupport::setSettings("settings", "ExpressionsDisabled", id, true);
+        mDisabled << id;
+    }
 }
 
-void ExpressionPresets::remExpr(const QString &id)
+void ExpressionPresets::setExprEnabled(const QString &id,
+                                       const bool &enabled)
 {
     const int index = getExprIndex(id);
     if (index < 0) { return; }
-    remExpr(index);
+    setExprEnabled(index, enabled);
 }
 
 bool ExpressionPresets::isValidExprFile(const QString &path)
@@ -252,6 +281,8 @@ bool ExpressionPresets::isValidExprFile(const QString &path)
 void ExpressionPresets::scanAll(const bool &clear)
 {
     if (clear) { mExpr.clear(); }
+
+    mDisabled = AppSupport::getSettings("settings", "ExpressionsDisabled").toStringList();
 
     QStringList expressions;
     expressions << ":/expressions/clamp.fexpr";
