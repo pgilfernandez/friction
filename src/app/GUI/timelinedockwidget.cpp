@@ -27,7 +27,6 @@
 
 #include <QKeyEvent>
 #include <QScrollBar>
-#include <QTimer>
 
 #include "Private/document.h"
 #include "GUI/global.h"
@@ -414,9 +413,6 @@ bool TimelineDockWidget::processKeyPress(QKeyEvent *event)
             mDocument.setActiveSceneFrame(targetFrame);
         }*/
         if (!setNextKeyframe()) { return false; }
-    } else if (key == Qt::Key_M && (mods & Qt::ControlModifier)) {
-        if (state != PreviewState::stopped) { interruptPreview(); }
-        mStepPreviewTimer->start();
     } else {
         return false;
     }
