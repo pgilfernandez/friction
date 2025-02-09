@@ -308,6 +308,36 @@ void ExpressionPresets::scanAll(const bool &clear)
 
     QStringList expressions;
     expressions << ":/expressions/clamp.fexpr";
+    expressions << ":/expressions/easeInBack.fexpr";
+    expressions << ":/expressions/easeInBounce.fexpr";
+    expressions << ":/expressions/easeInCirc.fexpr";
+    expressions << ":/expressions/easeInCubic.fexpr";
+    expressions << ":/expressions/easeInElastic.fexpr";
+    expressions << ":/expressions/easeInExpo.fexpr";
+    expressions << ":/expressions/easeInOutBack.fexpr";
+    expressions << ":/expressions/easeInOutBounce.fexpr";
+    expressions << ":/expressions/easeInOutCirc.fexpr";
+    expressions << ":/expressions/easeInOutCubic.fexpr";
+    expressions << ":/expressions/easeInOutElastic.fexpr";
+    expressions << ":/expressions/easeInOutExpo.fexpr";
+    expressions << ":/expressions/easeInOutQuad.fexpr";
+    expressions << ":/expressions/easeInOutQuart.fexpr";
+    expressions << ":/expressions/easeInOutQuint.fexpr";
+    expressions << ":/expressions/easeInOutSine.fexpr";
+    expressions << ":/expressions/easeInQuad.fexpr";
+    expressions << ":/expressions/easeInQuart.fexpr";
+    expressions << ":/expressions/easeInQuint.fexpr";
+    expressions << ":/expressions/easeInSine.fexpr";
+    expressions << ":/expressions/easeOutBack.fexpr";
+    expressions << ":/expressions/easeOutBounce.fexpr";
+    expressions << ":/expressions/easeOutCirc.fexpr";
+    expressions << ":/expressions/easeOutCubic.fexpr";
+    expressions << ":/expressions/easeOutElastic.fexpr";
+    expressions << ":/expressions/easeOutExpo.fexpr";
+    expressions << ":/expressions/easeOutQuad.fexpr";
+    expressions << ":/expressions/easeOutQuart.fexpr";
+    expressions << ":/expressions/easeOutQuint.fexpr";
+    expressions << ":/expressions/easeOutSine.fexpr";
 
     for (const auto &file : AppSupport::getFilesFromPath(AppSupport::getAppUserExPresetsPath(),
                                                          QStringList() << "*.fexpr")) {
