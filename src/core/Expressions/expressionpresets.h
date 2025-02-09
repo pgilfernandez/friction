@@ -1,6 +1,8 @@
 #ifndef EXPRESSION_PRESETS_H
 #define EXPRESSION_PRESETS_H
 
+#include "core_global.h"
+
 #include <QObject>
 #include <QList>
 #include <QStringList>
@@ -9,7 +11,7 @@ namespace Friction
 {
     namespace Core
     {
-        class ExpressionPresets : public QObject
+        class CORE_EXPORT ExpressionPresets : public QObject
         {
             Q_OBJECT
         public:
