@@ -91,12 +91,6 @@ public:
     void splitClip();
 
 private:
-    enum PlaybackType
-    {
-        PlayBackTypeCache,
-        PlayBackTypeRealTime
-    };
-
     void setLoop(const bool loop);
     void interruptPreview();
 
@@ -143,7 +137,6 @@ private:
 
     QTimer *mStepPreviewTimer;
 
-    PlaybackType mPlayBackType;
     QList<TimelineWidget*> mTimelineWidgets;
     //AnimationDockWidget *mAnimationDockWidget;
 };
