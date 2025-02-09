@@ -65,7 +65,8 @@ namespace Friction
             const QList<Expr> getCore(const QString &category = QString());
             const QList<Expr> getCoreDefinitions();
 
-            const QList<Expr> getUser(const QString &category = QString());
+            const QList<Expr> getUser(const QString &category = QString(),
+                                      const bool &defs = false);
             const QList<Expr> getUserDefinitions();
 
             void loadExpr(const QString &path);

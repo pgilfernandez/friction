@@ -72,7 +72,8 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getCoreDefinitions()
     return list;
 }
 
-const QList<ExpressionPresets::Expr> ExpressionPresets::getUser(const QString &category)
+const QList<ExpressionPresets::Expr> ExpressionPresets::getUser(const QString &category,
+                                                                const bool &defs)
 {
     QList<ExpressionPresets::Expr> list;
     for (const auto &expr : mExpr) {
@@ -80,6 +81,11 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getUser(const QString &c
             expr.core ||
             !expr.enabled ||
             expr.path.startsWith(":")) { continue; }
+        if (!defs) {
+            if (expr.bindings.isEmpty() &&
+                !expr.definitions.isEmpty() &&
+                expr.script.isEmpty()) { continue; }
+        }
         if (!category.isEmpty()) {
             if (!expr.categories.contains(category)) { continue; }
         }
