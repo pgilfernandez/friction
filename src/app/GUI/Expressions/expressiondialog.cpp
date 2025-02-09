@@ -284,6 +284,7 @@ void addBasicDefs(QsciAPIs* const target) {
     // add expressions presets
     const auto expressions = eSettings::sInstance->fExpressions.getAll();
     for (const auto &expr : expressions) {
+        if (!expr.enabled) { continue; }
         for (const auto &highlight : expr.highlighters) {
             target->add(highlight);
         }
