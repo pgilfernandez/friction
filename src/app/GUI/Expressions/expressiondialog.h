@@ -38,6 +38,7 @@
 
 #include "conncontext.h"
 #include "dialogs/dialog.h"
+#include "Private/esettings.h"
 
 class QrealAnimator;
 class ExpressionEditor;
@@ -54,9 +55,6 @@ public:
     ExpressionDialog(QrealAnimator* const target,
                      QWidget * const parent = nullptr);
 
-    void exportPreset(const QString& presetName);
-    void importPreset(const QString& filePath = QString());
-
 private:
     using PropertyBindingMap = std::map<QString, QSharedPointer<PropertyBindingBase>>;
     bool getBindings(PropertyBindingMap& bindings);
@@ -65,9 +63,14 @@ private:
     void updateAllScript();
     void setCurrentTabId(const int id);
     bool apply(const bool action);
-    void loadPresetCombo();
-    void updatePresetCombo();
-    bool checkPresetJSON(const QString& mPresetsDir, const QString& presetFile);
+
+    QWidget* setupPresetsUi();
+    void populatePresets(const bool &clear = false);
+    void exportPreset(const QString &path);
+    void importPreset(const QString &path);
+    void savePreset(const QString &title);
+    void applyPreset(const QString &id);
+    const QString genPresetId(const QString &title);
 
     QrealAnimator* const mTarget;
 
@@ -99,9 +102,9 @@ private:
 
     ConnContext mAutoApplyConn;
 
-    QDir mPresetsDir;
-    QDir mPresetsDirUser;
-    QComboBox* presetCombo;
+    QComboBox* mPresetsCombo;
+
+    eSettings* mSettings;
 };
 
 #endif // EXPRESSIONDIALOG_H
