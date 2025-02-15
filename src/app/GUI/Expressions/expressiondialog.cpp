@@ -50,7 +50,8 @@
 
 using namespace Friction::Core;
 
-class JSLexer : public QsciLexerJavaScript {
+class JSLexer : public QsciLexerJavaScript
+{
 public:
     using QsciLexerJavaScript::QsciLexerJavaScript;
     JSLexer(QsciScintilla* const editor)
@@ -77,17 +78,18 @@ public:
     }
 
     const char *keywords(int set) const {
-        if(set == 1) {
+        if (set == 1) {
             return sKeywordClass1;
-        } else if(set == 2) {
+        } else if (set == 2) {
             return mDefKeywordsClass2.data();
-        } else if(set == 4) {
+        } else if (set == 4) {
             return mBindKeywords5.data();
         }
         return 0;
     }
 
-    QStringList autoCompletionWordSeparators() const {
+    QStringList autoCompletionWordSeparators() const
+    {
         QStringList wl;
 
         wl << "::" << "->";
@@ -95,37 +97,46 @@ public:
         return wl;
     }
 
-    void addDefinition(const QString& def) {
+    void addDefinition(const QString& def)
+    {
         mDefinitions << def;
     }
 
-    void removeDefinition(const QString& def) {
+    void removeDefinition(const QString& def)
+    {
         mDefinitions.removeOne(def);
     }
 
-    void clearDefinitions() {
+    void clearDefinitions()
+    {
         mDefinitions.clear();
     }
 
-    void prepareDefinitions() {
+    void prepareDefinitions()
+    {
         mDefKeywordsClass2 = mDefinitions.join(' ').toUtf8();
     }
 
-    void addBinding(const QString& bind) {
+    void addBinding(const QString& bind)
+    {
         mBindings << bind;
     }
 
-    void removeBinding(const QString& bind) {
+    void removeBinding(const QString& bind)
+    {
         mBindings.removeOne(bind);
     }
 
-    void clearBindings() {
+    void clearBindings()
+    {
         mBindings.clear();
     }
 
-    void prepareBindings() {
+    void prepareBindings()
+    {
         mBindKeywords5 = mBindings.join(' ').toUtf8();
     }
+
 private:
     QStringList mDefinitions;
     QStringList mBindings;
@@ -148,9 +159,12 @@ const char *JSLexer::sKeywordClass1 =
 
 #define KEYWORDSET_MAX  8
 
-class JSEditor : public QsciScintilla {
+class JSEditor : public QsciScintilla
+{
 public:
-    JSEditor(const QString& fillerText) : mFillerTextV(fillerText) {
+    JSEditor(const QString& fillerText)
+        : mFillerTextV(fillerText)
+    {
         setMinimumWidth(20*eSizesUI::widget);
 
         setFont(QApplication::font());
@@ -181,47 +195,53 @@ public:
                 this, &JSEditor::clearFillerText);
         connect(this, &JSEditor::SCN_FOCUSOUT,
                 this, [this]() {
-            if(length() == 0) setFillerText();
-            else mFillerText = false;
+            if (length() == 0) { setFillerText(); }
+            else { mFillerText = false; }
         });
     }
 
-    void updateLexer() {
-        for(int k = 0; k <= KEYWORDSET_MAX; ++k) {
+    void updateLexer()
+    {
+        for (int k = 0; k <= KEYWORDSET_MAX; ++k) {
             const char *kw = lexer() -> keywords(k + 1);
 
-            if(!kw) kw = "";
+            if (!kw) { kw = ""; }
 
             SendScintilla(SCI_SETKEYWORDS, k, kw);
         }
         recolor();
     }
 
-    void setText(const QString &text) override {
-        if(text.isEmpty()) {
+    void setText(const QString &text) override
+    {
+        if (text.isEmpty()) {
             setFillerText();
         } else {
             QsciScintilla::setText(text);
         }
     }
 
-    QString text() const {
-        if(mFillerText) return QString();
+    QString text() const
+    {
+        if (mFillerText) { return QString(); }
         return QsciScintilla::text();
     }
 
-    void setFillerText() {
-        if(mFillerText) return;
+    void setFillerText()
+    {
+        if (mFillerText) { return; }
         mFillerText = true;
         setText(mFillerTextV);
     }
 
-    void clearFillerText() {
-        if(mFillerText) {
+    void clearFillerText()
+    {
+        if (mFillerText) {
             mFillerText = false;
             QsciScintilla::setText("");
         }
     }
+
 private:
     bool mFillerText = false;
     const QString mFillerTextV;
@@ -229,7 +249,8 @@ private:
     using QsciScintilla::text;
 };
 
-void addBasicDefs(QsciAPIs* const target) {
+void addBasicDefs(QsciAPIs* const target)
+{
     target->add("function");
     target->add("var");
     target->add("return");
@@ -320,20 +341,17 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     mTabEditor = mTab->addTab(editorWidget, tr("Editor"));
     const auto mainLayout = new QVBoxLayout(editorWidget);
 
-    // presets
     mainLayout->addWidget(setupPresetsUi());
 
-
     const auto tabLayout = new QHBoxLayout;
-    tabLayout->setSpacing(0);
     tabLayout->setContentsMargins(0, 0, 0, 0);
-    mBindingsButton = new QPushButton("Bindings && Script", this);
+    mBindingsButton = new QPushButton(tr("Bindings and Script"), this);
     mBindingsButton->setFocusPolicy(Qt::NoFocus);
     mBindingsButton->setObjectName("leftButton");
     mBindingsButton->setCheckable(true);
     mBindingsButton->setChecked(true);
 
-    mDefinitionsButon = new QPushButton("Definitions", this);
+    mDefinitionsButon = new QPushButton(tr("Definitions"), this);
     mDefinitionsButon->setFocusPolicy(Qt::NoFocus);
     mDefinitionsButon->setObjectName("rightButton");
     mDefinitionsButon->setCheckable(true);
@@ -344,7 +362,7 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     tabGroup->setExclusive(true);
     connect(tabGroup, qOverload<int, bool>(&QButtonGroup::idToggled),
             this, [this](const int id, const bool checked) {
-        if(checked) setCurrentTabId(id);
+        if (checked) { setCurrentTabId(id); }
     });
 
     tabLayout->addWidget(mBindingsButton);
@@ -352,12 +370,13 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     mainLayout->addLayout(tabLayout);
 
     mBindings = new ExpressionEditor(target, this);
-    connect(mBindings, &ExpressionEditor::textChanged, this, [this]() {
+    connect(mBindings, &ExpressionEditor::textChanged,
+            this, [this]() {
         mBindingsChanged = true;
         updateAllScript();
     });
 
-    mBindingsLabel = new QLabel("Bindings:");
+    mBindingsLabel = new QLabel(tr("Bindings:"));
     mainLayout->addWidget(mBindingsLabel);
     mainLayout->addWidget(mBindings, 1);
 
@@ -365,11 +384,11 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     mBindingsError->setObjectName("errorLabel");
     mainLayout->addWidget(mBindingsError);
 
-    mDefsLabel = new QLabel("Definitions:");
+    mDefsLabel = new QLabel(tr("Definitions:"));
     mainLayout->addWidget(mDefsLabel);
-    mDefinitions = new JSEditor("// Here you can define JavaScript functions,\n"
-                                "// you can later use in the 'Calculate'\n"
-                                "// portion of the script.");
+    mDefinitions = new JSEditor(tr("// Here you can define JavaScript functions,\n"
+                                   "// you can later use in the 'Calculate'\n"
+                                   "// portion of the script."));
     mDefsLexer = new JSLexer(mDefinitions);
 
     mDefinitionsApi = new QsciAPIs(mDefsLexer);
@@ -391,13 +410,13 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     mDefinitionsError->setObjectName("errorLabel");
     mainLayout->addWidget(mDefinitionsError);
 
-    mScriptLabel = new QLabel("Calculate (  ) :");
+    mScriptLabel = new QLabel(QString("%1 (  ) :").arg(tr("Calculate")));
     mainLayout->addWidget(mScriptLabel);
-    mScript = new JSEditor("// Here you can define a JavaScript script,\n"
-                           "// that will be evaluated every time any of\n"
-                           "// the bound property values changes.\n"
-                           "// You should return the resulting value\n"
-                           "// at the end of this script.");
+    mScript = new JSEditor(tr("// Here you can define a JavaScript script,\n"
+                              "// that will be evaluated every time any of\n"
+                              "// the bound property values changes.\n"
+                              "// You should return the resulting value\n"
+                              "// at the end of this script."));
     mScriptLexer = new JSLexer(mScript);
 
     mScriptApi = new QsciAPIs(mScriptLexer);
@@ -416,22 +435,20 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     mainLayout->addWidget(mScriptError);
 
     const auto buttonsLayout = new QHBoxLayout;
-    const auto applyButton = new QPushButton("Apply", this);
-    const auto okButton = new QPushButton("Ok", this);
-    const auto cancelButton = new QPushButton("Cancel", this);
-    const auto checkBox = new QCheckBox("Auto Apply", this);
+    const auto applyButton = new QPushButton(tr("Apply"), this);
+    const auto okButton = new QPushButton(tr("Ok"), this);
+    const auto cancelButton = new QPushButton(tr("Cancel"), this);
+    const auto checkBox = new QCheckBox(tr("Auto Apply"), this);
     connect(checkBox, &QCheckBox::stateChanged,
             this, [this](const int state) {
-        if(state) {
+        if (state) {
             mAutoApplyConn << connect(mBindings, &ExpressionEditor::textChanged,
                                       this, [this]() { apply(false); });
             mAutoApplyConn << connect(mDefinitions, &QsciScintilla::textChanged,
                                       this, [this]() { apply(false); });
             mAutoApplyConn << connect(mScript, &QsciScintilla::textChanged,
                                       this, [this]() { apply(false); });
-        } else {
-            mAutoApplyConn.clear();
-        }
+        } else { mAutoApplyConn.clear(); }
     });
 
     buttonsLayout->addWidget(checkBox);
@@ -440,14 +457,6 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     buttonsLayout->addWidget(cancelButton);
 
     mainLayout->addLayout(buttonsLayout);
-
-    /*windowLayout->setContentsMargins(0, 0, 0, 0);
-    const auto style = QApplication::style();
-    mainLayout->setContentsMargins(style->pixelMetric(QStyle::PM_LayoutLeftMargin),
-                                   style->pixelMetric(QStyle::PM_LayoutTopMargin),
-                                   style->pixelMetric(QStyle::PM_LayoutRightMargin),
-                                   style->pixelMetric(QStyle::PM_LayoutBottomMargin));
-    windowLayout->addLayout(mainLayout);*/
 
     connect(applyButton, &QPushButton::released,
             this, [this]() { apply(true); });
@@ -469,7 +478,8 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     updateAllScript();
 
     const int pixSize = eSizesUI::widget/2;
-    eSizesUI::widget.add(mBindingsButton, [this](const int size) {
+    eSizesUI::widget.add(mBindingsButton,
+                         [this](const int size) {
         Q_UNUSED(size)
         mBindingsButton->setFixedHeight(eSizesUI::button);
         mDefinitionsButon->setFixedHeight(eSizesUI::button);
@@ -483,13 +493,12 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     p.drawEllipse(pix.rect().adjusted(1, 1, -1, -1));
     p.end();
     mRedDotIcon = QIcon(pix);
-
-    //mBindingsButton->setFocus();
 }
 
-void ExpressionDialog::setCurrentTabId(const int id) {
+void ExpressionDialog::setCurrentTabId(const int id)
+{
     const bool first = id == 0;
-    if(!first) mBindingsButton->setChecked(false);
+    if (!first) { mBindingsButton->setChecked(false); }
     mBindingsLabel->setVisible(first);
     mBindings->setVisible(first);
     mBindingsError->setVisible(first);
@@ -498,13 +507,14 @@ void ExpressionDialog::setCurrentTabId(const int id) {
     mScript->setVisible(first);
     mScriptError->setVisible(first);
 
-    if(first) mDefinitionsButon->setChecked(false);
+    if (first) { mDefinitionsButon->setChecked(false); }
     mDefsLabel->setVisible(!first);
     mDefinitions->setVisible(!first);
     mDefinitionsError->setVisible(!first);
 }
 
-void ExpressionDialog::updateAllScript() {
+void ExpressionDialog::updateAllScript()
+{
     mScriptApi->clear();
     addBasicDefs(mScriptApi);
 
@@ -529,27 +539,28 @@ void ExpressionDialog::updateAllScript() {
     mBindingsChanged = false;
 }
 
-void ExpressionDialog::updateScriptDefinitions() {
+void ExpressionDialog::updateScriptDefinitions()
+{
     const QString defsText = mDefinitions->text();
     QString scriptContext;
 
     int nOpenBrackets = 0;
-    for(const auto& c : defsText) {
-        if(c == '{') nOpenBrackets++;
-        else if(c == '}') nOpenBrackets--;
-        else if(c == QChar::LineFeed) continue;
-        else if(!nOpenBrackets) scriptContext.append(c);
+    for (const auto& c : defsText) {
+        if (c == '{') { nOpenBrackets++; }
+        else if (c == '}') { nOpenBrackets--; }
+        else if (c == QChar::LineFeed) { continue; }
+        else if (!nOpenBrackets) { scriptContext.append(c); }
     }
 
     {
         QRegExp funcDefs("(class|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*(\\([a-zA-Z0-9_, ]*\\))");
         int pos = 0;
-        while((pos = funcDefs.indexIn(scriptContext, pos)) != -1) {
+        while ((pos = funcDefs.indexIn(scriptContext, pos)) != -1) {
               QStringList funcs = funcDefs.capturedTexts();
-              for(int i = 2; i < funcs.count() - 1; i += 3) {
+              for (int i = 2; i < funcs.count() - 1; i += 3) {
                   const auto& func = funcs.at(i);
                   const auto& funcArgs = funcs.at(i + 1);
-                  if(func.isEmpty()) continue;
+                  if (func.isEmpty()) { continue; }
                   mScriptApi->add(func + funcArgs);
                   mScriptLexer->addDefinition(func);
                   mDefsLexer->addDefinition(func);
@@ -561,11 +572,11 @@ void ExpressionDialog::updateScriptDefinitions() {
     {
         QRegExp varDefs("([a-zA-Z_][a-zA-Z0-9_]*)\\s*=\\s*(?!=)");
         int pos = 0;
-        while((pos = varDefs.indexIn(scriptContext, pos)) != -1) {
+        while ((pos = varDefs.indexIn(scriptContext, pos)) != -1) {
               QStringList vars = varDefs.capturedTexts();
-              for(int i = 1; i < vars.count(); i++) {
+              for (int i = 1; i < vars.count(); i++) {
                   const auto& var = vars.at(i);
-                  if(var.isEmpty()) continue;
+                  if (var.isEmpty()) { continue; }
                   mScriptApi->add(var);
                   mScriptLexer->addDefinition(var);
                   mDefsLexer->addDefinition(var);
@@ -575,15 +586,17 @@ void ExpressionDialog::updateScriptDefinitions() {
     }
 }
 
-bool ExpressionDialog::getBindings(PropertyBindingMap& bindings) {
+bool ExpressionDialog::getBindings(PropertyBindingMap& bindings)
+{
     mBindingsError->clear();
     const auto bindingsStr = mBindings->text();
     try {
-        bindings = PropertyBindingParser::parseBindings(
-                       bindingsStr, nullptr, mTarget);
+        bindings = PropertyBindingParser::parseBindings(bindingsStr,
+                                                        nullptr,
+                                                        mTarget);
         mBindingsButton->setIcon(QIcon());
         return true;
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         mBindingsButton->setIcon(mRedDotIcon);
         mBindingsError->setText(e.what());
         return false;
@@ -593,22 +606,24 @@ bool ExpressionDialog::getBindings(PropertyBindingMap& bindings) {
 #define BFC_0 "<font color=\"#FF8080\">"
 #define BFC_1 "</font>"
 
-void ExpressionDialog::updateScriptBindings() {
+void ExpressionDialog::updateScriptBindings()
+{
     QStringList bindingList;
     PropertyBindingMap bindings;
-    if(getBindings(bindings)) {
-        for(const auto& binding : bindings) {
+    if (getBindings(bindings)) {
+        for (const auto& binding : bindings) {
             bindingList << binding.first;
             mScriptApi->add(binding.first);
             mScriptLexer->addBinding(binding.first);
         }
     }
-    mScriptLabel->setText("Calculate ( " BFC_0 +
+    mScriptLabel->setText(tr("Calculate") + " ( " BFC_0 +
                             bindingList.join(BFC_1 ", " BFC_0) +
                           BFC_1 " ) :");
 }
 
-bool ExpressionDialog::apply(const bool action) {
+bool ExpressionDialog::apply(const bool action)
+{
     mBindingsButton->setIcon(QIcon());
     mDefinitionsButon->setIcon(QIcon());
     mDefinitionsError->clear();
@@ -618,12 +633,12 @@ bool ExpressionDialog::apply(const bool action) {
     const auto scriptStr = mScript->text();
 
     PropertyBindingMap bindings;
-    if(!getBindings(bindings)) return false;
+    if (!getBindings(bindings)) { return false; }
 
     auto engine = std::make_unique<QJSEngine>();
     try {
         Expression::sAddDefinitionsTo(definitionsStr, *engine);
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         mDefinitionsError->setText(e.what());
         mDefinitionsButon->setIcon(mRedDotIcon);
         return false;
@@ -633,7 +648,7 @@ bool ExpressionDialog::apply(const bool action) {
     try {
         Expression::sAddScriptTo(scriptStr, bindings, *engine, eEvaluate,
                                  Expression::sQrealAnimatorTester);
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         mScriptError->setText(e.what());
         mBindingsButton->setIcon(mRedDotIcon);
         return false;
@@ -644,13 +659,13 @@ bool ExpressionDialog::apply(const bool action) {
                                         scriptStr, std::move(bindings),
                                         std::move(engine),
                                         std::move(eEvaluate));
-        if(expr && !expr->isValid()) expr = nullptr;
-        if(action) {
+        if (expr && !expr->isValid()) { expr = nullptr; }
+        if (action) {
             mTarget->setExpressionAction(expr);
         } else {
             mTarget->setExpression(expr);
         }
-    } catch(const std::exception& e) {
+    } catch (const std::exception& e) {
         return false;
     }
 
@@ -743,7 +758,7 @@ QWidget *ExpressionDialog::setupPresetsUi()
     connect(addPresetBtn,
             &QPushButton::released,
             this, [this]() {
-        QDialog dialog(this);
+        Friction::Ui::Dialog dialog(this);
         dialog.setWindowTitle(tr("New Preset"));
 
         QVBoxLayout layout(&dialog);
@@ -758,6 +773,9 @@ QWidget *ExpressionDialog::setupPresetsUi()
         QHBoxLayout buttonLayout;
         QPushButton cancelButton(tr("Cancel"), &dialog);
         QPushButton okButton(tr("Ok"), &dialog);
+
+        okButton.setDefault(true);
+
         buttonLayout.addWidget(&okButton);
         buttonLayout.addWidget(&cancelButton);
         layout.addLayout(&buttonLayout);
@@ -911,7 +929,7 @@ void ExpressionDialog::exportPreset(const QString &path)
         QMessageBox::information(this,
                                  tr("Export Success"),
                                  tr("Your new preset has been exported to %1.").arg(path));
-        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+        //QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     } else {
         QMessageBox::warning(this,
                              tr("Export Failed"),
@@ -1033,24 +1051,19 @@ void ExpressionDialog::applyPreset(const QString &id)
 
     const auto expr = mSettings->fExpressions.getExpr(id);
 
-    const bool hasDef = !expr.definitions.isEmpty();
     const bool hasBind = !expr.bindings.isEmpty();
     const bool hasScript = !expr.script.isEmpty();
 
     if (!hasBind && !hasScript) { return; }
 
-    if (hasDef) {
-        mDefinitions->clearFillerText();
-        mDefinitions->setText(expr.definitions);
-    }
-    if (hasBind) {
-        mBindings->clearFillerText();
-        mBindings->setText(expr.bindings);
-    }
-    if (hasScript) {
-        mScript->clearFillerText();
-        mScript->setText(expr.script);
-    }
+    mDefinitions->clearFillerText();
+    mDefinitions->setText(expr.definitions);
+
+    mBindings->clearFillerText();
+    mBindings->setText(expr.bindings);
+
+    mScript->clearFillerText();
+    mScript->setText(expr.script);
 
     updateAllScript();
 
