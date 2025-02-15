@@ -36,7 +36,6 @@
 #include <QLineEdit>
 #include <QUuid>
 #include <QRegularExpression>
-#include <QDesktopServices>
 
 #include <Qsci/qscilexerjavascript.h>
 #include <Qsci/qsciapis.h>
@@ -732,7 +731,9 @@ QWidget *ExpressionDialog::setupPresetsUi()
             this, [this]() {
         QString path = QFileDialog::getSaveFileName(this,
                                                     tr("Export Preset"),
-                                                    QDir::homePath(), /* TODO: setting */
+                                                    AppSupport::getSettings("files",
+                                                                            "lastExprExportDir",
+                                                                            QDir::homePath()).toString(),
                                                     "Expressions (*.fexpr)");
         if (path.trimmed().isEmpty()) { return; }
         if (QFileInfo(path).suffix() != "fexpr") { path.append(".fexpr"); }
@@ -744,7 +745,9 @@ QWidget *ExpressionDialog::setupPresetsUi()
             this, [this]() {
         const QString preset = QFileDialog::getOpenFileName(this,
                                                             tr("Import Preset"),
-                                                            QDir::homePath(), /* TODO: setting */
+                                                            AppSupport::getSettings("files",
+                                                                                    "lastExprImportDir",
+                                                                                    QDir::homePath()).toString(),
                                                             "Expressions (*.fexpr)");
         if (mSettings->fExpressions.isValidExprFile(preset)) {
             importPreset(preset);
@@ -929,7 +932,9 @@ void ExpressionDialog::exportPreset(const QString &path)
         QMessageBox::information(this,
                                  tr("Export Success"),
                                  tr("Your new preset has been exported to %1.").arg(path));
-        //QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+        AppSupport::setSettings("files",
+                                "lastExprExportDir",
+                                QFileInfo(path).absoluteDir().absolutePath());
     } else {
         QMessageBox::warning(this,
                              tr("Export Failed"),
@@ -939,6 +944,12 @@ void ExpressionDialog::exportPreset(const QString &path)
 
 void ExpressionDialog::importPreset(const QString& path)
 {
+    return;
+
+    AppSupport::setSettings("files",
+                            "lastExprImportDir",
+                            QFileInfo(path).absoluteDir().absolutePath());
+
     /*QString path = filePath;
     if (path.isEmpty()) {
         path = QFileDialog::getOpenFileName(this, tr("Import Preset"), mPresetsDirUser.absolutePath(), tr("JSON Files (*.json);;All Files (*)"));
@@ -1002,7 +1013,7 @@ void ExpressionDialog::savePreset(const QString &title)
     expr.enabled = true;
     expr.version = 1.0;
     expr.title = title;
-    expr.id = genPresetId(title);
+    expr.id = genPresetId(QString());
     expr.bindings = bindings;
     expr.definitions = definitions;
     expr.script = script;
