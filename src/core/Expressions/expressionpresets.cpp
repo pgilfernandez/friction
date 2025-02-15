@@ -105,17 +105,16 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getUserDefinitions()
     return list;
 }
 
-void ExpressionPresets::loadExpr(const QString &path)
+const ExpressionPresets::Expr
+ExpressionPresets::readExpr(const QString &path)
 {
-    if (!QFile::exists(path)) { return; }
-    qDebug() << "Load expression" << path;
-    if (!isValidExprFile(path)) {
-        qDebug() << "Bad expression" << path;
-        return;
-    }
+    ExpressionPresets::Expr expr;
+    expr.valid = false;
+
+    if (!QFile::exists(path)) { return expr; }
 
     QSettings fexpr(path, QSettings::IniFormat);
-    ExpressionPresets::Expr expr;
+
     expr.core = path.startsWith(":");
     expr.valid = true;
     expr.version = fexpr.value("version").toDouble();
@@ -132,6 +131,20 @@ void ExpressionPresets::loadExpr(const QString &path)
     expr.definitions = fexpr.value("definitions").toString();
     expr.bindings = fexpr.value("bindings").toString();
     expr.script = fexpr.value("script").toString();
+
+    return expr;
+}
+
+void ExpressionPresets::loadExpr(const QString &path)
+{
+    if (!QFile::exists(path)) { return; }
+    qDebug() << "Load expression" << path;
+    if (!isValidExprFile(path)) {
+        qDebug() << "Bad expression" << path;
+        return;
+    }
+
+    const auto expr = readExpr(path);
 
     if (!hasExpr(expr.id)) {
         qDebug() << "Added expression" << expr.title << expr.id;

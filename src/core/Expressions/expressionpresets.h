@@ -69,6 +69,8 @@ namespace Friction
                                       const bool &defs = false);
             const QList<Expr> getUserDefinitions();
 
+            const Expr readExpr(const QString &path);
+
             void loadExpr(const QString &path);
             void loadExpr(const QStringList &paths);
 
