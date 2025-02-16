@@ -172,7 +172,7 @@ bool ExpressionPresets::editExpr(const QString &id,
         modified = true;
     }
 
-    if (!modified) { return false; }
+    if (!modified) { return true; }
     return saveExpr(index, expr.path);
 }
 
