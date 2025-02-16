@@ -71,6 +71,12 @@ namespace Friction
 
             const Expr readExpr(const QString &path);
 
+            bool editExpr(const QString &id,
+                          const QString &title = QString(),
+                          const QString &definitions = QString(),
+                          const QString &bindings = QString(),
+                          const QString &script = QString());
+
             void loadExpr(const QString &path);
             void loadExpr(const QStringList &paths);
 

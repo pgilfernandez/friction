@@ -135,6 +135,47 @@ ExpressionPresets::readExpr(const QString &path)
     return expr;
 }
 
+bool ExpressionPresets::editExpr(const QString &id,
+                                 const QString &title,
+                                 const QString &definitions,
+                                 const QString &bindings,
+                                 const QString &script)
+{
+    if (!hasExpr(id)) { return false; }
+
+    const auto expr = getExpr(id);
+    if (!expr.valid || expr.core) { return false; }
+
+    const int index = getExprIndex(id);
+    if (index < 0) { return false; }
+
+    bool modified = false;
+
+    if (!title.trimmed().isEmpty() &&
+        title != expr.title) {
+        mExpr[index].title = title;
+        modified = true;
+    }
+    if (!definitions.trimmed().isEmpty() &&
+        definitions != expr.definitions) {
+        mExpr[index].definitions = definitions;
+        modified = true;
+    }
+    if (!bindings.trimmed().isEmpty() &&
+        bindings != expr.bindings) {
+        mExpr[index].bindings = bindings;
+        modified = true;
+    }
+    if (!script.trimmed().isEmpty() &&
+        script != expr.script) {
+        mExpr[index].script = script;
+        modified = true;
+    }
+
+    if (!modified) { return false; }
+    return saveExpr(index, expr.path);
+}
+
 void ExpressionPresets::loadExpr(const QString &path)
 {
     if (!QFile::exists(path)) { return; }
@@ -284,10 +325,15 @@ void ExpressionPresets::setExprEnabled(const int &index,
     if (enabled && disabled.contains(id)) {
         QStringList list = disabled;
         list.removeAll(id);
-        AppSupport::setSettings("settings", "ExpressionsDisabled", list);
+        AppSupport::setSettings("settings",
+                                "ExpressionsDisabled",
+                                list);
         mDisabled = list;
     } else if (!enabled && !disabled.contains(id)) {
-        AppSupport::setSettings("settings", "ExpressionsDisabled", id, true);
+        AppSupport::setSettings("settings",
+                                "ExpressionsDisabled",
+                                id,
+                                true);
         mDisabled << id;
     }
 }
@@ -323,7 +369,8 @@ void ExpressionPresets::scanAll(const bool &clear)
 {
     if (clear) { mExpr.clear(); }
 
-    mDisabled = AppSupport::getSettings("settings", "ExpressionsDisabled").toStringList();
+    mDisabled = AppSupport::getSettings("settings",
+                                        "ExpressionsDisabled").toStringList();
 
     QStringList expressions;
     expressions << ":/expressions/clamp.fexpr";
