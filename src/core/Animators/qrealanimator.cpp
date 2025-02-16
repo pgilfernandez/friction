@@ -34,8 +34,6 @@
 #include "Segments/fitcurves.h"
 #include "svgexporter.h"
 #include "Properties/namedproperty.h"
-#include <QFile>
-#include <QTextStream>
 
 QrealAnimator::QrealAnimator(const qreal iniVal,
                              const qreal minVal,
@@ -1012,25 +1010,4 @@ void QrealAnimator::prp_readPropertyXEV_impl(
                                Expression::sQrealAnimatorTester));
          });
     }
-}
-
-void QrealAnimator::exportPropertyToFile(const QString& filePath) const {
-    if (!mExpression) {
-        return;
-    }
-
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning() << "Could not open file for writing:" << filePath;
-        return;
-    }
-
-    QTextStream out(&file);
-    out << "{\n";
-    out << "  \"bindings\": \"" << mExpression->bindingsString() << "\",\n";
-    out << "  \"calculate\": \"" << mExpression->scriptString() << "\",\n";
-    out << "  \"definitions\": \"" << mExpression->definitionsString() << "\"\n";
-    out << "}\n";
-
-    file.close();
 }

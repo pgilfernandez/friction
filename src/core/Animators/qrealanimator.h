@@ -201,9 +201,6 @@ public:
                       const bool motion = false,
                       const bool motionRotate = false,
                       const QString & motionPath = QString());
-
-    void exportPropertyToFile(const QString& filePath) const;
-
 private:
     qreal calculateBaseValueAtRelFrame(const qreal frame) const;
     void startBaseValueTransform();
