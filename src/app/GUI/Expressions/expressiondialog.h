@@ -34,7 +34,6 @@
 #include <QComboBox>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
-#include <QDir>
 
 #include "conncontext.h"
 #include "dialogs/dialog.h"
