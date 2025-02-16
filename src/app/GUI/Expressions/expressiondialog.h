@@ -71,6 +71,7 @@ private:
     void savePreset(const QString &title);
     void applyPreset(const QString &id);
     const QString genPresetId(const QString &title);
+    const QString filterPresetId(const QString &id);
 
     QrealAnimator* const mTarget;
 

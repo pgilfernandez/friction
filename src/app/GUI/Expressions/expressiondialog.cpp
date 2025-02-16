@@ -492,6 +492,8 @@ ExpressionDialog::ExpressionDialog(QrealAnimator* const target,
     p.drawEllipse(pix.rect().adjusted(1, 1, -1, -1));
     p.end();
     mRedDotIcon = QIcon(pix);
+
+    mBindingsButton->setFocus();
 }
 
 void ExpressionDialog::setCurrentTabId(const int id)
@@ -681,6 +683,7 @@ QWidget *ExpressionDialog::setupPresetsUi()
     presetLayout->setContentsMargins(0, 0, 0, 0);
 
     mPresetsCombo = new QComboBox(this);
+    mPresetsCombo->setFocusPolicy(Qt::ClickFocus);
     mPresetsCombo->setSizePolicy(QSizePolicy::Expanding,
                                  QSizePolicy::Preferred);
     mPresetsCombo->setToolTip(tr("Select a Preset from the list to fill Bindings, Definitions\n"
@@ -692,22 +695,27 @@ QWidget *ExpressionDialog::setupPresetsUi()
     const auto addPresetBtn = new QPushButton(QIcon::fromTheme("plus"),
                                               QString(), this);
     addPresetBtn->setToolTip(tr("Save as New Preset"));
+    addPresetBtn->setFocusPolicy(Qt::NoFocus);
 
     const auto removePresetBtn = new QPushButton(QIcon::fromTheme("minus"),
                                                  QString(), this);
     removePresetBtn->setToolTip(tr("Remove Active Preset"));
+    removePresetBtn->setFocusPolicy(Qt::NoFocus);
 
-    const auto editPresetBtn = new QPushButton(QIcon::fromTheme("edit"),
+    const auto editPresetBtn = new QPushButton(QIcon::fromTheme("disk_drive"),
                                                QString(), this);
-    editPresetBtn->setToolTip(tr("Edit Active Preset Name"));
+    editPresetBtn->setToolTip(tr("Save Active Preset"));
+    editPresetBtn->setFocusPolicy(Qt::NoFocus);
 
     const auto importPresetBtn = new QPushButton(QIcon::fromTheme("file-import"),
                                                  QString(), this);
     importPresetBtn->setToolTip(tr("Import Preset from file"));
+    importPresetBtn->setFocusPolicy(Qt::NoFocus);
 
     const auto exportPresetBtn = new QPushButton(QIcon::fromTheme("file-export"),
                                                  QString(), this);
     exportPresetBtn->setToolTip(tr("Export Active Preset to file"));
+    exportPresetBtn->setFocusPolicy(Qt::NoFocus);
 
     presetLayout->addWidget(presetLabel);
     presetLayout->addWidget(mPresetsCombo);
@@ -719,11 +727,55 @@ QWidget *ExpressionDialog::setupPresetsUi()
 
     populatePresets(true);
 
+    mPresetsCombo->setEditable(true);
+    mPresetsCombo->setInsertPolicy(QComboBox::NoInsert);
+    connect(mPresetsCombo->lineEdit(),
+            &QLineEdit::editingFinished,
+            this, [this]() {
+        const QString id = mPresetsCombo->currentData().toString();
+        const QString text = mPresetsCombo->currentText();
+        const int index = mPresetsCombo->currentIndex();
+        qDebug() << "editingFinished" << index << id << text;
+        if (id.isEmpty() || text.trimmed().isEmpty() || index < 1) {
+            mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index));
+            return;
+        }
+        if (mPresetsCombo->itemText(index) == text) {
+            qDebug() << "title is identical, ignore";
+            return;
+        }
+        if (mSettings->fExpressions.editExpr(id, text)) {
+            mPresetsCombo->setItemText(index, text);
+        } else { mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index)); }
+    });
+
     connect(mPresetsCombo,
             QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, [this](int index) {
         const QString id = mPresetsCombo->itemData(index).toString();
-        if (!id.isEmpty()) { applyPreset(id) ;}
+        if (!id.isEmpty()) { applyPreset(id); }
+    });
+
+    connect(editPresetBtn,
+            &QPushButton::released,
+            this, [this]() {
+        const QString id = mPresetsCombo->currentData().toString();
+        if (id.isEmpty()) {
+            QMessageBox::warning(this,
+                                 tr("No Preset"),
+                                 tr("No preset selected."));
+            return;
+        }
+        if (!mSettings->fExpressions.editExpr(id,
+                                              QString(),
+                                              mDefinitions->text(),
+                                              mBindings->text(),
+                                              mScript->text())) {
+            QMessageBox::warning(this,
+                                 tr("Failed to change preset"),
+                                 tr("Unable to edit preset, "
+                                    "check file permissions."));
+        }
     });
 
     connect(exportPresetBtn,
@@ -796,101 +848,23 @@ QWidget *ExpressionDialog::setupPresetsUi()
     connect(removePresetBtn,
             &QPushButton::released,
             this, [this]() {
-        /*int index = mPresetsCombo->currentIndex();
-        if (index > 0) {
-            QString presetName = mPresetsCombo->itemText(index);
-
-            QDialog dialog(this);
-            dialog.setWindowTitle(tr("Confirm Delete"));
-
-            QVBoxLayout layout(&dialog);
-
-            QLabel label(tr("Are you sure you want to <b>remove '%1'</b> Preset?").arg(presetName), &dialog);
-            layout.addWidget(&label);
-
-            QHBoxLayout buttonLayout;
-            QPushButton cancelButton(tr("Cancel"), &dialog);
-            QPushButton okButton(tr("OK"), &dialog);
-            buttonLayout.addWidget(&okButton);
-            buttonLayout.addWidget(&cancelButton);
-            layout.addLayout(&buttonLayout);
-
-            connect(&cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
-            connect(&okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
-
-            if (dialog.exec() == QDialog::Accepted) {
-                QString filePath = mPresetsDir.filePath(QString("%1.json").arg(presetName));
-                QString filePathUser = mPresetsDirUser.filePath(QString("%1.json").arg(presetName));
-                QFile file(filePath);
-                QFile fileUser(filePathUser);
-                if (file.exists()) {
-                    if (file.remove()) {
-                        qWarning() << "Preset file removed:" << filePath;
+                const int index = mPresetsCombo->currentIndex();
+                const QString text = mPresetsCombo->currentText();
+                const QString id = mPresetsCombo->currentData().toString();
+                if (index < 1 || id.isEmpty()) { return; }
+                const int ask = QMessageBox::question(this,
+                                                      tr("Delete Preset?"),
+                                                      tr("Are you sure you want "
+                                                         "to remove '%1' preset?").arg(text));
+                if (ask == QMessageBox::Yes) {
+                    if (mSettings->fExpressions.remExpr(id)) {
+                        populatePresets(true);
                     } else {
-                        qWarning() << "Failed to remove preset file:" << filePath;
-                    }
-                } else if (fileUser.exists()) {
-                    if (fileUser.remove()) {
-                        qWarning() << "Preset file removed:" << filePathUser;
-                    } else {
-                        qWarning() << "Failed to remove preset file:" << filePathUser;
-                    }
-                } else {
-                    qWarning() << "Preset file does not exist in:" << filePath;
-                    qWarning() << "Preset file does not exist in:" << filePathUser;
-                }
-                updatePresetCombo();
-            }
-        }*/
-    });
-
-    connect(editPresetBtn,
-            &QPushButton::released,
-            this, [this]() {
-        /*int index = mPresetsCombo->currentIndex();
-        if (index > 0) {
-            QString presetName = mPresetsCombo->itemText(index);
-
-            QDialog dialog(this);
-            dialog.setWindowTitle(tr("Preset Name"));
-
-            QVBoxLayout layout(&dialog);
-
-            QLabel label(tr("<b>Edit</b> Preset Name:"), &dialog);
-            layout.addWidget(&label);
-
-            QLineEdit lineEdit(&dialog);
-            lineEdit.setText(presetName);
-            layout.addWidget(&lineEdit);
-            lineEdit.setFocus();
-
-            QHBoxLayout buttonLayout;
-            QPushButton cancelButton(tr("Cancel"), &dialog);
-            QPushButton okButton(tr("OK"), &dialog);
-            buttonLayout.addWidget(&okButton);
-            buttonLayout.addWidget(&cancelButton);
-            layout.addLayout(&buttonLayout);
-
-            connect(&cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
-            connect(&okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
-
-            if (dialog.exec() == QDialog::Accepted) {
-                QString newPresetName = lineEdit.text().trimmed();
-                if (!newPresetName.isEmpty() && newPresetName != presetName) {
-                    QString oldFilePath = mPresetsDirUser.filePath(QString("%1.json").arg(presetName));
-                    QString newFilePath = mPresetsDirUser.filePath(QString("%1.json").arg(newPresetName));
-                    if (QFile::rename(oldFilePath, newFilePath)) {
-                        updatePresetCombo();
-                        int newIndex = mPresetsCombo->findText(newPresetName);
-                        if (newIndex != -1) {
-                            mPresetsCombo->setCurrentIndex(newIndex);
-                        }
-                    } else {
-                        qWarning() << "Failed to rename preset file:" << oldFilePath << "to" << newFilePath;
+                        QMessageBox::warning(this,
+                                             tr("Failed to remove"),
+                                             tr("Failed to remove preset, check file permissions."));
                     }
                 }
-            }
-        }*/
     });
 
     return presetWidget;
@@ -920,6 +894,9 @@ void ExpressionDialog::exportPreset(const QString &path)
         script.isEmpty()) { return; }
 
     ExpressionPresets::Expr expr;
+    expr.valid = true;
+    expr.enabled = true;
+    expr.version = 1.0;
     expr.title = QFileInfo(path).baseName();
     expr.id = genPresetId(expr.title);
     expr.bindings = bindings;
@@ -944,51 +921,41 @@ void ExpressionDialog::exportPreset(const QString &path)
 
 void ExpressionDialog::importPreset(const QString& path)
 {
-    return;
+    if (!QFile::exists(path)) { return; }
+    if (!mSettings->fExpressions.isValidExprFile(path)) {
+        return;
+    }
 
-    AppSupport::setSettings("files",
-                            "lastExprImportDir",
-                            QFileInfo(path).absoluteDir().absolutePath());
+    const auto expr = mSettings->fExpressions.readExpr(path);
+    if (mSettings->fExpressions.hasExpr(expr.id)) {
+        QMessageBox::warning(this,
+                             tr("Expression exists"),
+                             tr("An expression with id %1 already exists.").arg(expr.id));
+        return;
+    }
 
-    /*QString path = filePath;
-    if (path.isEmpty()) {
-        path = QFileDialog::getOpenFileName(this, tr("Import Preset"), mPresetsDirUser.absolutePath(), tr("JSON Files (*.json);;All Files (*)"));
-        if (path.isEmpty()) {
-            return;
+    const QString newPath = QString("%1/%2.fexpr").arg(AppSupport::getAppUserExPresetsPath(),
+                                                       filterPresetId(expr.id));
+    if (!mSettings->fExpressions.saveExpr(expr, newPath)) {
+        QMessageBox::warning(this,
+                             tr("Save Failed"),
+                             tr("Unable to save preset %1.").arg(newPath));
+    } else {
+        mSettings->fExpressions.addExpr(expr);
+        if (!expr.highlighters.isEmpty()) {
+            for (const auto &highlight : expr.highlighters) {
+                mScriptApi->add(highlight);
+            }
         }
+        populatePresets(true);
+        const int index = mPresetsCombo->findData(expr.id);
+        if (index >= 0) {
+            mPresetsCombo->setCurrentIndex(index);
+        }
+        AppSupport::setSettings("files",
+                                "lastExprImportDir",
+                                QFileInfo(path).absoluteDir().absolutePath());
     }
-
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Could not open file for reading:" << path;
-        return;
-    }
-
-    QString jsonContent = file.readAll();
-    file.close();
-
-    QJsonDocument doc = QJsonDocument::fromJson(jsonContent.toUtf8());
-    if (doc.isNull() || !doc.isObject()) {
-        qWarning() << "Invalid JSON content";
-        return;
-    }
-
-    QJsonObject obj = doc.object();
-    QString bindings = obj.value("bindings").toString();
-    QString calculate = obj.value("calculate").toString();
-    QString definitions = obj.value("definitions").toString();
-
-    mBindings->setText(bindings);
-    mScript->setText(calculate);
-    mDefinitions->setText(definitions);
-
-    updateAllScript();
-
-    QString presetName = QFileInfo(path).baseName();
-    int index = mPresetsCombo->findText(presetName);
-    if (index != -1) {
-        mPresetsCombo->setCurrentIndex(index);
-    }*/
 }
 
 void ExpressionDialog::savePreset(const QString &title)
@@ -1083,10 +1050,16 @@ void ExpressionDialog::applyPreset(const QString &id)
 
 const QString ExpressionDialog::genPresetId(const QString &title)
 {
-    static QRegularExpression rx("[^a-zA-Z0-9-_]");
     QString uid = QUuid::createUuid().toString();
     if (!title.isEmpty()) {
         uid.append(QString("_%1").arg(title));
     }
-    return uid.replace(rx, "");
+    return filterPresetId(uid);
+}
+
+const QString ExpressionDialog::filterPresetId(const QString &id)
+{
+    static QRegularExpression rx("[^a-zA-Z0-9-_]");
+    QString result(id);
+    return result.replace(rx, "");
 }
