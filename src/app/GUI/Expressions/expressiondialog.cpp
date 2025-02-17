@@ -738,15 +738,27 @@ QWidget *ExpressionDialog::setupPresetsUi()
         qDebug() << "editingFinished" << index << id << text;
         if (id.isEmpty() || text.trimmed().isEmpty() || index < 1) {
             mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index));
+            mScript->setFocus();
+            fixLeaveEvent(mPresetsCombo);
             return;
         }
         if (mPresetsCombo->itemText(index) == text) {
             qDebug() << "title is identical, ignore";
+            mScript->setFocus();
+            fixLeaveEvent(mPresetsCombo);
             return;
         }
         if (mSettings->fExpressions.editExpr(id, text)) {
-            mPresetsCombo->setItemText(index, text);
-        } else { mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index)); }
+            populatePresets(true);
+            const int newIndex = mPresetsCombo->findData(id);
+            if (newIndex >= 0) {
+                mPresetsCombo->setCurrentIndex(newIndex);
+            }
+        } else {
+            mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index));
+        }
+        mScript->setFocus();
+        fixLeaveEvent(mPresetsCombo);
     });
 
     connect(mPresetsCombo,
@@ -876,7 +888,11 @@ void ExpressionDialog::populatePresets(const bool &clear)
         mPresetsCombo->clear();
         mPresetsCombo->addItem(tr("Select ..."));
     }
-    for (const auto &expr : mSettings->fExpressions.getUser()) {
+    auto expressions = mSettings->fExpressions.getUser();
+    std::sort(expressions.begin(), expressions.end(), [](const auto &a, const auto &b) {
+        return a.title.toLower() < b.title.toLower();
+    });
+    for (const auto &expr : expressions) {
         mPresetsCombo->addItem(expr.title, expr.id);
     }
 }
@@ -926,7 +942,7 @@ void ExpressionDialog::importPreset(const QString& path)
         return;
     }
 
-    const auto expr = mSettings->fExpressions.readExpr(path);
+    auto expr = mSettings->fExpressions.readExpr(path);
     if (mSettings->fExpressions.hasExpr(expr.id)) {
         QMessageBox::warning(this,
                              tr("Expression exists"),
@@ -941,6 +957,7 @@ void ExpressionDialog::importPreset(const QString& path)
                              tr("Save Failed"),
                              tr("Unable to save preset %1.").arg(newPath));
     } else {
+        expr.path = newPath;
         mSettings->fExpressions.addExpr(expr);
         if (!expr.highlighters.isEmpty()) {
             for (const auto &highlight : expr.highlighters) {
@@ -984,6 +1001,8 @@ void ExpressionDialog::savePreset(const QString &title)
     expr.bindings = bindings;
     expr.definitions = definitions;
     expr.script = script;
+    expr.path = QString("%1/%2.fexpr").arg(AppSupport::getAppUserExPresetsPath(),
+                                           expr.id);
 
     if (onlyDef) {
         const auto lines = definitions.split("\n");
@@ -999,13 +1018,10 @@ void ExpressionDialog::savePreset(const QString &title)
         }
     }
 
-    const QString path = QString("%1/%2.fexpr").arg(AppSupport::getAppUserExPresetsPath(),
-                                                    expr.id);
-
-    if (!mSettings->fExpressions.saveExpr(expr, path)) {
+    if (!mSettings->fExpressions.saveExpr(expr, expr.path)) {
         QMessageBox::warning(this,
                              tr("Save Failed"),
-                             tr("Unable to save preset %1.").arg(path));
+                             tr("Unable to save preset %1.").arg(expr.path));
     } else {
         mSettings->fExpressions.addExpr(expr);
         if (!expr.highlighters.isEmpty()) {
@@ -1045,6 +1061,9 @@ void ExpressionDialog::applyPreset(const QString &id)
 
     updateAllScript();
 
+    mScript->setFocus();
+    fixLeaveEvent(mPresetsCombo);
+
     if (hasScript) { apply(true); }
 }
 
@@ -1062,4 +1081,11 @@ const QString ExpressionDialog::filterPresetId(const QString &id)
     static QRegularExpression rx("[^a-zA-Z0-9-_]");
     QString result(id);
     return result.replace(rx, "");
+}
+
+void ExpressionDialog::fixLeaveEvent(QWidget *widget)
+{
+    if (!widget) { return; }
+    QEvent event(QEvent::Leave);
+    QApplication::sendEvent(widget, &event);
 }
