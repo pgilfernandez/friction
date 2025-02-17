@@ -71,6 +71,7 @@ private:
     void applyPreset(const QString &id);
     const QString genPresetId(const QString &title);
     const QString filterPresetId(const QString &id);
+    void fixLeaveEvent(QWidget *widget);
 
     QrealAnimator* const mTarget;
 

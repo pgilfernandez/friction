@@ -738,15 +738,21 @@ QWidget *ExpressionDialog::setupPresetsUi()
         qDebug() << "editingFinished" << index << id << text;
         if (id.isEmpty() || text.trimmed().isEmpty() || index < 1) {
             mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index));
+            mScript->setFocus();
+            fixLeaveEvent(mPresetsCombo);
             return;
         }
         if (mPresetsCombo->itemText(index) == text) {
             qDebug() << "title is identical, ignore";
+            mScript->setFocus();
+            fixLeaveEvent(mPresetsCombo);
             return;
         }
         if (mSettings->fExpressions.editExpr(id, text)) {
             mPresetsCombo->setItemText(index, text);
         } else { mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index)); }
+        mScript->setFocus();
+        fixLeaveEvent(mPresetsCombo);
     });
 
     connect(mPresetsCombo,
@@ -1045,6 +1051,9 @@ void ExpressionDialog::applyPreset(const QString &id)
 
     updateAllScript();
 
+    mScript->setFocus();
+    fixLeaveEvent(mPresetsCombo);
+
     if (hasScript) { apply(true); }
 }
 
@@ -1062,4 +1071,11 @@ const QString ExpressionDialog::filterPresetId(const QString &id)
     static QRegularExpression rx("[^a-zA-Z0-9-_]");
     QString result(id);
     return result.replace(rx, "");
+}
+
+void ExpressionDialog::fixLeaveEvent(QWidget *widget)
+{
+    if (!widget) { return; }
+    const auto event = new QEvent(QEvent::Leave);
+    QApplication::sendEvent(widget, event);
 }
