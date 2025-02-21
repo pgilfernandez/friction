@@ -1082,12 +1082,6 @@ void MainWindow::setupMenuBar()
                                           this,
                                           &MainWindow::openAboutWindow);
     cmdAddAction(aboutAct);
-    help->addAction(QIcon::fromTheme("question"),
-                    tr("About Qt", "MenuBar_Help"), this, [this]() {
-        QMessageBox::aboutQt(this, tr("About Qt"));
-    });
-
-    help->addSeparator();
 
     QString cmdDefKey = "Ctrl+Space";
 #ifdef Q_OS_MAC
