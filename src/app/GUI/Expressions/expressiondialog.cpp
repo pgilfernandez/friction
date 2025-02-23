@@ -749,8 +749,14 @@ QWidget *ExpressionDialog::setupPresetsUi()
             return;
         }
         if (mSettings->fExpressions.editExpr(id, text)) {
-            mPresetsCombo->setItemText(index, text);
-        } else { mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index)); }
+            populatePresets(true);
+            const int newIndex = mPresetsCombo->findData(id);
+            if (newIndex >= 0) {
+                mPresetsCombo->setCurrentIndex(newIndex);
+            }
+        } else {
+            mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index));
+        }
         mScript->setFocus();
         fixLeaveEvent(mPresetsCombo);
     });
