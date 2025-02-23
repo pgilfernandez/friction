@@ -932,7 +932,7 @@ void ExpressionDialog::importPreset(const QString& path)
         return;
     }
 
-    const auto expr = mSettings->fExpressions.readExpr(path);
+    auto expr = mSettings->fExpressions.readExpr(path);
     if (mSettings->fExpressions.hasExpr(expr.id)) {
         QMessageBox::warning(this,
                              tr("Expression exists"),
@@ -947,6 +947,7 @@ void ExpressionDialog::importPreset(const QString& path)
                              tr("Save Failed"),
                              tr("Unable to save preset %1.").arg(newPath));
     } else {
+        expr.path = newPath;
         mSettings->fExpressions.addExpr(expr);
         if (!expr.highlighters.isEmpty()) {
             for (const auto &highlight : expr.highlighters) {
