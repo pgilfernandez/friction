@@ -990,6 +990,8 @@ void ExpressionDialog::savePreset(const QString &title)
     expr.bindings = bindings;
     expr.definitions = definitions;
     expr.script = script;
+    expr.path = QString("%1/%2.fexpr").arg(AppSupport::getAppUserExPresetsPath(),
+                                           expr.id);
 
     if (onlyDef) {
         const auto lines = definitions.split("\n");
@@ -1005,13 +1007,10 @@ void ExpressionDialog::savePreset(const QString &title)
         }
     }
 
-    const QString path = QString("%1/%2.fexpr").arg(AppSupport::getAppUserExPresetsPath(),
-                                                    expr.id);
-
-    if (!mSettings->fExpressions.saveExpr(expr, path)) {
+    if (!mSettings->fExpressions.saveExpr(expr, expr.path)) {
         QMessageBox::warning(this,
                              tr("Save Failed"),
-                             tr("Unable to save preset %1.").arg(path));
+                             tr("Unable to save preset %1.").arg(expr.path));
     } else {
         mSettings->fExpressions.addExpr(expr);
         if (!expr.highlighters.isEmpty()) {
@@ -1076,6 +1075,6 @@ const QString ExpressionDialog::filterPresetId(const QString &id)
 void ExpressionDialog::fixLeaveEvent(QWidget *widget)
 {
     if (!widget) { return; }
-    const auto event = new QEvent(QEvent::Leave);
-    QApplication::sendEvent(widget, event);
+    QEvent event(QEvent::Leave);
+    QApplication::sendEvent(widget, &event);
 }
