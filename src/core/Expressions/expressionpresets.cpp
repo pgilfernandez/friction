@@ -97,11 +97,7 @@ const QList<ExpressionPresets::Expr> ExpressionPresets::getUser(const QString &c
 const QList<ExpressionPresets::Expr> ExpressionPresets::getUserDefinitions()
 {
     QList<ExpressionPresets::Expr> list;
-    for (const auto &expr : getUser()) {
-        if (expr.bindings.isEmpty() &&
-            !expr.definitions.isEmpty() &&
-            expr.script.isEmpty()) { list.append(expr); }
-    }
+    for (const auto &expr : getUser(QString(), true)) { list.append(expr); }
     return list;
 }
 
