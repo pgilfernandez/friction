@@ -889,7 +889,9 @@ void ExpressionDialog::populatePresets(const bool &clear)
         mPresetsCombo->addItem(tr("Select ..."));
     }
     auto expressions = mSettings->fExpressions.getUser();
-    std::sort(expressions.begin(), expressions.end(), [](const auto &a, const auto &b) {
+    std::sort(expressions.begin(),
+              expressions.end(), [](const auto &a,
+                                    const auto &b) {
         return a.title.toLower() < b.title.toLower();
     });
     for (const auto &expr : expressions) {
@@ -905,9 +907,9 @@ void ExpressionDialog::exportPreset(const QString &path)
     const QString definitions = mDefinitions->text();
     const QString script = mScript->text();
 
-    if (bindings.isEmpty() &&
-        definitions.isEmpty() &&
-        script.isEmpty()) { return; }
+    if (bindings.trimmed().isEmpty() &&
+        definitions.trimmed().isEmpty() &&
+        script.trimmed().isEmpty()) { return; }
 
     ExpressionPresets::Expr expr;
     expr.valid = true;
@@ -919,7 +921,7 @@ void ExpressionDialog::exportPreset(const QString &path)
     expr.definitions = definitions;
     expr.script = script;
 
-    // TODO: open a new dialog to edit the meta data before save
+    if (!editDialog(&expr)) { return; }
 
     if (mSettings->fExpressions.saveExpr(expr, path)) {
         QMessageBox::information(this,
@@ -988,9 +990,7 @@ void ExpressionDialog::savePreset(const QString &title)
     const bool hasScript = !script.trimmed().isEmpty();
     const bool onlyDef = hasDef && !hasBind && !hasScript;
 
-    if (bindings.isEmpty() &&
-        definitions.isEmpty() &&
-        script.isEmpty()) { return; }
+    if (!hasDef && !hasBind && !hasScript) { return; }
 
     ExpressionPresets::Expr expr;
     expr.valid = true;
@@ -1088,4 +1088,143 @@ void ExpressionDialog::fixLeaveEvent(QWidget *widget)
     if (!widget) { return; }
     QEvent event(QEvent::Leave);
     QApplication::sendEvent(widget, &event);
+}
+
+bool ExpressionDialog::editDialog(ExpressionPresets::Expr *expr)
+{
+    if (!expr) { return false; }
+
+    Friction::Ui::Dialog dialog(this);
+    dialog.setWindowTitle(tr("Edit meta data"));
+    dialog.setMinimumWidth(400);
+
+    QVBoxLayout layout(&dialog);
+
+    QHBoxLayout layoutVer;
+    QLabel labelVer(tr("Version"), &dialog);
+    QLineEdit editVer(&dialog);
+
+    layoutVer.addWidget(&labelVer);
+    layoutVer.addWidget(&editVer);
+
+    QHBoxLayout layoutId;
+    QLabel labelId(tr("ID"), &dialog);
+    QLineEdit editId(&dialog);
+
+    layoutId.addWidget(&labelId);
+    layoutId.addWidget(&editId);
+
+    QHBoxLayout layoutTitle;
+    QLabel labelTitle(tr("Title"), &dialog);
+    QLineEdit editTitle(&dialog);
+
+    layoutTitle.addWidget(&labelTitle);
+    layoutTitle.addWidget(&editTitle);
+
+    QHBoxLayout layoutAuthor;
+    QLabel labelAuthor(tr("Author"), &dialog);
+    QLineEdit editAuthor(&dialog);
+
+    layoutAuthor.addWidget(&labelAuthor);
+    layoutAuthor.addWidget(&editAuthor);
+
+    QHBoxLayout layoutUrl;
+    QLabel labelUrl(tr("Url"), &dialog);
+    QLineEdit editUrl(&dialog);
+
+    layoutUrl.addWidget(&labelUrl);
+    layoutUrl.addWidget(&editUrl);
+
+    QHBoxLayout layoutDesc;
+    QLabel labelDesc(tr("Description"), &dialog);
+    QLineEdit editDesc(&dialog);
+
+    layoutDesc.addWidget(&labelDesc);
+    layoutDesc.addWidget(&editDesc);
+
+    QHBoxLayout layoutLic;
+    QLabel labelLic(tr("License"), &dialog);
+    QLineEdit editLic(&dialog);
+
+    layoutLic.addWidget(&labelLic);
+    layoutLic.addWidget(&editLic);
+
+    layout.addLayout(&layoutVer);
+    layout.addLayout(&layoutId);
+    layout.addLayout(&layoutTitle);
+    layout.addLayout(&layoutAuthor);
+    layout.addLayout(&layoutUrl);
+    layout.addLayout(&layoutDesc);
+    layout.addLayout(&layoutLic);
+
+    QSizePolicy labelSizePolicy(QSizePolicy::Expanding,
+                                QSizePolicy::Preferred);
+    const int labelSize = labelDesc.width();
+
+    labelVer.setSizePolicy(labelSizePolicy);
+    labelVer.setMinimumWidth(labelSize);
+    labelVer.setMaximumWidth(labelSize);
+
+    labelId.setSizePolicy(labelSizePolicy);
+    labelId.setMinimumWidth(labelSize);
+    labelId.setMaximumWidth(labelSize);
+
+    labelTitle.setSizePolicy(labelSizePolicy);
+    labelTitle.setMinimumWidth(labelSize);
+    labelTitle.setMaximumWidth(labelSize);
+
+    labelAuthor.setSizePolicy(labelSizePolicy);
+    labelAuthor.setMinimumWidth(labelSize);
+    labelAuthor.setMaximumWidth(labelSize);
+
+    labelUrl.setSizePolicy(labelSizePolicy);
+    labelUrl.setMinimumWidth(labelSize);
+    labelUrl.setMaximumWidth(labelSize);
+
+    labelDesc.setSizePolicy(labelSizePolicy);
+    labelDesc.setMinimumWidth(labelSize);
+    labelDesc.setMaximumWidth(labelSize);
+
+    labelLic.setSizePolicy(labelSizePolicy);
+    labelLic.setMinimumWidth(labelSize);
+    labelLic.setMaximumWidth(labelSize);
+
+    editVer.setText(QString::number(expr->version));
+    editId.setText(expr->id);
+    editTitle.setText(expr->title);
+    editAuthor.setText(expr->author);
+    editUrl.setText(expr->url);
+    editDesc.setText(expr->description);
+    editLic.setText(expr->license);
+
+    editVer.setFocus();
+
+    QHBoxLayout buttonLayout;
+    QPushButton noButton(tr("Cancel"), &dialog);
+    QPushButton yesButton(tr("Save"), &dialog);
+
+    buttonLayout.addWidget(&yesButton);
+    buttonLayout.addWidget(&noButton);
+    layout.addLayout(&buttonLayout);
+
+    yesButton.setDefault(true);
+
+    connect(&noButton, &QPushButton::clicked,
+            &dialog, &QDialog::reject);
+    connect(&yesButton, &QPushButton::clicked,
+            &dialog, &QDialog::accept);
+
+    if (dialog.exec() != QDialog::Accepted) {
+        return false;
+    }
+
+    expr->version = editVer.text().trimmed().toDouble();
+    expr->id = editId.text().trimmed();
+    expr->title = editTitle.text().trimmed();
+    expr->author = editAuthor.text().trimmed();
+    expr->url = editUrl.text().trimmed();
+    expr->description = editDesc.text().trimmed();
+    expr->license = editLic.text().trimmed();
+
+    return true;
 }

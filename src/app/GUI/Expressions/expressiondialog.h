@@ -72,6 +72,7 @@ private:
     const QString genPresetId(const QString &title);
     const QString filterPresetId(const QString &id);
     void fixLeaveEvent(QWidget *widget);
+    bool editDialog(Friction::Core::ExpressionPresets::Expr *expr);
 
     QrealAnimator* const mTarget;
 
