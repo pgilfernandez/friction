@@ -1,13 +1,8 @@
 [General]
-author=@rodlie
-bindings="value = $value"
-categories=
 definitions="function clamp(number, lower, upper) { return Math.max(lower, Math.min(number, upper)); }"
-description="Clamp value to upper and lower."
+categories=Core
+description=Clamp value to upper and lower.
 highlighters="clamp(x, lower, upper)"
 id=graphics.friction.clamp
-license=
-script="min = 0;\nmax = 200;\nreturn clamp(value, min, max)"
 title=Clamp
-url=
 version=1
