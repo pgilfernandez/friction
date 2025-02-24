@@ -65,14 +65,16 @@ private:
 
     QWidget* setupPresetsUi();
     void populatePresets(const bool &clear = false);
-    void exportPreset(const QString &path);
+    void exportPreset();
     void importPreset(const QString &path);
-    void savePreset(const QString &title);
+    void savePreset();
     void applyPreset(const QString &id);
     const QString genPresetId(const QString &title);
     const QString filterPresetId(const QString &id);
     void fixLeaveEvent(QWidget *widget);
-    bool editDialog(Friction::Core::ExpressionPresets::Expr *expr);
+    bool editDialog(const QString &title,
+                    Friction::Core::ExpressionPresets::Expr *expr,
+                    const bool &showId = true);
 
     QrealAnimator* const mTarget;
 
