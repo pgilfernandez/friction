@@ -735,7 +735,6 @@ QWidget *ExpressionDialog::setupPresetsUi()
         const QString id = mPresetsCombo->currentData().toString();
         const QString text = mPresetsCombo->currentText();
         const int index = mPresetsCombo->currentIndex();
-        qDebug() << "editingFinished" << index << id << text;
         if (id.isEmpty() || text.trimmed().isEmpty() || index < 1) {
             mPresetsCombo->setCurrentText(mPresetsCombo->itemText(index));
             mScript->setFocus();
@@ -743,7 +742,6 @@ QWidget *ExpressionDialog::setupPresetsUi()
             return;
         }
         if (mPresetsCombo->itemText(index) == text) {
-            qDebug() << "title is identical, ignore";
             mScript->setFocus();
             fixLeaveEvent(mPresetsCombo);
             return;
@@ -790,19 +788,12 @@ QWidget *ExpressionDialog::setupPresetsUi()
         }
     });
 
+    connect(addPresetBtn,
+            &QPushButton::released,
+            this, &ExpressionDialog::savePreset);
     connect(exportPresetBtn,
             &QPushButton::released,
-            this, [this]() {
-        QString path = QFileDialog::getSaveFileName(this,
-                                                    tr("Export Preset"),
-                                                    AppSupport::getSettings("files",
-                                                                            "lastExprExportDir",
-                                                                            QDir::homePath()).toString(),
-                                                    "Expressions (*.fexpr)");
-        if (path.trimmed().isEmpty()) { return; }
-        if (QFileInfo(path).suffix() != "fexpr") { path.append(".fexpr"); }
-        exportPreset(path);
-    });
+            this, &ExpressionDialog::exportPreset);
 
     connect(importPresetBtn,
             &QPushButton::released,
@@ -819,41 +810,6 @@ QWidget *ExpressionDialog::setupPresetsUi()
             QMessageBox::warning(this,
                                  tr("Failed to read preset"),
                                  tr("This file is not a valid expression preset."));
-        }
-    });
-
-    connect(addPresetBtn,
-            &QPushButton::released,
-            this, [this]() {
-        Friction::Ui::Dialog dialog(this);
-        dialog.setWindowTitle(tr("New Preset"));
-
-        QVBoxLayout layout(&dialog);
-
-        QLabel label(tr("Title"), &dialog);
-        layout.addWidget(&label);
-
-        QLineEdit lineEdit(&dialog);
-        layout.addWidget(&lineEdit);
-        lineEdit.setFocus();
-
-        QHBoxLayout buttonLayout;
-        QPushButton cancelButton(tr("Cancel"), &dialog);
-        QPushButton okButton(tr("Ok"), &dialog);
-
-        okButton.setDefault(true);
-
-        buttonLayout.addWidget(&okButton);
-        buttonLayout.addWidget(&cancelButton);
-        layout.addLayout(&buttonLayout);
-
-        connect(&cancelButton, &QPushButton::clicked,
-                &dialog, &QDialog::reject);
-        connect(&okButton, &QPushButton::clicked,
-                &dialog, &QDialog::accept);
-
-        if (dialog.exec() == QDialog::Accepted) {
-            savePreset(lineEdit.text().trimmed());
         }
     });
 
@@ -899,10 +855,8 @@ void ExpressionDialog::populatePresets(const bool &clear)
     }
 }
 
-void ExpressionDialog::exportPreset(const QString &path)
+void ExpressionDialog::exportPreset()
 {
-    if (path.isEmpty()) { return; }
-
     const QString bindings = mBindings->text();
     const QString definitions = mDefinitions->text();
     const QString script = mScript->text();
@@ -912,16 +866,40 @@ void ExpressionDialog::exportPreset(const QString &path)
         script.trimmed().isEmpty()) { return; }
 
     ExpressionPresets::Expr expr;
+    const int index = mPresetsCombo->currentIndex();
+    if (index >= 1) {
+        const QString currentId = mPresetsCombo->currentData().toString();
+        const auto currentExpr = mSettings->fExpressions.getExpr(currentId);
+        if (currentExpr.valid) { expr = currentExpr; }
+    }
+
     expr.valid = true;
     expr.enabled = true;
-    expr.version = 1.0;
-    expr.title = QFileInfo(path).baseName();
-    expr.id = genPresetId(expr.title);
+
+    if (expr.version < 0.1) {
+        expr.version = 1.0;
+    }
+    if (expr.title.trimmed().isEmpty()) {
+        expr.title = tr("New Preset");
+    }
+    if (expr.id.trimmed().isEmpty()) {
+        expr.id = genPresetId(QString());
+    }
+
     expr.bindings = bindings;
     expr.definitions = definitions;
     expr.script = script;
 
-    if (!editDialog(&expr)) { return; }
+    if (!editDialog(tr("Export Preset"), &expr)) { return; }
+
+    QString path = QFileDialog::getSaveFileName(this,
+                                                tr("Export Preset"),
+                                                AppSupport::getSettings("files",
+                                                                        "lastExprExportDir",
+                                                                        QDir::homePath()).toString(),
+                                                "Expressions (*.fexpr)");
+    if (path.trimmed().isEmpty()) { return; }
+    if (QFileInfo(path).suffix() != "fexpr") { path.append(".fexpr"); }
 
     if (mSettings->fExpressions.saveExpr(expr, path)) {
         QMessageBox::information(this,
@@ -968,7 +946,7 @@ void ExpressionDialog::importPreset(const QString& path)
         }
         populatePresets(true);
         const int index = mPresetsCombo->findData(expr.id);
-        if (index >= 0) {
+        if (index >= 1) {
             mPresetsCombo->setCurrentIndex(index);
         }
         AppSupport::setSettings("files",
@@ -977,10 +955,8 @@ void ExpressionDialog::importPreset(const QString& path)
     }
 }
 
-void ExpressionDialog::savePreset(const QString &title)
+void ExpressionDialog::savePreset()
 {
-    if (title.trimmed().isEmpty()) { return; }
-
     const QString bindings = mBindings->text();
     const QString definitions = mDefinitions->text();
     const QString script = mScript->text();
@@ -996,13 +972,15 @@ void ExpressionDialog::savePreset(const QString &title)
     expr.valid = true;
     expr.enabled = true;
     expr.version = 1.0;
-    expr.title = title;
+    expr.title = tr("New Preset");
     expr.id = genPresetId(QString());
     expr.bindings = bindings;
     expr.definitions = definitions;
     expr.script = script;
     expr.path = QString("%1/%2.fexpr").arg(AppSupport::getAppUserExPresetsPath(),
                                            expr.id);
+
+    if (!editDialog(tr("Save Preset"), &expr, false)) { return; }
 
     if (onlyDef) {
         const auto lines = definitions.split("\n");
@@ -1031,7 +1009,7 @@ void ExpressionDialog::savePreset(const QString &title)
         }
         populatePresets(true);
         const int index = mPresetsCombo->findData(expr.id);
-        if (index >= 0) {
+        if (index >= 1) {
             mPresetsCombo->blockSignals(true);
             mPresetsCombo->setCurrentIndex(index);
             mPresetsCombo->blockSignals(false);
@@ -1090,12 +1068,14 @@ void ExpressionDialog::fixLeaveEvent(QWidget *widget)
     QApplication::sendEvent(widget, &event);
 }
 
-bool ExpressionDialog::editDialog(ExpressionPresets::Expr *expr)
+bool ExpressionDialog::editDialog(const QString &title,
+                                  ExpressionPresets::Expr *expr,
+                                  const bool &showId)
 {
     if (!expr) { return false; }
 
     Friction::Ui::Dialog dialog(this);
-    dialog.setWindowTitle(tr("Edit meta data"));
+    dialog.setWindowTitle(title);
     dialog.setMinimumWidth(400);
 
     QVBoxLayout layout(&dialog);
@@ -1111,8 +1091,13 @@ bool ExpressionDialog::editDialog(ExpressionPresets::Expr *expr)
     QLabel labelId(tr("ID"), &dialog);
     QLineEdit editId(&dialog);
 
-    layoutId.addWidget(&labelId);
-    layoutId.addWidget(&editId);
+    if (showId) {
+        layoutId.addWidget(&labelId);
+        layoutId.addWidget(&editId);
+    } else {
+        labelId.setVisible(false);
+        editId.setVisible(false);
+    }
 
     QHBoxLayout layoutTitle;
     QLabel labelTitle(tr("Title"), &dialog);
@@ -1150,7 +1135,7 @@ bool ExpressionDialog::editDialog(ExpressionPresets::Expr *expr)
     layoutLic.addWidget(&editLic);
 
     layout.addLayout(&layoutVer);
-    layout.addLayout(&layoutId);
+    if (showId) { layout.addLayout(&layoutId); }
     layout.addLayout(&layoutTitle);
     layout.addLayout(&layoutAuthor);
     layout.addLayout(&layoutUrl);
@@ -1165,9 +1150,11 @@ bool ExpressionDialog::editDialog(ExpressionPresets::Expr *expr)
     labelVer.setMinimumWidth(labelSize);
     labelVer.setMaximumWidth(labelSize);
 
-    labelId.setSizePolicy(labelSizePolicy);
-    labelId.setMinimumWidth(labelSize);
-    labelId.setMaximumWidth(labelSize);
+    if (showId) {
+        labelId.setSizePolicy(labelSizePolicy);
+        labelId.setMinimumWidth(labelSize);
+        labelId.setMaximumWidth(labelSize);
+    }
 
     labelTitle.setSizePolicy(labelSizePolicy);
     labelTitle.setMinimumWidth(labelSize);
@@ -1190,7 +1177,7 @@ bool ExpressionDialog::editDialog(ExpressionPresets::Expr *expr)
     labelLic.setMaximumWidth(labelSize);
 
     editVer.setText(QString::number(expr->version));
-    editId.setText(expr->id);
+    if (showId) { editId.setText(expr->id); }
     editTitle.setText(expr->title);
     editAuthor.setText(expr->author);
     editUrl.setText(expr->url);
@@ -1218,13 +1205,18 @@ bool ExpressionDialog::editDialog(ExpressionPresets::Expr *expr)
         return false;
     }
 
-    expr->version = editVer.text().trimmed().toDouble();
-    expr->id = editId.text().trimmed();
+    expr->version = editVer.text().trimmed().replace(",", ".").toDouble();
     expr->title = editTitle.text().trimmed();
     expr->author = editAuthor.text().trimmed();
     expr->url = editUrl.text().trimmed();
     expr->description = editDesc.text().trimmed();
     expr->license = editLic.text().trimmed();
+
+    if (showId) {
+        QString exprId = editId.text().trimmed();
+        if (exprId.isEmpty()) { exprId = genPresetId(expr->title); }
+        expr->id = exprId;
+    }
 
     return true;
 }
