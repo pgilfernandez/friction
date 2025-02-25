@@ -1097,6 +1097,7 @@ bool ExpressionDialog::editDialog(const QString &title,
     QHBoxLayout layoutDesc;
     QLabel labelDesc(tr("Description"), &dialog);
     QTextEdit editDesc(&dialog);
+    editDesc.setObjectName("editPresetDesc");
     editDesc.setFixedHeight(4 * editDesc.fontMetrics().lineSpacing() + 10);
 
     layoutDesc.addWidget(&labelDesc);

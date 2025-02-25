@@ -241,14 +241,14 @@ QAction:checked
 QDoubleSpinBox,
 QSpinBox,
 QLineEdit,
-QTextEdit {
+QTextEdit#editPresetDesc {
     background-color: %3;
 }
 
 QDoubleSpinBox:hover,
 QSpinBox:hover,
 QLineEdit:hover,
-QTextEdit:hover {
+QTextEdit#editPresetDesc:hover {
     background-color: black;
 }
 
