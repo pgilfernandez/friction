@@ -310,6 +310,15 @@ void Canvas::renderSk(SkCanvas* const canvas,
             canvas->save();
             iBox->drawBoundingRect(canvas, invZoom);
             iBox->drawAllCanvasControls(canvas, mCurrentMode, invZoom, ctrlPressed);
+
+            // Dibujar rectángulo rojo en el centro del objeto seleccionado
+            SkPaint translateWidgetX;
+            translateWidgetX.setColor(SkColorSetARGB(200, 255, 0, 0));
+            translateWidgetX.setStyle(SkPaint::kFill_Style);
+            QPointF center = iBox->getAbsolutePos();
+            SkRect greenRect = SkRect::MakeXYWH(center.x() + 40, center.y() - 20, 100, 40);
+            canvas->drawRect(greenRect, translateWidgetX);
+
             canvas->restore();
         }
         for(const auto obj : mNullObjects) {
