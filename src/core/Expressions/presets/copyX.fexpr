@@ -1,7 +1,7 @@
 [General]
 author=@pgilfernandez
 bindings="x = x"
-categories=
+categories=Core
 definitions=
 description="It copies the value from it's X parameter. There is a proportion value that allow a proportional final Y value"
 highlighters=

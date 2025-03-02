@@ -1,7 +1,7 @@
 [General]
 author=@pgilfernandez
 bindings="objectPos = transform.translation;\npivotPos = transform.pivot;\noffsetAngle = $value;\ntargetPos = circle.transform.translation;\n"
-categories=
+categories=Core
 definitions=
 description="It looks at another object, it is meant to be applied to a 'rotation' parameter"
 highlighters=

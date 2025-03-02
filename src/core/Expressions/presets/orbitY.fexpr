@@ -1,7 +1,7 @@
 [General]
 author=@pgilfernandez
 bindings="centerY = properties.y;\nframe = $frame;\nradius = properties.radius;\n"
-categories=
+categories=Core
 definitions=
 description="To be applied to Y parameter. It simulates the orbit around an origin with 'translate' X and Y parameters. It could be connected to custom properties to allow easier controll of both expressions"
 highlighters=

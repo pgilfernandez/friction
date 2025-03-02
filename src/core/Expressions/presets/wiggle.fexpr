@@ -1,7 +1,7 @@
 [General]
 author=@pgilfernandez
 bindings="fps = $scene.fps;\nframe = $frame;\nvalue = $value;\n"
-categories=
+categories=Core
 definitions=
 description="Similar to AE Wiggle, it creates random variation of the initial value of the parameter"
 highlighters=

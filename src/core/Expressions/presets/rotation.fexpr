@@ -1,7 +1,7 @@
 [General]
 author=@pgilfernandez
 bindings="fps = $scene.fps;\nframe = $frame;\nvalue = $value;"
-categories=
+categories=Core
 definitions=
 description="It rotates the object on a constant speed controlled by FPS"
 highlighters=

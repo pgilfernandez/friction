@@ -1,7 +1,7 @@
 [General]
 author=@@pgilfernandez
 bindings="frame =$frame;\nfps =$scene.fps;"
-categories=
+categories=Core
 definitions=
 description="It animates the parameter based on the frame number and the frames per second of the scene."
 highlighters=
