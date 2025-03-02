@@ -370,7 +370,20 @@ void ExpressionPresets::firstRun()
     if (!firstrun || path.isEmpty()) { return; }
 
     QStringList presets;
-    // presets << "something.fexpr";
+    presets << "clamp.fexpr";
+    presets << "copyX.fexpr";
+    presets << "copyY.fexpr";
+    presets << "followPathX.fexpr";
+    presets << "followPathY.fexpr";
+    presets << "generateNoise.fexpr";
+    presets << "orbitX.fexpr";
+    presets << "orbitY.fexpr";
+    presets << "oscillation.fexpr";
+    presets << "rotation.fexpr";
+    presets << "time.fexpr";
+    presets << "trackObject.fexpr";
+    presets << "wave.fexpr";
+    presets << "wiggle.fexpr";
 
     for (const auto &preset : presets) {
         const auto expr = readExpr(QString(":/expressions/%1").arg(preset));
