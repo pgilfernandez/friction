@@ -793,7 +793,7 @@ void MainWindow::setupMenuBar()
     {
         const auto qAct = mPathMenu->addAction(
                     tr("Exclusion", "MenuBar_Path"));
-        qAct->setIcon(QIcon::fromTheme("booleans-exclusion"));
+        qAct->setIcon(QIcon::fromTheme("booleans_exclusion"));
         qAct->setShortcut(Qt::CTRL + Qt::Key_AsciiCircum);
         mActions.pathsExclusionAction->connect(qAct);
         cmdAddAction(qAct);
