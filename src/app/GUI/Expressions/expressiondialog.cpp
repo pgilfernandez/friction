@@ -1122,7 +1122,8 @@ bool ExpressionDialog::editDialog(const QString &title,
 
     QHBoxLayout layoutDesc;
     QLabel labelDesc(tr("Description"), &dialog);
-    QLineEdit editDesc(&dialog);
+    QTextEdit editDesc(&dialog);
+    editDesc.setObjectName("TextEdit");
 
     layoutDesc.addWidget(&labelDesc);
     layoutDesc.addWidget(&editDesc);
@@ -1139,8 +1140,8 @@ bool ExpressionDialog::editDialog(const QString &title,
     layout.addLayout(&layoutTitle);
     layout.addLayout(&layoutAuthor);
     layout.addLayout(&layoutUrl);
-    layout.addLayout(&layoutDesc);
     layout.addLayout(&layoutLic);
+    layout.addLayout(&layoutDesc);
 
     QSizePolicy labelSizePolicy(QSizePolicy::Expanding,
                                 QSizePolicy::Preferred);
@@ -1184,7 +1185,7 @@ bool ExpressionDialog::editDialog(const QString &title,
     editDesc.setText(expr->description);
     editLic.setText(expr->license);
 
-    editVer.setFocus();
+    editTitle.setFocus();
 
     QHBoxLayout buttonLayout;
     QPushButton noButton(tr("Cancel"), &dialog);
@@ -1209,7 +1210,7 @@ bool ExpressionDialog::editDialog(const QString &title,
     expr->title = editTitle.text().trimmed();
     expr->author = editAuthor.text().trimmed();
     expr->url = editUrl.text().trimmed();
-    expr->description = editDesc.text().trimmed();
+    expr->description = editDesc.toPlainText().trimmed();
     expr->license = editLic.text().trimmed();
 
     if (showId) {
