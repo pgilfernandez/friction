@@ -23,6 +23,7 @@
     </qresource>
     <qresource prefix="/expressions">
         <file alias="clamp.fexpr">Expressions/presets/clamp.fexpr</file>
+        <file alias="lerp.fexpr">Expressions/presets/lerp.fexpr</file>
         <file alias="copyX.fexpr">Expressions/presets/copyX.fexpr</file>
         <file alias="copyY.fexpr">Expressions/presets/copyY.fexpr</file>
         <file alias="followPathX.fexpr">Expressions/presets/followPathX.fexpr</file>
