@@ -1,7 +1,7 @@
 [General]
 author=@pgilfernandez
 bindings="complete = properties.complete;\nframe = $frame;\noffsetX = path.transform.translation.x;\noffsetY = path.transform.translation.y;\n"
-categories=Core
+categories=
 definitions=
 description="To be applied to X parameter. Simulates the effect 'follow path' and allows accessing to 'translate' values for the 'complete' parameter. It needs to manually add the path vector points to the 'Script' in order to work"
 highlighters=
