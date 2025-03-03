@@ -375,7 +375,7 @@ void ExpressionPresets::firstRun()
     presets << "copyY.fexpr";
     presets << "followPathX.fexpr";
     presets << "followPathY.fexpr";
-    presets << "generateNoise.fexpr";
+    presets << "noise.fexpr";
     presets << "orbitX.fexpr";
     presets << "orbitY.fexpr";
     presets << "oscillation.fexpr";
