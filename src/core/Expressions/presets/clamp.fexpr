@@ -1,13 +1,8 @@
 [General]
-author=@rodlie
-bindings=
-categories=Core
 definitions="function clamp(number, lower, upper) { return Math.max(lower, Math.min(number, upper)); }"
+categories=Core
 description=Clamp value to upper and lower.
 highlighters="clamp(x, lower, upper)"
 id=graphics.friction.clamp
-license=
-script=
 title=Clamp
-url=
 version=1
