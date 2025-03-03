@@ -370,7 +370,6 @@ void ExpressionPresets::firstRun()
     if (!firstrun || path.isEmpty()) { return; }
 
     QStringList presets;
-    presets << "clamp.fexpr";
     presets << "copyX.fexpr";
     presets << "copyY.fexpr";
     presets << "followPathX.fexpr";
@@ -419,6 +418,7 @@ void ExpressionPresets::scanAll(const bool &clear)
 
     QStringList expressions;
     expressions << ":/expressions/clamp.fexpr";
+    expressions << ":/expressions/lerp.fexpr";
     expressions << ":/expressions/easeInBack.fexpr";
     expressions << ":/expressions/easeInBounce.fexpr";
     expressions << ":/expressions/easeInCirc.fexpr";
