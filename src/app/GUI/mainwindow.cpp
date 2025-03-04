@@ -1106,6 +1106,9 @@ void MainWindow::setupMenuBar()
     help->addAction(QIcon::fromTheme("renderlayers"),
                     tr("Reinstall default render profiles"),
                     this, &MainWindow::askInstallRenderPresets);
+    help->addAction(QIcon::fromTheme("renderlayers"),
+                    tr("Reinstall default Expressions Presets"),
+                    this, &MainWindow::askInstallExpressionsPresets);
 
 
     // toolbar actions
@@ -1376,6 +1379,16 @@ void MainWindow::askInstallRenderPresets()
                                                  "<p style='font-weight: normal;font-style: italic'>Note that a restart of the application is required to detect new profiles.</p>"));
     if (result != QMessageBox::Yes) { return; }
     initRenderPresets(true);
+}
+
+void MainWindow::askInstallExpressionsPresets()
+{
+    const auto result = QMessageBox::question(this,
+                                              tr("Install default Expressions Presets"),
+                                              tr("Are you sure you want to install the default Expressions Presets?"
+                                                 "<p style='font-weight: normal;font-style: italic'>Note that:<ul><li>any user modification to default presets will be removed.</li><li>a restart of the application is required to install them all.</li></ul></p>"));
+    if (result != QMessageBox::Yes) { return; }
+    AppSupport::setSettings("settings", "firstRunExprPresets", true);
 }
 
 void MainWindow::openWelcomeDialog()
