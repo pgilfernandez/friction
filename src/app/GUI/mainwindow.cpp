@@ -1373,7 +1373,7 @@ void MainWindow::askInstallRenderPresets()
     const auto result = QMessageBox::question(this,
                                               tr("Install Render Profiles"),
                                               tr("Are you sure you want to install the default render profiles?"
-                                                 "<br><br><i>Note that a restart of the application is required to detect new profiles.</i>"));
+                                                 "<p style='font-weight: normal;font-style: italic'>Note that a restart of the application is required to detect new profiles.</p>"));
     if (result != QMessageBox::Yes) { return; }
     initRenderPresets(true);
 }
