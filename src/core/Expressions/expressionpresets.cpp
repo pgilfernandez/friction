@@ -372,8 +372,6 @@ void ExpressionPresets::firstRun()
     QStringList presets;
     presets << "copyX.fexpr";
     presets << "copyY.fexpr";
-    presets << "followPathX.fexpr";
-    presets << "followPathY.fexpr";
     presets << "noise.fexpr";
     presets << "orbitX.fexpr";
     presets << "orbitY.fexpr";
