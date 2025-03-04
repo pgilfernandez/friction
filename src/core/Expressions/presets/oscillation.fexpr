@@ -1,5 +1,5 @@
 [General]
-author=@pgilfernandez
+author=pgilfernandez
 bindings=
 categories=
 definitions="function oscillation(origin, time, frequency, amplitude, shift) {\n    var correctedShift = ((shift % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);\n    var val = Math.cos((correctedShift + time) * frequency) * amplitude;\n    return origin + val;\n}"

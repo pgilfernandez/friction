@@ -1,6 +1,6 @@
 [General]
-author=@pgilfernandez
-bindings="objectPos = transform.translation;\npivotPos = transform.pivot;\noffsetAngle = $value;\ntargetPos = circle.transform.translation;\n"
+author=pgilfernandez
+bindings="objectPos = transform.translation;\npivotPos = transform.pivot;\noffsetAngle = $value;\ntargetPos = your_target_object.transform.translation;\n"
 categories=
 definitions=
 description="It looks at another object, it is meant to be applied to a 'rotation' parameter"

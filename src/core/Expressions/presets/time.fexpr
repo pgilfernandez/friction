@@ -1,5 +1,5 @@
 [General]
-author=@@pgilfernandez
+author=pgilfernandez
 bindings="frame =$frame;\nfps =$scene.fps;"
 categories=
 definitions=
