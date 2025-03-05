@@ -3,7 +3,7 @@ author=pgilfernandez
 bindings="frame = $frame;\nvalue =$value \n"
 categories=
 definitions=
-description=To be applied to Y parameter. It simulates the orbit around an origin with 'translate' X and Y parameters. It could be connected to custom properties to allow easier controll of both expressions
+description=To be applied to Y parameter. It simulates the orbit around an origin with 'translate' X and Y parameters. It could be connected to custom properties to allow easier control of both expressions
 highlighters=
 id=graphics.friction.orbitY
 license=
