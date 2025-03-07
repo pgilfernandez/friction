@@ -1063,3 +1063,52 @@ const QString AppSupport::filterId(const QString &input)
 {
     return QString(input).simplified().replace(" ", "");
 }
+
+int AppSupport::getLastUsedWidth(int defaultWidth)
+{
+    QSettings settings;
+    return settings.value("LastUsedWidth", defaultWidth).toInt();
+}
+
+int AppSupport::getLastUsedHeight(int defaultHeight)
+{
+    QSettings settings;
+    return settings.value("LastUsedHeight", defaultHeight).toInt();
+}
+
+int AppSupport::getLastUsedMinFrame(int defaultMin)
+{
+    QSettings settings;
+    return settings.value("LastUsedMinFrame", defaultMin).toInt();
+}
+
+int AppSupport::getLastUsedMaxFrame(int defaultMax)
+{
+    QSettings settings;
+    return settings.value("LastUsedMaxFrame", defaultMax).toInt();
+}
+
+qreal AppSupport::getLastUsedFps(qreal defaultFps)
+{
+    QSettings settings;
+    return settings.value("LastUsedFps", defaultFps).toDouble();
+}
+
+QColor AppSupport::getLastUsedBgColor(const QColor &defaultColor)
+{
+    QSettings settings;
+    return settings.value("LastUsedBgColor", defaultColor).value<QColor>();
+}
+
+void AppSupport::saveLastUsedSceneSettings(int width, int height,
+                                         int minFrame, int maxFrame, 
+                                         qreal fps, const QColor &bgColor)
+{
+    QSettings settings;
+    settings.setValue("LastUsedWidth", width);
+    settings.setValue("LastUsedHeight", height);
+    settings.setValue("LastUsedMinFrame", minFrame);
+    settings.setValue("LastUsedMaxFrame", maxFrame);
+    settings.setValue("LastUsedFps", fps);
+    settings.setValue("LastUsedBgColor", bgColor);
+}
