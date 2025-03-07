@@ -1614,7 +1614,8 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
     const auto focusWidget = QApplication::focusWidget();
     if (type == QEvent::KeyPress) {
         const auto keyEvent = static_cast<QKeyEvent*>(e);
-        if (keyEvent->key() == Qt::Key_Delete && focusWidget || keyEvent->key() == Qt::Key_Backspace && focusWidget) {
+        if ((keyEvent->key() == Qt::Key_Delete && focusWidget) || 
+            (keyEvent->key() == Qt::Key_Backspace && focusWidget)) {
             mEventFilterDisabled = true;
             const bool widHandled =
                     QCoreApplication::sendEvent(focusWidget, keyEvent);
