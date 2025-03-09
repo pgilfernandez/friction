@@ -89,7 +89,7 @@ AboutWidget::AboutWidget(QWidget *parent)
 
     AboutWidgetTab tab2;
     tab2.title = tr("Shortcuts");
-    tab2.path = ":/docs/documentation/shortcuts.html";
+    tab2.path = ":/docs/shortcuts.html";
 
     AboutWidgetTab tab3;
     tab3.title = tr("Privacy");
