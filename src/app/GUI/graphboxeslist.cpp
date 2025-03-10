@@ -639,3 +639,13 @@ void KeysView::graphUpdateAfterKeysChanged() {
     graphResetValueScaleAndMinShown();
     graphUpdateDimensions();
 }
+
+void KeysView::keyframeZoomHorizontalAction() {
+    if(!mCurrentScene) return;
+    const auto range = mCurrentScene->getFrameRange();
+    const int padding = 2;
+    const FrameRange newRange = {range.fMin - padding, range.fMax + padding};
+    setFramesRange(newRange);
+    emit changedViewedFrames(newRange);
+    update();
+}

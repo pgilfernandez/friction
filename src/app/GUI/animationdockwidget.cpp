@@ -52,6 +52,15 @@ AnimationDockWidget::AnimationDockWidget(QWidget *parent,
                                 QSizePolicy::Expanding);
     generateEasingActions(easingButton, keysView);
 
+    const auto mFitToWidthButton = new QPushButton(QIcon::fromTheme("zoom_all"),
+                                              QString(), this);
+    mFitToWidthButton->setToolTip(tr("Fit horizontal"));
+    mFitToWidthButton->setFocusPolicy(Qt::NoFocus);
+    mFitToWidthButton->setSizePolicy(QSizePolicy::Expanding,
+                                QSizePolicy::Expanding);
+    connect(mFitToWidthButton, &QPushButton::clicked,
+        keysView, &KeysView::keyframeZoomHorizontalAction);
+
     mLineButton = new QAction(QIcon::fromTheme("segmentLine"),
                               tr("Make Segment Line"), this);
     connect(mLineButton, &QAction::triggered,
@@ -105,6 +114,7 @@ AnimationDockWidget::AnimationDockWidget(QWidget *parent,
     addAction(mSmoothButton);
     addAction(mCornerButton);
     addAction(mFitToHeightButton);
+    addWidget(mFitToWidthButton);
     //addWidget(valueLines);
 
     eSizesUI::widget.add(this, [this](const int size) {
