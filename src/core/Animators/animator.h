@@ -1,4 +1,4 @@
-/*
+﻿/*
 #
 # Friction - https://friction.graphics
 #
