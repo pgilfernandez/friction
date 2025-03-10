@@ -656,7 +656,7 @@ void KeysView::keyframeZoomHorizontalAction() {
             if(animMax > maxFrame) maxFrame = animMax;
         }
         
-        if(minFrame != INT_MAX && maxFrame != INT_MIN) {
+        if(minFrame != INT_MAX && maxFrame != INT_MIN && minFrame < maxFrame) {
             range = {minFrame, maxFrame};
         } else {
             range = mCurrentScene->getFrameRange();
