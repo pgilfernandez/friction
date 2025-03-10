@@ -39,6 +39,7 @@ AnimationDockWidget::AnimationDockWidget(QWidget *parent,
     , mSmoothButton(nullptr)
     , mCornerButton(nullptr)
     , mFitToHeightButton(nullptr)
+    , mFitToWidthButton(nullptr)
 {
     setObjectName(QString::fromUtf8("animationDockWidget"));
     setSizePolicy(QSizePolicy::Maximum,
@@ -52,13 +53,9 @@ AnimationDockWidget::AnimationDockWidget(QWidget *parent,
                                 QSizePolicy::Expanding);
     generateEasingActions(easingButton, keysView);
 
-    const auto mFitToWidthButton = new QPushButton(QIcon::fromTheme("zoom_all"),
-                                              QString(), this);
-    mFitToWidthButton->setToolTip(tr("Fit horizontal"));
-    mFitToWidthButton->setFocusPolicy(Qt::NoFocus);
-    mFitToWidthButton->setSizePolicy(QSizePolicy::Expanding,
-                                QSizePolicy::Expanding);
-    connect(mFitToWidthButton, &QPushButton::clicked,
+    mFitToWidthButton = new QAction(QIcon::fromTheme("zoom_horizontal"),
+                                     tr("Fit Horizontal"), this);
+    connect(mFitToWidthButton, &QAction::triggered,
         keysView, &KeysView::keyframeZoomHorizontalAction);
 
     mLineButton = new QAction(QIcon::fromTheme("segmentLine"),
@@ -86,7 +83,7 @@ AnimationDockWidget::AnimationDockWidget(QWidget *parent,
     connect(mCornerButton, &QAction::triggered,
             keysView, &KeysView::graphSetCornerCtrlAction);
 
-    mFitToHeightButton = new QAction(QIcon::fromTheme("zoom"),
+    mFitToHeightButton = new QAction(QIcon::fromTheme("zoom_vertical"),
                                      tr("Fit Vertical"), this);
     connect(mFitToHeightButton, &QAction::triggered,
             keysView, &KeysView::graphResetValueScaleAndMinShownAction);
@@ -114,7 +111,7 @@ AnimationDockWidget::AnimationDockWidget(QWidget *parent,
     addAction(mSmoothButton);
     addAction(mCornerButton);
     addAction(mFitToHeightButton);
-    addWidget(mFitToWidthButton);
+    addAction(mFitToWidthButton);
     //addWidget(valueLines);
 
     eSizesUI::widget.add(this, [this](const int size) {
