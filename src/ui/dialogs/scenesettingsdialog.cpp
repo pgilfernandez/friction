@@ -198,16 +198,19 @@ SceneSettingsDialog::SceneSettingsDialog(const QString &name,
     mCancelButton = new QPushButton(QIcon::fromTheme("dialog-cancel"),
                                     tr("Cancel"), this);
     mButtonsLayout = new QHBoxLayout();
-    mMainLayout->addLayout(mButtonsLayout);
 
     if (isNew) {
         mSaveAsDefault = new QCheckBox(this);
-        mSaveAsDefault->setText(tr("Remember"));
+        mSaveAsDefault->setText(tr("Set as default"));
+        mSaveAsDefault->setToolTip(tr("Use selected properties as default for new scenes"));
         mSaveAsDefault->setChecked(AppSupport::getSettings("scene",
                                                            "SaveDefault",
                                                            false).toBool());
-        mButtonsLayout->addWidget(mSaveAsDefault);
+        mMainLayout->addWidget(mSaveAsDefault);
     }
+
+    mMainLayout->addLayout(mButtonsLayout);
+
     mButtonsLayout->addWidget(mOkButton);
     mButtonsLayout->addWidget(mCancelButton);
 
