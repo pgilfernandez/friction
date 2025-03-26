@@ -39,6 +39,8 @@
 #include <QSpacerItem>
 #include <QMargins>
 #include <iostream>
+#include <QClipboard>
+#include <QMimeData>
 
 #include "GUI/edialogs.h"
 #include "dialogs/applyexpressiondialog.h"
@@ -568,6 +570,23 @@ void MainWindow::setupMenuBar()
 #endif
         mActions.pasteAction->connect(qAct);
         cmdAddAction(qAct);
+    }
+
+    { // import (paste) SVG from clipboard
+        mEditMenu->addAction(QIcon::fromTheme("paste"),
+                             tr("Paste from Clipboard"),
+                             [this]() {
+            const auto clipboard = QGuiApplication::clipboard();
+            if (clipboard) {
+                const auto mime = clipboard->mimeData();
+                qDebug() << mime->formats() << mime->text();
+                if (mime->hasText() && mime->text().contains("<svg")) {
+                    const QString svg = mime->text();
+                    try { mActions.importClipboard(svg); }
+                    catch (const std::exception& e) { gPrintExceptionCritical(e); }
+                }
+            }
+        }, QKeySequence(tr("Ctrl+Shift+V")));
     }
 
     {
