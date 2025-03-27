@@ -165,6 +165,9 @@ public:
     // expressions presets
     Friction::Core::ExpressionPresets fExpressions;
 
+    // last used stroke color
+    QColor fLastUsedStrokeColor = ThemeSupport::getThemeObjectColor();
+
 signals:
     void settingsChanged();
 
