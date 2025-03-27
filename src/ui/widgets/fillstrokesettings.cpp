@@ -599,6 +599,12 @@ void FillStrokeSettingsWidget::colorSettingReceived(const ColorSetting &colorSet
         paintSetting << std::make_shared<ColorPaintSetting>(mTarget, colorSetting);
         scene->applyPaintSettingToSelected(paintSetting);
     }
+
+    if (mTarget == PaintSetting::OUTLINE &&
+        getCurrentPaintTypeVal() == PaintType::FLATPAINT) {
+        // store as last used stroke color
+        eSettings::sInstance->fLastUsedStrokeColor = colorSetting.getColor();
+    }
 }
 
 void FillStrokeSettingsWidget::connectGradient()
