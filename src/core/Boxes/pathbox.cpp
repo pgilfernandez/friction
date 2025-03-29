@@ -75,7 +75,7 @@ PathBox::PathBox(const QString &name, const eBoxType type) :
     mStrokeGradientPoints = mFillSettings->getGradientPoints();
 
     mStrokeSettings->setPaintType(PaintType::FLATPAINT);
-    mStrokeSettings->setCurrentColor(eSettings::sInstance->fLastUsedStrokeColor);
+    mStrokeSettings->setCurrentColor(eSettings::instance().fLastUsedStrokeColor);
 
     ca_prependChild(mPathEffectsAnimators.get(), mFillSettings);
     ca_prependChild(mPathEffectsAnimators.get(), mStrokeSettings);
