@@ -335,7 +335,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
         paint.setAntiAlias(true);
 
         const auto& pts = mDrawPath.smoothPts();
-        const auto drawColor = eSettings::sInstance->fLastUsedStrokeColor;
+        const auto drawColor = eSettings::instance().fLastUsedStrokeColor;
         paint.setARGB(255,
                       drawColor.red(),
                       drawColor.green(),
