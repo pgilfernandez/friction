@@ -127,6 +127,7 @@ FillStrokeSettingsWidget::FillStrokeSettingsWidget(Document &document,
     connect(mLineWidthSpin, &QrealAnimatorValueSlider::valueEdited,
             actions, [actions](const qreal value) {
         actions->strokeWidthAction(QrealAction::sMakeSet(value));
+        eSettings::sInstance->fLastUsedStrokeWidth = value;
     });
     connect(mLineWidthSpin, &QrealAnimatorValueSlider::editingFinished,
             actions, [actions]() {
