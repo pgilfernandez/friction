@@ -664,8 +664,17 @@ PaintType FillStrokeSettingsWidget::getCurrentPaintTypeVal()
 
 void FillStrokeSettingsWidget::setCurrentPaintTypeVal(const PaintType paintType)
 {
-    if (mTarget == PaintSetting::FILL) { mCurrentFillPaintType = paintType; }
-    else { mCurrentStrokePaintType = paintType; }
+    if (mTarget == PaintSetting::FILL) {
+        if (!mCurrentFillColorAnimator && (mCurrentFillPaintType != paintType)) {
+            eSettings::sInstance->fLastFillFlatEnabled = (paintType == PaintType::FLATPAINT);
+        }
+        mCurrentFillPaintType = paintType;
+    } else {
+        if (!mCurrentStrokeColorAnimator && (mCurrentStrokePaintType != paintType)) {
+            eSettings::sInstance->fLastStrokeFlatEnabled = (paintType == PaintType::FLATPAINT);
+        }
+        mCurrentStrokePaintType = paintType;
+    }
 }
 
 QColor FillStrokeSettingsWidget::getColorVal()
