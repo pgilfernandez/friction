@@ -32,11 +32,11 @@ DashPathEffect::DashPathEffect() :
     mSize->setValueRange(0.1, 9999.999);
     mSize->setCurrentBaseValue(1);
 
-    mDashLength = enve::make_shared<QrealAnimator>("dash length");
+    mDashLength = enve::make_shared<QrealAnimator>("length");
     mDashLength->setValueRange(0.1, 9999.999);
     mDashLength->setCurrentBaseValue(10);
 
-    mSpaceLength = enve::make_shared<QrealAnimator>("space length");
+    mSpaceLength = enve::make_shared<QrealAnimator>("spacing");
     mSpaceLength->setValueRange(0.1, 9999.999);
     mSpaceLength->setCurrentBaseValue(5);
 
