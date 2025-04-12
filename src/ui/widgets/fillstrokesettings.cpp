@@ -606,6 +606,12 @@ void FillStrokeSettingsWidget::colorSettingReceived(const ColorSetting &colorSet
         // store as last used stroke color
         eSettings::sInstance->fLastUsedStrokeColor = colorSetting.getColor();
     }
+
+    if (mTarget == PaintSetting::FILL &&
+        getCurrentPaintTypeVal() == PaintType::FLATPAINT) {
+        // store as last used fill color
+        eSettings::sInstance->fLastUsedFillColor = colorSetting.getColor();
+    }
 }
 
 void FillStrokeSettingsWidget::connectGradient()
