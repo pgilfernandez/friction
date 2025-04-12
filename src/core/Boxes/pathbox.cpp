@@ -81,12 +81,16 @@ PathBox::PathBox(const QString &name,
     mStrokeSettings = enve::make_shared<OutlineSettingsAnimator>(this);
     mStrokeGradientPoints = mFillSettings->getGradientPoints();
 
+    bool fillFlat = eSettings::instance().fLastFillFlatEnabled;
+    bool strokeFlat = eSettings::instance().fLastStrokeFlatEnabled;
+    if (!fillFlat && !strokeFlat) { strokeFlat = true; }
+
     switch (type) {
     case eBoxType::circle:
     case eBoxType::rectangle:
-        mFillSettings->setPaintType(eSettings::instance().fLastFillFlatEnabled ?
+        mFillSettings->setPaintType(fillFlat ?
                                     PaintType::FLATPAINT : PaintType::NOPAINT);
-        mStrokeSettings->setPaintType(eSettings::instance().fLastStrokeFlatEnabled ?
+        mStrokeSettings->setPaintType(strokeFlat ?
                                       PaintType::FLATPAINT : PaintType::NOPAINT);
         break;
     default:
