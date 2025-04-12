@@ -171,6 +171,13 @@ public:
     // last used stoke size
     qreal fLastUsedStrokeWidth = 10.;
 
+    // last used fill color
+    QColor fLastUsedFillColor = Qt::black;
+
+    // last fill/stroke state
+    bool fLastFillFlatEnabled = false;
+    bool fLastStrokeFlatEnabled = true;
+
 signals:
     void settingsChanged();
 
