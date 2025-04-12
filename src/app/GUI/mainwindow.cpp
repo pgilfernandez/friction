@@ -1805,6 +1805,18 @@ void MainWindow::writeSettings()
     AppSupport::setSettings("ui", "geometry", saveGeometry());
     AppSupport::setSettings("ui", "maximized", isMaximized());
     AppSupport::setSettings("ui", "fullScreen", isFullScreen());
+
+    AppSupport::setSettings("FillStroke", "LastStrokeColor",
+                            eSettings::instance().fLastUsedStrokeColor);
+    AppSupport::setSettings("FillStroke", "LastStrokeWidth",
+                            eSettings::instance().fLastUsedStrokeWidth);
+    AppSupport::setSettings("FillStroke", "LastStrokeFlat",
+                            eSettings::instance().fLastStrokeFlatEnabled);
+
+    AppSupport::setSettings("FillStroke", "LastFillColor",
+                            eSettings::instance().fLastUsedFillColor);
+    AppSupport::setSettings("FillStroke", "LastFillFlat",
+                            eSettings::instance().fLastFillFlatEnabled);
 }
 
 bool MainWindow::isEnabled()
