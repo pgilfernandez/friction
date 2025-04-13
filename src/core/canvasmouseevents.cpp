@@ -170,6 +170,10 @@ void Canvas::mouseReleaseEvent(const eMouseEvent &e)
             drawPathClear();
             clearSelectionAction();
             break;
+        case CanvasMode::circleCreate:
+        case CanvasMode::rectCreate:
+            clearSelectionAction();
+            break;
         case CanvasMode::pickFillStroke:
             applyPixelColor(pickPixelColor(e.fGlobalPos), false);
             break;
