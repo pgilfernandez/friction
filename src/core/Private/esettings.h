@@ -178,7 +178,7 @@ public:
     // last used fill color
     QColor fLastUsedFillColor = AppSupport::getSettings("FillStroke",
                                                         "LastFillColor",
-                                                        QColor(Qt::black)).value<QColor>();
+                                                        QColor(Qt::white)).value<QColor>();
 
     // last fill/stroke state
     bool fLastFillFlatEnabled = AppSupport::getSettings("FillStroke",
