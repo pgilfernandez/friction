@@ -1139,7 +1139,9 @@ void MainWindow::setupMenuBar()
     help->addAction(QIcon::fromTheme("renderlayers"),
                     tr("Reinstall default Expressions Presets"),
                     this, &MainWindow::askInstallExpressionsPresets);
-
+    help->addAction(QIcon::fromTheme("color"),
+                    tr("Restore default fill and stroke"),
+                    this, &MainWindow::askRestoreFillStrokeDefault);
 
     // toolbar actions
     mToolbar->addAction(newAct);
@@ -1419,6 +1421,21 @@ void MainWindow::askInstallExpressionsPresets()
                                                  "<p style='font-weight: normal;font-style: italic'>Note that:<ul><li>any user modification to default presets will be removed.</li><li>a restart of the application is required to install them all.</li></ul></p>"));
     if (result != QMessageBox::Yes) { return; }
     AppSupport::setSettings("settings", "firstRunExprPresets", true);
+}
+
+void MainWindow::askRestoreFillStrokeDefault()
+{
+    const auto result = QMessageBox::question(this,
+                                              tr("Restore default fill and stroke?"),
+                                              tr("Are you sure you want to restore fill and stroke defaults?"));
+    if (result != QMessageBox::Yes) { return; }
+
+    auto settings = eSettings::sInstance;
+    settings->fLastFillFlatEnabled = false;
+    settings->fLastStrokeFlatEnabled = true;
+    settings->fLastUsedFillColor = Qt::black;
+    settings->fLastUsedStrokeColor = ThemeSupport::getThemeObjectColor();
+    settings->fLastUsedStrokeWidth = 10.;
 }
 
 void MainWindow::openWelcomeDialog()
