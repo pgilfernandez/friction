@@ -1063,3 +1063,27 @@ const QString AppSupport::filterId(const QString &input)
 {
     return QString(input).simplified().replace(" ", "");
 }
+
+const QColor AppSupport::adjustColorVisibility(const QColor &color,
+                                               const QColor &background)
+{
+    qDebug() << "compare" << "color" << color << "background" << background;
+
+    if (color.alpha() == 0) { // if no alpha return gray
+        return QColor(128, 128, 128);
+    }
+    if (color == background &&
+        (color == Qt::black || color == Qt::white)) {
+        // if same color and that is white or black return gray
+        return QColor(128, 128, 128, color.alpha());
+    }
+
+    qreal luminanceColor = color.valueF();
+    qreal luminanceBackground = background.valueF();
+
+    if (std::abs(luminanceColor - luminanceBackground) < 0.4) { // return a darker/lighter color
+        if (luminanceBackground > 0.5) { return color.darker(150); }
+        else { return color.lighter(150); }
+    }
+    return color;
+}
