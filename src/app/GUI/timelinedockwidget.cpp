@@ -94,8 +94,8 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
             this, [this]() {
         const auto scene = *mDocument.fActiveScene;
         if (!scene) { return; }
-        if ((QApplication::keyboardModifiers() & (Qt::ShiftModifier | Qt::AltModifier)) 
-            == (Qt::ShiftModifier | Qt::AltModifier)) { // Go to previous scene quarter
+        const bool jumpFrame = (QApplication::keyboardModifiers() & (Qt::ShiftModifier | Qt::AltModifier)) == (Qt::ShiftModifier | Qt::AltModifier);
+        if (jumpFrame) { // Go to previous scene quarter
             jumpToIntermediateFrame(false);
         } else { // Go to First Frame
             scene->anim_setAbsFrame(scene->getFrameRange().fMin);
@@ -114,8 +114,8 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
             this, [this]() {
         const auto scene = *mDocument.fActiveScene;
         if (!scene) { return; }
-        if ((QApplication::keyboardModifiers() & (Qt::ShiftModifier | Qt::AltModifier)) 
-        == (Qt::ShiftModifier | Qt::AltModifier)) { // Go to next scene quarter
+        const bool jumpFrame = (QApplication::keyboardModifiers() & (Qt::ShiftModifier | Qt::AltModifier)) == (Qt::ShiftModifier | Qt::AltModifier);
+        if (jumpFrame) { // Go to next scene quarter
             jumpToIntermediateFrame(true);
         } else { // Go to Last Frame
             scene->anim_setAbsFrame(scene->getFrameRange().fMax);
@@ -367,6 +367,7 @@ bool TimelineDockWidget::processKeyPress(QKeyEvent *event)
     const int key = event->key();
     const auto mods = event->modifiers();
     const auto state = RenderHandler::sInstance->currentPreviewState();
+    const bool jumpFrame = (mods & (Qt::ShiftModifier | Qt::AltModifier)) == (Qt::ShiftModifier | Qt::AltModifier);
     if (key == Qt::Key_Escape) { // stop playback
         if (state != PreviewState::stopped ||
             mStepPreviewTimer->isActive()) { interruptPreview(); }
@@ -402,13 +403,13 @@ bool TimelineDockWidget::processKeyPress(QKeyEvent *event)
             default:;
         }
     } else if (key == Qt::Key_Right && !(mods & Qt::ControlModifier)) {
-        if ((mods & (Qt::ShiftModifier | Qt::AltModifier)) == (Qt::ShiftModifier | Qt::AltModifier)) { // jump to next scene quarter
+        if (jumpFrame) { // jump to next scene quarter
             jumpToIntermediateFrame(true);
         } else { // next frame
             mDocument.incActiveSceneFrame();
         }
     } else if (key == Qt::Key_Left && !(mods & Qt::ControlModifier)) {
-        if ((mods & (Qt::ShiftModifier | Qt::AltModifier)) == (Qt::ShiftModifier | Qt::AltModifier)) { // jump to previous scene quarter
+        if (jumpFrame) { // jump to previous scene quarter
             jumpToIntermediateFrame(false);
         } else { // previous frame
             mDocument.decActiveSceneFrame();
