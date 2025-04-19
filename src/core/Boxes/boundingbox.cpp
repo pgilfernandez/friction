@@ -1544,8 +1544,9 @@ void BoundingBox::renderDataFinished(BoxRenderData *renderData) {
     }
 }
 
-QString skBlendModeToSVG(const SkBlendMode mode) {
-   switch(mode) {
+QString skBlendModeToSVG(const SkBlendMode mode)
+{
+   switch (mode) {
    case SkBlendMode::kPlus:        return "plus-ligher";
    case SkBlendMode::kMultiply:    return "multiply";
    case SkBlendMode::kScreen:      return "screen";
@@ -1582,7 +1583,12 @@ eTask* BoundingBox::saveSVGWithTransform(SvgExporter& exp,
         auto& ele = taskPtr->element();
         if (ptr) {
             ele.setAttribute("id", AppSupport::filterId(ptr->prp_getName()));
-            ele.setAttribute("style", "mix-blend-mode:" + skBlendModeToSVG(ptr->getBlendMode()) + ";");
+
+            if (expPtr->fBlendMix) {
+                ele.setAttribute("style",
+                                 QString("mix-blend-mode: %1;").arg(skBlendModeToSVG(ptr->getBlendMode())));
+            }
+
             SvgExportHelpers::assignVisibility(*expPtr, ele, visRange);
 
             const auto transformEffects = ptr->mTransformEffectCollection.get();
