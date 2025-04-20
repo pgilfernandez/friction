@@ -1584,9 +1584,10 @@ eTask* BoundingBox::saveSVGWithTransform(SvgExporter& exp,
         if (ptr) {
             ele.setAttribute("id", AppSupport::filterId(ptr->prp_getName()));
 
-            if (expPtr->fBlendMix) {
+            const QString blend = skBlendModeToSVG(ptr->getBlendMode());
+            if (expPtr->fBlendMix && blend != "normal") {
                 ele.setAttribute("style",
-                                 QString("mix-blend-mode: %1;").arg(skBlendModeToSVG(ptr->getBlendMode())));
+                                 QString("mix-blend-mode: %1;").arg(blend));
             }
 
             SvgExportHelpers::assignVisibility(*expPtr, ele, visRange);
