@@ -103,6 +103,7 @@ set(
     widgets/scenechooser.cpp
     widgets/settingswidget.cpp
     widgets/toolbar.cpp
+    widgets/transformtoolbar.cpp
     widgets/twocolumnlayout.cpp
     widgets/uilayout.cpp
     widgets/welcomedialog.cpp
@@ -176,6 +177,7 @@ set(
     widgets/settingswidget.h
     widgets/toolbar.h
     widgets/toolbutton.h
+    widgets/transformtoolbar.h
     widgets/twocolumnlayout.h
     widgets/uilayout.h
     widgets/vlabel.h
