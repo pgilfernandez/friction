@@ -56,6 +56,7 @@
 #include "widgets/aboutwidget.h"
 #include "widgets/uilayout.h"
 #include "widgets/toolbar.h"
+#include "widgets/transformtoolbar.h"
 
 class VideoEncoder;
 class RenderWidget;
@@ -362,6 +363,7 @@ private:
 
     Friction::Ui::ColorToolBar *mColorToolBar;
     Friction::Ui::CanvasToolBar *mCanvasToolBar;
+    Friction::Ui::TransformToolBar *mTransformToolBar;
 
     void setupToolBox();
     void setupToolBoxMain();

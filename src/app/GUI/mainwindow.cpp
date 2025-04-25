@@ -150,6 +150,7 @@ MainWindow::MainWindow(Document& document,
     , mTabQueueIndex(0)
     , mColorToolBar(nullptr)
     , mCanvasToolBar(nullptr)
+    , mTransformToolBar(nullptr)
     , mBackupOnSave(false)
     , mAutoSave(false)
     , mAutoSaveTimeout(0)
@@ -331,6 +332,9 @@ MainWindow::MainWindow(Document& document,
                                             tr("Queue"));
 
     addToolBar(mColorToolBar);
+
+    mTransformToolBar = new Ui::TransformToolBar(this);
+    addToolBar(Qt::BottomToolBarArea, mTransformToolBar);
 
     mCanvasToolBar->addSeparator();
     mCanvasToolBar->addAction(QIcon::fromTheme("workspace"),
@@ -1460,6 +1464,7 @@ void MainWindow::updateSettingsForCurrentCanvas(Canvas* const scene)
 {
     mColorToolBar->setCurrentCanvas(scene);
     mCanvasToolBar->setCurrentCanvas(scene);
+    if (mTransformToolBar) { mTransformToolBar->setCurrentCanvas(scene); }
 
     mObjectSettingsWidget->setCurrentScene(scene);
 

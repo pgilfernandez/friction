@@ -21,38 +21,99 @@
 */
 
 #include "transformtoolbar.h"
+#include "Animators/qpointfanimator.h"
+#include "Animators/transformanimator.h"
 #include "GUI/global.h"
 #include "Private/document.h"
-
-#include <QDebug>
 
 using namespace Friction::Ui;
 
 TransformToolBar::TransformToolBar(QWidget *parent)
     : ToolBar("TransformToolBar", parent)
+    , mTransformX(nullptr)
+    , mTransformY(nullptr)
+    , mTransformR(nullptr)
+    , mTransformSX(nullptr)
+    , mTransformSY(nullptr)
 {
-    setEnabled(false);
-    setWindowTitle(tr("Transform Toolbar"));
+    setFocusPolicy(Qt::NoFocus);
+    setupWidgets();
 }
 
 void TransformToolBar::setCurrentCanvas(Canvas * const target)
 {
     mCanvas.assign(target);
     if (target) {
-        // TODO
-        //mCanvas << connect(mCanvas, &Canvas::currentBoxChanged);
-        //mCanvas << connect(mCanvas, &Canvas::objectSelectionChanged);
-        //mCanvas << connect(mCanvas, &Canvas::requestUpdate);
+        setCurrentBox(target->getCurrentBox());
+        mCanvas << connect(mCanvas, &Canvas::currentBoxChanged,
+                           this, &TransformToolBar::setCurrentBox);
     }
-    updateWidgets(target);
 }
 
-// TODO
-void TransformToolBar::updateWidgets(Canvas * const target)
+void TransformToolBar::setCurrentBox(BoundingBox * const target)
 {
     if (!target) {
-        setEnabled(false);
+        clearTransform();
         return;
     }
+
+    const auto animator = target->getTransformAnimator();
+    if (!animator) {
+        clearTransform();
+        return;
+    }
+
+    const auto pos = animator->getPosAnimator();
+    mTransformX->setTarget(pos ? pos->getXAnimator() : nullptr);
+    mTransformY->setTarget(pos ? pos->getYAnimator() : nullptr);
+
+    const auto rot = animator->getRotAnimator();
+    mTransformR->setTarget(rot);
+
+    const auto scale = animator->getScaleAnimator();
+    mTransformSX->setTarget(scale ? scale->getXAnimator() : nullptr);
+    mTransformSY->setTarget(scale ? scale->getYAnimator() : nullptr);
+
     setEnabled(true);
+}
+
+void TransformToolBar::clearTransform()
+{
+    mTransformX->setTarget(nullptr);
+    mTransformX->setTarget(nullptr);
+    mTransformR->setTarget(nullptr);
+    mTransformSX->setTarget(nullptr);
+    mTransformSY->setTarget(nullptr);
+    setEnabled(false);
+}
+
+void TransformToolBar::setupWidgets()
+{
+    eSizesUI::widget.add(this, [this](const int size) {
+        this->setIconSize({size, size});
+    });
+
+    addAction(QIcon::fromTheme("boxTransform"), tr("Transform"));
+
+    setEnabled(false);
+    setWindowTitle(tr("Transform Toolbar"));
+
+    mTransformX = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformY = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformR = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformSX = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformSY = new QrealAnimatorValueSlider(nullptr, this);
+
+    addAction(QIcon::fromTheme("width"), tr("X"));
+    addWidget(mTransformX);
+
+    addAction(QIcon::fromTheme("height"), tr("Y"));
+    addWidget(mTransformY);
+
+    addAction(QIcon::fromTheme("loop3"), tr("Rotate"));
+    addWidget(mTransformR);
+
+    addAction(QIcon::fromTheme("fullscreen"), tr("Scale"));
+    addWidget(mTransformSX);
+    addWidget(mTransformSY);
 }

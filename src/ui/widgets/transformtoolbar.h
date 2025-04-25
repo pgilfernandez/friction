@@ -24,6 +24,7 @@
 #define FRICTION_TRANSFORM_TOOLBAR_H
 
 #include "ui_global.h"
+#include "widgets/qrealanimatorvalueslider.h"
 #include "widgets/toolbar.h"
 #include "canvas.h"
 
@@ -36,10 +37,19 @@ namespace Friction
         public:
             explicit TransformToolBar(QWidget *parent = nullptr);
             void setCurrentCanvas(Canvas * const target);
+            void setCurrentBox(BoundingBox * const target);
 
         private:
-            void updateWidgets(Canvas * const target);
+            void clearTransform();
+            void setupWidgets();
+
             ConnContextQPtr<Canvas> mCanvas;
+
+            QrealAnimatorValueSlider *mTransformX;
+            QrealAnimatorValueSlider *mTransformY;
+            QrealAnimatorValueSlider *mTransformR;
+            QrealAnimatorValueSlider *mTransformSX;
+            QrealAnimatorValueSlider *mTransformSY;
         };
     }
 }
