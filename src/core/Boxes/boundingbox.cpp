@@ -803,6 +803,11 @@ void BoundingBox::setupCanvasMenu(PropertyMenu * const menu)
 
     menu->addSeparator();
 
+    const auto parentWidget = menu->getParentWidget();
+    menu->addPlainAction(QIcon::fromTheme("dialog-information"), tr("Rename"), [this, parentWidget]() {
+        PropertyNameDialog::sRenameBox(this, parentWidget);
+    });
+
     menu->addPlainAction(QIcon::fromTheme("copy"), tr("Copy"), [pScene]() {
         pScene->copyAction();
     })->setShortcut(Qt::CTRL + Qt::Key_C);
@@ -815,9 +820,12 @@ void BoundingBox::setupCanvasMenu(PropertyMenu * const menu)
         pScene->duplicateAction();
     })->setShortcut(Qt::CTRL + Qt::Key_D);
 
-    menu->addPlainAction(QIcon::fromTheme("trash"), tr("Delete"), [pScene]() {
-        pScene->removeSelectedBoxesAndClearList();
-    })->setShortcut(Qt::Key_Delete);
+    const bool fromTreeView = menu->isFromTreeView();
+    if(!fromTreeView) {
+        menu->addPlainAction(QIcon::fromTheme("trash"), tr("Delete"), [pScene]() {
+            pScene->removeSelectedBoxesAndClearList();
+        })->setShortcut(Qt::Key_Delete);
+    }
 
     menu->addSeparator();
 
@@ -1353,7 +1361,9 @@ void BoundingBox::prp_setupTreeViewMenu(PropertyMenu * const menu)
     })->setEnabled(hasDurationRectangle());
 
     menu->addSeparator();
-    setupCanvasMenu(menu->addMenu(QIcon::fromTheme("preferences"), tr("Actions")));
+    auto actionsMenu = menu->addMenu(QIcon::fromTheme("preferences"), tr("Actions"));
+    actionsMenu->setFromTreeView(true);
+    setupCanvasMenu(actionsMenu);
 }
 
 void BoundingBox::getMotionBlurProperties(QList<Property*> &list) const {

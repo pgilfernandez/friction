@@ -36,7 +36,7 @@ class MovablePoint;
 class BoundingBox;
 
 template <typename Type>
-class CORE_EXPORT TypeMenu {
+class CORE_EXPORT TypeMenu : public QMenu {
     using TTypeMenu = TypeMenu<Type>;
 public:
     using PlainTriggeredOp = std::function<void()>;
@@ -181,6 +181,10 @@ public:
     bool hasActionsForType() const {
         return mTypeIndex.contains(std::type_index(typeid(T)));
     }
+
+    void setFromTreeView(const bool fromTree) { mFromTreeView = fromTree; }
+    bool isFromTreeView() const { return mFromTreeView; }
+
 private:
     template <typename U>
     void connectAction(BoundingBox * const, QAction * const qAction,
@@ -241,6 +245,7 @@ private:
     QList<stdsptr<TTypeMenu>> mChildMenus;
     QList<std::type_index> mTypeIndex;
     QStringList mSharedMenus;
+    bool mFromTreeView = false;
 };
 
 typedef TypeMenu<MovablePoint> PointTypeMenu;
