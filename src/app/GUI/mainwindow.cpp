@@ -311,6 +311,11 @@ MainWindow::MainWindow(Document& document,
         mTabProperties->setIconSize(QSize(size, size));
     });
 
+    const auto tabButtons = mTabProperties->findChildren<QToolButton*>();
+    for (const auto &button : tabButtons) {
+        button->setFocusPolicy(Qt::NoFocus); // don't allow buttons to take focus
+    }
+
     const auto propertiesWidget = new QWidget(this);
     const auto propertiesLayout = new QVBoxLayout(propertiesWidget);
     propertiesLayout->setContentsMargins(frictionMargins);
