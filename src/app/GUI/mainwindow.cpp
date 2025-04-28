@@ -1791,6 +1791,13 @@ void MainWindow::readSettings(const QString &openProject)
         mUI->setDockVisible("Fill and Stroke", false);
     }
 
+#ifdef Q_OS_LINUX
+    if (AppSupport::isWayland()) { // Disable fullscreen on wayland
+        isFull = false;
+        mViewFullScreenAct->setEnabled(false);
+    }
+#endif
+
     mViewFullScreenAct->blockSignals(true);
     mViewFullScreenAct->setChecked(isFull);
     mViewFullScreenAct->blockSignals(false);
