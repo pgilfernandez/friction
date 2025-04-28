@@ -93,8 +93,6 @@ void TransformToolBar::setupWidgets()
         this->setIconSize({size, size});
     });
 
-    addAction(QIcon::fromTheme("boxTransform"), tr("Transform"));
-
     setEnabled(false);
     setWindowTitle(tr("Transform Toolbar"));
 
@@ -104,10 +102,8 @@ void TransformToolBar::setupWidgets()
     mTransformSX = new QrealAnimatorValueSlider(nullptr, this);
     mTransformSY = new QrealAnimatorValueSlider(nullptr, this);
 
-    addAction(QIcon::fromTheme("width"), tr("X"));
+    addAction(QIcon::fromTheme("boxTransform"), tr("Move"));
     addWidget(mTransformX);
-
-    addAction(QIcon::fromTheme("height"), tr("Y"));
     addWidget(mTransformY);
 
     addAction(QIcon::fromTheme("loop3"), tr("Rotate"));
