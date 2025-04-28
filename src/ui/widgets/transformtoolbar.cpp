@@ -39,7 +39,15 @@ TransformToolBar::TransformToolBar(QWidget *parent)
     , mTransformSY(nullptr)
     , mTransformRX(nullptr)
     , mTransformRY(nullptr)
+    , mTransformMoveLabelAct(nullptr)
+    , mTransformRotateLabelAct(nullptr)
+    , mTransformScaleLabelAct(nullptr)
+    , mTransformRadiusLabelAct(nullptr)
+    , mTransformXAct(nullptr)
+    , mTransformYAct(nullptr)
     , mTransformRAct(nullptr)
+    , mTransformSXAct(nullptr)
+    , mTransformSYAct(nullptr)
     , mTransformRXAct(nullptr)
     , mTransformRYAct(nullptr)
 {
@@ -50,10 +58,10 @@ void TransformToolBar::setCurrentCanvas(Canvas * const target)
 {
     mCanvas.assign(target);
     if (target) {
-        setCurrentBox(target->getCurrentBox());
         mCanvas << connect(mCanvas, &Canvas::currentBoxChanged,
                            this, &TransformToolBar::setCurrentBox);
     }
+    setCurrentBox(target ? target->getCurrentBox() : nullptr);
 }
 
 void TransformToolBar::setCurrentBox(BoundingBox * const target)
@@ -73,12 +81,26 @@ void TransformToolBar::setCurrentBox(BoundingBox * const target)
     mTransformX->setTarget(pos ? pos->getXAnimator() : nullptr);
     mTransformY->setTarget(pos ? pos->getYAnimator() : nullptr);
 
+    const bool canMove = (pos);
+    mTransformMoveLabelAct->setEnabled(canMove);
+    mTransformXAct->setEnabled(canMove);
+    mTransformYAct->setEnabled(canMove);
+
     const auto rot = animator->getRotAnimator();
     mTransformR->setTarget(rot);
+
+    const bool canRotate = (rot);
+    mTransformRotateLabelAct->setEnabled(canRotate);
+    mTransformRAct->setEnabled(canRotate);
 
     const auto scale = animator->getScaleAnimator();
     mTransformSX->setTarget(scale ? scale->getXAnimator() : nullptr);
     mTransformSY->setTarget(scale ? scale->getYAnimator() : nullptr);
+
+    const bool canScale = (scale);
+    mTransformScaleLabelAct->setEnabled(canScale);
+    mTransformSXAct->setEnabled(canScale);
+    mTransformSYAct->setEnabled(canScale);
 
     const auto circle = enve_cast<Circle*>(target);
     const auto rectangle = enve_cast<RectangleBox*>(target);
@@ -90,10 +112,10 @@ void TransformToolBar::setCurrentBox(BoundingBox * const target)
                                 circle->getVRadiusAnimator()->getYAnimator() :
                                 (rectangle ? rectangle->getRadiusAnimator()->getYAnimator() : nullptr));
 
-    const bool radius = (circle || rectangle);
-    mTransformRAct->setVisible(radius);
-    mTransformRXAct->setVisible(radius);
-    mTransformRYAct->setVisible(radius);
+    const bool hasRadius = (circle || rectangle);
+    mTransformRadiusLabelAct->setEnabled(hasRadius);
+    mTransformRXAct->setEnabled(hasRadius);
+    mTransformRYAct->setEnabled(hasRadius);
 
     setEnabled(true);
 }
@@ -101,18 +123,35 @@ void TransformToolBar::setCurrentBox(BoundingBox * const target)
 void TransformToolBar::clearTransform()
 {
     mTransformX->setTarget(nullptr);
-    mTransformX->setTarget(nullptr);
+    mTransformY->setTarget(nullptr);
     mTransformR->setTarget(nullptr);
     mTransformSX->setTarget(nullptr);
     mTransformSY->setTarget(nullptr);
     mTransformRX->setTarget(nullptr);
     mTransformRY->setTarget(nullptr);
+
+    mTransformMoveLabelAct->setEnabled(false);
+    mTransformXAct->setEnabled(false);
+    mTransformYAct->setEnabled(false);
+
+    mTransformRotateLabelAct->setEnabled(false);
+    mTransformRAct->setEnabled(false);
+
+    mTransformScaleLabelAct->setEnabled(false);
+    mTransformSXAct->setEnabled(false);
+    mTransformSYAct->setEnabled(false);
+
+    mTransformRadiusLabelAct->setEnabled(false);
+    mTransformRXAct->setEnabled(false);
+    mTransformRYAct->setEnabled(false);
+
     setEnabled(false);
 }
 
 void TransformToolBar::setupWidgets()
 {
-    setEnabled(false);
+    setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
+
     setWindowTitle(tr("Transform Toolbar"));
 
     mTransformX = new QrealAnimatorValueSlider(nullptr, this);
@@ -123,22 +162,39 @@ void TransformToolBar::setupWidgets()
     mTransformRX = new QrealAnimatorValueSlider(nullptr, this);
     mTransformRY = new QrealAnimatorValueSlider(nullptr, this);
 
-    addAction(QIcon::fromTheme("boxTransform"), tr("Move"));
-    addWidget(mTransformX);
-    addWidget(mTransformY);
+    mTransformMoveLabelAct = addAction(QIcon::fromTheme("boxTransform"),
+                                       tr("Move"));
+    mTransformXAct = addWidget(mTransformX);
+    mTransformYAct = addWidget(mTransformY);
 
-    addAction(QIcon::fromTheme("loop3"), tr("Rotate"));
-    addWidget(mTransformR);
+    mTransformRotateLabelAct = addAction(QIcon::fromTheme("loop3"),
+                                         tr("Rotate"));
+    mTransformRAct = addWidget(mTransformR);
 
-    addAction(QIcon::fromTheme("fullscreen"), tr("Scale"));
-    addWidget(mTransformSX);
-    addWidget(mTransformSY);
+    mTransformScaleLabelAct = addAction(QIcon::fromTheme("fullscreen"),
+                                        tr("Scale"));
+    mTransformSXAct = addWidget(mTransformSX);
+    mTransformSYAct = addWidget(mTransformSY);
 
-    mTransformRAct = addAction(QIcon::fromTheme("circleCreate"), tr("Radius"));
+    mTransformRadiusLabelAct = addAction(QIcon::fromTheme("circleCreate"),
+                                         tr("Radius"));
     mTransformRXAct = addWidget(mTransformRX);
     mTransformRYAct = addWidget(mTransformRY);
 
-    mTransformRAct->setVisible(false);
-    mTransformRXAct->setVisible(false);
-    mTransformRYAct->setVisible(false);
+    clearTransform();
+
+    mTransformX->setValueRange(0, 1);
+    mTransformX->setDisplayedValue(0);
+    mTransformY->setValueRange(0, 1);
+    mTransformY->setDisplayedValue(0);
+    mTransformR->setValueRange(0, 1);
+    mTransformR->setDisplayedValue(0);
+    mTransformSX->setValueRange(0, 1);
+    mTransformSX->setDisplayedValue(0);
+    mTransformSY->setValueRange(0, 1);
+    mTransformSY->setDisplayedValue(0);
+    mTransformRX->setValueRange(0, 1);
+    mTransformRX->setDisplayedValue(0);
+    mTransformRY->setValueRange(0, 1);
+    mTransformRY->setDisplayedValue(0);
 }

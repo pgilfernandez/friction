@@ -53,7 +53,16 @@ namespace Friction
             QrealAnimatorValueSlider *mTransformRX;
             QrealAnimatorValueSlider *mTransformRY;
 
+            QAction *mTransformMoveLabelAct;
+            QAction *mTransformRotateLabelAct;
+            QAction *mTransformScaleLabelAct;
+            QAction *mTransformRadiusLabelAct;
+
+            QAction *mTransformXAct;
+            QAction *mTransformYAct;
             QAction *mTransformRAct;
+            QAction *mTransformSXAct;
+            QAction *mTransformSYAct;
             QAction *mTransformRXAct;
             QAction *mTransformRYAct;
         };
