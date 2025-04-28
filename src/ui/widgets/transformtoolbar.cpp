@@ -25,6 +25,7 @@
 #include "Animators/transformanimator.h"
 #include "GUI/global.h"
 #include "Private/document.h"
+#include "Boxes/circle.h"
 
 using namespace Friction::Ui;
 
@@ -35,8 +36,12 @@ TransformToolBar::TransformToolBar(QWidget *parent)
     , mTransformR(nullptr)
     , mTransformSX(nullptr)
     , mTransformSY(nullptr)
+    , mTransformRX(nullptr)
+    , mTransformRY(nullptr)
+    , mTransformRAct(nullptr)
+    , mTransformRXAct(nullptr)
+    , mTransformRYAct(nullptr)
 {
-    setFocusPolicy(Qt::NoFocus);
     setupWidgets();
 }
 
@@ -74,6 +79,20 @@ void TransformToolBar::setCurrentBox(BoundingBox * const target)
     mTransformSX->setTarget(scale ? scale->getXAnimator() : nullptr);
     mTransformSY->setTarget(scale ? scale->getYAnimator() : nullptr);
 
+    if (const auto &circle = enve_cast<Circle*>(target)) {
+        mTransformRAct->setVisible(true);
+        mTransformRXAct->setVisible(true);
+        mTransformRYAct->setVisible(true);
+        mTransformRX->setTarget(circle->getHRadiusAnimator()->getXAnimator());
+        mTransformRY->setTarget(circle->getVRadiusAnimator()->getYAnimator());
+    } else {
+        mTransformRAct->setVisible(false);
+        mTransformRXAct->setVisible(false);
+        mTransformRYAct->setVisible(false);
+        mTransformRX->setTarget(nullptr);
+        mTransformRY->setTarget(nullptr);
+    }
+
     setEnabled(true);
 }
 
@@ -84,15 +103,13 @@ void TransformToolBar::clearTransform()
     mTransformR->setTarget(nullptr);
     mTransformSX->setTarget(nullptr);
     mTransformSY->setTarget(nullptr);
+    mTransformRX->setTarget(nullptr);
+    mTransformRY->setTarget(nullptr);
     setEnabled(false);
 }
 
 void TransformToolBar::setupWidgets()
 {
-    eSizesUI::widget.add(this, [this](const int size) {
-        this->setIconSize({size, size});
-    });
-
     setEnabled(false);
     setWindowTitle(tr("Transform Toolbar"));
 
@@ -101,6 +118,8 @@ void TransformToolBar::setupWidgets()
     mTransformR = new QrealAnimatorValueSlider(nullptr, this);
     mTransformSX = new QrealAnimatorValueSlider(nullptr, this);
     mTransformSY = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformRX = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformRY = new QrealAnimatorValueSlider(nullptr, this);
 
     addAction(QIcon::fromTheme("boxTransform"), tr("Move"));
     addWidget(mTransformX);
@@ -112,4 +131,12 @@ void TransformToolBar::setupWidgets()
     addAction(QIcon::fromTheme("fullscreen"), tr("Scale"));
     addWidget(mTransformSX);
     addWidget(mTransformSY);
+
+    mTransformRAct = addAction(tr("Radius"));
+    mTransformRXAct = addWidget(mTransformRX);
+    mTransformRYAct = addWidget(mTransformRY);
+
+    mTransformRAct->setVisible(false);
+    mTransformRXAct->setVisible(false);
+    mTransformRYAct->setVisible(false);
 }
