@@ -26,6 +26,7 @@
 #include "GUI/global.h"
 #include "Private/document.h"
 #include "Boxes/circle.h"
+#include "Boxes/rectangle.h"
 
 using namespace Friction::Ui;
 
@@ -79,19 +80,20 @@ void TransformToolBar::setCurrentBox(BoundingBox * const target)
     mTransformSX->setTarget(scale ? scale->getXAnimator() : nullptr);
     mTransformSY->setTarget(scale ? scale->getYAnimator() : nullptr);
 
-    if (const auto &circle = enve_cast<Circle*>(target)) {
-        mTransformRAct->setVisible(true);
-        mTransformRXAct->setVisible(true);
-        mTransformRYAct->setVisible(true);
-        mTransformRX->setTarget(circle->getHRadiusAnimator()->getXAnimator());
-        mTransformRY->setTarget(circle->getVRadiusAnimator()->getYAnimator());
-    } else {
-        mTransformRAct->setVisible(false);
-        mTransformRXAct->setVisible(false);
-        mTransformRYAct->setVisible(false);
-        mTransformRX->setTarget(nullptr);
-        mTransformRY->setTarget(nullptr);
-    }
+    const auto circle = enve_cast<Circle*>(target);
+    const auto rectangle = enve_cast<RectangleBox*>(target);
+
+    mTransformRX->setTarget(circle ?
+                                circle->getHRadiusAnimator()->getXAnimator() :
+                                (rectangle ? rectangle->getRadiusAnimator()->getXAnimator() : nullptr));
+    mTransformRY->setTarget(circle ?
+                                circle->getVRadiusAnimator()->getYAnimator() :
+                                (rectangle ? rectangle->getRadiusAnimator()->getYAnimator() : nullptr));
+
+    const bool radius = (circle || rectangle);
+    mTransformRAct->setVisible(radius);
+    mTransformRXAct->setVisible(radius);
+    mTransformRYAct->setVisible(radius);
 
     setEnabled(true);
 }
@@ -132,7 +134,7 @@ void TransformToolBar::setupWidgets()
     addWidget(mTransformSX);
     addWidget(mTransformSY);
 
-    mTransformRAct = addAction(tr("Radius"));
+    mTransformRAct = addAction(QIcon::fromTheme("circleCreate"), tr("Radius"));
     mTransformRXAct = addWidget(mTransformRX);
     mTransformRYAct = addWidget(mTransformRY);
 
