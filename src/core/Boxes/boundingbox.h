@@ -478,6 +478,9 @@ protected:
     const qsptr<TransformEffectCollection> mTransformEffectCollection;
     const qsptr<BoxTransformAnimator> mTransformAnimator;
     const qsptr<RasterEffectCollection> mRasterEffectsAnimators;
+
+    bool mIsMenuFromTreeView = false;
+
 private:
     void alignGeometry(const QRectF& geometry,
                        const Qt::Alignment align,

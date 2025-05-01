@@ -55,6 +55,8 @@
 #include "svgexporter.h"
 #include "svgexporthelpers.h"
 #include "internallinkcanvas.h"
+// Pablo: test
+#include "PathEffects/patheffectcollection.h"
 
 #include <QInputDialog>
 #include <QMessageBox>
@@ -803,21 +805,40 @@ void BoundingBox::setupCanvasMenu(PropertyMenu * const menu)
 
     menu->addSeparator();
 
-    menu->addPlainAction(QIcon::fromTheme("copy"), tr("Copy"), [pScene]() {
-        pScene->copyAction();
-    })->setShortcut(Qt::CTRL + Qt::Key_C);
+    // Pablo: test
+    if (!mIsMenuFromTreeView) {
+        menu->addPlainAction(QIcon::fromTheme("edit-rename"), tr("Rename"), [this, menu]() {
+            PropertyNameDialog::sRenameBox(this, menu->getParentWidget());
+        })->setShortcut(Qt::Key_F2);
+        menu->addPlainAction(QIcon::fromTheme("copy"), tr("Copy"), [pScene]() {
+            pScene->copyAction();
+        })->setShortcut(Qt::CTRL + Qt::Key_C);
 
-    menu->addPlainAction(QIcon::fromTheme("cut"), tr("Cut"), [pScene]() {
-        pScene->cutAction();
-    })->setShortcut(Qt::CTRL + Qt::Key_X);
+        menu->addPlainAction(QIcon::fromTheme("cut"), tr("Cut"), [pScene]() {
+            pScene->cutAction();
+        })->setShortcut(Qt::CTRL + Qt::Key_X);
 
-    menu->addPlainAction(QIcon::fromTheme("duplicate"), tr("Duplicate"), [pScene]() {
-        pScene->duplicateAction();
-    })->setShortcut(Qt::CTRL + Qt::Key_D);
-
+        menu->addPlainAction(QIcon::fromTheme("duplicate"), tr("Duplicate"), [pScene]() {
+            pScene->duplicateAction();
+        })->setShortcut(Qt::CTRL + Qt::Key_D);
+    }
     menu->addPlainAction(QIcon::fromTheme("trash"), tr("Delete"), [pScene]() {
         pScene->removeSelectedBoxesAndClearList();
     })->setShortcut(Qt::Key_Delete);
+
+    menu->addSeparator();
+
+    // Pablo: test
+    const auto withPathEffects = enve_cast<BoxWithPathEffects*>(this);
+    if(withPathEffects) {
+        const PropertyMenu::CheckSelectedOp<BoxWithPathEffects> pathOp =
+        [](BoxWithPathEffects* const box, const bool checked) {
+            box->setPathEffectsEnabled(checked);
+        };
+        menu->addCheckableAction("Path Effects",
+                                 withPathEffects->getPathEffectsVisible(),
+                                 pathOp)->setEnabled(!withPathEffects->getPathEffectsCollection()->ca_hasChildren());
+    }
 
     menu->addSeparator();
 
@@ -1353,7 +1374,10 @@ void BoundingBox::prp_setupTreeViewMenu(PropertyMenu * const menu)
     })->setEnabled(hasDurationRectangle());
 
     menu->addSeparator();
+    // Pablo: test
+    mIsMenuFromTreeView = true;
     setupCanvasMenu(menu->addMenu(QIcon::fromTheme("preferences"), tr("Actions")));
+    mIsMenuFromTreeView = false;
 }
 
 void BoundingBox::getMotionBlurProperties(QList<Property*> &list) const {

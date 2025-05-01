@@ -74,6 +74,9 @@ public:
     PathEffectCollection *getOutlineBasePathEffectsAnimators();
     PathEffectCollection *getOutlinePathEffectsAnimators();
 
+    // Pablo: test
+    PathEffectCollection* getPathEffectsCollection() const { return mPathEffectsAnimators.get(); }
+
     bool hasBasePathEffects() const;
     bool hasFillEffects() const;
     bool hasOutlineBaseEffects() const;
