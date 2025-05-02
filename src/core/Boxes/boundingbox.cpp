@@ -790,7 +790,8 @@ QPointF BoundingBox::mapRelPosToAbs(const QPointF &relPos) const {
 
 void BoundingBox::setupCanvasMenu(PropertyMenu * const menu)
 {
-    if (menu->hasActionsForType<BoundingBox>()) { return; }
+    // Pablo: we don't want to check if the menu has actions for this type because we want to add the actions every time the menu is created
+    // if (menu->hasActionsForType<BoundingBox>()) { return; }
     menu->addedActionsForType<BoundingBox>();
 
     const auto pScene = getParentScene();
@@ -821,12 +822,12 @@ void BoundingBox::setupCanvasMenu(PropertyMenu * const menu)
         menu->addPlainAction(QIcon::fromTheme("duplicate"), tr("Duplicate"), [pScene]() {
             pScene->duplicateAction();
         })->setShortcut(Qt::CTRL + Qt::Key_D);
-    }
-    menu->addPlainAction(QIcon::fromTheme("trash"), tr("Delete"), [pScene]() {
-        pScene->removeSelectedBoxesAndClearList();
-    })->setShortcut(Qt::Key_Delete);
+        menu->addPlainAction(QIcon::fromTheme("trash"), tr("Delete"), [pScene]() {
+            pScene->removeSelectedBoxesAndClearList();
+        })->setShortcut(Qt::Key_Delete);
 
-    menu->addSeparator();
+        menu->addSeparator();
+    }
 
     // Pablo: test
     const auto withPathEffects = enve_cast<BoxWithPathEffects*>(this);
@@ -1376,7 +1377,8 @@ void BoundingBox::prp_setupTreeViewMenu(PropertyMenu * const menu)
     menu->addSeparator();
     // Pablo: test
     mIsMenuFromTreeView = true;
-    setupCanvasMenu(menu->addMenu(QIcon::fromTheme("preferences"), tr("Actions")));
+    // setupCanvasMenu(menu->addMenu(QIcon::fromTheme("preferences"), tr("Actions")));
+    setupCanvasMenu(menu);
     mIsMenuFromTreeView = false;
 }
 
