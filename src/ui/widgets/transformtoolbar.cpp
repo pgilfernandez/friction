@@ -167,6 +167,7 @@ void TransformToolBar::setupWidgets()
     mTransformMoveLabelAct = addAction(QIcon::fromTheme("boxTransform"),
                                        tr("Move"));
     mTransformXAct = addWidget(mTransformX);
+    addSeparator();
     mTransformYAct = addWidget(mTransformY);
 
     mTransformRotateLabelAct = addAction(QIcon::fromTheme("loop3"),
@@ -176,11 +177,13 @@ void TransformToolBar::setupWidgets()
     mTransformScaleLabelAct = addAction(QIcon::fromTheme("fullscreen"),
                                         tr("Scale"));
     mTransformSXAct = addWidget(mTransformSX);
+    addSeparator();
     mTransformSYAct = addWidget(mTransformSY);
 
     mTransformRadiusLabelAct = addAction(QIcon::fromTheme("circleCreate"),
                                          tr("Radius"));
     mTransformRXAct = addWidget(mTransformRX);
+    addSeparator();
     mTransformRYAct = addWidget(mTransformRY);
 
     clearTransform();
