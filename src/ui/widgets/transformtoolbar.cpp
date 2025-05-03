@@ -31,7 +31,7 @@
 using namespace Friction::Ui;
 
 TransformToolBar::TransformToolBar(QWidget *parent)
-    : ToolBar("TransformToolBar", parent)
+    : ToolBar("TransformToolBar", parent, true)
     , mTransformX(nullptr)
     , mTransformY(nullptr)
     , mTransformR(nullptr)
@@ -150,6 +150,8 @@ void TransformToolBar::clearTransform()
 
 void TransformToolBar::setupWidgets()
 {
+    setToolButtonStyle(Qt::ToolButtonIconOnly);
+    setContextMenuPolicy(Qt::NoContextMenu);
     setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
 
     setWindowTitle(tr("Transform Toolbar"));
