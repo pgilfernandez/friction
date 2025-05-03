@@ -67,6 +67,7 @@ set(
     widgets/aboutwidget.cpp
     widgets/actionbutton.cpp
     widgets/alignwidget.cpp
+    widgets/aligntoolbar.cpp
     widgets/framescrollbar.cpp
     widgets/assetswidget.cpp
     widgets/bookmarkedcolors.cpp
@@ -140,6 +141,7 @@ set(
     widgets/aboutwidget.h
     widgets/actionbutton.h
     widgets/alignwidget.h
+    widgets/aligntoolbar.h
     widgets/fillstrokesettings.h
     widgets/framescrollbar.h
     widgets/assetswidget.h
