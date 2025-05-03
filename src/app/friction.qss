@@ -601,13 +601,14 @@ QCheckBox:disabled {
     color: %13;
 }
 
-QToolBar#DarkToolBar {
+QToolBar#DarkToolBar,
+Friction--Ui--TransformToolBar {
     background-color: %5;
 }
 
 QToolBar#ColorToolBar QToolButton:hover,
 QToolBar#CanvasToolBar QToolButton:hover,
-QToolBar#TransformToolBar QToolButton:hover
+Friction--Ui--TransformToolBar QToolButton:hover
 {
     background-color: transparent;
     border-color: transparent;
