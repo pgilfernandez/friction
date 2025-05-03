@@ -1064,6 +1064,11 @@ void Canvas::clearSelectionAction()
     }
 }
 
+void Canvas::finishedAction()
+{
+    mDocument.actionFinished();
+}
+
 void Canvas::clearParentForSelected()
 {
     for (int i = 0; i < mSelectedBoxes.count(); i++) {

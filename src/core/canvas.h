@@ -561,6 +561,7 @@ public:
     void duplicateAction();
     void selectAllAction();
     void clearSelectionAction();
+    void finishedAction();
     void rotateSelectedBoxesStartAndFinish(const qreal rotBy,
                                            bool inc = true);
     void scaleSelectedBoxesStartAndFinish(const qreal scaleBy);
