@@ -49,14 +49,15 @@
 #include "fileshandler.h"
 #include "ekeyfilter.h"
 #include "GUI/RenderWidgets/renderwidget.h"
+#include "widgets/toolbar.h"
+#include "widgets/transformtoolbar.h"
+#include "widgets/aligntoolbar.h"
 #include "widgets/colortoolbar.h"
 #include "widgets/qdoubleslider.h"
 #include "widgets/canvastoolbar.h"
 #include "window.h"
 #include "widgets/aboutwidget.h"
 #include "widgets/uilayout.h"
-#include "widgets/toolbar.h"
-#include "widgets/transformtoolbar.h"
 
 class VideoEncoder;
 class RenderWidget;
@@ -364,6 +365,7 @@ private:
     Friction::Ui::ColorToolBar *mColorToolBar;
     Friction::Ui::CanvasToolBar *mCanvasToolBar;
     Friction::Ui::TransformToolBar *mTransformToolBar;
+    Friction::Ui::AlignToolBar *mAlignToolBar;
 
     void setupToolBox();
     void setupToolBoxMain();

@@ -151,6 +151,7 @@ MainWindow::MainWindow(Document& document,
     , mColorToolBar(nullptr)
     , mCanvasToolBar(nullptr)
     , mTransformToolBar(nullptr)
+    , mAlignToolBar(nullptr)
     , mBackupOnSave(false)
     , mAutoSave(false)
     , mAutoSaveTimeout(0)
@@ -284,9 +285,31 @@ MainWindow::MainWindow(Document& document,
        []() { MainWindow::sGetInstance()->openFile(); },
        this);
 
+    const auto viewerWidget = new QWidget(this);
+    const auto viewerToolBar = new QWidget(this);
+
+    const auto viewerLayout = new QVBoxLayout(viewerWidget);
+    const auto viewerLayoutToolBar = new QHBoxLayout(viewerToolBar);
+
+    viewerWidget->setContentsMargins(0, 0, 0, 0);
+
+    viewerToolBar->setObjectName("DarkWidget");
+    viewerToolBar->setContentsMargins(0, 0, 0, 0);
+
+    viewerLayout->setSpacing(0);
+    viewerLayout->setContentsMargins(0, 0, 0, 0);
+    viewerLayout->setMargin(0);
+
+    viewerLayoutToolBar->setSpacing(0);
+    viewerLayoutToolBar->setContentsMargins(0, 0, 0, 0);
+    viewerLayoutToolBar->setMargin(0);
+
     mStackWidget = new QStackedWidget(this);
     mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
     mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
+
+    viewerLayout->addWidget(mStackWidget);
+    viewerLayout->addWidget(viewerToolBar);
 
     mColorToolBar = new Ui::ColorToolBar(mDocument, this);
     connect(mColorToolBar, &Ui::ColorToolBar::message,
@@ -339,7 +362,11 @@ MainWindow::MainWindow(Document& document,
     addToolBar(mColorToolBar);
 
     mTransformToolBar = new Ui::TransformToolBar(this);
-    addToolBar(Qt::BottomToolBarArea, mTransformToolBar);
+    viewerLayoutToolBar->addWidget(mTransformToolBar);
+    viewerLayoutToolBar->addStretch();
+
+    mAlignToolBar = new Ui::AlignToolBar(this);
+    viewerLayoutToolBar->addWidget(mAlignToolBar);
 
     mCanvasToolBar->addSeparator();
     mCanvasToolBar->addAction(QIcon::fromTheme("workspace"),
@@ -360,7 +387,7 @@ MainWindow::MainWindow(Document& document,
     docks.push_back({UIDock::Position::Up,
                      -1,
                      tr("Viewer"),
-                     mStackWidget,
+                     viewerWidget,
                      false,
                      false,
                      false});
@@ -1467,9 +1494,10 @@ void MainWindow::addCanvasToRenderQue()
 
 void MainWindow::updateSettingsForCurrentCanvas(Canvas* const scene)
 {
-    mColorToolBar->setCurrentCanvas(scene);
-    mCanvasToolBar->setCurrentCanvas(scene);
+    if (mColorToolBar) { mColorToolBar->setCurrentCanvas(scene); }
+    if (mCanvasToolBar) { mCanvasToolBar->setCurrentCanvas(scene); }
     if (mTransformToolBar) { mTransformToolBar->setCurrentCanvas(scene); }
+    if (mAlignToolBar) { mAlignToolBar->setCurrentCanvas(scene); }
 
     mObjectSettingsWidget->setCurrentScene(scene);
 
