@@ -450,6 +450,7 @@ signals:
     void currentPickedColor(const QColor &color);
     void currentHoverColor(const QColor &color);
     void markersChanged();
+    void canvasModeSet(const CanvasMode &mode);
 
 public:
     void makePointCtrlsSymmetric();
