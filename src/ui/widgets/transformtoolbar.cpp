@@ -115,9 +115,14 @@ void TransformToolBar::setCurrentBox(BoundingBox * const target)
                                 (rectangle ? rectangle->getRadiusAnimator()->getYAnimator() : nullptr));
 
     const bool hasRadius = (circle || rectangle);
+
     mTransformRadiusLabelAct->setEnabled(hasRadius);
     mTransformRXAct->setEnabled(hasRadius);
     mTransformRYAct->setEnabled(hasRadius);
+
+    mTransformRadiusLabelAct->setVisible(hasRadius);
+    mTransformRXAct->setVisible(hasRadius);
+    mTransformRYAct->setVisible(hasRadius);
 }
 
 void TransformToolBar::clearTransform()
@@ -144,6 +149,10 @@ void TransformToolBar::clearTransform()
     mTransformRadiusLabelAct->setEnabled(false);
     mTransformRXAct->setEnabled(false);
     mTransformRYAct->setEnabled(false);
+
+    mTransformRadiusLabelAct->setVisible(false);
+    mTransformRXAct->setVisible(false);
+    mTransformRYAct->setVisible(false);
 }
 
 void TransformToolBar::setupWidgets()
