@@ -151,7 +151,8 @@ MainWindow::MainWindow(Document& document,
     , mColorToolBar(nullptr)
     , mCanvasToolBar(nullptr)
     , mTransformToolBar(nullptr)
-    , mAlignToolBar(nullptr)
+    , mViewerLeftToolBar(nullptr)
+    , mViewerRightToolBar(nullptr)
     , mBackupOnSave(false)
     , mAutoSave(false)
     , mAutoSaveTimeout(0)
@@ -165,6 +166,7 @@ MainWindow::MainWindow(Document& document,
     , mRenderWindow(nullptr)
     , mRenderWindowAct(nullptr)
     , mColorPickLabel(nullptr)
+    , mColorPickLabelAct(nullptr)
     , mToolBarMainAct(nullptr)
     , mToolBarColorAct(nullptr)
 {
@@ -263,6 +265,14 @@ MainWindow::MainWindow(Document& document,
 
     const auto assets = new AssetsWidget(this);
 
+    mTransformToolBar = new Ui::TransformToolBar(this);
+    mViewerLeftToolBar = new Ui::ViewerToolBar("ViewerLeftToolBar",
+                                               tr("Viewer Left ToolBar"),
+                                               this);
+    mViewerRightToolBar = new Ui::ViewerToolBar("ViewerRightToolBar",
+                                                tr("Viewer Right ToolBar"),
+                                                this);
+
     setupToolBox();
     setupToolBar();
     setupMenuBar();
@@ -310,6 +320,11 @@ MainWindow::MainWindow(Document& document,
 
     viewerLayout->addWidget(mStackWidget);
     viewerLayout->addWidget(viewerToolBar);
+
+    viewerLayoutToolBar->addWidget(mViewerLeftToolBar);
+    viewerLayoutToolBar->addWidget(mTransformToolBar);
+    viewerLayoutToolBar->addStretch();
+    viewerLayoutToolBar->addWidget(mViewerRightToolBar);
 
     mColorToolBar = new Ui::ColorToolBar(mDocument, this);
     connect(mColorToolBar, &Ui::ColorToolBar::message,
@@ -361,13 +376,6 @@ MainWindow::MainWindow(Document& document,
 
     addToolBar(mColorToolBar);
 
-    mTransformToolBar = new Ui::TransformToolBar(this);
-    viewerLayoutToolBar->addWidget(mTransformToolBar);
-    viewerLayoutToolBar->addStretch();
-
-    mAlignToolBar = new Ui::AlignToolBar(this);
-    viewerLayoutToolBar->addWidget(mAlignToolBar);
-
     mCanvasToolBar->addSeparator();
     mCanvasToolBar->addAction(QIcon::fromTheme("workspace"),
                               tr("Layout"));
@@ -378,8 +386,8 @@ MainWindow::MainWindow(Document& document,
     statusBar()->addPermanentWidget(mCanvasToolBar);
 
     mColorPickLabel = new QLabel(this);
-    mColorPickLabel->setVisible(false);
-    statusBar()->addWidget(mColorPickLabel);
+    mColorPickLabelAct = mViewerRightToolBar->addWidget(mColorPickLabel);
+    mColorPickLabelAct->setVisible(false);
 
     // final layout
     mUI = new UILayout(this);
@@ -566,12 +574,14 @@ void MainWindow::setupMenuBar()
     undoQAct->setShortcut(Qt::CTRL + Qt::Key_Z);
     mActions.undoAction->connect(undoQAct);
     cmdAddAction(undoQAct);
+    mViewerLeftToolBar->addAction(undoQAct);
 
     const auto redoQAct = mEditMenu->addAction(QIcon::fromTheme("loop_forwards"),
                                                tr("Redo", "MenuBar_Edit"));
     redoQAct->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_Z);
     mActions.redoAction->connect(redoQAct);
     cmdAddAction(redoQAct);
+    mViewerLeftToolBar->addAction(redoQAct);
 
     mEditMenu->addSeparator();
 
@@ -1497,7 +1507,6 @@ void MainWindow::updateSettingsForCurrentCanvas(Canvas* const scene)
     if (mColorToolBar) { mColorToolBar->setCurrentCanvas(scene); }
     if (mCanvasToolBar) { mCanvasToolBar->setCurrentCanvas(scene); }
     if (mTransformToolBar) { mTransformToolBar->setCurrentCanvas(scene); }
-    if (mAlignToolBar) { mAlignToolBar->setCurrentCanvas(scene); }
 
     mObjectSettingsWidget->setCurrentScene(scene);
 
@@ -1568,8 +1577,8 @@ void MainWindow::updateCanvasModeButtonsChecked()
 
     if (mColorPickLabel) {
         mColorPickLabel->clear();
-        mColorPickLabel->setVisible(mode == CanvasMode::pickFillStroke ||
-                                    mode == CanvasMode::pickFillStrokeEvent);
+        mColorPickLabelAct->setVisible(mode == CanvasMode::pickFillStroke ||
+                                       mode == CanvasMode::pickFillStrokeEvent);
     }
 }
 
