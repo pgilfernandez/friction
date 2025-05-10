@@ -297,7 +297,6 @@ void MainWindow::setupToolBoxMain()
 void MainWindow::setupToolBoxNodes()
 {
     mToolBoxGroupNodes = new QActionGroup(this);
-    mToolBoxGroupNodes->addAction(mToolBoxMain->addSeparator());
 
     // nodeConnect
     mActionConnectPointsAct = new QAction(QIcon::fromTheme("nodeConnect"),
@@ -408,8 +407,8 @@ void MainWindow::setupToolBoxNodes()
         Document::sInstance->actionFinished();
     });
 
-    mToolBoxMain->addActions(mToolBoxGroupNodes->actions());
-    mNodeVisibilityAct = mToolBoxMain->addWidget(mNodeVisibility);
+    mViewerRightToolBar->addActions(mToolBoxGroupNodes->actions());
+    mNodeVisibilityAct = mViewerRightToolBar->addWidget(mNodeVisibility);
 
     setEnableToolBoxNodes(false);
 }
@@ -460,7 +459,7 @@ void MainWindow::setupToolBoxDraw()
         mDrawPathSmooth->setMinimumSize({size, size});
     });
 
-    connect(mToolBoxMain, &QToolBar::orientationChanged,
+    connect(mViewerRightToolBar, &QToolBar::orientationChanged,
             this, [this](Qt::Orientation orientation) {
         const auto policyH = orientation == Qt::Vertical ?
                                  QSizePolicy::MinimumExpanding :
@@ -474,33 +473,31 @@ void MainWindow::setupToolBoxDraw()
 
     const auto label1 = new VLabel(QString("%1 ").arg(tr("Max Error")),
                                    this,
-                                   mToolBoxMain->orientation());
+                                   mViewerRightToolBar->orientation());
     const auto label2 = new VLabel(QString("%1 ").arg(tr("Smooth")),
                                    this,
-                                   mToolBoxMain->orientation());
+                                   mViewerRightToolBar->orientation());
 
-    connect(mToolBoxMain, &QToolBar::orientationChanged,
+    connect(mViewerRightToolBar, &QToolBar::orientationChanged,
             this, [label1, label2](Qt::Orientation orientation){
         label1->setOrientation(orientation);
         label2->setOrientation(orientation);
     });
 
-    mToolBoxDrawActSep = mToolBoxMain->addSeparator();
-
-    mToolBoxDrawActIcon1 = mToolBoxMain->addAction(QIcon::fromTheme("drawPath"),
-                                                   QString());
+    mToolBoxDrawActIcon1 = mViewerRightToolBar->addAction(QIcon::fromTheme("drawPath"),
+                                                          QString());
     mToolBoxDrawActIcon1->setDisabled(true);
 
-    mToolBoxDrawActLabel1 = mToolBoxMain->addWidget(label1);
-    mToolBoxDrawActMaxError = mToolBoxMain->addWidget(mDrawPathMaxError);
+    mToolBoxDrawActLabel1 = mViewerRightToolBar->addWidget(label1);
+    mToolBoxDrawActMaxError = mViewerRightToolBar->addWidget(mDrawPathMaxError);
 
-    mToolBoxDrawActIcon2 = mToolBoxMain->addAction(QIcon::fromTheme("drawPath"),
-                                                   QString());
+    mToolBoxDrawActIcon2 = mViewerRightToolBar->addAction(QIcon::fromTheme("drawPath"),
+                                                          QString());
     mToolBoxDrawActIcon2->setDisabled(true);
 
-    mToolBoxDrawActLabel2 = mToolBoxMain->addWidget(label2);
-    mToolBoxDrawActSmooth = mToolBoxMain->addWidget(mDrawPathSmooth);
-    mToolBoxMain->addAction(mDrawPathAuto);
+    mToolBoxDrawActLabel2 = mViewerRightToolBar->addWidget(label2);
+    mToolBoxDrawActSmooth = mViewerRightToolBar->addWidget(mDrawPathSmooth);
+    mViewerRightToolBar->addAction(mDrawPathAuto);
 
     setEnableToolBoxDraw(false);
 }
