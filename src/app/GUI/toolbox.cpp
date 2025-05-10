@@ -201,7 +201,6 @@ void MainWindow::setupToolBoxMain()
     textModeAct->setShortcut(QKeySequence(AppSupport::getSettings("shortcuts",
                                                                   "textMode",
                                                                   "F7").toString()));
-    //cmdAddAction(textModeAct);
     connect(textModeAct,
             &QAction::triggered,
             this,
@@ -431,11 +430,8 @@ void MainWindow::setupToolBoxDraw()
     });
 
     mDrawPathMaxError = new QDoubleSlider(1, 200, 1, this, false);
-    mDrawPathMaxError->setSizePolicy(QSizePolicy::MinimumExpanding,
-                                     QSizePolicy::Preferred);
     mDrawPathMaxError->setNumberDecimals(0);
-    mDrawPathMaxError->setMinimumSize({eSizesUI::widget,
-                                       eSizesUI::widget});
+    mDrawPathMaxError->setMinimumWidth(50);
     mDrawPathMaxError->setDisplayedValue(mDocument.fDrawPathMaxError);
     connect(mDrawPathMaxError, &QDoubleSlider::valueEdited,
             this, [this](const qreal value) {
@@ -443,32 +439,12 @@ void MainWindow::setupToolBoxDraw()
     });
 
     mDrawPathSmooth = new QDoubleSlider(1, 200, 1, this, false);
-    mDrawPathSmooth->setSizePolicy(QSizePolicy::MinimumExpanding,
-                                   QSizePolicy::Preferred);
     mDrawPathSmooth->setNumberDecimals(0);
-    mDrawPathSmooth->setMinimumSize({eSizesUI::widget,
-                                     eSizesUI::widget});
+    mDrawPathSmooth->setMinimumWidth(50);
     mDrawPathSmooth->setDisplayedValue(mDocument.fDrawPathSmooth);
     connect(mDrawPathSmooth, &QDoubleSlider::valueEdited,
             this, [this](const qreal value) {
         mDocument.fDrawPathSmooth = qFloor(value);
-    });
-
-    eSizesUI::widget.add(mDrawPathMaxError, [this](const int size) {
-        mDrawPathMaxError->setMinimumSize({size, size});
-        mDrawPathSmooth->setMinimumSize({size, size});
-    });
-
-    connect(mViewerRightToolBar, &QToolBar::orientationChanged,
-            this, [this](Qt::Orientation orientation) {
-        const auto policyH = orientation == Qt::Vertical ?
-                                 QSizePolicy::MinimumExpanding :
-                                 QSizePolicy::Preferred;
-        const auto policyV = orientation == Qt::Vertical ?
-                                 QSizePolicy::Preferred :
-                                 QSizePolicy::MinimumExpanding;
-        mDrawPathMaxError->setSizePolicy(policyH, policyV);
-        mDrawPathSmooth->setSizePolicy(policyH, policyV);
     });
 
     const auto label1 = new VLabel(QString("%1 ").arg(tr("Max Error")),
@@ -477,12 +453,6 @@ void MainWindow::setupToolBoxDraw()
     const auto label2 = new VLabel(QString("%1 ").arg(tr("Smooth")),
                                    this,
                                    mViewerRightToolBar->orientation());
-
-    connect(mViewerRightToolBar, &QToolBar::orientationChanged,
-            this, [label1, label2](Qt::Orientation orientation){
-        label1->setOrientation(orientation);
-        label2->setOrientation(orientation);
-    });
 
     mToolBoxDrawActIcon1 = mViewerRightToolBar->addAction(QIcon::fromTheme("drawPath"),
                                                           QString());
