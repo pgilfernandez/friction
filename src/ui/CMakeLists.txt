@@ -111,6 +111,7 @@ set(
     widgets/widgetstack.cpp
     widgets/widgetwrappernode.cpp
     widgets/wrappernode.cpp
+    widgets/viewertoolbar.cpp
 )
 
 set(
@@ -187,6 +188,7 @@ set(
     widgets/widgetstack.h
     widgets/widgetwrappernode.h
     widgets/wrappernode.h
+    widgets/viewertoolbar.h
 )
 
 if(NOT WIN32)
