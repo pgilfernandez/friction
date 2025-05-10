@@ -148,6 +148,7 @@ public:
                           const bool startTrans);
 
     QPointF getSelectedBoxesAbsPivotPos();
+    int getSelectedBoxesCount();
     bool isBoxSelectionEmpty() const;
 
     void ungroupSelectedBoxes();
