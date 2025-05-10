@@ -23,7 +23,6 @@
 #include "transformtoolbar.h"
 #include "Animators/qpointfanimator.h"
 #include "Animators/transformanimator.h"
-#include "GUI/global.h"
 #include "Private/document.h"
 #include "Boxes/circle.h"
 #include "Boxes/rectangle.h"
@@ -66,7 +65,10 @@ void TransformToolBar::setCurrentCanvas(Canvas * const target)
 
 void TransformToolBar::setCurrentBox(BoundingBox * const target)
 {
-    if (!target) {
+    const bool multiple = target ? mCanvas->getSelectedBoxesCount() > 1 : false;
+    // TODO: add support for multiple boxes
+
+    if (!target || multiple) {
         clearTransform();
         return;
     }
@@ -116,8 +118,6 @@ void TransformToolBar::setCurrentBox(BoundingBox * const target)
     mTransformRadiusLabelAct->setEnabled(hasRadius);
     mTransformRXAct->setEnabled(hasRadius);
     mTransformRYAct->setEnabled(hasRadius);
-
-    setEnabled(true);
 }
 
 void TransformToolBar::clearTransform()
@@ -144,8 +144,6 @@ void TransformToolBar::clearTransform()
     mTransformRadiusLabelAct->setEnabled(false);
     mTransformRXAct->setEnabled(false);
     mTransformRYAct->setEnabled(false);
-
-    setEnabled(false);
 }
 
 void TransformToolBar::setupWidgets()
