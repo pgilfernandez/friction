@@ -1576,7 +1576,6 @@ void MainWindow::updateCanvasModeButtonsChecked()
     mLocalPivotAct->setEnabled(pointMode || boxMode);
 
     if (mColorPickLabel) {
-        mColorPickLabel->clear();
         mColorPickLabelAct->setVisible(mode == CanvasMode::pickFillStroke ||
                                        mode == CanvasMode::pickFillStrokeEvent);
     }
@@ -2382,14 +2381,11 @@ void MainWindow::handleNewVideoClip(const VideoBox::VideoSpecs &specs)
 
 void MainWindow::handleCurrentPixelColor(const QColor &color)
 {
-    if (!color.isValid()) {
-        mColorPickLabel->clear();
-        return;
-    }
-    mColorPickLabel->setText(QString("&nbsp;&nbsp;<span style=\"background-color: %4;\">"
-                                     "&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;"
-                                     "<b>RGB</b> %1, %2, %3").arg(QString::number(color.redF()),
-                                                                  QString::number(color.greenF()),
-                                                                  QString::number(color.blueF()),
-                                                                  color.name()));
+    mColorPickLabel->setText(QString("<b>R:</b> %1 <b>G:</b> %2 <b>B:</b> %3 &nbsp;&nbsp;"
+                                     "<span style=\"background-color: %4;\">"
+                                     "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                                     "</span>").arg(QString::number(color.isValid() ? color.redF() : 0., 'f', 3),
+                                                    QString::number(color.isValid() ? color.greenF() : 0., 'f', 3),
+                                                    QString::number(color.isValid() ? color.blueF() : 0., 'f', 3),
+                                                    color.isValid() ? color.name() : "black"));
 }
