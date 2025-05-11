@@ -29,6 +29,8 @@
 #include "widgets/qrealanimatorvalueslider.h"
 #include "canvas.h"
 
+#include <QActionGroup>
+
 namespace Friction
 {
     namespace Ui
@@ -41,10 +43,13 @@ namespace Friction
             explicit TransformToolBar(QWidget *parent = nullptr);
             void setCurrentCanvas(Canvas * const target);
             void setCurrentBox(BoundingBox * const target);
+            void setCanvasMode(const CanvasMode &mode);
 
         private:
+            void setTransform(BoundingBox * const target);
             void clearTransform();
             void setupWidgets();
+            void setupTransform();
 
             ConnContextQPtr<Canvas> mCanvas;
 
@@ -56,18 +61,10 @@ namespace Friction
             QrealAnimatorValueSlider *mTransformRX;
             QrealAnimatorValueSlider *mTransformRY;
 
-            QAction *mTransformMoveLabelAct;
-            QAction *mTransformRotateLabelAct;
-            QAction *mTransformScaleLabelAct;
-            QAction *mTransformRadiusLabelAct;
-
-            QAction *mTransformXAct;
-            QAction *mTransformYAct;
-            QAction *mTransformRAct;
-            QAction *mTransformSXAct;
-            QAction *mTransformSYAct;
-            QAction *mTransformRXAct;
-            QAction *mTransformRYAct;
+            QActionGroup *mTransformMove;
+            QActionGroup *mTransformRotate;
+            QActionGroup *mTransformScale;
+            QActionGroup *mTransformRadius;
         };
     }
 }
