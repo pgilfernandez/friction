@@ -635,12 +635,19 @@ Friction--Ui--ToolBar::separator:horizontal {
     width: 1px;
 }
 
-Friction--Ui--TransformToolBar::separator {
+Friction--Ui--TransformToolBar::separator,
+Friction--Ui--ToolBar#ViewerRightToolBar::separator,
+Friction--Ui--ToolBar#ViewerLeftToolBar::separator {
     background-color: transparent;
 }
 
 Friction--Ui--TransformToolBar::separator:horizontal {
     width: 2px;
+}
+
+Friction--Ui--ToolBar#ViewerRightToolBar::separator:horizontal,
+Friction--Ui--ToolBar#ViewerLeftToolBar::separator:horizontal {
+    width: 4px;
 }
 
 Friction--Ui--TransformToolBar QComboBox {

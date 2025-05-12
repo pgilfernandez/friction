@@ -770,6 +770,12 @@ void MainWindow::setupMenuBar()
     ltbQAct->setData(tr("Lower Object to Bottom"));
     cmdAddAction(ltbQAct);
 
+    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, raiseQAct);
+    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, lowerQAct);
+    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, rttQAct);
+    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, ltbQAct);
+    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, mViewerRightToolBar->addSeparator());
+
     mObjectMenu->addSeparator();
 
     {
@@ -840,7 +846,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Plus);
         mActions.pathsUnionAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
+        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -850,7 +856,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Minus);
         mActions.pathsDifferenceAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
+        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -860,7 +866,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Asterisk);
         mActions.pathsIntersectionAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
+        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -870,7 +876,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_AsciiCircum);
         mActions.pathsExclusionAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
+        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -880,7 +886,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Slash);
         mActions.pathsDivisionAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
+        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
     }
 
     mPathMenu->addSeparator();
@@ -892,7 +898,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_K);
         mActions.pathsCombineAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
+        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -902,7 +908,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_K);
         mActions.pathsBreakApartAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
+        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
     }
 
     setupMenuScene();
