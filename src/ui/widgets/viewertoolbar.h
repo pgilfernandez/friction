@@ -27,6 +27,10 @@
 
 #include "widgets/toolbar.h"
 
+#include "canvas.h"
+
+#include <QActionGroup>
+
 namespace Friction
 {
     namespace Ui
@@ -37,6 +41,28 @@ namespace Friction
             explicit ViewerToolBar(const QString &name,
                                    const QString &title,
                                    QWidget *parent = nullptr);
+            void setCurrentCanvas(Canvas * const target);
+            void setCurrentBox(BoundingBox * const target);
+            void setCanvasMode(const CanvasMode &mode);
+
+            void addCanvasAction(QAction *action);
+            void addCanvasAction(const CanvasMode &mode,
+                                 QAction *action);
+            void addCanvasWidget(QWidget *widget);
+            void addCanvasWidget(const CanvasMode &mode,
+                                 QWidget *widget);
+
+        private:
+            ConnContextQPtr<Canvas> mCanvas;
+
+            QActionGroup *mGroupCommon;
+            QActionGroup *mGroupTransform;
+            QActionGroup *mGroupPath;
+            QActionGroup *mGroupCircle;
+            QActionGroup *mGroupRectangle;
+            QActionGroup *mGroupText;
+            QActionGroup *mGroupDraw;
+            QActionGroup *mGroupPick;
         };
     }
 }
