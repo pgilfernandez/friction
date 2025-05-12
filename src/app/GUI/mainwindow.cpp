@@ -389,6 +389,9 @@ MainWindow::MainWindow(Document& document,
     mColorPickLabelAct = mViewerRightToolBar->addWidget(mColorPickLabel);
     mColorPickLabelAct->setVisible(false);
 
+    mViewerLeftToolBar->setCanvasMode(CanvasMode::boxTransform);
+    mViewerRightToolBar->setCanvasMode(CanvasMode::boxTransform);
+
     // final layout
     mUI = new UILayout(this);
     std::vector<UILayout::Item> docks;
