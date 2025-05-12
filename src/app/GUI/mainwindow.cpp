@@ -609,9 +609,7 @@ void MainWindow::setupMenuBar()
         const auto qAct = new NoShortcutAction(tr("Delete", "MenuBar_Edit"));
         qAct->setIcon(QIcon::fromTheme("trash"));
         mEditMenu->addAction(qAct);
-#ifndef Q_OS_MAC
         qAct->setShortcut(Qt::Key_Delete);
-#endif
         mActions.deleteAction->connect(qAct);
         cmdAddAction(qAct);
     }
