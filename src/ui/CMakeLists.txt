@@ -67,7 +67,6 @@ set(
     widgets/aboutwidget.cpp
     widgets/actionbutton.cpp
     widgets/alignwidget.cpp
-    widgets/aligntoolbar.cpp
     widgets/framescrollbar.cpp
     widgets/assetswidget.cpp
     widgets/bookmarkedcolors.cpp
@@ -107,11 +106,11 @@ set(
     widgets/transformtoolbar.cpp
     widgets/twocolumnlayout.cpp
     widgets/uilayout.cpp
+    widgets/viewertoolbar.cpp
     widgets/welcomedialog.cpp
     widgets/widgetstack.cpp
     widgets/widgetwrappernode.cpp
     widgets/wrappernode.cpp
-    widgets/viewertoolbar.cpp
 )
 
 set(
@@ -142,7 +141,6 @@ set(
     widgets/aboutwidget.h
     widgets/actionbutton.h
     widgets/alignwidget.h
-    widgets/aligntoolbar.h
     widgets/fillstrokesettings.h
     widgets/framescrollbar.h
     widgets/assetswidget.h
@@ -184,11 +182,11 @@ set(
     widgets/twocolumnlayout.h
     widgets/uilayout.h
     widgets/vlabel.h
+    widgets/viewertoolbar.h
     widgets/welcomedialog.h
     widgets/widgetstack.h
     widgets/widgetwrappernode.h
     widgets/wrappernode.h
-    widgets/viewertoolbar.h
 )
 
 if(NOT WIN32)
