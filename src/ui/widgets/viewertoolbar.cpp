@@ -37,6 +37,7 @@ ViewerToolBar::ViewerToolBar(const QString &name,
     , mGroupText(nullptr)
     , mGroupDraw(nullptr)
     , mGroupPick(nullptr)
+    , mGroupBox(nullptr)
 {
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -51,6 +52,17 @@ ViewerToolBar::ViewerToolBar(const QString &name,
     mGroupText = new QActionGroup(this);
     mGroupDraw = new QActionGroup(this);
     mGroupPick = new QActionGroup(this);
+    mGroupBox = new QActionGroup(this);
+
+    mGroupCommon->setVisible(false);
+    mGroupTransform->setVisible(false);
+    mGroupPath->setVisible(false);
+    mGroupCircle->setVisible(false);
+    mGroupRectangle->setVisible(false);
+    mGroupText->setVisible(false);
+    mGroupDraw->setVisible(false);
+    mGroupPick->setVisible(false);
+    mGroupBox->setVisible(false);
 }
 
 void ViewerToolBar::setCurrentCanvas(Canvas * const target)
@@ -67,7 +79,7 @@ void ViewerToolBar::setCurrentCanvas(Canvas * const target)
 
 void ViewerToolBar::setCurrentBox(BoundingBox * const target)
 {
-    Q_UNUSED(target)
+    mGroupBox->setVisible(target);
 }
 
 void ViewerToolBar::setCanvasMode(const CanvasMode &mode)
@@ -121,6 +133,12 @@ void ViewerToolBar::addCanvasAction(const CanvasMode &mode,
     }
 }
 
+void ViewerToolBar::addCanvasBoxAction(QAction *action)
+{
+    if (!action) { return; }
+    addAction(mGroupBox->addAction(action));
+}
+
 void ViewerToolBar::addCanvasWidget(QWidget *widget)
 {
     if (!widget) { return; }
@@ -156,4 +174,10 @@ void ViewerToolBar::addCanvasWidget(const CanvasMode &mode,
         break;
     default:;
     }
+}
+
+void ViewerToolBar::addCanvasBoxWidget(QWidget *widget)
+{
+    if (!widget) { return; }
+    mGroupBox->addAction(addWidget(widget));
 }

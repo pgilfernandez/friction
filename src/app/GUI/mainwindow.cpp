@@ -594,7 +594,7 @@ void MainWindow::setupMenuBar()
 #endif
         mActions.copyAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerLeftToolBar->addAction(qAct);
+        mViewerLeftToolBar->addCanvasBoxAction(qAct);
     }
 
     {
@@ -617,7 +617,7 @@ void MainWindow::setupMenuBar()
 #endif
         mActions.pasteAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerLeftToolBar->addAction(qAct);
+        mViewerLeftToolBar->addCanvasBoxAction(qAct);
     }
 
     { // import (paste) SVG from clipboard
