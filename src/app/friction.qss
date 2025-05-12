@@ -601,13 +601,14 @@ QCheckBox:disabled {
     color: %13;
 }
 
-QToolBar#DarkToolBar {
+QToolBar#DarkToolBar,
+Friction--Ui--TransformToolBar {
     background-color: %5;
 }
 
 QToolBar#ColorToolBar QToolButton:hover,
-QToolBar#CanvasToolBar QToolButton:hover
-{
+QToolBar#CanvasToolBar QToolButton:hover,
+Friction--Ui--TransformToolBar QToolButton:hover {
     background-color: transparent;
     border-color: transparent;
 }
@@ -632,6 +633,18 @@ Friction--Ui--ToolBar::separator:vertical {
 
 Friction--Ui--ToolBar::separator:horizontal {
     width: 1px;
+}
+
+Friction--Ui--TransformToolBar::separator {
+    background-color: transparent;
+}
+
+Friction--Ui--TransformToolBar::separator:horizontal {
+    width: 2px;
+}
+
+Friction--Ui--TransformToolBar QComboBox {
+    padding: .1em;
 }
 
 ExpressionEditor {

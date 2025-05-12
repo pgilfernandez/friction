@@ -68,6 +68,10 @@ void ToolBar::setup()
     setStyleSheet(QString("font-size: %1pt;").arg(font().pointSize()));
 #endif
 
+    eSizesUI::widget.add(this, [this](const int size) {
+        this->setIconSize({size, size});
+    });
+
     if (objectName().isEmpty()) {
         setObjectName(windowTitle().replace(" ", "").simplified());
     }

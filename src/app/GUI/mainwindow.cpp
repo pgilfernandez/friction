@@ -150,6 +150,9 @@ MainWindow::MainWindow(Document& document,
     , mTabQueueIndex(0)
     , mColorToolBar(nullptr)
     , mCanvasToolBar(nullptr)
+    , mTransformToolBar(nullptr)
+    , mViewerLeftToolBar(nullptr)
+    , mViewerRightToolBar(nullptr)
     , mBackupOnSave(false)
     , mAutoSave(false)
     , mAutoSaveTimeout(0)
@@ -163,6 +166,7 @@ MainWindow::MainWindow(Document& document,
     , mRenderWindow(nullptr)
     , mRenderWindowAct(nullptr)
     , mColorPickLabel(nullptr)
+    , mColorPickLabelAct(nullptr)
     , mToolBarMainAct(nullptr)
     , mToolBarColorAct(nullptr)
 {
@@ -261,6 +265,14 @@ MainWindow::MainWindow(Document& document,
 
     const auto assets = new AssetsWidget(this);
 
+    mTransformToolBar = new Ui::TransformToolBar(this);
+    mViewerLeftToolBar = new Ui::ViewerToolBar("ViewerLeftToolBar",
+                                               tr("Viewer Left ToolBar"),
+                                               this);
+    mViewerRightToolBar = new Ui::ViewerToolBar("ViewerRightToolBar",
+                                                tr("Viewer Right ToolBar"),
+                                                this);
+
     setupToolBox();
     setupToolBar();
     setupMenuBar();
@@ -283,9 +295,36 @@ MainWindow::MainWindow(Document& document,
        []() { MainWindow::sGetInstance()->openFile(); },
        this);
 
+    const auto viewerWidget = new QWidget(this);
+    const auto viewerToolBar = new QWidget(this);
+
+    const auto viewerLayout = new QVBoxLayout(viewerWidget);
+    const auto viewerLayoutToolBar = new QHBoxLayout(viewerToolBar);
+
+    viewerWidget->setContentsMargins(0, 0, 0, 0);
+
+    viewerToolBar->setObjectName("DarkWidget");
+    viewerToolBar->setContentsMargins(0, 0, 0, 0);
+
+    viewerLayout->setSpacing(0);
+    viewerLayout->setContentsMargins(0, 0, 0, 0);
+    viewerLayout->setMargin(0);
+
+    viewerLayoutToolBar->setSpacing(0);
+    viewerLayoutToolBar->setContentsMargins(0, 0, 0, 0);
+    viewerLayoutToolBar->setMargin(0);
+
     mStackWidget = new QStackedWidget(this);
     mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
     mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
+
+    viewerLayout->addWidget(mStackWidget);
+    viewerLayout->addWidget(viewerToolBar);
+
+    viewerLayoutToolBar->addWidget(mViewerLeftToolBar);
+    viewerLayoutToolBar->addWidget(mTransformToolBar);
+    viewerLayoutToolBar->addStretch();
+    viewerLayoutToolBar->addWidget(mViewerRightToolBar);
 
     mColorToolBar = new Ui::ColorToolBar(mDocument, this);
     connect(mColorToolBar, &Ui::ColorToolBar::message,
@@ -347,8 +386,8 @@ MainWindow::MainWindow(Document& document,
     statusBar()->addPermanentWidget(mCanvasToolBar);
 
     mColorPickLabel = new QLabel(this);
-    mColorPickLabel->setVisible(false);
-    statusBar()->addWidget(mColorPickLabel);
+    mColorPickLabelAct = mViewerRightToolBar->addWidget(mColorPickLabel);
+    mColorPickLabelAct->setVisible(false);
 
     // final layout
     mUI = new UILayout(this);
@@ -356,7 +395,7 @@ MainWindow::MainWindow(Document& document,
     docks.push_back({UIDock::Position::Up,
                      -1,
                      tr("Viewer"),
-                     mStackWidget,
+                     viewerWidget,
                      false,
                      false,
                      false});
@@ -535,12 +574,14 @@ void MainWindow::setupMenuBar()
     undoQAct->setShortcut(Qt::CTRL + Qt::Key_Z);
     mActions.undoAction->connect(undoQAct);
     cmdAddAction(undoQAct);
+    mViewerLeftToolBar->addAction(undoQAct);
 
     const auto redoQAct = mEditMenu->addAction(QIcon::fromTheme("loop_forwards"),
                                                tr("Redo", "MenuBar_Edit"));
     redoQAct->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_Z);
     mActions.redoAction->connect(redoQAct);
     cmdAddAction(redoQAct);
+    mViewerLeftToolBar->addAction(redoQAct);
 
     mEditMenu->addSeparator();
 
@@ -1463,8 +1504,9 @@ void MainWindow::addCanvasToRenderQue()
 
 void MainWindow::updateSettingsForCurrentCanvas(Canvas* const scene)
 {
-    mColorToolBar->setCurrentCanvas(scene);
-    mCanvasToolBar->setCurrentCanvas(scene);
+    if (mColorToolBar) { mColorToolBar->setCurrentCanvas(scene); }
+    if (mCanvasToolBar) { mCanvasToolBar->setCurrentCanvas(scene); }
+    if (mTransformToolBar) { mTransformToolBar->setCurrentCanvas(scene); }
 
     mObjectSettingsWidget->setCurrentScene(scene);
 
@@ -1534,9 +1576,8 @@ void MainWindow::updateCanvasModeButtonsChecked()
     mLocalPivotAct->setEnabled(pointMode || boxMode);
 
     if (mColorPickLabel) {
-        mColorPickLabel->clear();
-        mColorPickLabel->setVisible(mode == CanvasMode::pickFillStroke ||
-                                    mode == CanvasMode::pickFillStrokeEvent);
+        mColorPickLabelAct->setVisible(mode == CanvasMode::pickFillStroke ||
+                                       mode == CanvasMode::pickFillStrokeEvent);
     }
 }
 
@@ -2347,14 +2388,11 @@ void MainWindow::handleNewVideoClip(const VideoBox::VideoSpecs &specs)
 
 void MainWindow::handleCurrentPixelColor(const QColor &color)
 {
-    if (!color.isValid()) {
-        mColorPickLabel->clear();
-        return;
-    }
-    mColorPickLabel->setText(QString("&nbsp;&nbsp;<span style=\"background-color: %4;\">"
-                                     "&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;"
-                                     "<b>RGB</b> %1, %2, %3").arg(QString::number(color.redF()),
-                                                                  QString::number(color.greenF()),
-                                                                  QString::number(color.blueF()),
-                                                                  color.name()));
+    mColorPickLabel->setText(QString("<b>R:</b> %1 <b>G:</b> %2 <b>B:</b> %3 &nbsp;&nbsp;"
+                                     "<span style=\"background-color: %4;\">"
+                                     "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                                     "</span>").arg(QString::number(color.isValid() ? color.redF() : 0., 'f', 3),
+                                                    QString::number(color.isValid() ? color.greenF() : 0., 'f', 3),
+                                                    QString::number(color.isValid() ? color.blueF() : 0., 'f', 3),
+                                                    color.isValid() ? color.name() : "black"));
 }
