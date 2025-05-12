@@ -295,36 +295,24 @@ MainWindow::MainWindow(Document& document,
        []() { MainWindow::sGetInstance()->openFile(); },
        this);
 
-    const auto viewerWidget = new QWidget(this);
-    const auto viewerToolBar = new QWidget(this);
-
-    const auto viewerLayout = new QVBoxLayout(viewerWidget);
-    const auto viewerLayoutToolBar = new QHBoxLayout(viewerToolBar);
-
-    viewerWidget->setContentsMargins(0, 0, 0, 0);
-
-    viewerToolBar->setObjectName("DarkWidget");
-    viewerToolBar->setContentsMargins(0, 0, 0, 0);
-
-    viewerLayout->setSpacing(0);
-    viewerLayout->setContentsMargins(0, 0, 0, 0);
-    viewerLayout->setMargin(0);
-
-    viewerLayoutToolBar->setSpacing(0);
-    viewerLayoutToolBar->setContentsMargins(0, 0, 0, 0);
-    viewerLayoutToolBar->setMargin(0);
-
     mStackWidget = new QStackedWidget(this);
     mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
     mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
 
-    viewerLayout->addWidget(mStackWidget);
-    viewerLayout->addWidget(viewerToolBar);
+    const auto toolBox = new Ui::ToolBar(tr("ToolBox"),
+                                         "ToolBox",
+                                         this,
+                                         true);
+    toolBox->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
+    toolBox->addWidget(mViewerLeftToolBar);
+    toolBox->addWidget(mTransformToolBar);
+    toolBox->addWidget(mViewerRightToolBar);
 
-    viewerLayoutToolBar->addWidget(mViewerLeftToolBar);
-    viewerLayoutToolBar->addWidget(mTransformToolBar);
-    viewerLayoutToolBar->addStretch();
-    viewerLayoutToolBar->addWidget(mViewerRightToolBar);
+    insertToolBarBreak(toolBox);
+    addToolBar(Qt::TopToolBarArea, toolBox);
+
+    mViewerLeftToolBar->setCanvasMode(CanvasMode::boxTransform);
+    mViewerRightToolBar->setCanvasMode(CanvasMode::boxTransform);
 
     mColorToolBar = new Ui::ColorToolBar(mDocument, this);
     connect(mColorToolBar, &Ui::ColorToolBar::message,
@@ -389,16 +377,13 @@ MainWindow::MainWindow(Document& document,
     mColorPickLabelAct = mViewerRightToolBar->addWidget(mColorPickLabel);
     mColorPickLabelAct->setVisible(false);
 
-    mViewerLeftToolBar->setCanvasMode(CanvasMode::boxTransform);
-    mViewerRightToolBar->setCanvasMode(CanvasMode::boxTransform);
-
     // final layout
     mUI = new UILayout(this);
     std::vector<UILayout::Item> docks;
     docks.push_back({UIDock::Position::Up,
                      -1,
                      tr("Viewer"),
-                     viewerWidget,
+                     mStackWidget,
                      false,
                      false,
                      false});

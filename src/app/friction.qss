@@ -486,7 +486,8 @@ AlignWidget QPushButton:disabled {
     background: transparent;
 }
 
-QWidget#DarkWidget {
+QWidget#DarkWidget,
+Friction--Ui--ToolBar#ToolBox {
     background-color: %5;
 }
 
