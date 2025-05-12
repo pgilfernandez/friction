@@ -62,6 +62,14 @@ void ToolBar::updateActions()
     }
 }
 
+QAction *ToolBar::addSpacer(const bool &horizontal)
+{
+    const auto widget = new QWidget(this);
+    widget->setSizePolicy(horizontal ? QSizePolicy::Expanding : QSizePolicy::Minimum,
+                          horizontal ? QSizePolicy::Minimum : QSizePolicy::Expanding);
+    return addWidget(widget);
+}
+
 void ToolBar::setup()
 {
 #ifdef Q_OS_MAC
