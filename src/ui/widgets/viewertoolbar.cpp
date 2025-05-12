@@ -29,6 +29,7 @@ ViewerToolBar::ViewerToolBar(const QString &name,
                              const QString &title,
                              QWidget *parent)
     : ToolBar(name, parent, true)
+    , mCanvasMode(CanvasMode::boxTransform)
     , mGroupCommon(nullptr)
     , mGroupTransform(nullptr)
     , mGroupPath(nullptr)
@@ -37,7 +38,12 @@ ViewerToolBar::ViewerToolBar(const QString &name,
     , mGroupText(nullptr)
     , mGroupDraw(nullptr)
     , mGroupPick(nullptr)
-    , mGroupBox(nullptr)
+    , mGroupSelected(nullptr)
+    , mGroupSelectedTransform(nullptr)
+    , mGroupSelectedPath(nullptr)
+    , mGroupSelectedCircle(nullptr)
+    , mGroupSelectedRectangle(nullptr)
+    , mGroupSelectedText(nullptr)
 {
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -52,7 +58,12 @@ ViewerToolBar::ViewerToolBar(const QString &name,
     mGroupText = new QActionGroup(this);
     mGroupDraw = new QActionGroup(this);
     mGroupPick = new QActionGroup(this);
-    mGroupBox = new QActionGroup(this);
+    mGroupSelected = new QActionGroup(this);
+    mGroupSelectedTransform = new QActionGroup(this);
+    mGroupSelectedPath = new QActionGroup(this);
+    mGroupSelectedCircle = new QActionGroup(this);
+    mGroupSelectedRectangle = new QActionGroup(this);
+    mGroupSelectedText = new QActionGroup(this);
 
     mGroupCommon->setVisible(false);
     mGroupTransform->setVisible(false);
@@ -62,7 +73,12 @@ ViewerToolBar::ViewerToolBar(const QString &name,
     mGroupText->setVisible(false);
     mGroupDraw->setVisible(false);
     mGroupPick->setVisible(false);
-    mGroupBox->setVisible(false);
+    mGroupSelected->setVisible(false);
+    mGroupSelectedTransform->setVisible(false);
+    mGroupSelectedPath->setVisible(false);
+    mGroupSelectedCircle->setVisible(false);
+    mGroupSelectedRectangle->setVisible(false);
+    mGroupSelectedText->setVisible(false);
 }
 
 void ViewerToolBar::setCurrentCanvas(Canvas * const target)
@@ -79,11 +95,17 @@ void ViewerToolBar::setCurrentCanvas(Canvas * const target)
 
 void ViewerToolBar::setCurrentBox(BoundingBox * const target)
 {
-    mGroupBox->setVisible(target);
+    mGroupSelected->setVisible(target);
+    mGroupSelectedTransform->setVisible(target && mCanvasMode == CanvasMode::boxTransform);
+    mGroupSelectedPath->setVisible(target && mCanvasMode == CanvasMode::pointTransform);
+    mGroupSelectedCircle->setVisible(target && mCanvasMode == CanvasMode::circleCreate);
+    mGroupSelectedRectangle->setVisible(target && mCanvasMode == CanvasMode::rectCreate);
+    mGroupSelectedText->setVisible(target && mCanvasMode == CanvasMode::textCreate);
 }
 
 void ViewerToolBar::setCanvasMode(const CanvasMode &mode)
 {
+    mCanvasMode = mode;
     mGroupCommon->setVisible(true);
     mGroupTransform->setVisible(mode == CanvasMode::boxTransform);
     mGroupPath->setVisible(mode == CanvasMode::pointTransform);
@@ -94,6 +116,8 @@ void ViewerToolBar::setCanvasMode(const CanvasMode &mode)
     mGroupDraw->setVisible(mode == CanvasMode::drawPath);
     mGroupPick->setVisible(mode == CanvasMode::pickFillStroke ||
                            mode == CanvasMode::pickFillStrokeEvent);
+
+    if (mCanvas) { setCurrentBox(mCanvas->getCurrentBox()); }
 }
 
 void ViewerToolBar::addCanvasAction(QAction *action)
@@ -123,7 +147,7 @@ void ViewerToolBar::addCanvasAction(const CanvasMode &mode,
         addAction(mGroupText->addAction(action));
         break;
     case CanvasMode::drawPath:
-        addAction(mGroupPick->addAction(action));
+        addAction(mGroupDraw->addAction(action));
         break;
     case CanvasMode::pickFillStroke:
     case CanvasMode::pickFillStrokeEvent:
@@ -133,10 +157,34 @@ void ViewerToolBar::addCanvasAction(const CanvasMode &mode,
     }
 }
 
-void ViewerToolBar::addCanvasBoxAction(QAction *action)
+void ViewerToolBar::addCanvasSelectedAction(QAction *action)
 {
     if (!action) { return; }
-    addAction(mGroupBox->addAction(action));
+    addAction(mGroupSelected->addAction(action));
+}
+
+void ViewerToolBar::addCanvasSelectedAction(const CanvasMode &mode,
+                                            QAction *action)
+{
+    if (!action) { return; }
+    switch (mode) {
+    case CanvasMode::boxTransform:
+        addAction(mGroupSelectedTransform->addAction(action));
+        break;
+    case CanvasMode::pointTransform:
+        addAction(mGroupSelectedPath->addAction(action));
+        break;
+    case CanvasMode::circleCreate:
+        addAction(mGroupSelectedCircle->addAction(action));
+        break;
+    case CanvasMode::rectCreate:
+        addAction(mGroupSelectedRectangle->addAction(action));
+        break;
+    case CanvasMode::textCreate:
+        addAction(mGroupSelectedText->addAction(action));
+        break;
+    default:;
+    }
 }
 
 void ViewerToolBar::addCanvasWidget(QWidget *widget)
@@ -166,7 +214,7 @@ void ViewerToolBar::addCanvasWidget(const CanvasMode &mode,
         mGroupText->addAction(addWidget(widget));
         break;
     case CanvasMode::drawPath:
-        mGroupPick->addAction(addWidget(widget));
+        mGroupDraw->addAction(addWidget(widget));
         break;
     case CanvasMode::pickFillStroke:
     case CanvasMode::pickFillStrokeEvent:
@@ -176,8 +224,32 @@ void ViewerToolBar::addCanvasWidget(const CanvasMode &mode,
     }
 }
 
-void ViewerToolBar::addCanvasBoxWidget(QWidget *widget)
+void ViewerToolBar::addCanvasSelectedWidget(QWidget *widget)
 {
     if (!widget) { return; }
-    mGroupBox->addAction(addWidget(widget));
+    mGroupSelected->addAction(addWidget(widget));
+}
+
+void ViewerToolBar::addCanvasSelectedWidget(const CanvasMode &mode,
+                                            QWidget *widget)
+{
+    if (!widget) { return; }
+    switch (mode) {
+    case CanvasMode::boxTransform:
+        mGroupSelectedTransform->addAction(addWidget(widget));
+        break;
+    case CanvasMode::pointTransform:
+        mGroupSelectedPath->addAction(addWidget(widget));
+        break;
+    case CanvasMode::circleCreate:
+        mGroupSelectedCircle->addAction(addWidget(widget));
+        break;
+    case CanvasMode::rectCreate:
+        mGroupSelectedRectangle->addAction(addWidget(widget));
+        break;
+    case CanvasMode::textCreate:
+        mGroupSelectedText->addAction(addWidget(widget));
+        break;
+    default:;
+    }
 }

@@ -48,14 +48,19 @@ namespace Friction
             void addCanvasAction(QAction *action);
             void addCanvasAction(const CanvasMode &mode,
                                  QAction *action);
-            void addCanvasBoxAction(QAction *action);
+            void addCanvasSelectedAction(QAction *action);
+            void addCanvasSelectedAction(const CanvasMode &mode,
+                                         QAction *action);
             void addCanvasWidget(QWidget *widget);
             void addCanvasWidget(const CanvasMode &mode,
                                  QWidget *widget);
-            void addCanvasBoxWidget(QWidget *widget);
+            void addCanvasSelectedWidget(QWidget *widget);
+            void addCanvasSelectedWidget(const CanvasMode &mode,
+                                         QWidget *widget);
 
         private:
             ConnContextQPtr<Canvas> mCanvas;
+            CanvasMode mCanvasMode;
 
             QActionGroup *mGroupCommon;
             QActionGroup *mGroupTransform;
@@ -65,7 +70,12 @@ namespace Friction
             QActionGroup *mGroupText;
             QActionGroup *mGroupDraw;
             QActionGroup *mGroupPick;
-            QActionGroup *mGroupBox;
+            QActionGroup *mGroupSelected;
+            QActionGroup *mGroupSelectedTransform;
+            QActionGroup *mGroupSelectedPath;
+            QActionGroup *mGroupSelectedCircle;
+            QActionGroup *mGroupSelectedRectangle;
+            QActionGroup *mGroupSelectedText;
         };
     }
 }
