@@ -594,6 +594,7 @@ void MainWindow::setupMenuBar()
 #endif
         mActions.copyAction->connect(qAct);
         cmdAddAction(qAct);
+        mViewerLeftToolBar->addAction(qAct);
     }
 
     {
@@ -616,6 +617,7 @@ void MainWindow::setupMenuBar()
 #endif
         mActions.pasteAction->connect(qAct);
         cmdAddAction(qAct);
+        mViewerLeftToolBar->addAction(qAct);
     }
 
     { // import (paste) SVG from clipboard
@@ -835,6 +837,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Plus);
         mActions.pathsUnionAction->connect(qAct);
         cmdAddAction(qAct);
+        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -844,6 +847,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Minus);
         mActions.pathsDifferenceAction->connect(qAct);
         cmdAddAction(qAct);
+        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -853,6 +857,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Asterisk);
         mActions.pathsIntersectionAction->connect(qAct);
         cmdAddAction(qAct);
+        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -862,6 +867,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_AsciiCircum);
         mActions.pathsExclusionAction->connect(qAct);
         cmdAddAction(qAct);
+        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -871,6 +877,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Slash);
         mActions.pathsDivisionAction->connect(qAct);
         cmdAddAction(qAct);
+        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
     }
 
     mPathMenu->addSeparator();
@@ -882,6 +889,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_K);
         mActions.pathsCombineAction->connect(qAct);
         cmdAddAction(qAct);
+        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
     }
 
     {
@@ -891,6 +899,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_K);
         mActions.pathsBreakApartAction->connect(qAct);
         cmdAddAction(qAct);
+        mViewerRightToolBar->addCanvasAction(CanvasMode::boxTransform, qAct);
     }
 
     setupMenuScene();
@@ -904,6 +913,7 @@ void MainWindow::setupMenuBar()
     mZoomInAction = zoomMenu->addAction(tr("Zoom In", "MenuBar_View_Zoom"));
     mZoomInAction->setIcon(QIcon::fromTheme("zoom_in"));
     mZoomInAction->setShortcut(QKeySequence("Ctrl+Shift++"));
+    mViewerLeftToolBar->addCanvasAction(mZoomInAction);
     cmdAddAction(mZoomInAction);
     connect(mZoomInAction, &QAction::triggered,
             this, [](){
@@ -916,6 +926,7 @@ void MainWindow::setupMenuBar()
     mZoomOutAction = zoomMenu->addAction(tr("Zoom Out", "MenuBar_View_Zoom"));
     mZoomOutAction->setIcon(QIcon::fromTheme("zoom_out"));
     mZoomOutAction->setShortcut(QKeySequence("Ctrl+Shift+-"));
+    mViewerLeftToolBar->addCanvasAction(mZoomOutAction);
     cmdAddAction(mZoomOutAction);
     connect(mZoomOutAction, &QAction::triggered,
             this, [](){
@@ -928,6 +939,7 @@ void MainWindow::setupMenuBar()
     mFitViewAction = zoomMenu->addAction(tr("Fit to Canvas", "MenuBar_View_Zoom"));
     mFitViewAction->setIcon(QIcon::fromTheme("zoom_all"));
     mFitViewAction->setShortcut(QKeySequence("Ctrl+0"));
+    mViewerLeftToolBar->addCanvasAction(mFitViewAction);
     connect(mFitViewAction, &QAction::triggered,
             this, [](){
         const auto target = KeyFocusTarget::KFT_getCurrentTarget();
@@ -1507,6 +1519,8 @@ void MainWindow::updateSettingsForCurrentCanvas(Canvas* const scene)
     if (mColorToolBar) { mColorToolBar->setCurrentCanvas(scene); }
     if (mCanvasToolBar) { mCanvasToolBar->setCurrentCanvas(scene); }
     if (mTransformToolBar) { mTransformToolBar->setCurrentCanvas(scene); }
+    if (mViewerLeftToolBar) { mViewerLeftToolBar->setCurrentCanvas(scene); }
+    if (mViewerRightToolBar) { mViewerRightToolBar->setCurrentCanvas(scene); }
 
     mObjectSettingsWidget->setCurrentScene(scene);
 
