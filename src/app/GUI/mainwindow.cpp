@@ -308,18 +308,21 @@ MainWindow::MainWindow(Document& document,
     toolBox->addWidget(mTransformToolBar);
     toolBox->addWidget(mViewerRightToolBar);
 
-    insertToolBarBreak(toolBox);
-    addToolBar(Qt::TopToolBarArea, toolBox);
-
-    mViewerLeftToolBar->setCanvasMode(CanvasMode::boxTransform);
-    mViewerRightToolBar->setCanvasMode(CanvasMode::boxTransform);
-
     mColorToolBar = new Ui::ColorToolBar(mDocument, this);
     connect(mColorToolBar, &Ui::ColorToolBar::message,
             this, [this](const QString &msg){ statusBar()->showMessage(msg, 500); });
 
     mCanvasToolBar = new Ui::CanvasToolBar(this);
     installNumericFilter(mCanvasToolBar->getResolutionComboBox());
+
+    addToolBar(mColorToolBar);
+
+    insertToolBarBreak(toolBox);
+    addToolBarBreak(Qt::TopToolBarArea);
+    addToolBar(Qt::TopToolBarArea, toolBox);
+
+    mViewerLeftToolBar->setCanvasMode(CanvasMode::boxTransform);
+    mViewerRightToolBar->setCanvasMode(CanvasMode::boxTransform);
 
     QMargins frictionMargins(0, 0, 0, 0);
     int frictionSpacing = 0;
@@ -361,8 +364,6 @@ MainWindow::MainWindow(Document& document,
     mTabQueueIndex = mTabProperties->addTab(mRenderWidget,
                                             QIcon::fromTheme("render_animation"),
                                             tr("Queue"));
-
-    addToolBar(mColorToolBar);
 
     mCanvasToolBar->addSeparator();
     mCanvasToolBar->addAction(QIcon::fromTheme("workspace"),
