@@ -38,10 +38,15 @@ TransformToolBar::TransformToolBar(QWidget *parent)
     , mTransformSY(nullptr)
     , mTransformRX(nullptr)
     , mTransformRY(nullptr)
+    , mTransformPX(nullptr)
+    , mTransformPY(nullptr)
+    , mTransformOX(nullptr)
     , mTransformMove(nullptr)
     , mTransformRotate(nullptr)
     , mTransformScale(nullptr)
     , mTransformRadius(nullptr)
+    , mTransformPivot(nullptr)
+    , mTransformOpacity(nullptr)
 {
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -87,7 +92,7 @@ void TransformToolBar::setTransform(BoundingBox * const target)
         return;
     }
 
-    const auto animator = target->getTransformAnimator();
+    const auto animator = target->getBoxTransformAnimator();
     if (!animator) {
         clearTransform();
         return;
@@ -109,6 +114,17 @@ void TransformToolBar::setTransform(BoundingBox * const target)
     mTransformSY->setTarget(scale ? scale->getYAnimator() : nullptr);
 
     mTransformScale->setEnabled(scale);
+
+    const auto pivot = animator->getPivotAnimator();
+    mTransformPX->setTarget(pivot ? pivot->getXAnimator() : nullptr);
+    mTransformPY->setTarget(pivot ? pivot->getYAnimator() : nullptr);
+
+    mTransformPivot->setEnabled(pivot);
+
+    const auto opacity = animator->getOpacityAnimator();
+    mTransformOX->setTarget(opacity);
+
+    mTransformOpacity->setEnabled(opacity);
 
     const auto circle = enve_cast<Circle*>(target);
     const auto rectangle = enve_cast<RectangleBox*>(target);
@@ -135,11 +151,16 @@ void TransformToolBar::clearTransform()
     mTransformSY->setTarget(nullptr);
     mTransformRX->setTarget(nullptr);
     mTransformRY->setTarget(nullptr);
+    mTransformPX->setTarget(nullptr);
+    mTransformPY->setTarget(nullptr);
+    mTransformOX->setTarget(nullptr);
 
     mTransformMove->setEnabled(false);
     mTransformRotate->setEnabled(false);
     mTransformScale->setEnabled(false);
     mTransformRadius->setEnabled(false);
+    mTransformPivot->setEnabled(false);
+    mTransformOpacity->setEnabled(false);
 
     mTransformRadius->setVisible(false);
 }
@@ -155,6 +176,8 @@ void TransformToolBar::setupTransform()
     mTransformRotate = new QActionGroup(this);
     mTransformScale = new QActionGroup(this);
     mTransformRadius = new QActionGroup(this);
+    mTransformPivot = new QActionGroup(this);
+    mTransformOpacity = new QActionGroup(this);
 
     mTransformX = new QrealAnimatorValueSlider(nullptr, this);
     mTransformY = new QrealAnimatorValueSlider(nullptr, this);
@@ -163,6 +186,9 @@ void TransformToolBar::setupTransform()
     mTransformSY = new QrealAnimatorValueSlider(nullptr, this);
     mTransformRX = new QrealAnimatorValueSlider(nullptr, this);
     mTransformRY = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformPX = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformPY = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformOX =new QrealAnimatorValueSlider(nullptr, this);
 
     mTransformMove->addAction(addAction(QIcon::fromTheme("boxTransform"),
                                         tr("Move")));
@@ -179,6 +205,16 @@ void TransformToolBar::setupTransform()
     mTransformScale->addAction(addWidget(mTransformSX));
     mTransformScale->addAction(addSeparator());
     mTransformScale->addAction(addWidget(mTransformSY));
+
+    mTransformPivot->addAction(addAction(QIcon::fromTheme("pivot"),
+                                         tr("Pivot")));
+    mTransformPivot->addAction(addWidget(mTransformPX));
+    mTransformPivot->addAction(addSeparator());
+    mTransformPivot->addAction(addWidget(mTransformPY));
+
+    mTransformOpacity->addAction(addAction(QIcon::fromTheme("alpha"),
+                                           tr("Opacity")));
+    mTransformOpacity->addAction(addWidget(mTransformOX));
 
     mTransformRadius->addAction(addAction(QIcon::fromTheme("circleCreate"),
                                           tr("Radius")));
@@ -202,4 +238,10 @@ void TransformToolBar::setupTransform()
     mTransformRX->setDisplayedValue(0);
     mTransformRY->setValueRange(0, 1);
     mTransformRY->setDisplayedValue(0);
+    mTransformPX->setValueRange(0, 1);
+    mTransformPX->setDisplayedValue(0);
+    mTransformPY->setValueRange(0, 1);
+    mTransformPY->setDisplayedValue(0);
+    mTransformOX->setValueRange(0, 100);
+    mTransformOX->setDisplayedValue(100);
 }
