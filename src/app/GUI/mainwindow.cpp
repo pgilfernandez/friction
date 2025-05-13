@@ -583,7 +583,6 @@ void MainWindow::setupMenuBar()
 #endif
         mActions.copyAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerLeftToolBar->addAction(qAct);
     }
 
     {
@@ -606,7 +605,6 @@ void MainWindow::setupMenuBar()
 #endif
         mActions.pasteAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerLeftToolBar->addAction(qAct);
     }
 
     { // import (paste) SVG from clipboard
@@ -756,12 +754,6 @@ void MainWindow::setupMenuBar()
     ltbQAct->setData(tr("Lower Object to Bottom"));
     cmdAddAction(ltbQAct);
 
-    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, raiseQAct);
-    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, lowerQAct);
-    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, rttQAct);
-    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, ltbQAct);
-    mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, mViewerRightToolBar->addSeparator());
-
     mObjectMenu->addSeparator();
 
     {
@@ -825,6 +817,16 @@ void MainWindow::setupMenuBar()
 
     mPathMenu->addSeparator();
 
+    const auto pathOpTool = new QToolButton(this);
+    pathOpTool->setIcon(QIcon::fromTheme("booleans_union"));
+    pathOpTool->setToolTip(tr("Boolean Operations"));
+    pathOpTool->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    pathOpTool->setPopupMode(QToolButton::InstantPopup);
+    pathOpTool->setFocusPolicy(Qt::NoFocus);
+    pathOpTool->setObjectName(QString::fromUtf8("ToolButton"));
+
+    mViewerRightToolBar->addCanvasSelectedWidget(CanvasMode::boxTransform, pathOpTool);
+
     {
         const auto qAct = mPathMenu->addAction(
                     tr("Union", "MenuBar_Path"));
@@ -832,7 +834,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Plus);
         mActions.pathsUnionAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
+        pathOpTool->addAction(qAct);
     }
 
     {
@@ -842,7 +844,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Minus);
         mActions.pathsDifferenceAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
+        pathOpTool->addAction(qAct);
     }
 
     {
@@ -852,7 +854,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Asterisk);
         mActions.pathsIntersectionAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
+        pathOpTool->addAction(qAct);
     }
 
     {
@@ -862,7 +864,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_AsciiCircum);
         mActions.pathsExclusionAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
+        pathOpTool->addAction(qAct);
     }
 
     {
@@ -872,7 +874,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Slash);
         mActions.pathsDivisionAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
+        pathOpTool->addAction(qAct);
     }
 
     mPathMenu->addSeparator();
@@ -884,7 +886,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_K);
         mActions.pathsCombineAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
+        pathOpTool->addAction(qAct);
     }
 
     {
@@ -894,7 +896,7 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_K);
         mActions.pathsBreakApartAction->connect(qAct);
         cmdAddAction(qAct);
-        mViewerRightToolBar->addCanvasSelectedAction(CanvasMode::boxTransform, qAct);
+        pathOpTool->addAction(qAct);
     }
 
     setupMenuScene();
@@ -908,7 +910,6 @@ void MainWindow::setupMenuBar()
     mZoomInAction = zoomMenu->addAction(tr("Zoom In", "MenuBar_View_Zoom"));
     mZoomInAction->setIcon(QIcon::fromTheme("zoom_in"));
     mZoomInAction->setShortcut(QKeySequence("Ctrl+Shift++"));
-    mViewerLeftToolBar->addCanvasAction(mZoomInAction);
     cmdAddAction(mZoomInAction);
     connect(mZoomInAction, &QAction::triggered,
             this, [](){
@@ -921,7 +922,6 @@ void MainWindow::setupMenuBar()
     mZoomOutAction = zoomMenu->addAction(tr("Zoom Out", "MenuBar_View_Zoom"));
     mZoomOutAction->setIcon(QIcon::fromTheme("zoom_out"));
     mZoomOutAction->setShortcut(QKeySequence("Ctrl+Shift+-"));
-    mViewerLeftToolBar->addCanvasAction(mZoomOutAction);
     cmdAddAction(mZoomOutAction);
     connect(mZoomOutAction, &QAction::triggered,
             this, [](){
@@ -934,7 +934,6 @@ void MainWindow::setupMenuBar()
     mFitViewAction = zoomMenu->addAction(tr("Fit to Canvas", "MenuBar_View_Zoom"));
     mFitViewAction->setIcon(QIcon::fromTheme("zoom_all"));
     mFitViewAction->setShortcut(QKeySequence("Ctrl+0"));
-    mViewerLeftToolBar->addCanvasAction(mFitViewAction);
     connect(mFitViewAction, &QAction::triggered,
             this, [](){
         const auto target = KeyFocusTarget::KFT_getCurrentTarget();

@@ -31,6 +31,7 @@ using namespace Friction::Ui;
 
 TransformToolBar::TransformToolBar(QWidget *parent)
     : ToolBar("TransformToolBar", parent, true)
+    , mCanvasMode(CanvasMode::boxTransform)
     , mTransformX(nullptr)
     , mTransformY(nullptr)
     , mTransformR(nullptr)
@@ -75,6 +76,13 @@ void TransformToolBar::setCurrentBox(BoundingBox * const target)
 
 void TransformToolBar::setCanvasMode(const CanvasMode &mode)
 {
+    mCanvasMode = mode;
+
+    const bool hasPivot = mTransformPX->hasTarget() && mTransformPY->hasTarget();
+    const bool hasOpacity = mTransformOX->hasTarget();
+    mTransformPivot->setVisible(hasPivot && mode == CanvasMode::boxTransform);
+    mTransformOpacity->setVisible(hasOpacity && mode == CanvasMode::boxTransform);
+
     const bool hasRadius = mTransformRX->hasTarget() && mTransformRY->hasTarget();
     const bool showRadius = mode == CanvasMode::boxTransform ||
                             mode == CanvasMode::circleCreate ||
@@ -137,9 +145,9 @@ void TransformToolBar::setTransform(BoundingBox * const target)
                                 (rectangle ? rectangle->getRadiusAnimator()->getYAnimator() : nullptr));
 
     const bool hasRadius = (circle || rectangle);
-
     mTransformRadius->setEnabled(hasRadius);
-    mTransformRadius->setVisible(hasRadius);
+
+    setCanvasMode(mCanvasMode);
 }
 
 void TransformToolBar::clearTransform()

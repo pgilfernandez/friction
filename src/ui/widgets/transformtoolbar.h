@@ -52,6 +52,7 @@ namespace Friction
             void setupTransform();
 
             ConnContextQPtr<Canvas> mCanvas;
+            CanvasMode mCanvasMode;
 
             QrealAnimatorValueSlider *mTransformX;
             QrealAnimatorValueSlider *mTransformY;
