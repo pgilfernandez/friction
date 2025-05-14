@@ -332,6 +332,21 @@ MainWindow::MainWindow(Document& document,
     mObjectSettingsScrollArea->setPalette(darkPal);
 
     // setup "Properties", "Assets", "Queue" tab
+
+    {
+        const auto act = mViewMenu->addAction(tr("Align in Properties"));
+        act->setCheckable(true);
+        act->setChecked(AppSupport::getSettings("ui",
+                                                "PropertiesShowAlign",
+                                                true).toBool());
+        alignWidget->setVisible(act->isChecked());
+        connect(act, &QAction::triggered,
+                this, [alignWidget](bool checked) {
+            alignWidget->setVisible(checked);
+            AppSupport::setSettings("ui", "PropertiesShowAlign", checked);
+        });
+    }
+
     mTabProperties = new QTabWidget(this);
     mTabProperties->setObjectName("TabWidgetWide");
     mTabProperties->tabBar()->setFocusPolicy(Qt::NoFocus);
