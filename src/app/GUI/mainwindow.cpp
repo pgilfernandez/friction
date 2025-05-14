@@ -817,16 +817,6 @@ void MainWindow::setupMenuBar()
 
     mPathMenu->addSeparator();
 
-    const auto pathOpTool = new QToolButton(this);
-    pathOpTool->setIcon(QIcon::fromTheme("booleans_union"));
-    pathOpTool->setToolTip(tr("Boolean Operations"));
-    pathOpTool->setToolButtonStyle(Qt::ToolButtonIconOnly);
-    pathOpTool->setPopupMode(QToolButton::InstantPopup);
-    pathOpTool->setFocusPolicy(Qt::NoFocus);
-    pathOpTool->setObjectName(QString::fromUtf8("ToolButton"));
-
-    mViewerRightToolBar->addCanvasSelectedWidget(CanvasMode::boxTransform, pathOpTool);
-
     {
         const auto qAct = mPathMenu->addAction(
                     tr("Union", "MenuBar_Path"));
@@ -834,7 +824,6 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Plus);
         mActions.pathsUnionAction->connect(qAct);
         cmdAddAction(qAct);
-        pathOpTool->addAction(qAct);
     }
 
     {
@@ -844,7 +833,6 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Minus);
         mActions.pathsDifferenceAction->connect(qAct);
         cmdAddAction(qAct);
-        pathOpTool->addAction(qAct);
     }
 
     {
@@ -854,7 +842,6 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Asterisk);
         mActions.pathsIntersectionAction->connect(qAct);
         cmdAddAction(qAct);
-        pathOpTool->addAction(qAct);
     }
 
     {
@@ -864,7 +851,6 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_AsciiCircum);
         mActions.pathsExclusionAction->connect(qAct);
         cmdAddAction(qAct);
-        pathOpTool->addAction(qAct);
     }
 
     {
@@ -874,7 +860,6 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_Slash);
         mActions.pathsDivisionAction->connect(qAct);
         cmdAddAction(qAct);
-        pathOpTool->addAction(qAct);
     }
 
     mPathMenu->addSeparator();
@@ -886,7 +871,6 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::Key_K);
         mActions.pathsCombineAction->connect(qAct);
         cmdAddAction(qAct);
-        pathOpTool->addAction(qAct);
     }
 
     {
@@ -896,7 +880,6 @@ void MainWindow::setupMenuBar()
         qAct->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_K);
         mActions.pathsBreakApartAction->connect(qAct);
         cmdAddAction(qAct);
-        pathOpTool->addAction(qAct);
     }
 
     setupMenuScene();
