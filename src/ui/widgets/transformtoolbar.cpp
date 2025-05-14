@@ -89,8 +89,8 @@ void TransformToolBar::setCurrentCanvas(Canvas * const target)
 
 void TransformToolBar::setCurrentBox(BoundingBox * const target)
 {
-    mTransformAlign->setEnabled(target);
     setTransform(target);
+    mTransformAlign->setEnabled(target);
 }
 
 void TransformToolBar::setCanvasMode(const CanvasMode &mode)
