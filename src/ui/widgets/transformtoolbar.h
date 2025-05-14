@@ -29,6 +29,7 @@
 #include "widgets/qrealanimatorvalueslider.h"
 #include "canvas.h"
 
+#include <QComboBox>
 #include <QActionGroup>
 
 namespace Friction
@@ -47,9 +48,14 @@ namespace Friction
 
         private:
             void setTransform(BoundingBox * const target);
-            void clearTransform();
+            void resetWidgets();
             void setupWidgets();
             void setupTransform();
+            void setupAlign();
+            void triggerAlign(const Qt::Alignment &align);
+            void setComboBoxItemState(QComboBox *box,
+                                      int index,
+                                      bool enabled);
 
             ConnContextQPtr<Canvas> mCanvas;
             CanvasMode mCanvasMode;
@@ -71,6 +77,10 @@ namespace Friction
             QActionGroup *mTransformRadius;
             QActionGroup *mTransformPivot;
             QActionGroup *mTransformOpacity;
+            QActionGroup *mTransformAlign;
+
+            QComboBox *mTranformAlignPivot;
+            QComboBox *mTransformAlignRelativeTo;
         };
     }
 }
