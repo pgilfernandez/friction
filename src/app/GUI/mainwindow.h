@@ -57,7 +57,6 @@
 #include "widgets/colortoolbar.h"
 #include "widgets/qdoubleslider.h"
 #include "widgets/canvastoolbar.h"
-#include "widgets/viewertoolbar.h"
 #include "widgets/aboutwidget.h"
 #include "widgets/uilayout.h"
 
@@ -367,8 +366,6 @@ private:
     Friction::Ui::ColorToolBar *mColorToolBar;
     Friction::Ui::CanvasToolBar *mCanvasToolBar;
     Friction::Ui::TransformToolBar *mTransformToolBar;
-    Friction::Ui::ViewerToolBar *mViewerLeftToolBar;
-    Friction::Ui::ViewerToolBar *mViewerRightToolBar;
 
     void setupToolBox();
     void setupToolBoxMain();

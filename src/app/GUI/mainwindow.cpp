@@ -77,6 +77,7 @@
 #include "widgets/assetswidget.h"
 #include "dialogs/adjustscenedialog.h"
 #include "dialogs/commandpalette.h"
+#include "widgets/viewertoolbar.h"
 
 using namespace Friction;
 
@@ -151,8 +152,6 @@ MainWindow::MainWindow(Document& document,
     , mColorToolBar(nullptr)
     , mCanvasToolBar(nullptr)
     , mTransformToolBar(nullptr)
-    , mViewerLeftToolBar(nullptr)
-    , mViewerRightToolBar(nullptr)
     , mBackupOnSave(false)
     , mAutoSave(false)
     , mAutoSaveTimeout(0)
@@ -266,12 +265,6 @@ MainWindow::MainWindow(Document& document,
     const auto assets = new AssetsWidget(this);
 
     mTransformToolBar = new Ui::TransformToolBar(this);
-    mViewerLeftToolBar = new Ui::ViewerToolBar("ViewerLeftToolBar",
-                                               tr("Viewer Left ToolBar"),
-                                               this);
-    mViewerRightToolBar = new Ui::ViewerToolBar("ViewerRightToolBar",
-                                                tr("Viewer Right ToolBar"),
-                                                this);
 
     setupToolBox();
     setupToolBar();
@@ -299,15 +292,6 @@ MainWindow::MainWindow(Document& document,
     mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
     mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
 
-    const auto toolBox = new Ui::ToolBar(tr("ToolBox"),
-                                         "ToolBox",
-                                         this,
-                                         true);
-    toolBox->setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
-    toolBox->addWidget(mViewerLeftToolBar);
-    toolBox->addWidget(mTransformToolBar);
-    toolBox->addWidget(mViewerRightToolBar);
-
     mColorToolBar = new Ui::ColorToolBar(mDocument, this);
     connect(mColorToolBar, &Ui::ColorToolBar::message,
             this, [this](const QString &msg){ statusBar()->showMessage(msg, 500); });
@@ -316,13 +300,7 @@ MainWindow::MainWindow(Document& document,
     installNumericFilter(mCanvasToolBar->getResolutionComboBox());
 
     addToolBar(mColorToolBar);
-
-    insertToolBarBreak(toolBox);
-    addToolBarBreak(Qt::TopToolBarArea);
-    addToolBar(Qt::TopToolBarArea, toolBox);
-
-    mViewerLeftToolBar->setCanvasMode(CanvasMode::boxTransform);
-    mViewerRightToolBar->setCanvasMode(CanvasMode::boxTransform);
+    addToolBar(Qt::TopToolBarArea, mTransformToolBar);
 
     QMargins frictionMargins(0, 0, 0, 0);
     int frictionSpacing = 0;
@@ -390,7 +368,7 @@ MainWindow::MainWindow(Document& document,
     statusBar()->addPermanentWidget(mCanvasToolBar);
 
     mColorPickLabel = new QLabel(this);
-    mColorPickLabelAct = mViewerRightToolBar->addWidget(mColorPickLabel);
+    mColorPickLabelAct = mTransformToolBar->addWidget(mColorPickLabel);
     mColorPickLabelAct->setVisible(false);
 
     // final layout
@@ -578,14 +556,16 @@ void MainWindow::setupMenuBar()
     undoQAct->setShortcut(Qt::CTRL + Qt::Key_Z);
     mActions.undoAction->connect(undoQAct);
     cmdAddAction(undoQAct);
-    mViewerLeftToolBar->addAction(undoQAct);
 
     const auto redoQAct = mEditMenu->addAction(QIcon::fromTheme("loop_forwards"),
                                                tr("Redo", "MenuBar_Edit"));
     redoQAct->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_Z);
     mActions.redoAction->connect(redoQAct);
     cmdAddAction(redoQAct);
-    mViewerLeftToolBar->addAction(redoQAct);
+
+    // add undo/redo to transform toolbar (left)
+    mTransformToolBar->getLeftToolBar()->addAction(undoQAct);
+    mTransformToolBar->getLeftToolBar()->addAction(redoQAct);
 
     mEditMenu->addSeparator();
 
@@ -1511,8 +1491,6 @@ void MainWindow::updateSettingsForCurrentCanvas(Canvas* const scene)
     if (mColorToolBar) { mColorToolBar->setCurrentCanvas(scene); }
     if (mCanvasToolBar) { mCanvasToolBar->setCurrentCanvas(scene); }
     if (mTransformToolBar) { mTransformToolBar->setCurrentCanvas(scene); }
-    if (mViewerLeftToolBar) { mViewerLeftToolBar->setCurrentCanvas(scene); }
-    if (mViewerRightToolBar) { mViewerRightToolBar->setCurrentCanvas(scene); }
 
     mObjectSettingsWidget->setCurrentScene(scene);
 
@@ -1856,6 +1834,9 @@ void MainWindow::readSettings(const QString &openProject)
     mRenderWindowAct->blockSignals(true);
     mRenderWindowAct->setChecked(isRenderWindow);
     mRenderWindowAct->blockSignals(false);
+
+    // force transform toolbar to own row
+    insertToolBarBreak(mTransformToolBar);
 
     if (isTimelineWindow) { openTimelineWindow(); }
     if (isRenderWindow) { openRenderQueueWindow(); }
@@ -2394,11 +2375,5 @@ void MainWindow::handleNewVideoClip(const VideoBox::VideoSpecs &specs)
 
 void MainWindow::handleCurrentPixelColor(const QColor &color)
 {
-    mColorPickLabel->setText(QString("<b>R:</b> %1 <b>G:</b> %2 <b>B:</b> %3 &nbsp;&nbsp;"
-                                     "<span style=\"background-color: %4;\">"
-                                     "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                                     "</span>").arg(QString::number(color.isValid() ? color.redF() : 0., 'f', 3),
-                                                    QString::number(color.isValid() ? color.greenF() : 0., 'f', 3),
-                                                    QString::number(color.isValid() ? color.blueF() : 0., 'f', 3),
-                                                    color.isValid() ? color.name() : "black"));
+    mTransformToolBar->updateColorPicker(color);
 }

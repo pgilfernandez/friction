@@ -406,8 +406,8 @@ void MainWindow::setupToolBoxNodes()
         Document::sInstance->actionFinished();
     });
 
-    mViewerRightToolBar->addActions(mToolBoxGroupNodes->actions());
-    mNodeVisibilityAct = mViewerRightToolBar->addWidget(mNodeVisibility);
+    mTransformToolBar->getRightToolBar()->addActions(mToolBoxGroupNodes->actions());
+    mNodeVisibilityAct = mTransformToolBar->getRightToolBar()->addWidget(mNodeVisibility);
 
     setEnableToolBoxNodes(false);
 }
@@ -449,25 +449,25 @@ void MainWindow::setupToolBoxDraw()
 
     const auto label1 = new VLabel(QString("%1 ").arg(tr("Max Error")),
                                    this,
-                                   mViewerRightToolBar->orientation());
+                                   mTransformToolBar->orientation());
     const auto label2 = new VLabel(QString("%1 ").arg(tr("Smooth")),
                                    this,
-                                   mViewerRightToolBar->orientation());
+                                   mTransformToolBar->orientation());
 
-    mToolBoxDrawActIcon1 = mViewerRightToolBar->addAction(QIcon::fromTheme("drawPath"),
-                                                          QString());
+    mToolBoxDrawActIcon1 = mTransformToolBar->getRightToolBar()->addAction(QIcon::fromTheme("drawPath"),
+                                                                           QString());
     mToolBoxDrawActIcon1->setDisabled(true);
 
-    mToolBoxDrawActLabel1 = mViewerRightToolBar->addWidget(label1);
-    mToolBoxDrawActMaxError = mViewerRightToolBar->addWidget(mDrawPathMaxError);
+    mToolBoxDrawActLabel1 = mTransformToolBar->getRightToolBar()->addWidget(label1);
+    mToolBoxDrawActMaxError = mTransformToolBar->getRightToolBar()->addWidget(mDrawPathMaxError);
 
-    mToolBoxDrawActIcon2 = mViewerRightToolBar->addAction(QIcon::fromTheme("drawPath"),
-                                                          QString());
+    mToolBoxDrawActIcon2 = mTransformToolBar->getRightToolBar()->addAction(QIcon::fromTheme("drawPath"),
+                                                                           QString());
     mToolBoxDrawActIcon2->setDisabled(true);
 
-    mToolBoxDrawActLabel2 = mViewerRightToolBar->addWidget(label2);
-    mToolBoxDrawActSmooth = mViewerRightToolBar->addWidget(mDrawPathSmooth);
-    mViewerRightToolBar->addAction(mDrawPathAuto);
+    mToolBoxDrawActLabel2 = mTransformToolBar->getRightToolBar()->addWidget(label2);
+    mToolBoxDrawActSmooth = mTransformToolBar->getRightToolBar()->addWidget(mDrawPathSmooth);
+    mTransformToolBar->getRightToolBar()->addAction(mDrawPathAuto);
 
     setEnableToolBoxDraw(false);
 }
@@ -491,4 +491,3 @@ void MainWindow::setEnableToolBoxDraw(const bool &enable)
     if (mToolBoxDrawActSmooth) { mToolBoxDrawActSmooth->setVisible(enable); }
     if (mDrawPathAuto) { mDrawPathAuto->setVisible(enable); }
 }
-

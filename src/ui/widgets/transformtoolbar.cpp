@@ -28,10 +28,9 @@
 #include "Boxes/rectangle.h"
 #include "widgets/toolbutton.h"
 
-#include <QPushButton>
-#include <QLabel>
 #include <QWidgetAction>
 #include <QStandardItemModel>
+#include <QPushButton>
 
 #define INDEX_ALIGN_GEOMETRY 0
 #define INDEX_ALIGN_GEOMETRY_PIVOT 1
@@ -46,6 +45,8 @@ using namespace Friction::Ui;
 
 TransformToolBar::TransformToolBar(QWidget *parent)
     : ToolBar("TransformToolBar", parent, true)
+    , mToolBarLeft(nullptr)
+    , mToolBarRight(nullptr)
     , mCanvasMode(CanvasMode::boxTransform)
     , mTransformX(nullptr)
     , mTransformY(nullptr)
@@ -66,6 +67,8 @@ TransformToolBar::TransformToolBar(QWidget *parent)
     , mTransformAlign(nullptr)
     , mTranformAlignPivot(nullptr)
     , mTransformAlignRelativeTo(nullptr)
+    , mColorPicker(nullptr)
+    , mColorPickerLabel(nullptr)
 {
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -85,6 +88,9 @@ void TransformToolBar::setCurrentCanvas(Canvas * const target)
                            this, &TransformToolBar::setCanvasMode);
     }
     setCurrentBox(target ? target->getCurrentBox() : nullptr);
+
+    mToolBarLeft->setCurrentCanvas(target);
+    mToolBarRight->setCurrentCanvas(target);
 }
 
 void TransformToolBar::setCurrentBox(BoundingBox * const target)
@@ -107,7 +113,33 @@ void TransformToolBar::setCanvasMode(const CanvasMode &mode)
                             mode == CanvasMode::circleCreate ||
                             mode == CanvasMode::rectCreate;
     mTransformRadius->setVisible(hasRadius && showRadius);
-    mTransformAlign->setVisible(mode == CanvasMode::boxTransform);
+
+    mTransformAlign->setVisible(mode == CanvasMode::boxTransform ||
+                                mode == CanvasMode::pointTransform ||
+                                mode == CanvasMode::circleCreate ||
+                                mode == CanvasMode::rectCreate ||
+                                mode == CanvasMode::textCreate);
+}
+
+ViewerToolBar *TransformToolBar::getLeftToolBar()
+{
+    return mToolBarLeft;
+}
+
+ViewerToolBar *TransformToolBar::getRightToolBar()
+{
+    return mToolBarRight;
+}
+
+void TransformToolBar::updateColorPicker(const QColor &color)
+{
+    if (!mColorPicker || !mColorPickerLabel) { return; }
+    mColorPicker->setStyleSheet(QString("background-color: %1;").arg(color.isValid() ? color.name() : "black"));
+    mColorPickerLabel->setText(QString("<b>R:</b> %1 "
+                                       "<b>G:</b> %2 "
+                                       "<b>B:</b> %3").arg(QString::number(color.isValid() ? color.redF() : 0., 'f', 3),
+                                                           QString::number(color.isValid() ? color.greenF() : 0., 'f', 3),
+                                                           QString::number(color.isValid() ? color.blueF() : 0., 'f', 3)));
 }
 
 void TransformToolBar::setTransform(BoundingBox * const target)
@@ -204,7 +236,29 @@ void TransformToolBar::setupWidgets()
     mTransformOpacity = new QActionGroup(this);
     mTransformAlign = new QActionGroup(this);
 
+    mToolBarLeft = new ViewerToolBar("TransformToolBarLeft",
+                                     tr("Left ToolBox"),
+                                     this);
+    mToolBarRight = new ViewerToolBar("TransformToolBarRight",
+                                      tr("Right ToolBox"),
+                                      this);
+
+    addWidget(mToolBarLeft);
     setupTransform();
+    addWidget(mToolBarRight);
+
+    mColorPicker = new QToolButton(this);
+    mColorPicker->setIcon(QIcon::fromTheme("pick"));
+    mColorPickerLabel = new QLabel(this);
+
+    mToolBarRight->addCanvasAction(CanvasMode::pickFillStroke,
+                                   mToolBarRight->addSeparator());
+    mToolBarRight->addCanvasWidget(CanvasMode::pickFillStroke,
+                                   mColorPicker);
+    mToolBarRight->addCanvasAction(CanvasMode::pickFillStroke,
+                                   mToolBarRight->addSeparator());
+    mToolBarRight->addCanvasWidget(CanvasMode::pickFillStroke,
+                                   mColorPickerLabel);
 }
 
 void TransformToolBar::setupTransform()

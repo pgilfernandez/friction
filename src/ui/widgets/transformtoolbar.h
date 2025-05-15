@@ -26,11 +26,13 @@
 #include "ui_global.h"
 
 #include "widgets/toolbar.h"
+#include "widgets/viewertoolbar.h"
 #include "widgets/qrealanimatorvalueslider.h"
 #include "canvas.h"
 
 #include <QComboBox>
 #include <QActionGroup>
+#include <QLabel>
 
 namespace Friction
 {
@@ -45,6 +47,9 @@ namespace Friction
             void setCurrentCanvas(Canvas * const target);
             void setCurrentBox(BoundingBox * const target);
             void setCanvasMode(const CanvasMode &mode);
+            ViewerToolBar* getLeftToolBar();
+            ViewerToolBar* getRightToolBar();
+            void updateColorPicker(const QColor &color);
 
         private:
             void setTransform(BoundingBox * const target);
@@ -56,6 +61,9 @@ namespace Friction
             void setComboBoxItemState(QComboBox *box,
                                       int index,
                                       bool enabled);
+
+            ViewerToolBar *mToolBarLeft;
+            ViewerToolBar *mToolBarRight;
 
             ConnContextQPtr<Canvas> mCanvas;
             CanvasMode mCanvasMode;
@@ -81,6 +89,9 @@ namespace Friction
 
             QComboBox *mTranformAlignPivot;
             QComboBox *mTransformAlignRelativeTo;
+
+            QToolButton *mColorPicker;
+            QLabel *mColorPickerLabel;
         };
     }
 }

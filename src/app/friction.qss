@@ -232,7 +232,9 @@ QPushButton:hover,
 QToolButton:hover,
 QPushButton:checked,
 QToolButton:checked,
-QAction:checked
+QAction:checked,
+Friction--Ui--ToolBar#TransformToolBarLeft QToolButton:hover,
+Friction--Ui--ToolBar#TransformToolBarRight QToolButton:hover
 {
     background-color: %3;
     border-color: %4;
@@ -637,8 +639,8 @@ Friction--Ui--ToolBar::separator:horizontal {
 }
 
 Friction--Ui--TransformToolBar::separator,
-Friction--Ui--ToolBar#ViewerRightToolBar::separator,
-Friction--Ui--ToolBar#ViewerLeftToolBar::separator {
+Friction--Ui--ToolBar#TransformToolBarLeft::separator,
+Friction--Ui--ToolBar#TransformToolBarRight::separator {
     background-color: transparent;
 }
 
@@ -646,8 +648,8 @@ Friction--Ui--TransformToolBar::separator:horizontal {
     width: 2px;
 }
 
-Friction--Ui--ToolBar#ViewerRightToolBar::separator:horizontal,
-Friction--Ui--ToolBar#ViewerLeftToolBar::separator:horizontal {
+Friction--Ui--ToolBar#TransformToolBarLeft::separator:horizontal,
+Friction--Ui--ToolBar#TransformToolBarRight::separator:horizontal {
     width: 4px;
 }
 
