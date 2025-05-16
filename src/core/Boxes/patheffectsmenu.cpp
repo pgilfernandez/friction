@@ -24,6 +24,8 @@
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
 #include "patheffectsmenu.h"
+#include <QAction>
+#include <QMenu>
 
 template <typename T, typename U>
 void addPathEffectActionToMenu(const QString& text, PropertyMenu * const menu,
@@ -64,21 +66,30 @@ void PathEffectsMenu::addPathEffectsToBoxActionMenu(PropertyMenu * const menu) {
     menu->addSharedMenu("Path Effects");
     menu->addSection("Path Effects");
 
-    const auto pathEffectsMenu = menu->addMenu(QIcon::fromTheme("effect"), "Path Effects");
-    addPathEffectsActionToMenu(pathEffectsMenu,
-                               &BoundingBox::addPathEffect);
+    const auto pathEffectsMenu = menu->addCheckableMenu("Path Effects", false, [menu](bool checked) {
+        const auto withPathEffects = enve_cast<BoxWithPathEffects*>(menu->getParentWidget());
+        if (withPathEffects) {
+            withPathEffects->setPathEffectsEnabled(checked);
+        }
+    });
+
+    // Use getMenuAction instead of menuAction
+    QAction *menuAction = pathEffectsMenu->getMenuAction();
+    menuAction->setCheckable(true);
+    QObject::connect(menuAction, &QAction::triggered, [menuAction]() {
+        menuAction->setChecked(!menuAction->isChecked());
+    });
+
+    addPathEffectsActionToMenu(pathEffectsMenu, &BoundingBox::addPathEffect);
 
     const auto fillPathEffectsMenu = menu->addMenu(QIcon::fromTheme("effect"), "Fill Effects");
-    addPathEffectsActionToMenu(fillPathEffectsMenu,
-                               &BoundingBox::addFillPathEffect);
+    addPathEffectsActionToMenu(fillPathEffectsMenu, &BoundingBox::addFillPathEffect);
 
     const auto outlineBasePathEffectsMenu = menu->addMenu(QIcon::fromTheme("effect"), "Outline Base Effects");
-    addPathEffectsActionToMenu(outlineBasePathEffectsMenu,
-                               &BoundingBox::addOutlineBasePathEffect);
+    addPathEffectsActionToMenu(outlineBasePathEffectsMenu, &BoundingBox::addOutlineBasePathEffect);
 
     const auto outlinePathEffectsMenu = menu->addMenu(QIcon::fromTheme("effect"), "Outline Effects");
-    addPathEffectsActionToMenu(outlinePathEffectsMenu,
-                               &BoundingBox::addOutlinePathEffect);
+    addPathEffectsActionToMenu(outlinePathEffectsMenu, &BoundingBox::addOutlinePathEffect);
 }
 
 #include "PathEffects/patheffectcollection.h"

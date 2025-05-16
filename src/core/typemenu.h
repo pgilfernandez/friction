@@ -181,6 +181,23 @@ public:
     bool hasActionsForType() const {
         return mTypeIndex.contains(std::type_index(typeid(T)));
     }
+
+    TTypeMenu* addCheckableMenu(const QString& title, bool checked, const CheckTriggeredOp& op) {
+        QMenu* const qMenu = new QMenu(title, mParentWidget);
+        QAction* const action = qMenu->menuAction();
+        action->setCheckable(true);
+        action->setChecked(checked);
+        QObject::connect(action, &QAction::triggered, op);
+        mQMenu->addMenu(qMenu);
+        const auto child = std::make_shared<TTypeMenu>(qMenu, mTargetCanvas, mParentWidget);
+        mChildMenus.append(child);
+        return child.get();
+    }
+
+    QAction* getMenuAction() const {
+        return mQMenu->menuAction();
+    }
+
 private:
     template <typename U>
     void connectAction(BoundingBox * const, QAction * const qAction,
