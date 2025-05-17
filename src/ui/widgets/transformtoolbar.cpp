@@ -114,11 +114,10 @@ void TransformToolBar::setCanvasMode(const CanvasMode &mode)
 
     const bool hasRadius = mTransformRX->hasTarget() && mTransformRY->hasTarget();
     const bool hasRectangle = mTransformBX->hasTarget() && mTransformBY->hasTarget();
-    const bool showRadiusRect = mode == CanvasMode::boxTransform ||
-                                mode == CanvasMode::circleCreate ||
-                                mode == CanvasMode::rectCreate;
-    mTransformRadius->setVisible(hasRadius && showRadiusRect);
-    mTransformBottomRight->setVisible(hasRectangle && showRadiusRect);
+    const bool showRectangle = mode == CanvasMode::boxTransform ||
+                               mode == CanvasMode::rectCreate;
+    mTransformRadius->setVisible(hasRadius && (showRectangle || mode == CanvasMode::circleCreate));
+    mTransformBottomRight->setVisible(hasRectangle && showRectangle);
 
     const bool canShowAlign = mode == CanvasMode::boxTransform ||
                               mode == CanvasMode::pointTransform ||
