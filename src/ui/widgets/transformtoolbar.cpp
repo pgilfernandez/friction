@@ -55,6 +55,8 @@ TransformToolBar::TransformToolBar(QWidget *parent)
     , mTransformSY(nullptr)
     , mTransformRX(nullptr)
     , mTransformRY(nullptr)
+    , mTransformBX(nullptr)
+    , mTransformBY(nullptr)
     , mTransformPX(nullptr)
     , mTransformPY(nullptr)
     , mTransformOX(nullptr)
@@ -62,6 +64,7 @@ TransformToolBar::TransformToolBar(QWidget *parent)
     , mTransformRotate(nullptr)
     , mTransformScale(nullptr)
     , mTransformRadius(nullptr)
+    , mTransformBottomRight(nullptr)
     , mTransformPivot(nullptr)
     , mTransformOpacity(nullptr)
     , mTransformAlign(nullptr)
@@ -110,10 +113,12 @@ void TransformToolBar::setCanvasMode(const CanvasMode &mode)
     mTransformOpacity->setVisible(hasOpacity && mode == CanvasMode::boxTransform);
 
     const bool hasRadius = mTransformRX->hasTarget() && mTransformRY->hasTarget();
-    const bool showRadius = mode == CanvasMode::boxTransform ||
-                            mode == CanvasMode::circleCreate ||
-                            mode == CanvasMode::rectCreate;
-    mTransformRadius->setVisible(hasRadius && showRadius);
+    const bool hasRectangle = mTransformBX->hasTarget() && mTransformBY->hasTarget();
+    const bool showRadiusRect = mode == CanvasMode::boxTransform ||
+                                mode == CanvasMode::circleCreate ||
+                                mode == CanvasMode::rectCreate;
+    mTransformRadius->setVisible(hasRadius && showRadiusRect);
+    mTransformBottomRight->setVisible(hasRectangle && showRadiusRect);
 
     const bool canShowAlign = mode == CanvasMode::boxTransform ||
                               mode == CanvasMode::pointTransform ||
@@ -210,8 +215,12 @@ void TransformToolBar::setTransform(BoundingBox * const target)
                                 circle->getVRadiusAnimator()->getYAnimator() :
                                 (rectangle ? rectangle->getRadiusAnimator()->getYAnimator() : nullptr));
 
+    mTransformBX->setTarget(rectangle ? rectangle->getBottomRightAnimator()->getXAnimator() : nullptr);
+    mTransformBY->setTarget(rectangle ? rectangle->getBottomRightAnimator()->getYAnimator() : nullptr);
+
     const bool hasRadius = (circle || rectangle);
     mTransformRadius->setEnabled(hasRadius);
+    mTransformBottomRight->setEnabled(rectangle);
 
     setCanvasMode(mCanvasMode);
 }
@@ -225,6 +234,8 @@ void TransformToolBar::resetWidgets()
     mTransformSY->setTarget(nullptr);
     mTransformRX->setTarget(nullptr);
     mTransformRY->setTarget(nullptr);
+    mTransformBX->setTarget(nullptr);
+    mTransformBY->setTarget(nullptr);
     mTransformPX->setTarget(nullptr);
     mTransformPY->setTarget(nullptr);
     mTransformOX->setTarget(nullptr);
@@ -233,11 +244,13 @@ void TransformToolBar::resetWidgets()
     mTransformRotate->setEnabled(false);
     mTransformScale->setEnabled(false);
     mTransformRadius->setEnabled(false);
+    mTransformBottomRight->setEnabled(false);
     mTransformPivot->setEnabled(false);
     mTransformOpacity->setEnabled(false);
     mTransformAlign->setEnabled(false);
 
     mTransformRadius->setVisible(false);
+    mTransformBottomRight->setVisible(false);
 }
 
 void TransformToolBar::setupWidgets()
@@ -246,6 +259,7 @@ void TransformToolBar::setupWidgets()
     mTransformRotate = new QActionGroup(this);
     mTransformScale = new QActionGroup(this);
     mTransformRadius = new QActionGroup(this);
+    mTransformBottomRight = new QActionGroup(this);
     mTransformPivot = new QActionGroup(this);
     mTransformOpacity = new QActionGroup(this);
     mTransformAlign = new QActionGroup(this);
@@ -284,6 +298,8 @@ void TransformToolBar::setupTransform()
     mTransformSY = new QrealAnimatorValueSlider(nullptr, this);
     mTransformRX = new QrealAnimatorValueSlider(nullptr, this);
     mTransformRY = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformBX = new QrealAnimatorValueSlider(nullptr, this);
+    mTransformBY = new QrealAnimatorValueSlider(nullptr, this);
     mTransformPX = new QrealAnimatorValueSlider(nullptr, this);
     mTransformPY = new QrealAnimatorValueSlider(nullptr, this);
     mTransformOX =new QrealAnimatorValueSlider(nullptr, this);
@@ -314,6 +330,12 @@ void TransformToolBar::setupTransform()
                                            tr("Opacity")));
     mTransformOpacity->addAction(addWidget(mTransformOX));
 
+    mTransformBottomRight->addAction(addAction(QIcon::fromTheme("rectCreate"),
+                                              tr("Rectangle")));
+    mTransformBottomRight->addAction(addWidget(mTransformBX));
+    mTransformBottomRight->addAction(addSeparator());
+    mTransformBottomRight->addAction(addWidget(mTransformBY));
+
     mTransformRadius->addAction(addAction(QIcon::fromTheme("circleCreate"),
                                           tr("Radius")));
     mTransformRadius->addAction(addWidget(mTransformRX));
@@ -337,6 +359,10 @@ void TransformToolBar::setupTransform()
     mTransformRX->setDisplayedValue(0);
     mTransformRY->setValueRange(0, 1);
     mTransformRY->setDisplayedValue(0);
+    mTransformBX->setValueRange(0, 1);
+    mTransformBX->setDisplayedValue(0);
+    mTransformBY->setValueRange(0, 1);
+    mTransformBY->setDisplayedValue(0);
     mTransformPX->setValueRange(0, 1);
     mTransformPX->setDisplayedValue(0);
     mTransformPY->setValueRange(0, 1);
