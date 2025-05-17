@@ -69,6 +69,7 @@ TransformToolBar::TransformToolBar(QWidget *parent)
     , mTransformAlignRelativeTo(nullptr)
     , mColorPicker(nullptr)
     , mColorPickerLabel(nullptr)
+    , mAlignEnabled(true)
 {
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -96,7 +97,7 @@ void TransformToolBar::setCurrentCanvas(Canvas * const target)
 void TransformToolBar::setCurrentBox(BoundingBox * const target)
 {
     setTransform(target);
-    mTransformAlign->setEnabled(target);
+    mTransformAlign->setEnabled(target && mAlignEnabled);
 }
 
 void TransformToolBar::setCanvasMode(const CanvasMode &mode)
@@ -114,11 +115,12 @@ void TransformToolBar::setCanvasMode(const CanvasMode &mode)
                             mode == CanvasMode::rectCreate;
     mTransformRadius->setVisible(hasRadius && showRadius);
 
-    mTransformAlign->setVisible(mode == CanvasMode::boxTransform ||
-                                mode == CanvasMode::pointTransform ||
-                                mode == CanvasMode::circleCreate ||
-                                mode == CanvasMode::rectCreate ||
-                                mode == CanvasMode::textCreate);
+    const bool canShowAlign = mode == CanvasMode::boxTransform ||
+                              mode == CanvasMode::pointTransform ||
+                              mode == CanvasMode::circleCreate ||
+                              mode == CanvasMode::rectCreate ||
+                              mode == CanvasMode::textCreate;
+    mTransformAlign->setVisible(canShowAlign && mAlignEnabled);
 }
 
 ViewerToolBar *TransformToolBar::getLeftToolBar()
@@ -140,6 +142,18 @@ void TransformToolBar::updateColorPicker(const QColor &color)
                                        "<b>B:</b> %3").arg(QString::number(color.isValid() ? color.redF() : 0., 'f', 3),
                                                            QString::number(color.isValid() ? color.greenF() : 0., 'f', 3),
                                                            QString::number(color.isValid() ? color.blueF() : 0., 'f', 3)));
+}
+
+void TransformToolBar::setAlignEnabled(const bool enabled)
+{
+    mAlignEnabled = enabled;
+    mTransformAlign->setEnabled(enabled);
+    setCanvasMode(mCanvasMode);
+}
+
+bool TransformToolBar::isAlignEnabled()
+{
+    return mAlignEnabled;
 }
 
 void TransformToolBar::setTransform(BoundingBox * const target)

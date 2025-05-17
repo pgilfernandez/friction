@@ -324,6 +324,19 @@ MainWindow::MainWindow(Document& document,
             AppSupport::setSettings("ui", "PropertiesShowAlign", checked);
         });
     }
+    {
+        const auto act = mViewMenu->addAction(tr("Align in Toolbar"));
+        act->setCheckable(true);
+        act->setChecked(AppSupport::getSettings("ui",
+                                                "ToolBarShowAlign",
+                                                true).toBool());
+        mTransformToolBar->setAlignEnabled(act->isChecked());
+        connect(act, &QAction::triggered,
+                this, [this](bool checked) {
+            mTransformToolBar->setAlignEnabled(checked);
+            AppSupport::setSettings("ui", "ToolBarShowAlign", checked);
+        });
+    }
 
     mTabProperties = new QTabWidget(this);
     mTabProperties->setObjectName("TabWidgetWide");

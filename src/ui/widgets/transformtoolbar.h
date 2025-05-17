@@ -50,6 +50,8 @@ namespace Friction
             ViewerToolBar* getLeftToolBar();
             ViewerToolBar* getRightToolBar();
             void updateColorPicker(const QColor &color);
+            void setAlignEnabled(const bool enabled);
+            bool isAlignEnabled();
 
         private:
             void setTransform(BoundingBox * const target);
@@ -92,6 +94,8 @@ namespace Friction
 
             QToolButton *mColorPicker;
             QLabel *mColorPickerLabel;
+
+            bool mAlignEnabled;
         };
     }
 }
