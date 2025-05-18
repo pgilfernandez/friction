@@ -329,7 +329,7 @@ MainWindow::MainWindow(Document& document,
         act->setCheckable(true);
         act->setChecked(AppSupport::getSettings("ui",
                                                 "ToolBarShowAlign",
-                                                true).toBool());
+                                                false).toBool());
         mTransformToolBar->setAlignEnabled(act->isChecked());
         connect(act, &QAction::triggered,
                 this, [this](bool checked) {

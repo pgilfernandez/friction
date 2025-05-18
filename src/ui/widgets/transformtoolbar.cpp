@@ -72,7 +72,7 @@ TransformToolBar::TransformToolBar(QWidget *parent)
     , mTransformAlignRelativeTo(nullptr)
     , mColorPicker(nullptr)
     , mColorPickerLabel(nullptr)
-    , mAlignEnabled(true)
+    , mAlignEnabled(false)
 {
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setContextMenuPolicy(Qt::NoContextMenu);
