@@ -20,13 +20,13 @@
 #
 */
 
-#ifndef FRICTION_TRANSFORM_TOOLBAR_H
-#define FRICTION_TRANSFORM_TOOLBAR_H
+#ifndef FRICTION_TOOL_CONTROLS_H
+#define FRICTION_TOOL_CONTROLS_H
 
 #include "ui_global.h"
 
 #include "widgets/toolbar.h"
-#include "widgets/viewertoolbar.h"
+#include "widgets/toolboxtoolbar.h"
 #include "widgets/qrealanimatorvalueslider.h"
 #include "canvas.h"
 
@@ -38,17 +38,17 @@ namespace Friction
 {
     namespace Ui
     {
-        class UI_EXPORT TransformToolBar : public ToolBar
+        class UI_EXPORT ToolControls : public ToolBar
         {
             Q_OBJECT
 
         public:
-            explicit TransformToolBar(QWidget *parent = nullptr);
+            explicit ToolControls(QWidget *parent = nullptr);
             void setCurrentCanvas(Canvas * const target);
             void setCurrentBox(BoundingBox * const target);
             void setCanvasMode(const CanvasMode &mode);
-            ViewerToolBar* getLeftToolBar();
-            ViewerToolBar* getRightToolBar();
+            ToolboxToolBar* getLeftToolBar();
+            ToolboxToolBar* getRightToolBar();
             void updateColorPicker(const QColor &color);
             void setAlignEnabled(const bool enabled);
             bool isAlignEnabled();
@@ -64,8 +64,8 @@ namespace Friction
                                       int index,
                                       bool enabled);
 
-            ViewerToolBar *mToolBarLeft;
-            ViewerToolBar *mToolBarRight;
+            ToolboxToolBar *mToolBarLeft;
+            ToolboxToolBar *mToolBarRight;
 
             ConnContextQPtr<Canvas> mCanvas;
             CanvasMode mCanvasMode;
@@ -103,4 +103,4 @@ namespace Friction
     }
 }
 
-#endif // FRICTION_TRANSFORM_TOOLBAR_H
+#endif // FRICTION_TOOL_CONTROLS_H

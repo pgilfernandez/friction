@@ -77,7 +77,6 @@
 #include "widgets/assetswidget.h"
 #include "dialogs/adjustscenedialog.h"
 #include "dialogs/commandpalette.h"
-#include "widgets/viewertoolbar.h"
 
 using namespace Friction;
 
@@ -151,7 +150,7 @@ MainWindow::MainWindow(Document& document,
     , mTabQueueIndex(0)
     , mColorToolBar(nullptr)
     , mCanvasToolBar(nullptr)
-    , mTransformToolBar(nullptr)
+    , mToolControls(nullptr)
     , mBackupOnSave(false)
     , mAutoSave(false)
     , mAutoSaveTimeout(0)
@@ -164,8 +163,6 @@ MainWindow::MainWindow(Document& document,
     , mViewFillStrokeAct(nullptr)
     , mRenderWindow(nullptr)
     , mRenderWindowAct(nullptr)
-    , mColorPickLabel(nullptr)
-    , mColorPickLabelAct(nullptr)
     , mToolBarMainAct(nullptr)
     , mToolBarColorAct(nullptr)
 {
@@ -264,7 +261,7 @@ MainWindow::MainWindow(Document& document,
 
     const auto assets = new AssetsWidget(this);
 
-    mTransformToolBar = new Ui::TransformToolBar(this);
+    mToolControls = new Ui::ToolControls(this);
 
     setupToolBox();
     setupToolBar();
@@ -300,7 +297,7 @@ MainWindow::MainWindow(Document& document,
     installNumericFilter(mCanvasToolBar->getResolutionComboBox());
 
     addToolBar(mColorToolBar);
-    addToolBar(Qt::TopToolBarArea, mTransformToolBar);
+    addToolBar(Qt::TopToolBarArea, mToolControls);
 
     QMargins frictionMargins(0, 0, 0, 0);
     int frictionSpacing = 0;
@@ -330,10 +327,10 @@ MainWindow::MainWindow(Document& document,
         act->setChecked(AppSupport::getSettings("ui",
                                                 "ToolBarShowAlign",
                                                 false).toBool());
-        mTransformToolBar->setAlignEnabled(act->isChecked());
+        mToolControls->setAlignEnabled(act->isChecked());
         connect(act, &QAction::triggered,
                 this, [this](bool checked) {
-            mTransformToolBar->setAlignEnabled(checked);
+            mToolControls->setAlignEnabled(checked);
             AppSupport::setSettings("ui", "ToolBarShowAlign", checked);
         });
     }
@@ -379,10 +376,6 @@ MainWindow::MainWindow(Document& document,
     mCanvasToolBar->addWidget(workspaceLayoutCombo);
 
     statusBar()->addPermanentWidget(mCanvasToolBar);
-
-    mColorPickLabel = new QLabel(this);
-    mColorPickLabelAct = mTransformToolBar->addWidget(mColorPickLabel);
-    mColorPickLabelAct->setVisible(false);
 
     // final layout
     mUI = new UILayout(this);
@@ -576,9 +569,9 @@ void MainWindow::setupMenuBar()
     mActions.redoAction->connect(redoQAct);
     cmdAddAction(redoQAct);
 
-    // add undo/redo to transform toolbar (left)
-    mTransformToolBar->getLeftToolBar()->addAction(undoQAct);
-    mTransformToolBar->getLeftToolBar()->addAction(redoQAct);
+    // add undo/redo to tool controls
+    mToolControls->getLeftToolBar()->addAction(undoQAct);
+    mToolControls->getLeftToolBar()->addAction(redoQAct);
 
     mEditMenu->addSeparator();
 
@@ -1503,7 +1496,7 @@ void MainWindow::updateSettingsForCurrentCanvas(Canvas* const scene)
 {
     if (mColorToolBar) { mColorToolBar->setCurrentCanvas(scene); }
     if (mCanvasToolBar) { mCanvasToolBar->setCurrentCanvas(scene); }
-    if (mTransformToolBar) { mTransformToolBar->setCurrentCanvas(scene); }
+    if (mToolControls) { mToolControls->setCurrentCanvas(scene); }
 
     mObjectSettingsWidget->setCurrentScene(scene);
 
@@ -1571,11 +1564,6 @@ void MainWindow::updateCanvasModeButtonsChecked()
     setEnableToolBoxNodes(pointMode);
     setEnableToolBoxDraw(drawMode);
     mLocalPivotAct->setEnabled(pointMode || boxMode);
-
-    if (mColorPickLabel) {
-        mColorPickLabelAct->setVisible(mode == CanvasMode::pickFillStroke ||
-                                       mode == CanvasMode::pickFillStrokeEvent);
-    }
 }
 
 void MainWindow::setResolutionValue(const qreal value)
@@ -1848,8 +1836,8 @@ void MainWindow::readSettings(const QString &openProject)
     mRenderWindowAct->setChecked(isRenderWindow);
     mRenderWindowAct->blockSignals(false);
 
-    // force transform toolbar to own row
-    insertToolBarBreak(mTransformToolBar);
+    // force tool controls to own row
+    insertToolBarBreak(mToolControls);
 
     if (isTimelineWindow) { openTimelineWindow(); }
     if (isRenderWindow) { openRenderQueueWindow(); }
@@ -2388,5 +2376,6 @@ void MainWindow::handleNewVideoClip(const VideoBox::VideoSpecs &specs)
 
 void MainWindow::handleCurrentPixelColor(const QColor &color)
 {
-    mTransformToolBar->updateColorPicker(color);
+    if (!mToolControls) { return; }
+    mToolControls->updateColorPicker(color);
 }

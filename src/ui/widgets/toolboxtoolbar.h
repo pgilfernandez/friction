@@ -20,8 +20,8 @@
 #
 */
 
-#ifndef FRICTION_VIEWER_TOOLBAR_H
-#define FRICTION_VIEWER_TOOLBAR_H
+#ifndef FRICTION_TOOLBOX_TOOLBAR_H
+#define FRICTION_TOOLBOX_TOOLBAR_H
 
 #include "ui_global.h"
 
@@ -35,12 +35,12 @@ namespace Friction
 {
     namespace Ui
     {
-        class UI_EXPORT ViewerToolBar : public ToolBar
+        class UI_EXPORT ToolboxToolBar : public ToolBar
         {
         public:
-            explicit ViewerToolBar(const QString &name,
-                                   const QString &title,
-                                   QWidget *parent = nullptr);
+            explicit ToolboxToolBar(const QString &name,
+                                    const QString &title,
+                                    QWidget *parent = nullptr);
             void setCurrentCanvas(Canvas * const target);
             void setCurrentBox(BoundingBox * const target);
             void setCanvasMode(const CanvasMode &mode);
@@ -80,4 +80,4 @@ namespace Friction
     }
 }
 
-#endif // FRICTION_VIEWER_TOOLBAR_H
+#endif // FRICTION_TOOLBOX_TOOLBAR_H

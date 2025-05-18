@@ -53,7 +53,7 @@
 
 #include "widgets/fontswidget.h"
 #include "widgets/toolbar.h"
-#include "widgets/transformtoolbar.h"
+#include "widgets/toolcontrols.h"
 #include "widgets/colortoolbar.h"
 #include "widgets/qdoubleslider.h"
 #include "widgets/canvastoolbar.h"
@@ -365,7 +365,7 @@ private:
 
     Friction::Ui::ColorToolBar *mColorToolBar;
     Friction::Ui::CanvasToolBar *mCanvasToolBar;
-    Friction::Ui::TransformToolBar *mTransformToolBar;
+    Friction::Ui::ToolControls *mToolControls;
 
     void setupToolBox();
     void setupToolBoxMain();
@@ -403,9 +403,6 @@ private:
     void askInstallRenderPresets();
     void askInstallExpressionsPresets();
     void askRestoreFillStrokeDefault();
-
-    QLabel *mColorPickLabel;
-    QAction *mColorPickLabelAct;
 
     QAction *mToolBarMainAct;
     QAction *mToolBarColorAct;

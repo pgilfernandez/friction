@@ -20,14 +20,14 @@
 #
 */
 
-#include "viewertoolbar.h"
+#include "toolboxtoolbar.h"
 #include "Private/document.h"
 
 using namespace Friction::Ui;
 
-ViewerToolBar::ViewerToolBar(const QString &name,
-                             const QString &title,
-                             QWidget *parent)
+ToolboxToolBar::ToolboxToolBar(const QString &name,
+                               const QString &title,
+                               QWidget *parent)
     : ToolBar(name, parent, true)
     , mCanvasMode(CanvasMode::boxTransform)
     , mGroupCommon(nullptr)
@@ -81,19 +81,19 @@ ViewerToolBar::ViewerToolBar(const QString &name,
     mGroupSelectedText->setVisible(false);
 }
 
-void ViewerToolBar::setCurrentCanvas(Canvas * const target)
+void ToolboxToolBar::setCurrentCanvas(Canvas * const target)
 {
     mCanvas.assign(target);
     if (target) {
         mCanvas << connect(mCanvas, &Canvas::currentBoxChanged,
-                           this, &ViewerToolBar::setCurrentBox);
+                           this, &ToolboxToolBar::setCurrentBox);
         mCanvas << connect(mCanvas, &Canvas::canvasModeSet,
-                           this, &ViewerToolBar::setCanvasMode);
+                           this, &ToolboxToolBar::setCanvasMode);
     }
     setCurrentBox(target ? target->getCurrentBox() : nullptr);
 }
 
-void ViewerToolBar::setCurrentBox(BoundingBox * const target)
+void ToolboxToolBar::setCurrentBox(BoundingBox * const target)
 {
     mGroupSelected->setVisible(target);
     mGroupSelectedTransform->setVisible(target && mCanvasMode == CanvasMode::boxTransform);
@@ -103,7 +103,7 @@ void ViewerToolBar::setCurrentBox(BoundingBox * const target)
     mGroupSelectedText->setVisible(target && mCanvasMode == CanvasMode::textCreate);
 }
 
-void ViewerToolBar::setCanvasMode(const CanvasMode &mode)
+void ToolboxToolBar::setCanvasMode(const CanvasMode &mode)
 {
     mCanvasMode = mode;
     mGroupCommon->setVisible(true);
@@ -120,14 +120,14 @@ void ViewerToolBar::setCanvasMode(const CanvasMode &mode)
     if (mCanvas) { setCurrentBox(mCanvas->getCurrentBox()); }
 }
 
-void ViewerToolBar::addCanvasAction(QAction *action)
+void ToolboxToolBar::addCanvasAction(QAction *action)
 {
     if (!action) { return; }
     addAction(mGroupCommon->addAction(action));
 }
 
-void ViewerToolBar::addCanvasAction(const CanvasMode &mode,
-                                    QAction *action)
+void ToolboxToolBar::addCanvasAction(const CanvasMode &mode,
+                                     QAction *action)
 {
     if (!action) { return; }
     switch (mode) {
@@ -157,14 +157,14 @@ void ViewerToolBar::addCanvasAction(const CanvasMode &mode,
     }
 }
 
-void ViewerToolBar::addCanvasSelectedAction(QAction *action)
+void ToolboxToolBar::addCanvasSelectedAction(QAction *action)
 {
     if (!action) { return; }
     addAction(mGroupSelected->addAction(action));
 }
 
-void ViewerToolBar::addCanvasSelectedAction(const CanvasMode &mode,
-                                            QAction *action)
+void ToolboxToolBar::addCanvasSelectedAction(const CanvasMode &mode,
+                                             QAction *action)
 {
     if (!action) { return; }
     switch (mode) {
@@ -187,14 +187,14 @@ void ViewerToolBar::addCanvasSelectedAction(const CanvasMode &mode,
     }
 }
 
-void ViewerToolBar::addCanvasWidget(QWidget *widget)
+void ToolboxToolBar::addCanvasWidget(QWidget *widget)
 {
     if (!widget) { return; }
     mGroupCommon->addAction(addWidget(widget));
 }
 
-void ViewerToolBar::addCanvasWidget(const CanvasMode &mode,
-                                    QWidget *widget)
+void ToolboxToolBar::addCanvasWidget(const CanvasMode &mode,
+                                     QWidget *widget)
 {
     if (!widget) { return; }
     switch (mode) {
@@ -224,14 +224,14 @@ void ViewerToolBar::addCanvasWidget(const CanvasMode &mode,
     }
 }
 
-void ViewerToolBar::addCanvasSelectedWidget(QWidget *widget)
+void ToolboxToolBar::addCanvasSelectedWidget(QWidget *widget)
 {
     if (!widget) { return; }
     mGroupSelected->addAction(addWidget(widget));
 }
 
-void ViewerToolBar::addCanvasSelectedWidget(const CanvasMode &mode,
-                                            QWidget *widget)
+void ToolboxToolBar::addCanvasSelectedWidget(const CanvasMode &mode,
+                                             QWidget *widget)
 {
     if (!widget) { return; }
     switch (mode) {

@@ -233,8 +233,8 @@ QToolButton:hover,
 QPushButton:checked,
 QToolButton:checked,
 QAction:checked,
-Friction--Ui--ToolBar#TransformToolBarLeft QToolButton:hover,
-Friction--Ui--ToolBar#TransformToolBarRight QToolButton:hover
+Friction--Ui--ToolBar#ToolControlsLeft QToolButton:hover,
+Friction--Ui--ToolBar#ToolControlsRight QToolButton:hover
 {
     background-color: %3;
     border-color: %4;
@@ -605,13 +605,13 @@ QCheckBox:disabled {
 }
 
 QToolBar#DarkToolBar,
-Friction--Ui--TransformToolBar {
+Friction--Ui--ToolControls {
     background-color: %5;
 }
 
 QToolBar#ColorToolBar QToolButton:hover,
 QToolBar#CanvasToolBar QToolButton:hover,
-Friction--Ui--TransformToolBar QToolButton:hover {
+Friction--Ui--ToolControls QToolButton:hover {
     background-color: transparent;
     border-color: transparent;
 }
@@ -638,22 +638,22 @@ Friction--Ui--ToolBar::separator:horizontal {
     width: 1px;
 }
 
-Friction--Ui--TransformToolBar::separator,
-Friction--Ui--ToolBar#TransformToolBarLeft::separator,
-Friction--Ui--ToolBar#TransformToolBarRight::separator {
+Friction--Ui--ToolControls::separator,
+Friction--Ui--ToolBar#ToolControlsLeft::separator,
+Friction--Ui--ToolBar#ToolControlsRight::separator {
     background-color: transparent;
 }
 
-Friction--Ui--TransformToolBar::separator:horizontal {
+Friction--Ui--ToolControls::separator:horizontal {
     width: 2px;
 }
 
-Friction--Ui--ToolBar#TransformToolBarLeft::separator:horizontal,
-Friction--Ui--ToolBar#TransformToolBarRight::separator:horizontal {
+Friction--Ui--ToolBar#ToolControlsLeft::separator:horizontal,
+Friction--Ui--ToolBar#ToolControlsRight::separator:horizontal {
     width: 4px;
 }
 
-Friction--Ui--TransformToolBar QComboBox {
+Friction--Ui--ToolControls QComboBox {
     padding: .1em;
 }
 

@@ -20,7 +20,7 @@
 #
 */
 
-#include "transformtoolbar.h"
+#include "toolcontrols.h"
 #include "Animators/qpointfanimator.h"
 #include "Animators/transformanimator.h"
 #include "Private/document.h"
@@ -43,8 +43,8 @@
 
 using namespace Friction::Ui;
 
-TransformToolBar::TransformToolBar(QWidget *parent)
-    : ToolBar("TransformToolBar", parent, true)
+ToolControls::ToolControls(QWidget *parent)
+    : ToolBar("ToolControls", parent, true)
     , mToolBarLeft(nullptr)
     , mToolBarRight(nullptr)
     , mCanvasMode(CanvasMode::boxTransform)
@@ -77,19 +77,19 @@ TransformToolBar::TransformToolBar(QWidget *parent)
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setContextMenuPolicy(Qt::NoContextMenu);
     setAllowedAreas(Qt::TopToolBarArea | Qt::BottomToolBarArea);
-    setWindowTitle(tr("Transform Toolbar"));
+    setWindowTitle(tr("Tool Controls"));
 
     setupWidgets();
 }
 
-void TransformToolBar::setCurrentCanvas(Canvas * const target)
+void ToolControls::setCurrentCanvas(Canvas * const target)
 {
     mCanvas.assign(target);
     if (target) {
         mCanvas << connect(mCanvas, &Canvas::currentBoxChanged,
-                           this, &TransformToolBar::setCurrentBox);
+                           this, &ToolControls::setCurrentBox);
         mCanvas << connect(mCanvas, &Canvas::canvasModeSet,
-                           this, &TransformToolBar::setCanvasMode);
+                           this, &ToolControls::setCanvasMode);
     }
     setCurrentBox(target ? target->getCurrentBox() : nullptr);
 
@@ -97,13 +97,13 @@ void TransformToolBar::setCurrentCanvas(Canvas * const target)
     mToolBarRight->setCurrentCanvas(target);
 }
 
-void TransformToolBar::setCurrentBox(BoundingBox * const target)
+void ToolControls::setCurrentBox(BoundingBox * const target)
 {
     setTransform(target);
     mTransformAlign->setEnabled(target && mAlignEnabled);
 }
 
-void TransformToolBar::setCanvasMode(const CanvasMode &mode)
+void ToolControls::setCanvasMode(const CanvasMode &mode)
 {
     mCanvasMode = mode;
 
@@ -127,17 +127,17 @@ void TransformToolBar::setCanvasMode(const CanvasMode &mode)
     mTransformAlign->setVisible(canShowAlign && mAlignEnabled);
 }
 
-ViewerToolBar *TransformToolBar::getLeftToolBar()
+ToolboxToolBar *ToolControls::getLeftToolBar()
 {
     return mToolBarLeft;
 }
 
-ViewerToolBar *TransformToolBar::getRightToolBar()
+ToolboxToolBar *ToolControls::getRightToolBar()
 {
     return mToolBarRight;
 }
 
-void TransformToolBar::updateColorPicker(const QColor &color)
+void ToolControls::updateColorPicker(const QColor &color)
 {
     if (!mColorPicker || !mColorPickerLabel) { return; }
     mColorPicker->setStyleSheet(QString("background-color: %1;").arg(color.isValid() ? color.name() : "black"));
@@ -148,19 +148,19 @@ void TransformToolBar::updateColorPicker(const QColor &color)
                                                            QString::number(color.isValid() ? color.blueF() : 0., 'f', 3)));
 }
 
-void TransformToolBar::setAlignEnabled(const bool enabled)
+void ToolControls::setAlignEnabled(const bool enabled)
 {
     mAlignEnabled = enabled;
     mTransformAlign->setEnabled(enabled);
     setCanvasMode(mCanvasMode);
 }
 
-bool TransformToolBar::isAlignEnabled()
+bool ToolControls::isAlignEnabled()
 {
     return mAlignEnabled;
 }
 
-void TransformToolBar::setTransform(BoundingBox * const target)
+void ToolControls::setTransform(BoundingBox * const target)
 {
     const bool multiple = target ? mCanvas->getSelectedBoxesCount() > 1 : false;
     // TODO: add support for multiple boxes
@@ -224,7 +224,7 @@ void TransformToolBar::setTransform(BoundingBox * const target)
     setCanvasMode(mCanvasMode);
 }
 
-void TransformToolBar::resetWidgets()
+void ToolControls::resetWidgets()
 {
     mTransformX->setTarget(nullptr);
     mTransformY->setTarget(nullptr);
@@ -252,7 +252,7 @@ void TransformToolBar::resetWidgets()
     mTransformBottomRight->setVisible(false);
 }
 
-void TransformToolBar::setupWidgets()
+void ToolControls::setupWidgets()
 {
     mTransformMove = new QActionGroup(this);
     mTransformRotate = new QActionGroup(this);
@@ -263,12 +263,12 @@ void TransformToolBar::setupWidgets()
     mTransformOpacity = new QActionGroup(this);
     mTransformAlign = new QActionGroup(this);
 
-    mToolBarLeft = new ViewerToolBar("TransformToolBarLeft",
-                                     tr("Left ToolBox"),
-                                     this);
-    mToolBarRight = new ViewerToolBar("TransformToolBarRight",
-                                      tr("Right ToolBox"),
+    mToolBarLeft = new ToolboxToolBar("ToolControlsLeft",
+                                      tr("Left Tool Controls"),
                                       this);
+    mToolBarRight = new ToolboxToolBar("ToolControlsRight",
+                                       tr("Right Tool Controls"),
+                                       this);
 
     addWidget(mToolBarLeft);
     setupTransform();
@@ -288,7 +288,7 @@ void TransformToolBar::setupWidgets()
                                    mColorPickerLabel);
 }
 
-void TransformToolBar::setupTransform()
+void ToolControls::setupTransform()
 {
     mTransformX = new QrealAnimatorValueSlider(nullptr, this);
     mTransformY = new QrealAnimatorValueSlider(nullptr, this);
@@ -301,7 +301,7 @@ void TransformToolBar::setupTransform()
     mTransformBY = new QrealAnimatorValueSlider(nullptr, this);
     mTransformPX = new QrealAnimatorValueSlider(nullptr, this);
     mTransformPY = new QrealAnimatorValueSlider(nullptr, this);
-    mTransformOX =new QrealAnimatorValueSlider(nullptr, this);
+    mTransformOX = new QrealAnimatorValueSlider(nullptr, this);
 
     mTransformMove->addAction(addAction(QIcon::fromTheme("boxTransform"),
                                         tr("Move")));
@@ -370,7 +370,7 @@ void TransformToolBar::setupTransform()
     mTransformOX->setDisplayedValue(100);
 }
 
-void TransformToolBar::setupAlign()
+void ToolControls::setupAlign()
 {
     const auto button = new ToolButton(this, false);
     const auto buttonAct = new QWidgetAction(this);
@@ -490,7 +490,7 @@ void TransformToolBar::setupAlign()
     });
 }
 
-void TransformToolBar::triggerAlign(const Qt::Alignment &align)
+void ToolControls::triggerAlign(const Qt::Alignment &align)
 {
     if (!mCanvas) { return; }
 
@@ -501,9 +501,9 @@ void TransformToolBar::triggerAlign(const Qt::Alignment &align)
     mCanvas->finishedAction();
 }
 
-void TransformToolBar::setComboBoxItemState(QComboBox *box,
-                                            int index,
-                                            bool enabled)
+void ToolControls::setComboBoxItemState(QComboBox *box,
+                                        int index,
+                                        bool enabled)
 {
     auto model = qobject_cast<QStandardItemModel*>(box->model());
     if (!model) { return; }
