@@ -44,12 +44,26 @@ namespace Friction
                 Controls,
                 Extra
             };
+            enum Node {
+                NodeConnect,
+                NodeDisconnect,
+                NodeMerge,
+                NodeNew,
+                NodeSymmetric,
+                NodeSmooth,
+                NodeCorner,
+                NodeSegmentLine,
+                NodeSegmentCurve
+            };
 
             explicit ToolBox(Actions &actions,
                              Document &document,
                              QWidget *parent);
 
             QToolBar *getToolBar(const Type &type);
+
+            const QList<QAction*> getMainActions();
+            const QList<QAction*> getNodeActions();
 
         private:
             Actions &mActions;
@@ -59,6 +73,7 @@ namespace Friction
             ToolBar *mExtra;
 
             QActionGroup *mGroupMain;
+            QActionGroup *mGroupNodes;
 
             void setupToolBox(QWidget *parent);
             void setupDocument();
@@ -68,7 +83,11 @@ namespace Friction
                                  const QList<CanvasMode> &modes,
                                  const bool checked,
                                  QObject *parent = nullptr);
-            void setupActions(QWidget *parent);
+            void setupMainActions(QWidget *parent);
+            void setupNodesAction(const QIcon &icon,
+                                  const QString &title,
+                                  const Node &node);
+            void setupNodesActions(QWidget *parent);
         };
     }
 }

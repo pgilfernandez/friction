@@ -22,6 +22,8 @@
 
 #include "toolbox.h"
 
+#include <QToolButton>
+
 using namespace Friction::Ui;
 
 ToolBox::ToolBox(Actions &actions,
@@ -34,6 +36,7 @@ ToolBox::ToolBox(Actions &actions,
     , mControls(nullptr)
     , mExtra(nullptr)
     , mGroupMain(nullptr)
+    , mGroupNodes(nullptr)
 {
     setupToolBox(parent);
 }
@@ -51,6 +54,16 @@ QToolBar *ToolBox::getToolBar(const Type &type)
     return nullptr;
 }
 
+const QList<QAction*> ToolBox::getMainActions()
+{
+    return mGroupMain->actions();
+}
+
+const QList<QAction*> ToolBox::getNodeActions()
+{
+    return mGroupNodes->actions();
+}
+
 void ToolBox::setupToolBox(QWidget *parent)
 {
     if (!parent) { return; }
@@ -66,9 +79,11 @@ void ToolBox::setupToolBox(QWidget *parent)
                          true);
 
     mGroupMain = new QActionGroup(this);
+    mGroupNodes = new QActionGroup(this);
 
     setupDocument();
-    setupActions(parent);
+    setupMainActions(parent);
+    setupNodesActions(parent);
 }
 
 void ToolBox::setupDocument()
@@ -140,7 +155,7 @@ void ToolBox::setupMainAction(const QIcon &icon,
     });
 }
 
-void ToolBox::setupActions(QWidget *parent)
+void ToolBox::setupMainActions(QWidget *parent)
 {
     if (!parent) { return; }
 
@@ -241,4 +256,100 @@ void ToolBox::setupActions(QWidget *parent)
     }
 
     mMain->addActions(mGroupMain->actions());
+}
+
+void ToolBox::setupNodesAction(const QIcon &icon,
+                               const QString &title,
+                               const Node &node)
+{
+
+    const auto act = new QAction(icon, title, this);
+    connect(act, &QAction::triggered,
+            this, [this, node]() {
+        switch (node) {
+        case NodeConnect:
+            mActions.connectPointsSlot();
+            break;
+        case NodeDisconnect:
+            mActions.disconnectPointsSlot();
+            break;
+        case NodeMerge:
+            mActions.mergePointsSlot();
+            break;
+        case NodeNew:
+            mActions.subdivideSegments();
+            break;
+        case NodeSymmetric:
+            mActions.makePointCtrlsSymmetric();
+            break;
+        case NodeSmooth:
+            mActions.makePointCtrlsSmooth();
+            break;
+        case NodeCorner:
+            mActions.makePointCtrlsCorner();
+            break;
+        case NodeSegmentLine:
+            mActions.makeSegmentLine();
+            break;
+        case NodeSegmentCurve:
+            mActions.makeSegmentCurve();
+            break;
+        default:;
+        }
+    });
+    mGroupNodes->addAction(act);
+}
+
+void ToolBox::setupNodesActions(QWidget *parent)
+{
+    setupNodesAction(QIcon::fromTheme("nodeConnect"),
+                     tr("Connect Nodes"), NodeConnect);
+    setupNodesAction(QIcon::fromTheme("nodeDisconnect"),
+                     tr("Disconnect Nodes"), NodeDisconnect);
+    setupNodesAction(QIcon::fromTheme("nodeMerge"),
+                     tr("Merge Nodes"), NodeMerge);
+    setupNodesAction(QIcon::fromTheme("nodeNew"),
+                     tr("New Node"), NodeNew);
+    setupNodesAction(QIcon::fromTheme("nodeSymmetric"),
+                     tr("Symmetric Nodes"), NodeSymmetric);
+    setupNodesAction(QIcon::fromTheme("nodeSmooth"),
+                     tr("Smooth Nodes"), NodeSmooth);
+    setupNodesAction(QIcon::fromTheme("nodeCorner"),
+                     tr("Corner Nodes"), NodeCorner);
+    setupNodesAction(QIcon::fromTheme("segmentLine"),
+                     tr("Make Segment Line"), NodeSegmentLine);
+    setupNodesAction(QIcon::fromTheme("segmentCurve"),
+                     tr("Make Segment Curve"), NodeSegmentCurve);
+
+    {
+        // nodeVisibility
+        const auto button = new QToolButton(parent);
+        button->setObjectName(QString::fromUtf8("ToolButton"));
+        button->setPopupMode(QToolButton::InstantPopup);
+        button->setFocusPolicy(Qt::NoFocus);
+        const auto act1 = new QAction(QIcon::fromTheme("dissolvedAndNormalNodes"),
+                                      tr("Dissolved and normal nodes"),
+                                      this);
+        act1->setData(0);
+        const auto act2 = new QAction(QIcon::fromTheme("dissolvedNodesOnly"),
+                                      tr("Dissolved nodes only"),
+                                      this);
+        act2->setData(1);
+        const auto act3 = new QAction(QIcon::fromTheme("normalNodesOnly"),
+                                      tr("Normal nodes only"),
+                                      this);
+        act3->setData(2);
+        button->addAction(act1);
+        button->addAction(act2);
+        button->addAction(act3);
+        button->setDefaultAction(act1);
+        connect(button, &QToolButton::triggered,
+                this, [this, button](QAction *act) {
+            button->setDefaultAction(act);
+            mDocument.fNodeVisibility = static_cast<NodeVisiblity>(act->data().toInt());
+            Document::sInstance->actionFinished();
+        });
+    }
+
+    // TODO: add to controls
 }
