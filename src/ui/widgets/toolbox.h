@@ -23,6 +23,8 @@
 #ifndef FRICTION_TOOLBOX_H
 #define FRICTION_TOOLBOX_H
 
+#include "ui_global.h"
+
 #include <QObject>
 #include <QActionGroup>
 
@@ -37,7 +39,7 @@ namespace Friction
 {
     namespace Ui
     {
-        class ToolBox : public QObject
+        class UI_EXPORT ToolBox : public QObject
         {
             Q_OBJECT
         public:
