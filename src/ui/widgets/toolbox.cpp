@@ -37,6 +37,9 @@ ToolBox::ToolBox(Actions &actions,
     , mExtra(nullptr)
     , mGroupMain(nullptr)
     , mGroupNodes(nullptr)
+    , mGroupDraw(nullptr)
+    , mDrawPathMaxError(nullptr)
+    , mDrawPathSmooth(nullptr)
 {
     setupToolBox(parent);
 }
@@ -73,39 +76,39 @@ void ToolBox::setupToolBox(QWidget *parent)
                         parent,
                         true);
     mControls = new ToolControls(parent);
-    mExtra = new ToolBar(tr("Tool Extra"),
-                         "ToolBoxExtra",
-                         parent,
-                         true);
+    mExtra = new ToolboxToolBar(tr("Extra Tools"),
+                                "ToolBoxExtra",
+                                parent);
 
     mGroupMain = new QActionGroup(this);
     mGroupNodes = new QActionGroup(this);
 
     setupDocument();
-    setupMainActions(parent);
-    setupNodesActions(parent);
+    setupMainActions();
+    setupNodesActions();
 }
 
 void ToolBox::setupDocument()
 {
-    // TODO
+    connect(&mDocument, &Document::activeSceneSet,
+            this, &ToolBox::setCurrentCanvas);
+    connect(&mDocument, &Document::canvasModeSet,
+            this, &ToolBox::setCanvasMode);
 }
 
 void ToolBox::setupMainAction(const QIcon &icon,
                               const QString &title,
                               const QKeySequence &shortcut,
                               const QList<CanvasMode> &modes,
-                              const bool checked,
-                              QObject *parent)
+                              const bool checked)
 {
     if (modes.isEmpty() ||
         icon.isNull() ||
-        title.isEmpty() ||
-        !parent) { return; }
+        title.isEmpty()) { return; }
 
     const auto act = new QAction(icon,
                                  title,
-                                 parent);
+                                 mMain);
     act->setCheckable(true);
     act->setChecked(checked);
     act->setShortcut(shortcut);
@@ -155,74 +158,64 @@ void ToolBox::setupMainAction(const QIcon &icon,
     });
 }
 
-void ToolBox::setupMainActions(QWidget *parent)
+void ToolBox::setupMainActions()
 {
-    if (!parent) { return; }
-
     setupMainAction(QIcon::fromTheme("boxTransform"),
                     tr("Object Mode"),
                     QKeySequence(AppSupport::getSettings("shortcuts",
                                                          "boxTransform",
                                                          "F1").toString()),
                     {CanvasMode::boxTransform},
-                    true,
-                    parent);
+                    true);
     setupMainAction(QIcon::fromTheme("pointTransform"),
                     tr("Point Mode"),
                     QKeySequence(AppSupport::getSettings("shortcuts",
                                                          "pointTransform",
                                                          "F2").toString()),
                     {CanvasMode::pointTransform},
-                    false,
-                    parent);
+                    false);
     setupMainAction(QIcon::fromTheme("pathCreate"),
                     tr("Add Path"),
                     QKeySequence(AppSupport::getSettings("shortcuts",
                                                          "pathCreate",
                                                          "F3").toString()),
                     {CanvasMode::pathCreate},
-                    false,
-                    parent);
+                    false);
     setupMainAction(QIcon::fromTheme("drawPath"),
                     tr("Draw Path"),
                     QKeySequence(AppSupport::getSettings("shortcuts",
                                                          "drawPath",
                                                          "F4").toString()),
                     {CanvasMode::drawPath},
-                    false,
-                    parent);
+                    false);
     setupMainAction(QIcon::fromTheme("circleCreate"),
                     tr("Add Circle"),
                     QKeySequence(AppSupport::getSettings("shortcuts",
                                                          "circleMode",
                                                          "F5").toString()),
                     {CanvasMode::circleCreate},
-                    false,
-                    parent);
+                    false);
     setupMainAction(QIcon::fromTheme("rectCreate"),
                     tr("Add Rectangle"),
                     QKeySequence(AppSupport::getSettings("shortcuts",
                                                          "rectMode",
                                                          "F6").toString()),
                     {CanvasMode::rectCreate},
-                    false,
-                    parent);
+                    false);
     setupMainAction(QIcon::fromTheme("textCreate"),
                     tr("Add Text"),
                     QKeySequence(AppSupport::getSettings("shortcuts",
                                                          "textMode",
                                                          "F7").toString()),
                     {CanvasMode::textCreate},
-                    false,
-                    parent);
+                    false);
     setupMainAction(QIcon::fromTheme("nullCreate"),
                     tr("Add Null Object"),
                     QKeySequence(AppSupport::getSettings("shortcuts",
                                                          "nullMode",
                                                          "F8").toString()),
                     {CanvasMode::nullCreate},
-                    false,
-                    parent);
+                    false);
     setupMainAction(QIcon::fromTheme("pick"),
                     tr("Color Pick Mode"),
                     QKeySequence(AppSupport::getSettings("shortcuts",
@@ -230,8 +223,7 @@ void ToolBox::setupMainActions(QWidget *parent)
                                                          "F9").toString()),
                     {CanvasMode::pickFillStroke,
                      CanvasMode::pickFillStrokeEvent},
-                    false,
-                    parent);
+                    false);
 
     {
         // pivot
@@ -239,7 +231,7 @@ void ToolBox::setupMainActions(QWidget *parent)
                                          QIcon::fromTheme("pivotLocal") :
                                          QIcon::fromTheme("pivotGlobal"),
                                      tr("Pivot Global / Local"),
-                                     parent);
+                                     mMain);
         act->setShortcut(QKeySequence(AppSupport::getSettings("shortcuts",
                                       "localPivot",
                                       "P").toString()));
@@ -297,10 +289,10 @@ void ToolBox::setupNodesAction(const QIcon &icon,
         default:;
         }
     });
-    mGroupNodes->addAction(act);
+    mControls->addAction(mGroupNodes->addAction(act));
 }
 
-void ToolBox::setupNodesActions(QWidget *parent)
+void ToolBox::setupNodesActions()
 {
     setupNodesAction(QIcon::fromTheme("nodeConnect"),
                      tr("Connect Nodes"), NodeConnect);
@@ -322,8 +314,8 @@ void ToolBox::setupNodesActions(QWidget *parent)
                      tr("Make Segment Curve"), NodeSegmentCurve);
 
     {
-        // nodeVisibility
-        const auto button = new QToolButton(parent);
+        // node visibility tool button
+        const auto button = new QToolButton(mControls);
         button->setObjectName(QString::fromUtf8("ToolButton"));
         button->setPopupMode(QToolButton::InstantPopup);
         button->setFocusPolicy(Qt::NoFocus);
@@ -349,7 +341,64 @@ void ToolBox::setupNodesActions(QWidget *parent)
             mDocument.fNodeVisibility = static_cast<NodeVisiblity>(act->data().toInt());
             Document::sInstance->actionFinished();
         });
+        mGroupNodes->addAction(mControls->addWidget(button));
     }
 
-    // TODO: add to controls
+    mGroupNodes->setEnabled(false);
+    mGroupNodes->setVisible(false);
+}
+
+void ToolBox::setupDrawActions()
+{
+    {
+        const auto act = new QAction(mDocument.fDrawPathManual ?
+                                         QIcon::fromTheme("drawPathAutoUnchecked") :
+                                         QIcon::fromTheme("drawPathAutoChecked"),
+                                     tr("Automatic/Manual Fitting"),
+                                     this);
+        connect(act, &QAction::triggered,
+                this, [this, act]() {
+            mDocument.fDrawPathManual = !mDocument.fDrawPathManual;
+            mDrawPathMaxError->setDisabled(mDocument.fDrawPathManual);
+            act->setIcon(mDocument.fDrawPathManual ?
+                             QIcon::fromTheme("drawPathAutoUnchecked") :
+                             QIcon::fromTheme("drawPathAutoChecked"));
+        });
+        mGroupDraw->addAction(act);
+    }
+
+    mDrawPathMaxError = new QDoubleSlider(1, 200, 1, mControls, false);
+    mDrawPathMaxError->setNumberDecimals(0);
+    mDrawPathMaxError->setMinimumWidth(50);
+    mDrawPathMaxError->setDisplayedValue(mDocument.fDrawPathMaxError);
+    connect(mDrawPathMaxError, &QDoubleSlider::valueEdited,
+            this, [this](const qreal value) {
+        mDocument.fDrawPathMaxError = qFloor(value);
+    });
+
+    mDrawPathSmooth = new QDoubleSlider(1, 200, 1, mControls, false);
+    mDrawPathSmooth->setNumberDecimals(0);
+    mDrawPathSmooth->setMinimumWidth(50);
+    mDrawPathSmooth->setDisplayedValue(mDocument.fDrawPathSmooth);
+    connect(mDrawPathSmooth, &QDoubleSlider::valueEdited,
+            this, [this](const qreal value) {
+        mDocument.fDrawPathSmooth = qFloor(value);
+    });
+    // TODO
+}
+
+void ToolBox::setCurrentCanvas(Canvas * const target)
+{
+    mControls->setCurrentCanvas(target);
+}
+
+void ToolBox::setCanvasMode(const CanvasMode &mode)
+{
+    const bool boxMode = mode == CanvasMode::boxTransform;
+    const bool pointMode = mode == CanvasMode::pointTransform;
+    const bool drawMode = mode == CanvasMode::drawPath;
+
+    mGroupNodes->setEnabled(pointMode);
+    mGroupNodes->setVisible(pointMode);
+    // TODO
 }

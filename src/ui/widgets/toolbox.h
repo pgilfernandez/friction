@@ -29,7 +29,9 @@
 #include "Private/document.h"
 
 #include "widgets/toolbar.h"
+#include "widgets/toolboxtoolbar.h"
 #include "widgets/toolcontrols.h"
+#include "widgets/qdoubleslider.h"
 
 namespace Friction
 {
@@ -70,10 +72,14 @@ namespace Friction
             Document &mDocument;
             ToolBar *mMain;
             ToolControls *mControls;
-            ToolBar *mExtra;
+            ToolboxToolBar *mExtra;
 
             QActionGroup *mGroupMain;
             QActionGroup *mGroupNodes;
+            QActionGroup *mGroupDraw;
+
+            QDoubleSlider *mDrawPathMaxError;
+            QDoubleSlider *mDrawPathSmooth;
 
             void setupToolBox(QWidget *parent);
             void setupDocument();
@@ -81,13 +87,16 @@ namespace Friction
                                  const QString &title,
                                  const QKeySequence &shortcut,
                                  const QList<CanvasMode> &modes,
-                                 const bool checked,
-                                 QObject *parent = nullptr);
-            void setupMainActions(QWidget *parent);
+                                 const bool checked);
+            void setupMainActions();
             void setupNodesAction(const QIcon &icon,
                                   const QString &title,
                                   const Node &node);
-            void setupNodesActions(QWidget *parent);
+            void setupNodesActions();
+            void setupDrawActions();
+
+            void setCurrentCanvas(Canvas * const target);
+            void setCanvasMode(const CanvasMode &mode);
         };
     }
 }
