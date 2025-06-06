@@ -1675,6 +1675,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
         const auto keyEvent = static_cast<QKeyEvent*>(e);
         const int key = keyEvent->key();
         if (key == Qt::Key_Tab) {
+            if (enve_cast<QLineEdit*>(focusWidget)) { return true; }
             KeyFocusTarget::KFT_sTab();
             return true;
         }

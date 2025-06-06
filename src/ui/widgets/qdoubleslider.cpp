@@ -59,6 +59,10 @@ void SliderEdit::keyPressEvent(QKeyEvent* e) {
     case Qt::Key_Enter:
         clearFocus();
         break;
+    case Qt::Key_Tab:
+        clearFocus();
+        emit tabPressed();
+        break;
     default: QLineEdit::keyPressEvent(e);
     }
 }
@@ -117,6 +121,8 @@ QDoubleSlider::QDoubleSlider(const qreal minVal, const qreal maxVal,
         unsetCursor();
         update();
     });
+    connect(mLineEdit, &SliderEdit::tabPressed,
+            this, [this]() { emit tabPressed(); });
     connect(mLineEdit, &SliderEdit::valueSet,
             this, [this](const qreal value) {
         const qreal clampedValue = clamped(value);
@@ -169,6 +175,15 @@ void QDoubleSlider::setNumberDecimals(const int decimals) {
     mDecimals = decimals;
     if (mAutoAdjustWidth) { fitWidthToContent(); }
     updateValueString();
+}
+
+void QDoubleSlider::setLineEditFocus()
+{
+    updateLineEditFromValue();
+    mCanceled = false;
+    mLineEdit->show();
+    mLineEdit->setFocus();
+    mLineEdit->selectAll();
 }
 
 void QDoubleSlider::updateLineEditFromValue() {
