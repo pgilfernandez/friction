@@ -66,6 +66,9 @@ public:
 
     qreal getCurrentXRadius();
     qreal getCurrentYRadius();
+
+    // Nuevo método para obtener el duple radius
+    QPointF getRadius() const;
 protected:
     void getMotionBlurProperties(QList<Property*> &list) const;
 private:
@@ -76,6 +79,9 @@ private:
     qsptr<QPointFAnimator> mCenterAnimator;
     qsptr<QPointFAnimator> mHorizontalRadiusAnimator;
     qsptr<QPointFAnimator> mVerticalRadiusAnimator;
+
+    // Añade el animator duple para radius
+    qsptr<QPointFAnimator> mRadiusAnimator;
 };
 
 #endif // CIRCLE_H

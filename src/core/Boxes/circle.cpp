@@ -42,11 +42,11 @@ Circle::Circle() : PathBox("Circle", eBoxType::circle) {
 
     mCenterPoint->disableSelection();
     mCenterPoint->setRelativePos(QPointF(0, 0));
-    ca_prependChild(mPathEffectsAnimators.data(),
-                            mCenterAnimator);
+    ca_prependChild(mPathEffectsAnimators.data(), mCenterAnimator);
 
     mHorizontalRadiusAnimator =
             enve::make_shared<QPointFAnimator>("horizontal radius");
+    // mHorizontalRadiusAnimator->setHidden(true); // <-- Quitar o comentar esta línea si no existe setHidden
     mHorizontalRadiusPoint = enve::make_shared<CircleRadiusPoint>(
                 mHorizontalRadiusAnimator.get(), mTransformAnimator.get(),
                 mCenterPoint.get(), TYPE_PATH_POINT, false);
@@ -59,6 +59,7 @@ Circle::Circle() : PathBox("Circle", eBoxType::circle) {
 
     mVerticalRadiusAnimator =
             enve::make_shared<QPointFAnimator>("vertical radius");
+    // mVerticalRadiusAnimator->setHidden(true); // <-- Quitar o comentar esta línea si no existe setHidden
     mVerticalRadiusPoint = enve::make_shared<CircleRadiusPoint>(
                 mVerticalRadiusAnimator.get(), mTransformAnimator.get(),
                 mCenterPoint.get(), TYPE_PATH_POINT, true);
@@ -68,6 +69,32 @@ Circle::Circle() : PathBox("Circle", eBoxType::circle) {
     ca_prependChild(mPathEffectsAnimators.data(),
                             vYAnimator->ref<QrealAnimator>());
     vYAnimator->prp_setName("vertical radius");
+
+    // --- NUEVO: animator duple para radius ---
+    mRadiusAnimator = enve::make_shared<QPointFAnimator>("radius");
+    ca_prependChild(mPathEffectsAnimators.data(), mRadiusAnimator);
+
+    // Sincroniza el animator radius con los valores actuales en cada frame
+    auto syncRadius = [this]() {
+        QPointF r(
+            mHorizontalRadiusAnimator->getEffectiveXValue(),
+            mVerticalRadiusAnimator->getEffectiveYValue()
+        );
+        mRadiusAnimator->setBaseValue(r);
+    };
+    // Conecta la sincronización a los cambios de los radios
+    connect(mHorizontalRadiusAnimator.get(), &Property::prp_currentFrameChanged, this, syncRadius);
+    connect(mVerticalRadiusAnimator.get(), &Property::prp_currentFrameChanged, this, syncRadius);
+    // Inicializa el valor
+    syncRadius();
+
+    // --- Sincronización inversa: radius -> radios individuales ---
+    auto syncFromRadius = [this]() {
+        QPointF r = mRadiusAnimator->getEffectiveValue();
+        mHorizontalRadiusAnimator->setBaseValue(QPointF(r.x(), 0));
+        mVerticalRadiusAnimator->setBaseValue(QPointF(0, r.y()));
+    };
+    connect(mRadiusAnimator.get(), &Property::prp_currentFrameChanged, this, syncFromRadius);
 
     const auto pathUpdater = [this](const UpdateReason reason) {
         setPathsOutdated(reason);
@@ -142,6 +169,7 @@ void Circle::getMotionBlurProperties(QList<Property*> &list) const {
     PathBox::getMotionBlurProperties(list);
     list.append(mHorizontalRadiusAnimator.get());
     list.append(mVerticalRadiusAnimator.get());
+    list.append(mRadiusAnimator.get()); // Exponer el animator de radio
 }
 
 bool Circle::differenceInEditPathBetweenFrames(
@@ -200,4 +228,11 @@ void CircleRadiusPoint::setRelativePos(const QPointF &relPos) {
     } else {
         setValue(QPointF(relPos.x() - centerPos.x(), 0));
     }
+}
+
+QPointF Circle::getRadius() const {
+    return QPointF(
+        mHorizontalRadiusAnimator->getEffectiveXValue(),
+        mVerticalRadiusAnimator->getEffectiveYValue()
+    );
 }
