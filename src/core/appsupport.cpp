@@ -1020,14 +1020,14 @@ QPair<bool, int> AppSupport::handleXDGArgs(const bool &isRenderer,
                                            const QStringList &args)
 {
     QPair<bool,int> status(false, 0);
-    if (!AppSupport::isAppPortable() || isRenderer) { return status; }
+    if ((!isAppPortable() && !isAppImage()) || isRenderer) { return status; }
     if (args.contains("--xdg-remove")) {
-        const bool removedXDG = AppSupport::removeXDGDesktopIntegration();
+        const bool removedXDG = removeXDGDesktopIntegration();
         qWarning() << "Removed XDG Integration:" << removedXDG;
         status.first = true;
         status.second = removedXDG ? 0 : -1;
     } else if (args.contains("--xdg-install")) {
-        const bool installedXDG = AppSupport::setupXDGDesktopIntegration();
+        const bool installedXDG = setupXDGDesktopIntegration();
         qWarning() << "Installed XDG Integration:" << installedXDG;
         status.first = true;
         status.second = installedXDG ? 0 : -1;
