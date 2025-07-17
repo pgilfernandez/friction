@@ -119,11 +119,7 @@ void ToolControls::setCanvasMode(const CanvasMode &mode)
     mTransformRadius->setVisible(hasRadius && (showRectangle || mode == CanvasMode::circleCreate));
     mTransformBottomRight->setVisible(hasRectangle && showRectangle);
 
-    const bool canShowAlign = mode == CanvasMode::boxTransform ||
-                              mode == CanvasMode::pointTransform ||
-                              mode == CanvasMode::circleCreate ||
-                              mode == CanvasMode::rectCreate ||
-                              mode == CanvasMode::textCreate;
+    const bool canShowAlign = mode == CanvasMode::boxTransform;
     mTransformAlign->setVisible(canShowAlign && mAlignEnabled);
 }
 
@@ -148,10 +144,12 @@ void ToolControls::updateColorPicker(const QColor &color)
                                                            QString::number(color.isValid() ? color.blueF() : 0., 'f', 3)));
 }
 
-void ToolControls::setAlignEnabled(const bool enabled)
+void ToolControls::setAlignEnabled(const bool enabled,
+                                   const bool trigger)
 {
     mAlignEnabled = enabled;
     mTransformAlign->setEnabled(enabled);
+    if (!trigger) { return; }
     setCanvasMode(mCanvasMode);
 }
 
@@ -248,6 +246,7 @@ void ToolControls::resetWidgets()
     mTransformOpacity->setEnabled(false);
     mTransformAlign->setEnabled(false);
 
+    mTransformAlign->setVisible(false);
     mTransformRadius->setVisible(false);
     mTransformBottomRight->setVisible(false);
 }

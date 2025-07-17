@@ -50,7 +50,8 @@ namespace Friction
             ToolboxToolBar* getLeftToolBar();
             ToolboxToolBar* getRightToolBar();
             void updateColorPicker(const QColor &color);
-            void setAlignEnabled(const bool enabled);
+            void setAlignEnabled(const bool enabled,
+                                 const bool trigger = true);
             bool isAlignEnabled();
 
         private:
