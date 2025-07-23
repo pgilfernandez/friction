@@ -453,20 +453,23 @@ void Canvas::setCanvasSize(const int width,
     emit dimensionsChanged(width, height);
 }
 
-void Canvas::setFrameRange(const FrameRange &range)
+void Canvas::setFrameRange(const FrameRange &range,
+                           const bool undo)
 {
-    {
-        prp_pushUndoRedoName("Scene Changed");
-        UndoRedo ur;
-        const FrameRange origRange(mRange);
-        const FrameRange newRange(range);
-        ur.fUndo = [this, origRange]() {
-            setFrameRange(origRange);
-        };
-        ur.fRedo = [this, newRange]() {
-            setFrameRange(newRange);
-        };
-        prp_addUndoRedo(ur);
+    if (undo) {
+        {
+            prp_pushUndoRedoName("Scene Changed");
+            UndoRedo ur;
+            const FrameRange origRange(mRange);
+            const FrameRange newRange(range);
+            ur.fUndo = [this, origRange]() {
+                setFrameRange(origRange);
+            };
+            ur.fRedo = [this, newRange]() {
+                setFrameRange(newRange);
+            };
+            prp_addUndoRedo(ur);
+        }
     }
     mRange = range;
     emit newFrameRange(range);
@@ -1361,7 +1364,7 @@ void Canvas::readSettings(eReadStream& src)
     if (src.evFileVersion() >= EvFormat::markers) {
         readMarkers(src);
     }
-    setFrameRange(range);
+    setFrameRange(range, false);
     anim_setAbsFrame(currFrame);
 }
 
