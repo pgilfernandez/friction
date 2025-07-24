@@ -37,7 +37,7 @@ for /f %%i in ('git rev-parse --short^=8 HEAD') do set COMMIT=%%i
 
 if not exist "sdk\" ( 
     curl -OL "https://github.com/friction2d/friction-sdk/releases/download/v%SDK_VERSION%/friction-sdk-%SDK_VERSION%r3-windows-x64.7z"
-    7z x friction-sdk-%SDK_VERSION%r2-windows-x64.7z
+    7z x friction-sdk-%SDK_VERSION%r3-windows-x64.7z
 )
 
 if exist "build\" (
