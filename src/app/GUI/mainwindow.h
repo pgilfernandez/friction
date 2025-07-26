@@ -178,6 +178,9 @@ public:
     void extAddAction(const CanvasMode &mode,
                       QAction *act,
                       const bool selected = false);
+    void extAddWidget(const CanvasMode &mode,
+                      QWidget *wid,
+                      const bool selected = false);
     LayoutHandler* getLayoutHandler();
     TimelineDockWidget* getTimeLineWidget();
     void focusFontWidget(const bool focus = true);

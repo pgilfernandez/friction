@@ -2256,6 +2256,17 @@ void MainWindow::extAddAction(const CanvasMode &mode,
     else { toolbar->addCanvasAction(mode, act); }
 }
 
+void MainWindow::extAddWidget(const CanvasMode &mode,
+                              QWidget *wid,
+                              const bool selected)
+{
+    if (!wid) { return; }
+    const auto toolbar = enve_cast<Ui::ToolboxToolBar*>(mToolBox->getToolBar(Ui::ToolBox::Extra));
+    if (!toolbar) { return; }
+    if (selected) { toolbar->addCanvasSelectedWidget(mode, wid); }
+    else { toolbar->addCanvasWidget(mode, wid); }
+}
+
 LayoutHandler *MainWindow::getLayoutHandler()
 {
     return mLayoutHandler;
