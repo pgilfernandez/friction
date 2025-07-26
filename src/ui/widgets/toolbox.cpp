@@ -418,6 +418,7 @@ void ToolBox::setupDrawActions()
 void ToolBox::setCurrentCanvas(Canvas * const target)
 {
     mControls->setCurrentCanvas(target);
+    mExtra->setCurrentCanvas(target);
 }
 
 void ToolBox::setCanvasMode(const CanvasMode &mode)
@@ -433,4 +434,6 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
     mGroupDraw->setVisible(drawMode);
 
     mLocalPivot->setEnabled(boxMode || pointMode);
+
+    mExtra->setCanvasMode(mode);
 }

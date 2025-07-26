@@ -175,6 +175,8 @@ public:
     void updateAutoSaveBackupState();
     void openRendererWindow();
     void cmdAddAction(QAction *act);
+    void extAddActionMode(const CanvasMode &mode,
+                          QAction *act);
     LayoutHandler* getLayoutHandler();
     TimelineDockWidget* getTimeLineWidget();
     void focusFontWidget(const bool focus = true);
