@@ -200,8 +200,6 @@ MainWindow::MainWindow(Document& document,
     setupToolBar();
     setupMenuBar();
 
-    setupPropertiesActions();
-
     readRecentFiles();
     updateRecentMenu();
 
@@ -262,6 +260,7 @@ MainWindow::MainWindow(Document& document,
     mObjectSettingsScrollArea->setPalette(darkPal);
 
     // setup "Properties", "Assets", "Queue" tab
+    setupPropertiesActions();
     mTabProperties = new QTabWidget(this);
     mTabProperties->setObjectName("TabWidgetWide");
     mTabProperties->tabBar()->setFocusPolicy(Qt::NoFocus);
@@ -960,6 +959,8 @@ void MainWindow::setupMenuBar()
     connect(mClipViewToCanvas, &QAction::triggered,
             &mActions, &Actions::setClipToCanvas);
 
+    mViewMenu->addSeparator();
+
     const auto previewCacheAct = mViewMenu->addAction(tr("Preview Cache"));
     previewCacheAct->setCheckable(true);
     previewCacheAct->setChecked(eSettings::instance().fPreviewCache);
@@ -975,6 +976,8 @@ void MainWindow::setupMenuBar()
     });
     cmdAddAction(previewCacheAct);
 
+    mViewMenu->addSeparator();
+
     mRasterEffectsVisible = mViewMenu->addAction(
                 tr("Raster Effects", "MenuBar_View"));
     mRasterEffectsVisible->setCheckable(true);
@@ -989,6 +992,8 @@ void MainWindow::setupMenuBar()
     connect(mPathEffectsVisible, &QAction::triggered,
             &mActions, &Actions::setPathEffectsVisible);
 
+    mViewMenu->addSeparator();
+
     mViewFullScreenAct = mViewMenu->addAction(tr("Full Screen"));
     mViewFullScreenAct->setCheckable(true);
     mViewFullScreenAct->setShortcut(QKeySequence(AppSupport::getSettings("shortcuts",
@@ -1000,6 +1005,8 @@ void MainWindow::setupMenuBar()
         if (checked) { showFullScreen(); }
         else { showNormal(); }
     });
+
+    mViewMenu->addSeparator();
 
     mViewTimelineAct = mViewMenu->addAction(tr("View Timeline"));
     mViewTimelineAct->setCheckable(true);
@@ -1024,6 +1031,8 @@ void MainWindow::setupMenuBar()
         AppSupport::setSettings("ui", "FillStrokeVisible", triggered);
     });
 
+    mViewMenu->addSeparator();
+
     mTimelineWindowAct = mViewMenu->addAction(tr("Timeline in Window"));
     mTimelineWindowAct->setCheckable(true);
     connect(mTimelineWindowAct, &QAction::triggered,
@@ -1041,6 +1050,8 @@ void MainWindow::setupMenuBar()
         if (!triggered) { mRenderWindow->close(); }
         else { openRenderQueueWindow(); }
     });
+
+    mViewMenu->addSeparator();
 
     mToolBarMainAct = mViewMenu->addAction(tr("Main Toolbar"));
     mToolBarMainAct->setCheckable(true);
@@ -1062,6 +1073,8 @@ void MainWindow::setupMenuBar()
                                 "ToolBarColorVisible",
                                 triggered);
     });
+
+    mViewMenu->addSeparator();
 
     setupMenuExtras();
 
