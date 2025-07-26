@@ -32,11 +32,12 @@
 
 using namespace Friction::Ui;
 
-FontsWidget::FontsWidget(QWidget *parent)
+FontsWidget::FontsWidget(QWidget *parent,
+                         const bool toolbar)
     : QWidget(parent)
+    , mToolbar(toolbar)
     , mBlockEmit(0)
     , mBlockTextUpdate(false)
-    , mMainLayout(nullptr)
     , mFontFamilyCombo(nullptr)
     , mFontStyleCombo(nullptr)
     , mFontSizeSlider(nullptr)
@@ -74,7 +75,10 @@ FontsWidget::FontsWidget(QWidget *parent)
     connect(mFontSizeSlider, &QDoubleSlider::valueEdited,
             this, &FontsWidget::emitSizeChanged);
 
-    mMainLayout = new QVBoxLayout(this);
+    QBoxLayout* mMainLayout;
+    if (mToolbar) { mMainLayout = new QHBoxLayout(this); }
+    else { mMainLayout = new QVBoxLayout(this); }
+
     mMainLayout->setContentsMargins(5, 5, 5, 0);
     //setContentsMargins(0, 0, 0, 0);
     setLayout(mMainLayout);
@@ -86,19 +90,33 @@ FontsWidget::FontsWidget(QWidget *parent)
     mFontSizeSlider->setSizePolicy(QSizePolicy::Expanding,
                                    QSizePolicy::Preferred);
 
-    mFontFamilyCombo->setMinimumWidth(120);
-    mFontStyleCombo->setMinimumWidth(80);
-    mFontSizeSlider->setMinimumWidth(60);
+    if (mToolbar) {
+        mFontFamilyCombo->setMaximumWidth(240);
+        mFontStyleCombo->setMaximumWidth(120);
+        mFontSizeSlider->setMaximumWidth(120);
+    } else {
+        mFontFamilyCombo->setMinimumWidth(120);
+        mFontStyleCombo->setMinimumWidth(80);
+        mFontSizeSlider->setMinimumWidth(60);
+    }
 
-    QWidget *fontFamilyWidget = new QWidget(this);
-    fontFamilyWidget->setContentsMargins(0, 0, 0, 0);
-    QHBoxLayout *fontFamilyLayout = new QHBoxLayout(fontFamilyWidget);
-    fontFamilyLayout->setMargin(0);
-    fontFamilyLayout->addWidget(mFontFamilyCombo);
-    fontFamilyLayout->addWidget(mFontStyleCombo);
-    fontFamilyLayout->addWidget(mFontSizeSlider);
+    if (!mToolbar) {
+        QWidget *fontFamilyWidget = new QWidget(this);
+        fontFamilyWidget->setContentsMargins(0, 0, 0, 0);
 
-    mMainLayout->addWidget(fontFamilyWidget);
+        QHBoxLayout *fontFamilyLayout = new QHBoxLayout(fontFamilyWidget);
+        fontFamilyLayout->setMargin(0);
+
+        fontFamilyLayout->addWidget(mFontFamilyCombo);
+        fontFamilyLayout->addWidget(mFontStyleCombo);
+        fontFamilyLayout->addWidget(mFontSizeSlider);
+
+        mMainLayout->addWidget(fontFamilyWidget);
+    } else {
+        mMainLayout->addWidget(mFontFamilyCombo);
+        mMainLayout->addWidget(mFontStyleCombo);
+        mMainLayout->addWidget(mFontSizeSlider);
+    }
 
     mAlignLeft = new QPushButton(QIcon::fromTheme("alignLeft"),
                                  QString(), this);
@@ -142,17 +160,10 @@ FontsWidget::FontsWidget(QWidget *parent)
     connect(mAlignBottom, &QPushButton::pressed,
             this, [this]() { emit textVAlignmentChanged(Qt::AlignBottom); });
 
-    eSizesUI::widget.add(mAlignLeft, [this](const int size) {
-        Q_UNUSED(size)
-        mAlignLeft->setFixedHeight(eSizesUI::button);
-        mAlignCenter->setFixedHeight(eSizesUI::button);
-        mAlignRight->setFixedHeight(eSizesUI::button);
-        mAlignTop->setFixedHeight(eSizesUI::button);
-        mAlignVCenter->setFixedHeight(eSizesUI::button);
-        mAlignBottom->setFixedHeight(eSizesUI::button);
-    });
-
     mTextInput = new QPlainTextEdit(this);
+    if (mToolbar) {
+        mTextInput->setMaximumHeight(eSizesUI::button);
+    }
     mTextInput->setPalette(ThemeSupport::getDarkerPalette());
     mTextInput->setAutoFillBackground(true);
     mTextInput->setFocusPolicy(Qt::ClickFocus);
@@ -162,17 +173,37 @@ FontsWidget::FontsWidget(QWidget *parent)
         emit textChanged(mTextInput->toPlainText());
     });
 
-    const auto buttonsLayout = new QHBoxLayout;
-    buttonsLayout->setContentsMargins(0, 0, 0, 0);
+    eSizesUI::widget.add(mAlignLeft, [this](const int size) {
+        Q_UNUSED(size)
+        mAlignLeft->setFixedHeight(eSizesUI::button);
+        mAlignCenter->setFixedHeight(eSizesUI::button);
+        mAlignRight->setFixedHeight(eSizesUI::button);
+        mAlignTop->setFixedHeight(eSizesUI::button);
+        mAlignVCenter->setFixedHeight(eSizesUI::button);
+        mAlignBottom->setFixedHeight(eSizesUI::button);
+        if (mToolbar) { mTextInput->setMaximumHeight(eSizesUI::button); }
+    });
 
-    buttonsLayout->addWidget(mAlignLeft);
-    buttonsLayout->addWidget(mAlignCenter);
-    buttonsLayout->addWidget(mAlignRight);
-    buttonsLayout->addWidget(mAlignTop);
-    buttonsLayout->addWidget(mAlignVCenter);
-    buttonsLayout->addWidget(mAlignBottom);
+    if (!mToolbar) {
+        const auto buttonsLayout = new QHBoxLayout;
+        buttonsLayout->setContentsMargins(0, 0, 0, 0);
 
-    mMainLayout->addLayout(buttonsLayout);
+        buttonsLayout->addWidget(mAlignLeft);
+        buttonsLayout->addWidget(mAlignCenter);
+        buttonsLayout->addWidget(mAlignRight);
+        buttonsLayout->addWidget(mAlignTop);
+        buttonsLayout->addWidget(mAlignVCenter);
+        buttonsLayout->addWidget(mAlignBottom);
+
+        mMainLayout->addLayout(buttonsLayout);
+    } else {
+        mMainLayout->addWidget(mAlignLeft);
+        mMainLayout->addWidget(mAlignCenter);
+        mMainLayout->addWidget(mAlignRight);
+        mMainLayout->addWidget(mAlignTop);
+        mMainLayout->addWidget(mAlignVCenter);
+        mMainLayout->addWidget(mAlignBottom);
+    }
     mMainLayout->addWidget(mTextInput);
 
     setDisabled(true);
