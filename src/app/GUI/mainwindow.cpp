@@ -2245,13 +2245,15 @@ void MainWindow::cmdAddAction(QAction *act)
     eSettings::sInstance->fCommandPalette.append(act);
 }
 
-void MainWindow::extAddActionMode(const CanvasMode &mode,
-                                  QAction *act)
+void MainWindow::extAddAction(const CanvasMode &mode,
+                              QAction *act,
+                              const bool selected)
 {
     if (!act) { return; }
     const auto toolbar = enve_cast<Ui::ToolboxToolBar*>(mToolBox->getToolBar(Ui::ToolBox::Extra));
     if (!toolbar) { return; }
-    toolbar->addCanvasAction(mode, act);
+    if (selected) { toolbar->addCanvasSelectedAction(mode, act); }
+    else { toolbar->addCanvasAction(mode, act); }
 }
 
 LayoutHandler *MainWindow::getLayoutHandler()
