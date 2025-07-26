@@ -22,6 +22,7 @@
 
 #include "toolboxtoolbar.h"
 #include "Private/document.h"
+#include "Boxes/textbox.h"
 
 using namespace Friction::Ui;
 
@@ -100,7 +101,10 @@ void ToolboxToolBar::setCurrentBox(BoundingBox * const target)
     mGroupSelectedPath->setVisible(target && mCanvasMode == CanvasMode::pointTransform);
     mGroupSelectedCircle->setVisible(target && mCanvasMode == CanvasMode::circleCreate);
     mGroupSelectedRectangle->setVisible(target && mCanvasMode == CanvasMode::rectCreate);
-    mGroupSelectedText->setVisible(target && mCanvasMode == CanvasMode::textCreate);
+
+    mGroupSelectedText->setVisible(enve_cast<TextBox*>(target) &&
+                                   (mCanvasMode == CanvasMode::boxTransform ||
+                                    mCanvasMode == CanvasMode::textCreate));
 }
 
 void ToolboxToolBar::setCanvasMode(const CanvasMode &mode)
