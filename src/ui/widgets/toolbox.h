@@ -83,6 +83,8 @@ namespace Friction
             QDoubleSlider *mDrawPathMaxError;
             QDoubleSlider *mDrawPathSmooth;
 
+            QAction *mLocalPivot;
+
             void setupToolBox(QWidget *parent);
             void setupDocument();
             void setupMainAction(const QIcon &icon,

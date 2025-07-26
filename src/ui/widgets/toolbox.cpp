@@ -40,6 +40,7 @@ ToolBox::ToolBox(Actions &actions,
     , mGroupDraw(nullptr)
     , mDrawPathMaxError(nullptr)
     , mDrawPathSmooth(nullptr)
+    , mLocalPivot(nullptr)
 {
     setupToolBox(parent);
 }
@@ -82,10 +83,12 @@ void ToolBox::setupToolBox(QWidget *parent)
 
     mGroupMain = new QActionGroup(this);
     mGroupNodes = new QActionGroup(this);
+    mGroupDraw = new QActionGroup(this);
 
     setupDocument();
     setupMainActions();
     setupNodesActions();
+    setupDrawActions();
 }
 
 void ToolBox::setupDocument()
@@ -94,6 +97,8 @@ void ToolBox::setupDocument()
             this, &ToolBox::setCurrentCanvas);
     connect(&mDocument, &Document::canvasModeSet,
             this, &ToolBox::setCanvasMode);
+    connect(&mDocument, &Document::currentPixelColor,
+            mControls, &ToolControls::updateColorPicker);
 }
 
 void ToolBox::setupMainAction(const QIcon &icon,
@@ -225,27 +230,25 @@ void ToolBox::setupMainActions()
                      CanvasMode::pickFillStrokeEvent},
                     false);
 
-    {
-        // pivot
-        const auto act = new QAction(mDocument.fLocalPivot ?
-                                         QIcon::fromTheme("pivotLocal") :
-                                         QIcon::fromTheme("pivotGlobal"),
-                                     tr("Pivot Global / Local"),
-                                     mMain);
-        act->setShortcut(QKeySequence(AppSupport::getSettings("shortcuts",
-                                      "localPivot",
-                                      "P").toString()));
-        connect(act, &QAction::triggered,
-                this, [this, act]() {
-            mDocument.fLocalPivot = !mDocument.fLocalPivot;
-            for (const auto& scene : mDocument.fScenes) { scene->updatePivot(); }
-            Document::sInstance->actionFinished();
-            act->setIcon(mDocument.fLocalPivot ?
-                             QIcon::fromTheme("pivotLocal") :
-                             QIcon::fromTheme("pivotGlobal"));
-        });
-        mGroupMain->addAction(act);
-    }
+    // local pivot
+    mLocalPivot = new QAction(mDocument.fLocalPivot ?
+                                  QIcon::fromTheme("pivotLocal") :
+                                  QIcon::fromTheme("pivotGlobal"),
+                              tr("Pivot Global / Local"),
+                              mMain);
+    mLocalPivot->setShortcut(QKeySequence(AppSupport::getSettings("shortcuts",
+                                                                  "localPivot",
+                                                                  "P").toString()));
+    connect(mLocalPivot, &QAction::triggered,
+            this, [this]() {
+        mDocument.fLocalPivot = !mDocument.fLocalPivot;
+        for (const auto& scene : mDocument.fScenes) { scene->updatePivot(); }
+        Document::sInstance->actionFinished();
+        mLocalPivot->setIcon(mDocument.fLocalPivot ?
+                         QIcon::fromTheme("pivotLocal") :
+                         QIcon::fromTheme("pivotGlobal"));
+    });
+    mGroupMain->addAction(mLocalPivot);
 
     mMain->addActions(mGroupMain->actions());
 }
@@ -350,23 +353,6 @@ void ToolBox::setupNodesActions()
 
 void ToolBox::setupDrawActions()
 {
-    {
-        const auto act = new QAction(mDocument.fDrawPathManual ?
-                                         QIcon::fromTheme("drawPathAutoUnchecked") :
-                                         QIcon::fromTheme("drawPathAutoChecked"),
-                                     tr("Automatic/Manual Fitting"),
-                                     this);
-        connect(act, &QAction::triggered,
-                this, [this, act]() {
-            mDocument.fDrawPathManual = !mDocument.fDrawPathManual;
-            mDrawPathMaxError->setDisabled(mDocument.fDrawPathManual);
-            act->setIcon(mDocument.fDrawPathManual ?
-                             QIcon::fromTheme("drawPathAutoUnchecked") :
-                             QIcon::fromTheme("drawPathAutoChecked"));
-        });
-        mGroupDraw->addAction(act);
-    }
-
     mDrawPathMaxError = new QDoubleSlider(1, 200, 1, mControls, false);
     mDrawPathMaxError->setNumberDecimals(0);
     mDrawPathMaxError->setMinimumWidth(50);
@@ -384,7 +370,49 @@ void ToolBox::setupDrawActions()
             this, [this](const qreal value) {
         mDocument.fDrawPathSmooth = qFloor(value);
     });
-    // TODO
+
+    const auto labelMax = new QLabel(tr("Max Error"), mControls);
+    const auto labelSmooth = new QLabel(tr("Smooth"), mControls);
+
+    mGroupDraw->addAction(mControls->addAction(QIcon::fromTheme("drawPath"),
+                                               QString()));
+    mGroupDraw->addAction(mControls->addWidget(labelMax));
+    mGroupDraw->addAction(mControls->addSeparator());
+    mGroupDraw->addAction(mControls->addSeparator());
+    mGroupDraw->addAction(mControls->addWidget(mDrawPathMaxError));
+
+    mGroupDraw->addAction(mControls->addSeparator());
+    mGroupDraw->addAction(mControls->addSeparator());
+
+    mGroupDraw->addAction(mControls->addAction(QIcon::fromTheme("drawPath"),
+                                               QString()));
+    mGroupDraw->addAction(mControls->addWidget(labelSmooth));
+    mGroupDraw->addAction(mControls->addSeparator());
+    mGroupDraw->addAction(mControls->addSeparator());
+    mGroupDraw->addAction(mControls->addWidget(mDrawPathSmooth));
+    mGroupDraw->addAction(mControls->addSeparator());
+    mGroupDraw->addAction(mControls->addSeparator());
+
+    {
+        const auto act = new QAction(mDocument.fDrawPathManual ?
+                                         QIcon::fromTheme("drawPathAutoUnchecked") :
+                                         QIcon::fromTheme("drawPathAutoChecked"),
+                                     tr("Automatic/Manual Fitting"),
+                                     this);
+        connect(act, &QAction::triggered,
+                this, [this, act]() {
+            mDocument.fDrawPathManual = !mDocument.fDrawPathManual;
+            mDrawPathMaxError->setDisabled(mDocument.fDrawPathManual);
+            act->setIcon(mDocument.fDrawPathManual ?
+                             QIcon::fromTheme("drawPathAutoUnchecked") :
+                             QIcon::fromTheme("drawPathAutoChecked"));
+        });
+        mControls->addAction(act);
+        mGroupDraw->addAction(act);
+    }
+
+    mGroupDraw->setEnabled(false);
+    mGroupDraw->setVisible(false);
 }
 
 void ToolBox::setCurrentCanvas(Canvas * const target)
@@ -400,5 +428,9 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
 
     mGroupNodes->setEnabled(pointMode);
     mGroupNodes->setVisible(pointMode);
-    // TODO
+
+    mGroupDraw->setEnabled(drawMode);
+    mGroupDraw->setVisible(drawMode);
+
+    mLocalPivot->setEnabled(boxMode || pointMode);
 }
