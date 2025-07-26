@@ -374,6 +374,9 @@ const QString FontsWidget::getText()
 void FontsWidget::setTextFocus()
 {
     mTextInput->setFocus();
+    QTextCursor cursor = mTextInput->textCursor();
+    cursor.movePosition(QTextCursor::End);
+    mTextInput->setTextCursor(cursor);
 }
 
 void FontsWidget::clearText()
