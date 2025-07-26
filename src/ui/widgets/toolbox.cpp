@@ -89,6 +89,9 @@ void ToolBox::setupToolBox(QWidget *parent)
     setupMainActions();
     setupNodesActions();
     setupDrawActions();
+
+    // reserve space for extra toolbar
+    mExtra->addAction(QString());
 }
 
 void ToolBox::setupDocument()
