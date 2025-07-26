@@ -56,6 +56,26 @@ AppSupport::AppSupport(QObject *parent)
 
 }
 
+void AppSupport::clearSettings(const QString &group)
+{
+    if (AppSupport::isAppPortable()) {
+        QSettings settings(QString("%1/friction.conf").arg(getAppConfigPath()),
+                           QSettings::IniFormat);
+        clearSettings(&settings, group);
+        return;
+    }
+    QSettings settings;
+    clearSettings(&settings, group);
+}
+
+void AppSupport::clearSettings(QSettings *settings,
+                               const QString &group)
+{
+    settings->beginGroup(group);
+    settings->remove(""); // clear all
+    settings->endGroup();
+}
+
 QVariant AppSupport::getSettings(const QString &group,
                                  const QString &key,
                                  const QVariant &fallback)

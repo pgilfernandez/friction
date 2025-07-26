@@ -1102,11 +1102,14 @@ void MainWindow::setupMenuBar()
                     tr("Reinstall default render profiles"),
                     this, &MainWindow::askInstallRenderPresets);
     help->addAction(QIcon::fromTheme("renderlayers"),
-                    tr("Reinstall default Expressions Presets"),
+                    tr("Reinstall default expressions presets"),
                     this, &MainWindow::askInstallExpressionsPresets);
     help->addAction(QIcon::fromTheme("color"),
                     tr("Restore default fill and stroke"),
                     this, &MainWindow::askRestoreFillStrokeDefault);
+    help->addAction(QIcon::fromTheme("workspace"),
+                    tr("Restore default user interface"),
+                    this, &MainWindow::askRestoreDefaultUi);
 
     // toolbar actions
     mToolbar->addAction(newAct);
@@ -1401,6 +1404,16 @@ void MainWindow::askRestoreFillStrokeDefault()
     settings->fLastUsedFillColor = Qt::white;
     settings->fLastUsedStrokeColor = ThemeSupport::getThemeObjectColor();
     settings->fLastUsedStrokeWidth = 10.;
+}
+
+void MainWindow::askRestoreDefaultUi()
+{
+    const auto result = QMessageBox::question(this,
+                                              tr("Restore default user interface?"),
+                                              tr("Are you sure you want to restore default user interface? "
+                                                 "You must restart Friction to apply."));
+    if (result != QMessageBox::Yes) { return; }
+    eSettings::sInstance->fRestoreDefaultUi = true;
 }
 
 void MainWindow::openWelcomeDialog()
@@ -1854,10 +1867,14 @@ void MainWindow::readSettings(const QString &openProject)
 
 void MainWindow::writeSettings()
 {
-    AppSupport::setSettings("ui", "state", saveState());
-    AppSupport::setSettings("ui", "geometry", saveGeometry());
-    AppSupport::setSettings("ui", "maximized", isMaximized());
-    AppSupport::setSettings("ui", "fullScreen", isFullScreen());
+    if (eSettings::instance().fRestoreDefaultUi) {
+        AppSupport::clearSettings("ui");
+    } else {
+        AppSupport::setSettings("ui", "state", saveState());
+        AppSupport::setSettings("ui", "geometry", saveGeometry());
+        AppSupport::setSettings("ui", "maximized", isMaximized());
+        AppSupport::setSettings("ui", "fullScreen", isFullScreen());
+    }
 
     AppSupport::setSettings("FillStroke", "LastStrokeColor",
                             eSettings::instance().fLastUsedStrokeColor);
