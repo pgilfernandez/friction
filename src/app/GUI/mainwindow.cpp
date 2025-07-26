@@ -571,9 +571,7 @@ void MainWindow::setupMenuBar()
         const auto qAct = new NoShortcutAction(tr("Delete", "MenuBar_Edit"));
         qAct->setIcon(QIcon::fromTheme("trash"));
         mEditMenu->addAction(qAct);
-#ifndef Q_OS_MAC
         qAct->setShortcut(Qt::Key_Delete);
-#endif
         mActions.deleteAction->connect(qAct);
         cmdAddAction(qAct);
     }
@@ -1696,6 +1694,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
         const auto keyEvent = static_cast<QKeyEvent*>(e);
         const int key = keyEvent->key();
         if (key == Qt::Key_Tab) {
+            if (enve_cast<QLineEdit*>(focusWidget)) { return true; }
             KeyFocusTarget::KFT_sTab();
             return true;
         }

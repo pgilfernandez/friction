@@ -345,7 +345,8 @@ public:
         return mHeight;
     }
 
-    void setFrameRange(const FrameRange& range);
+    void setFrameRange(const FrameRange& range,
+                       const bool undo = true);
 
     void setFrameIn(const bool enabled,
                     const int frameIn);

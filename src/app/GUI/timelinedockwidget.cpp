@@ -209,7 +209,7 @@ TimelineDockWidget::TimelineDockWidget(Document& document,
     mCurrentFrameSpin->setToolTip(tr("Current frame"));
     mCurrentFrameSpin->setRange(-INT_MAX, INT_MAX);
     connect(mCurrentFrameSpin,
-            QOverload<int>::of(&QSpinBox::valueChanged),
+            &QSpinBox::editingFinished,
             this, [this]() {
         const auto scene = *mDocument.fActiveScene;
         if (!scene) { return; }
