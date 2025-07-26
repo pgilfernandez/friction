@@ -359,6 +359,7 @@ void FontsWidget::setBoxTarget(TextBox * const target)
         mBoxTarget << connect(this, &FontsWidget::fontSizeChanged,
                               target, [target](const qreal &value) {
             target->setFontSize(value);
+            Document::sInstance->fFontSize = value;
             Document::sInstance->actionFinished();
         });
         mBoxTarget << connect(this, &FontsWidget::textChanged,
@@ -374,6 +375,8 @@ void FontsWidget::setBoxTarget(TextBox * const target)
                               target, [target](const QString &family,
                                                const SkFontStyle &style) {
             target->setFontFamilyAndStyle(family, style);
+            Document::sInstance->fFontFamily = family;
+            Document::sInstance->fFontStyle = style;
             Document::sInstance->actionFinished();
         });
         mBoxTarget << connect(this, &FontsWidget::textAlignmentChanged,
