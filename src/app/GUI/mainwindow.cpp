@@ -55,7 +55,6 @@
 #include "GUI/global.h"
 #include "filesourcescache.h"
 #include "widgets/fillstrokesettings.h"
-#include "widgets/editablecombobox.h"
 
 #include "Sound/soundcomposition.h"
 #include "GUI/BoxesList/boxsinglewidget.h"
@@ -101,9 +100,7 @@ MainWindow::MainWindow(Document& document,
     , mTimeline(nullptr)
     , mRenderWidget(nullptr)
     , mToolbar(nullptr)
-    , mToolBoxGroupMain(nullptr)
-    , mToolBoxGroupNodes(nullptr)
-    , mToolBoxMain(nullptr)
+    , mToolBox(nullptr)
     , mUI(nullptr)
     , mSaveAct(nullptr)
     , mSaveAsAct(nullptr)
@@ -122,21 +119,8 @@ MainWindow::MainWindow(Document& document,
     , mAddKeyAct(nullptr)
     , mAddToQueAct(nullptr)
     , mViewFullScreenAct(nullptr)
-    , mLocalPivotAct(nullptr)
-    , mNodeVisibility(nullptr)
-    , mNodeVisibilityAct(nullptr)
     , mFontWidget(nullptr)
     , mFontWidgetAct(nullptr)
-    , mDrawPathAuto(nullptr)
-    , mDrawPathSmooth(nullptr)
-    , mDrawPathMaxError(nullptr)
-    , mToolBoxDrawActLabel1(nullptr)
-    , mToolBoxDrawActLabel2(nullptr)
-    , mToolBoxDrawActIcon1(nullptr)
-    , mToolBoxDrawActIcon2(nullptr)
-    , mToolBoxDrawActMaxError(nullptr)
-    , mToolBoxDrawActSmooth(nullptr)
-    , mToolBoxDrawActSep(nullptr)
     , mDocument(document)
     , mActions(actions)
     , mAudioHandler(audioHandler)
@@ -150,7 +134,6 @@ MainWindow::MainWindow(Document& document,
     , mTabQueueIndex(0)
     , mColorToolBar(nullptr)
     , mCanvasToolBar(nullptr)
-    , mToolControls(nullptr)
     , mBackupOnSave(false)
     , mAutoSave(false)
     , mAutoSaveTimeout(0)
@@ -169,49 +152,14 @@ MainWindow::MainWindow(Document& document,
     Q_ASSERT(!sInstance);
     sInstance = this;
 
-    //ImportHandler::sInstance->addImporter<eXevImporter>(); // not supported yet, see own branch
-    ImportHandler::sInstance->addImporter<evImporter>();
-    ImportHandler::sInstance->addImporter<eSvgImporter>();
-    //ImportHandler::sInstance->addImporter<eOraImporter>(); // removed, will be added back soonish
-
-    connect(&mDocument, &Document::evFilePathChanged,
-            this, &MainWindow::updateTitle);
-    connect(&mDocument, &Document::documentChanged,
-            this, [this]() {
-        setFileChangedSinceSaving(true);
-        mTimeline->stopPreview();
-    });
-    connect(&mDocument, &Document::activeSceneSet,
-            this, &MainWindow::updateSettingsForCurrentCanvas);
-    connect(&mDocument, &Document::currentBoxChanged,
-            this, &MainWindow::setCurrentBox);
-    connect(&mDocument, &Document::canvasModeSet,
-            this, &MainWindow::updateCanvasModeButtonsChecked);
-    connect(&mDocument, &Document::sceneCreated,
-            this, &MainWindow::closeWelcomeDialog);
-    connect(&mDocument, &Document::openTextEditor,
-            this, [this] () { focusFontWidget(true); });
-    connect(&mDocument, &Document::openMarkerEditor,
-            this, &MainWindow::openMarkerEditor);
-    connect(&mDocument, &Document::openExpressionDialog,
-            this, &MainWindow::openExpressionDialog);
-    connect(&mDocument, &Document::openApplyExpressionDialog,
-            this, &MainWindow::openApplyExpressionDialog);
-    connect(&mDocument, &Document::newVideo,
-            this, &MainWindow::handleNewVideoClip);
-    connect(&mDocument, &Document::currentPixelColor,
-            this, &MainWindow::handleCurrentPixelColor);
-
     setWindowIcon(QIcon::fromTheme(AppSupport::getAppName()));
     setContextMenuPolicy(Qt::NoContextMenu);
 
-    mAutoSaveTimer = new QTimer(this);
-    connect (mAutoSaveTimer, &QTimer::timeout,
-             this, &MainWindow::checkAutoSaveTimer);
+    setupImporters();
+    setupDocument();
+    setupAutoSave();
 
     BoxSingleWidget::loadStaticPixmaps(eSizesUI::widget);
-
-    mDocument.setPath("");
 
     mFillStrokeSettings = new FillStrokeSettingsWidget(mDocument, this);
 
@@ -225,18 +173,6 @@ MainWindow::MainWindow(Document& document,
                                        mLayoutHandler,
                                        this);
     mRenderWidget = new RenderWidget(this);
-
-    const auto alignWidget = new AlignWidget(this);
-    alignWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    connect(alignWidget, &AlignWidget::alignTriggered,
-            this, [this](const Qt::Alignment align,
-                         const AlignPivot pivot,
-                         const AlignRelativeTo relativeTo) {
-        const auto scene = *mDocument.fActiveScene;
-        if (!scene) { return; }
-        scene->alignSelectedBoxes(align, pivot, relativeTo);
-        mDocument.actionFinished();
-    });
 
     // properties widget
     mObjectSettingsScrollArea = new ScrollArea(this);
@@ -261,11 +197,9 @@ MainWindow::MainWindow(Document& document,
 
     const auto assets = new AssetsWidget(this);
 
-    mToolControls = new Ui::ToolControls(this);
-
-    setupToolBox();
     setupToolBar();
     setupMenuBar();
+
     setupPropertiesActions();
 
     readRecentFiles();
@@ -280,35 +214,19 @@ MainWindow::MainWindow(Document& document,
                                                       .arg(mAudioHandler.getDeviceName()),
                                                       10000); });
 
-    mWelcomeDialog = new WelcomeDialog(mRecentMenu,
-       [this]() { SceneSettingsDialog::sNewSceneDialog(mDocument, this); },
-       []() { MainWindow::sGetInstance()->openFile(); },
-       this);
-
-    mStackWidget = new QStackedWidget(this);
-    mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
-    mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
-
-    mColorToolBar = new Ui::ColorToolBar(mDocument, this);
-    connect(mColorToolBar, &Ui::ColorToolBar::message,
-            this, [this](const QString &msg){ statusBar()->showMessage(msg, 500); });
-
-    mCanvasToolBar = new Ui::CanvasToolBar(this);
-    installNumericFilter(mCanvasToolBar->getResolutionComboBox());
-
-    addToolBar(mColorToolBar);
-    addToolBar(Qt::TopToolBarArea, mToolControls);
-
-    QMargins frictionMargins(0, 0, 0, 0);
-    int frictionSpacing = 0;
-
-    const auto darkPal = ThemeSupport::getDarkPalette();
-    mObjectSettingsScrollArea->setAutoFillBackground(true);
-    mObjectSettingsScrollArea->setPalette(darkPal);
-
-    // setup "Properties", "Assets", "Queue" tab
-
-    {
+    // align widget
+    const auto alignWidget = new AlignWidget(this);
+    alignWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    connect(alignWidget, &AlignWidget::alignTriggered,
+            this, [this](const Qt::Alignment align,
+                   const AlignPivot pivot,
+                   const AlignRelativeTo relativeTo) {
+        const auto scene = *mDocument.fActiveScene;
+        if (!scene) { return; }
+        scene->alignSelectedBoxes(align, pivot, relativeTo);
+        mDocument.actionFinished();
+    });
+    {   // show/hide widget menu option
         const auto act = mViewMenu->addAction(tr("Align in Properties"));
         act->setCheckable(true);
         act->setChecked(AppSupport::getSettings("ui",
@@ -321,20 +239,29 @@ MainWindow::MainWindow(Document& document,
             AppSupport::setSettings("ui", "PropertiesShowAlign", checked);
         });
     }
-    {
-        const auto act = mViewMenu->addAction(tr("Align in Toolbar"));
-        act->setCheckable(true);
-        act->setChecked(AppSupport::getSettings("ui",
-                                                "ToolBarShowAlign",
-                                                false).toBool());
-        mToolControls->setAlignEnabled(act->isChecked());
-        connect(act, &QAction::triggered,
-                this, [this](bool checked) {
-            mToolControls->setAlignEnabled(checked);
-            AppSupport::setSettings("ui", "ToolBarShowAlign", checked);
-        });
-    }
 
+    // stack widget
+    mWelcomeDialog = new WelcomeDialog(mRecentMenu,
+       [this]() { SceneSettingsDialog::sNewSceneDialog(mDocument, this); },
+       []() { MainWindow::sGetInstance()->openFile(); },
+       this);
+
+    mStackWidget = new QStackedWidget(this);
+    mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
+    mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
+
+
+    mCanvasToolBar = new Ui::CanvasToolBar(this);
+    installNumericFilter(mCanvasToolBar->getResolutionComboBox());
+
+    QMargins frictionMargins(0, 0, 0, 0);
+    int frictionSpacing = 0;
+
+    const auto darkPal = ThemeSupport::getDarkPalette();
+    mObjectSettingsScrollArea->setAutoFillBackground(true);
+    mObjectSettingsScrollArea->setPalette(darkPal);
+
+    // setup "Properties", "Assets", "Queue" tab
     mTabProperties = new QTabWidget(this);
     mTabProperties->setObjectName("TabWidgetWide");
     mTabProperties->tabBar()->setFocusPolicy(Qt::NoFocus);
@@ -569,9 +496,13 @@ void MainWindow::setupMenuBar()
     mActions.redoAction->connect(redoQAct);
     cmdAddAction(redoQAct);
 
-    // add undo/redo to tool controls
-    mToolControls->getLeftToolBar()->addAction(undoQAct);
-    mToolControls->getLeftToolBar()->addAction(redoQAct);
+    {   // add undo/redo to tool controls
+        const auto toolbar = mToolBox->getToolBar(Ui::ToolBox::Controls);
+        if (toolbar) {
+            toolbar->insertAction(toolbar->actions().at(0), redoQAct);
+            toolbar->insertAction(toolbar->actions().at(0), undoQAct);
+        }
+    }
 
     mEditMenu->addSeparator();
 
@@ -1496,7 +1427,6 @@ void MainWindow::updateSettingsForCurrentCanvas(Canvas* const scene)
 {
     if (mColorToolBar) { mColorToolBar->setCurrentCanvas(scene); }
     if (mCanvasToolBar) { mCanvasToolBar->setCurrentCanvas(scene); }
-    if (mToolControls) { mToolControls->setCurrentCanvas(scene); }
 
     mObjectSettingsWidget->setCurrentScene(scene);
 
@@ -1546,6 +1476,25 @@ void MainWindow::setupToolBar()
                                "MainToolBar",
                                this);
     addToolBar(Qt::TopToolBarArea, mToolbar);
+
+    mColorToolBar = new Ui::ColorToolBar(mDocument, this);
+    connect(mColorToolBar, &Ui::ColorToolBar::message,
+            this, [this](const QString &msg){ statusBar()->showMessage(msg, 500); });
+    addToolBar(mColorToolBar);
+
+    mToolBox = new Ui::ToolBox(mActions, mDocument, this);
+    {
+        const auto toolbar = mToolBox->getToolBar(Ui::ToolBox::Main);
+        if (toolbar) { addToolBar(Qt::LeftToolBarArea, toolbar); }
+    }
+    {
+        const auto toolbar = mToolBox->getToolBar(Ui::ToolBox::Controls);
+        if (toolbar) { addToolBar(Qt::TopToolBarArea, toolbar); }
+    }
+    {
+        const auto toolbar = mToolBox->getToolBar(Ui::ToolBox::Extra);
+        if (toolbar) { addToolBar(Qt::BottomToolBarArea, toolbar); }
+    }
 }
 
 MainWindow *MainWindow::sGetInstance()
@@ -1553,17 +1502,61 @@ MainWindow *MainWindow::sGetInstance()
     return sInstance;
 }
 
+void MainWindow::setupDocument()
+{
+    // setup connections
+    connect(&mDocument, &Document::evFilePathChanged,
+            this, &MainWindow::updateTitle);
+    connect(&mDocument, &Document::activeSceneSet,
+            this, &MainWindow::updateSettingsForCurrentCanvas);
+    connect(&mDocument, &Document::currentBoxChanged,
+            this, &MainWindow::setCurrentBox);
+    connect(&mDocument, &Document::canvasModeSet,
+            this, &MainWindow::updateCanvasModeButtonsChecked);
+    connect(&mDocument, &Document::sceneCreated,
+            this, &MainWindow::closeWelcomeDialog);
+    connect(&mDocument, &Document::openTextEditor,
+            this, [this] () { focusFontWidget(true); });
+    connect(&mDocument, &Document::openMarkerEditor,
+            this, &MainWindow::openMarkerEditor);
+    connect(&mDocument, &Document::openExpressionDialog,
+            this, &MainWindow::openExpressionDialog);
+    connect(&mDocument, &Document::openApplyExpressionDialog,
+            this, &MainWindow::openApplyExpressionDialog);
+    connect(&mDocument, &Document::newVideo,
+            this, &MainWindow::handleNewVideoClip);
+    connect(&mDocument, &Document::documentChanged,
+            this, [this]() {
+        setFileChangedSinceSaving(true);
+        if (mTimeline) { mTimeline->stopPreview(); }
+    });
+
+    // set defaults
+    mDocument.setPath("");
+    mDocument.fDrawPathManual = false;
+    mDocument.setCanvasMode(CanvasMode::boxTransform);
+}
+
+void MainWindow::setupImporters()
+{
+    //ImportHandler::sInstance->addImporter<eXevImporter>();
+    ImportHandler::sInstance->addImporter<evImporter>();
+
+    ImportHandler::sInstance->addImporter<eSvgImporter>();
+    //ImportHandler::sInstance->addImporter<eOraImporter>();
+}
+
+void MainWindow::setupAutoSave()
+{
+    mAutoSaveTimer = new QTimer(this);
+    connect (mAutoSaveTimer, &QTimer::timeout,
+            this, &MainWindow::checkAutoSaveTimer);
+}
+
 void MainWindow::updateCanvasModeButtonsChecked()
 {
-    const CanvasMode mode = mDocument.fCanvasMode;
-
-    const bool boxMode = mode == CanvasMode::boxTransform;
-    const bool pointMode = mode == CanvasMode::pointTransform;
-    const bool drawMode = mode == CanvasMode::drawPath;
-
-    setEnableToolBoxNodes(pointMode);
-    setEnableToolBoxDraw(drawMode);
-    mLocalPivotAct->setEnabled(pointMode || boxMode);
+    // const CanvasMode mode = mDocument.fCanvasMode;
+    // keep around in case we need to trigger something
 }
 
 void MainWindow::setResolutionValue(const qreal value)
@@ -1836,8 +1829,11 @@ void MainWindow::readSettings(const QString &openProject)
     mRenderWindowAct->setChecked(isRenderWindow);
     mRenderWindowAct->blockSignals(false);
 
-    // force tool controls to own row
-    insertToolBarBreak(mToolControls);
+    {
+        // force tool controls to own row
+        const auto toolbar = mToolBox->getToolBar(Ui::ToolBox::Controls);
+        if (toolbar) { insertToolBarBreak(toolbar); }
+    }
 
     if (isTimelineWindow) { openTimelineWindow(); }
     if (isRenderWindow) { openRenderQueueWindow(); }
@@ -2372,10 +2368,4 @@ void MainWindow::handleNewVideoClip(const VideoBox::VideoSpecs &specs)
     // open dialog if ask
     AdjustSceneDialog dialog(scene, specs, this);
     dialog.exec();
-}
-
-void MainWindow::handleCurrentPixelColor(const QColor &color)
-{
-    if (!mToolControls) { return; }
-    mToolControls->updateColorPicker(color);
 }

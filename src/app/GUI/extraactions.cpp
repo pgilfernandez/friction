@@ -25,6 +25,8 @@
 
 #include "GUI/BoxesList/boxscrollwidget.h"
 
+using namespace Friction;
+
 void MainWindow::setupMenuExtras()
 {
     const auto menu = new QMenu(this);
@@ -641,6 +643,24 @@ void MainWindow::setupMenuExtras()
                 const auto scene = *mDocument.fActiveScene;
                 if (!scene) { return; }
                 scene->setEasingAction(presetAct->text());
+            });
+        }
+    }
+
+    // add align in toolbar option
+    {
+        const auto toolbar = enve_cast<Ui::ToolControls*>(mToolBox->getToolBar(Ui::ToolBox::Controls));
+        if (toolbar) {
+            const auto act = mViewMenu->addAction(tr("Align in Toolbar"));
+            act->setCheckable(true);
+            act->setChecked(AppSupport::getSettings("ui",
+                                                    "ToolBarShowAlign",
+                                                    false).toBool());
+            toolbar->setAlignEnabled(act->isChecked(), false);
+            connect(act, &QAction::triggered,
+                    this, [toolbar](bool checked) {
+                if (toolbar) { toolbar->setAlignEnabled(checked); }
+                AppSupport::setSettings("ui", "ToolBarShowAlign", checked);
             });
         }
     }
