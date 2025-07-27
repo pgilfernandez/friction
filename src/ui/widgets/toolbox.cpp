@@ -41,6 +41,8 @@ ToolBox::ToolBox(Actions &actions,
     , mDrawPathMaxError(nullptr)
     , mDrawPathSmooth(nullptr)
     , mLocalPivot(nullptr)
+    , mColorPickerButton(nullptr)
+    , mColorPickerLabel(nullptr)
 {
     setupToolBox(parent);
 }
@@ -80,6 +82,7 @@ void ToolBox::setupToolBox(QWidget *parent)
     mExtra = new ToolboxToolBar(tr("Extra Tools"),
                                 "ToolBoxExtra",
                                 parent);
+    mExtra->addAction(QString());
 
     mGroupMain = new QActionGroup(this);
     mGroupNodes = new QActionGroup(this);
@@ -89,9 +92,7 @@ void ToolBox::setupToolBox(QWidget *parent)
     setupMainActions();
     setupNodesActions();
     setupDrawActions();
-
-    // reserve space for extra toolbar
-    mExtra->addAction(QString());
+    setupColorPickerActions();
 }
 
 void ToolBox::setupDocument()
@@ -101,7 +102,7 @@ void ToolBox::setupDocument()
     connect(&mDocument, &Document::canvasModeSet,
             this, &ToolBox::setCanvasMode);
     connect(&mDocument, &Document::currentPixelColor,
-            mControls, &ToolControls::updateColorPicker);
+            this, &ToolBox::updateColorPicker);
 }
 
 void ToolBox::setupMainAction(const QIcon &icon,
@@ -418,6 +419,19 @@ void ToolBox::setupDrawActions()
     mGroupDraw->setVisible(false);
 }
 
+void ToolBox::setupColorPickerActions()
+{
+    mColorPickerButton = new QPushButton(mExtra);
+    mColorPickerButton->setObjectName("FlatButton");
+    mColorPickerButton->setIcon(QIcon::fromTheme("pick"));
+    mColorPickerLabel = new QLabel(mExtra);
+
+    mExtra->addCanvasWidget(CanvasMode::pickFillStroke,
+                            mColorPickerButton);
+    mExtra->addCanvasWidget(CanvasMode::pickFillStroke,
+                            mColorPickerLabel);
+}
+
 void ToolBox::setCurrentCanvas(Canvas * const target)
 {
     mControls->setCurrentCanvas(target);
@@ -439,4 +453,19 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
     mLocalPivot->setEnabled(boxMode || pointMode);
 
     mExtra->setCanvasMode(mode);
+}
+
+void ToolBox::updateColorPicker(const QColor &color)
+{
+    if (!mColorPickerButton || !mColorPickerLabel) { return; }
+    mColorPickerButton->setStyleSheet(QString("background-color: %1;").arg(color.isValid() ?
+                                                                               color.name() :
+                                                                               "black"));
+    mColorPickerLabel->setText(QString("&nbsp;"
+                                       "<b>R:</b> %1 "
+                                       "<b>G:</b> %2 "
+                                       "<b>B:</b> %3")
+                                   .arg(QString::number(color.isValid() ? color.redF() : 0., 'f', 3),
+                                        QString::number(color.isValid() ? color.greenF() : 0., 'f', 3),
+                                        QString::number(color.isValid() ? color.blueF() : 0., 'f', 3)));
 }

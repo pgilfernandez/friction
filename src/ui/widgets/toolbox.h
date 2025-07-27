@@ -27,6 +27,7 @@
 
 #include <QObject>
 #include <QActionGroup>
+#include <QPushButton>
 
 #include "Private/document.h"
 
@@ -85,6 +86,9 @@ namespace Friction
 
             QAction *mLocalPivot;
 
+            QPushButton *mColorPickerButton;
+            QLabel *mColorPickerLabel;
+
             void setupToolBox(QWidget *parent);
             void setupDocument();
             void setupMainAction(const QIcon &icon,
@@ -98,9 +102,12 @@ namespace Friction
                                   const Node &node);
             void setupNodesActions();
             void setupDrawActions();
+            void setupColorPickerActions();
 
             void setCurrentCanvas(Canvas * const target);
             void setCanvasMode(const CanvasMode &mode);
+
+            void updateColorPicker(const QColor &color);
         };
     }
 }

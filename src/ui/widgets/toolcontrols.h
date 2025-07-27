@@ -49,7 +49,6 @@ namespace Friction
             void setCanvasMode(const CanvasMode &mode);
             ToolboxToolBar* getLeftToolBar();
             ToolboxToolBar* getRightToolBar();
-            void updateColorPicker(const QColor &color);
             void setAlignEnabled(const bool enabled,
                                  const bool trigger = true);
             bool isAlignEnabled();
@@ -95,9 +94,6 @@ namespace Friction
 
             QComboBox *mTranformAlignPivot;
             QComboBox *mTransformAlignRelativeTo;
-
-            QToolButton *mColorPicker;
-            QLabel *mColorPickerLabel;
 
             bool mAlignEnabled;
         };

@@ -70,8 +70,6 @@ ToolControls::ToolControls(QWidget *parent)
     , mTransformAlign(nullptr)
     , mTranformAlignPivot(nullptr)
     , mTransformAlignRelativeTo(nullptr)
-    , mColorPicker(nullptr)
-    , mColorPickerLabel(nullptr)
     , mAlignEnabled(false)
 {
     setToolButtonStyle(Qt::ToolButtonIconOnly);
@@ -131,17 +129,6 @@ ToolboxToolBar *ToolControls::getLeftToolBar()
 ToolboxToolBar *ToolControls::getRightToolBar()
 {
     return mToolBarRight;
-}
-
-void ToolControls::updateColorPicker(const QColor &color)
-{
-    if (!mColorPicker || !mColorPickerLabel) { return; }
-    mColorPicker->setStyleSheet(QString("background-color: %1;").arg(color.isValid() ? color.name() : "black"));
-    mColorPickerLabel->setText(QString("<b>R:</b> %1 "
-                                       "<b>G:</b> %2 "
-                                       "<b>B:</b> %3").arg(QString::number(color.isValid() ? color.redF() : 0., 'f', 3),
-                                                           QString::number(color.isValid() ? color.greenF() : 0., 'f', 3),
-                                                           QString::number(color.isValid() ? color.blueF() : 0., 'f', 3)));
 }
 
 void ToolControls::setAlignEnabled(const bool enabled,
@@ -272,19 +259,6 @@ void ToolControls::setupWidgets()
     addWidget(mToolBarLeft);
     setupTransform();
     addWidget(mToolBarRight);
-
-    mColorPicker = new QToolButton(this);
-    mColorPicker->setIcon(QIcon::fromTheme("pick"));
-    mColorPickerLabel = new QLabel(this);
-
-    mToolBarRight->addCanvasAction(CanvasMode::pickFillStroke,
-                                   mToolBarRight->addSeparator());
-    mToolBarRight->addCanvasWidget(CanvasMode::pickFillStroke,
-                                   mColorPicker);
-    mToolBarRight->addCanvasAction(CanvasMode::pickFillStroke,
-                                   mToolBarRight->addSeparator());
-    mToolBarRight->addCanvasWidget(CanvasMode::pickFillStroke,
-                                   mColorPickerLabel);
 }
 
 void ToolControls::setupTransform()
