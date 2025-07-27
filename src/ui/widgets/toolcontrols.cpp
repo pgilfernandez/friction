@@ -45,8 +45,6 @@ using namespace Friction::Ui;
 
 ToolControls::ToolControls(QWidget *parent)
     : ToolBar("ToolControls", parent, true)
-    , mToolBarLeft(nullptr)
-    , mToolBarRight(nullptr)
     , mCanvasMode(CanvasMode::boxTransform)
     , mTransformX(nullptr)
     , mTransformY(nullptr)
@@ -90,9 +88,6 @@ void ToolControls::setCurrentCanvas(Canvas * const target)
                            this, &ToolControls::setCanvasMode);
     }
     setCurrentBox(target ? target->getCurrentBox() : nullptr);
-
-    mToolBarLeft->setCurrentCanvas(target);
-    mToolBarRight->setCurrentCanvas(target);
 }
 
 void ToolControls::setCurrentBox(BoundingBox * const target)
@@ -119,16 +114,6 @@ void ToolControls::setCanvasMode(const CanvasMode &mode)
 
     const bool canShowAlign = mode == CanvasMode::boxTransform;
     mTransformAlign->setVisible(canShowAlign && mAlignEnabled);
-}
-
-ToolboxToolBar *ToolControls::getLeftToolBar()
-{
-    return mToolBarLeft;
-}
-
-ToolboxToolBar *ToolControls::getRightToolBar()
-{
-    return mToolBarRight;
 }
 
 void ToolControls::setAlignEnabled(const bool enabled,
@@ -249,16 +234,7 @@ void ToolControls::setupWidgets()
     mTransformOpacity = new QActionGroup(this);
     mTransformAlign = new QActionGroup(this);
 
-    mToolBarLeft = new ToolboxToolBar("ToolControlsLeft",
-                                      tr("Left Tool Controls"),
-                                      this);
-    mToolBarRight = new ToolboxToolBar("ToolControlsRight",
-                                       tr("Right Tool Controls"),
-                                       this);
-
-    addWidget(mToolBarLeft);
     setupTransform();
-    addWidget(mToolBarRight);
 }
 
 void ToolControls::setupTransform()

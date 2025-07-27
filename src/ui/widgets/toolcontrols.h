@@ -26,7 +26,6 @@
 #include "ui_global.h"
 
 #include "widgets/toolbar.h"
-#include "widgets/toolboxtoolbar.h"
 #include "widgets/qrealanimatorvalueslider.h"
 #include "canvas.h"
 
@@ -47,8 +46,6 @@ namespace Friction
             void setCurrentCanvas(Canvas * const target);
             void setCurrentBox(BoundingBox * const target);
             void setCanvasMode(const CanvasMode &mode);
-            ToolboxToolBar* getLeftToolBar();
-            ToolboxToolBar* getRightToolBar();
             void setAlignEnabled(const bool enabled,
                                  const bool trigger = true);
             bool isAlignEnabled();
@@ -63,9 +60,6 @@ namespace Friction
             void setComboBoxItemState(QComboBox *box,
                                       int index,
                                       bool enabled);
-
-            ToolboxToolBar *mToolBarLeft;
-            ToolboxToolBar *mToolBarRight;
 
             ConnContextQPtr<Canvas> mCanvas;
             CanvasMode mCanvasMode;

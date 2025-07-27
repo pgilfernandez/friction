@@ -108,6 +108,9 @@ namespace Friction
             void setCanvasMode(const CanvasMode &mode);
 
             void updateColorPicker(const QColor &color);
+
+            void setButtonStyle(const QString &name,
+                                QAction *act);
         };
     }
 }

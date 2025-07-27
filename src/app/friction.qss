@@ -232,9 +232,7 @@ QPushButton:hover,
 QToolButton:hover,
 QPushButton:checked,
 QToolButton:checked,
-QAction:checked,
-Friction--Ui--ToolBar#ToolControlsLeft QToolButton:hover,
-Friction--Ui--ToolBar#ToolControlsRight QToolButton:hover
+QAction:checked
 {
     background-color: %3;
     border-color: %4;
@@ -639,24 +637,25 @@ Friction--Ui--ToolBar::separator:horizontal {
 }
 
 Friction--Ui--ToolControls::separator,
-Friction--Ui--ToolBar#ToolControlsLeft::separator,
-Friction--Ui--ToolBar#ToolControlsRight::separator {
+Friction--Ui--ToolboxToolBar::separator {
     background-color: transparent;
 }
 
-Friction--Ui--ToolControls::separator:horizontal {
+Friction--Ui--ToolControls::separator:horizontal,
+Friction--Ui--ToolboxToolBar::separator:horizontal {
     width: 2px;
 }
 
-Friction--Ui--ToolBar#ToolControlsLeft::separator:horizontal,
-Friction--Ui--ToolBar#ToolControlsRight::separator:horizontal {
-    width: 4px;
-}
-
-Friction--Ui--ToolControls QComboBox {
+Friction--Ui--ToolControls QComboBox,
+Friction--Ui--ToolboxToolBar QComboBox {
     padding: .1em;
 }
 
 ExpressionEditor {
     background: %6;
+}
+
+QToolBar QToolButton#NodeButton:hover {
+    background-color: %3;
+    border-color: %4;
 }

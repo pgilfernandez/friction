@@ -297,6 +297,7 @@ void ToolBox::setupNodesAction(const QIcon &icon,
         }
     });
     mControls->addAction(mGroupNodes->addAction(act));
+    setButtonStyle("NodeButton", act);
 }
 
 void ToolBox::setupNodesActions()
@@ -323,7 +324,7 @@ void ToolBox::setupNodesActions()
     {
         // node visibility tool button
         const auto button = new QToolButton(mControls);
-        button->setObjectName(QString::fromUtf8("ToolButton"));
+        button->setObjectName("NodeButton");
         button->setPopupMode(QToolButton::InstantPopup);
         button->setFocusPolicy(Qt::NoFocus);
         const auto act1 = new QAction(QIcon::fromTheme("dissolvedAndNormalNodes"),
@@ -468,4 +469,14 @@ void ToolBox::updateColorPicker(const QColor &color)
                                    .arg(QString::number(color.isValid() ? color.redF() : 0., 'f', 3),
                                         QString::number(color.isValid() ? color.greenF() : 0., 'f', 3),
                                         QString::number(color.isValid() ? color.blueF() : 0., 'f', 3)));
+}
+
+void ToolBox::setButtonStyle(const QString &name,
+                             QAction *act)
+{
+    if (QWidget *widget = mControls->widgetForAction(act)) {
+        if (QToolButton *nodeButton = qobject_cast<QToolButton*>(widget)) {
+            nodeButton->setObjectName(name);
+        }
+    }
 }
