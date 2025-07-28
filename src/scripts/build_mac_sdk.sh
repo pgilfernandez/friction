@@ -23,7 +23,7 @@ set -e -x
 
 PYTHON_V=3.11.11
 NINJA_V=1.11.1
-CMAKE_V=3.26.3
+CMAKE_V=3.31.8
 NASM_V=2.14.02
 YASM_V=1.3.0
 PKGCONF_V=1.1.0
@@ -111,9 +111,6 @@ if [ ! -f "${CMAKE_BIN}" ]; then
     rm -rf ${CMAKE_SRC} || true
     tar xf ${DIST}/ffmpeg/${CMAKE_SRC}.tar.gz
     cd ${CMAKE_SRC}
-    if [ "${OSX_HOST}" = "15.4" ]; then
-        patch -p0 < ${DIST}/patches/cmake-zlib-macos154.diff
-    fi
     ./configure ${COMMON_CONFIGURE} --parallel=${MKJOBS} -- -DCMAKE_USE_OPENSSL=OFF
     make -j${MKJOBS}
     make install
@@ -456,6 +453,7 @@ if [ ! -f "${SDK}/lib/pkgconfig/libavcodec.pc" ]; then
     rm -rf ${FFMPEG_SRC} || true
     tar xf ${DIST}/ffmpeg/${FFMPEG_SRC}.tar.xz
     cd ${FFMPEG_SRC}
+    xzcat ${DIST}/ffmpeg/ffmpeg-tiff-assocalpha.diff.xz | patch -p0
     export MACOSX_DEPLOYMENT_TARGET=${OSX}
     CFLAGS="${DEFAULT_CFLAGS}" \
     CXXFLAGS="${DEFAULT_CPPFLAGS}" \
