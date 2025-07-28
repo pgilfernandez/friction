@@ -21,6 +21,7 @@
 */
 
 #include "toolbox.h"
+#include "themesupport.h"
 
 #include <QToolButton>
 
@@ -297,7 +298,7 @@ void ToolBox::setupNodesAction(const QIcon &icon,
         }
     });
     mControls->addAction(mGroupNodes->addAction(act));
-    setButtonStyle("NodeButton", act);
+    ThemeSupport::setToolbarButtonStyle("NodeButton", mControls, act);
 }
 
 void ToolBox::setupNodesActions()
@@ -444,6 +445,8 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
     const bool boxMode = mode == CanvasMode::boxTransform;
     const bool pointMode = mode == CanvasMode::pointTransform;
     const bool drawMode = mode == CanvasMode::drawPath;
+    const bool pickMode = mode == CanvasMode::pickFillStroke ||
+                          mode == CanvasMode::pickFillStrokeEvent;
 
     mGroupNodes->setEnabled(pointMode);
     mGroupNodes->setVisible(pointMode);
@@ -454,6 +457,8 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
     mLocalPivot->setEnabled(boxMode || pointMode);
 
     mExtra->setCanvasMode(mode);
+
+    if (pickMode) { updateColorPicker(Qt::black); }
 }
 
 void ToolBox::updateColorPicker(const QColor &color)
@@ -469,14 +474,4 @@ void ToolBox::updateColorPicker(const QColor &color)
                                    .arg(QString::number(color.isValid() ? color.redF() : 0., 'f', 3),
                                         QString::number(color.isValid() ? color.greenF() : 0., 'f', 3),
                                         QString::number(color.isValid() ? color.blueF() : 0., 'f', 3)));
-}
-
-void ToolBox::setButtonStyle(const QString &name,
-                             QAction *act)
-{
-    if (QWidget *widget = mControls->widgetForAction(act)) {
-        if (QToolButton *nodeButton = qobject_cast<QToolButton*>(widget)) {
-            nodeButton->setObjectName(name);
-        }
-    }
 }
