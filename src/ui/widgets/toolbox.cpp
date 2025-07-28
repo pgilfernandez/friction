@@ -415,6 +415,7 @@ void ToolBox::setupDrawActions()
         });
         mControls->addAction(act);
         mGroupDraw->addAction(act);
+        ThemeSupport::setToolbarButtonStyle("NodeButton", mControls, act);
     }
 
     mGroupDraw->setEnabled(false);
