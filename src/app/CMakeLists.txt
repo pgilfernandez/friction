@@ -201,6 +201,7 @@ set(
     GUI/mainwindow.cpp
     GUI/extraactions.cpp
     GUI/effectactions.cpp
+    GUI/menu.cpp
 )
 
 set(

@@ -290,17 +290,17 @@ private:
     AudioHandler& mAudioHandler;
     RenderHandler& mRenderHandler;
 
-    LayoutHandler *mLayoutHandler = nullptr;
+    LayoutHandler *mLayoutHandler;
 
     FillStrokeSettingsWidget *mFillStrokeSettings;
 
-    bool mChangedSinceSaving = false;
-    bool mEventFilterDisabled = true;
+    bool mChangedSinceSaving;
+    bool mEventFilterDisabled;
     bool isEnabled();
-    QWidget *mGrayOutWidget = nullptr;
-    bool mDisplayedFillStrokeSettingsUpdateNeeded = false;
+    QWidget *mGrayOutWidget;
+    bool mDisplayedFillStrokeSettingsUpdateNeeded;
 
-    BoxScrollWidget *mObjectSettingsWidget = nullptr;
+    BoxScrollWidget *mObjectSettingsWidget;
     ScrollArea *mObjectSettingsScrollArea;
 
     void setupToolBar();
