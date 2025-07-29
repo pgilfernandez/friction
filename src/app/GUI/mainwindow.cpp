@@ -167,157 +167,20 @@ MainWindow::MainWindow(Document& document,
     setupDocument();
     setupAutoSave();
 
-    BoxSingleWidget::loadStaticPixmaps(eSizesUI::widget);
-
-    mFillStrokeSettings = new FillStrokeSettingsWidget(mDocument, this);
-
-    mFontWidget = new Ui::FontsWidget(this);
-    mFontWidget->setMaximumHeight(150);
-
-    mLayoutHandler = new LayoutHandler(mDocument,
-                                       mAudioHandler,
-                                       this);
-    mTimeline = new TimelineDockWidget(mDocument,
-                                       mLayoutHandler,
-                                       this);
-    mRenderWidget = new RenderWidget(this);
-
-    // align widget
-    const auto alignWidget = new Ui::AlignWidget(this);
-
-    // assets widget
-    const auto assets = new AssetsWidget(this);
-
-    // properties widget
-    mObjectSettingsScrollArea = new ScrollArea(this);
-    mObjectSettingsScrollArea->setSizePolicy(QSizePolicy::Expanding,
-                                             QSizePolicy::Expanding);
-    mObjectSettingsScrollArea->setAutoFillBackground(true);
-    mObjectSettingsScrollArea->setPalette(ThemeSupport::getDarkPalette());
-
-    mObjectSettingsWidget = new BoxScrollWidget(mDocument,
-                                                mObjectSettingsScrollArea);
-    mObjectSettingsScrollArea->setWidget(mObjectSettingsWidget);
-    const int defaultRule = AppSupport::getSettings("ui",
-                                                    "propertiesFilter",
-                                                    (int)SWT_BoxRule::selected).toInt();
-    mObjectSettingsWidget->setCurrentRule(static_cast<SWT_BoxRule>(defaultRule));
-    mObjectSettingsWidget->setCurrentTarget(nullptr, SWT_Target::group);
-
-    connect(mObjectSettingsScrollArea->verticalScrollBar(),
-            &QScrollBar::valueChanged,
-            mObjectSettingsWidget, &BoxScrollWidget::changeVisibleTop);
-    connect(mObjectSettingsScrollArea, &ScrollArea::heightChanged,
-            mObjectSettingsWidget, &BoxScrollWidget::changeVisibleHeight);
-    connect(mObjectSettingsScrollArea, &ScrollArea::widthChanged,
-            mObjectSettingsWidget, &BoxScrollWidget::setWidth);
+    setupMainWidgets();
+    setupPropertiesWidgets();
 
     setupToolBar();
     setupMenuBar();
+
+    setupStackWidgets();
 
     readRecentFiles();
     updateRecentMenu();
 
     installEventFilter(this);
 
-    connect(&mAudioHandler, &AudioHandler::deviceChanged,
-            this, [this]() { statusBar()->showMessage(tr("Changed audio output: %1")
-                                                      .arg(mAudioHandler.getDeviceName()),
-                                                      10000); });
-
-    // stack widget
-    mWelcomeDialog = new WelcomeDialog(mRecentMenu,
-       [this]() { SceneSettingsDialog::sNewSceneDialog(mDocument, this); },
-       []() { MainWindow::sGetInstance()->openFile(); },
-       this);
-
-    mStackWidget = new QStackedWidget(this);
-    mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
-    mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
-
-    mCanvasToolBar = new Ui::CanvasToolBar(this);
-    installNumericFilter(mCanvasToolBar->getResolutionComboBox());
-
-
-    // setup "Properties", "Assets", "Queue" tab
-
-
-    mTabProperties = new QTabWidget(this);
-    mTabProperties->setObjectName("TabWidgetWide");
-    mTabProperties->tabBar()->setFocusPolicy(Qt::NoFocus);
-    mTabProperties->setContentsMargins(0, 0, 0, 0);
-    mTabProperties->setTabPosition(QTabWidget::South);
-    eSizesUI::widget.add(mTabProperties, [this](const int size) {
-        mTabProperties->setIconSize(QSize(size, size));
-    });
-
-    const auto tabButtons = mTabProperties->findChildren<QToolButton*>();
-    for (const auto &button : tabButtons) {
-        button->setFocusPolicy(Qt::NoFocus); // don't allow buttons to take focus
-    }
-
-    const auto propertiesWidget = new QWidget(this);
-    const auto propertiesLayout = new QVBoxLayout(propertiesWidget);
-    propertiesLayout->setContentsMargins(0, 0, 0, 0);
-    propertiesLayout->setSpacing(0);
-
-    propertiesLayout->addWidget(mObjectSettingsScrollArea);
-    propertiesLayout->addWidget(mFontWidget);
-    propertiesLayout->addWidget(alignWidget);
-
-    mTabPropertiesIndex = mTabProperties->addTab(propertiesWidget,
-                                                 QIcon::fromTheme("drawPathAutoChecked"),
-                                                 tr("Properties"));
-    mTabAssetsIndex = mTabProperties->addTab(assets,
-                                             QIcon::fromTheme("asset_manager"),
-                                             tr("Assets"));
-    mTabQueueIndex = mTabProperties->addTab(mRenderWidget,
-                                            QIcon::fromTheme("render_animation"),
-                                            tr("Queue"));
-
-    mCanvasToolBar->addSeparator();
-    mCanvasToolBar->addAction(QIcon::fromTheme("workspace"),
-                              tr("Layout"));
-    const auto workspaceLayoutCombo = mLayoutHandler->comboWidget();
-    workspaceLayoutCombo->setMaximumWidth(150);
-    mCanvasToolBar->addWidget(workspaceLayoutCombo);
-
-    statusBar()->addPermanentWidget(mCanvasToolBar);
-
-    // final layout
-    mUI = new UILayout(this);
-    std::vector<UILayout::Item> docks;
-    docks.push_back({UIDock::Position::Up,
-                     -1,
-                     tr("Viewer"),
-                     mStackWidget,
-                     false,
-                     false,
-                     false});
-    docks.push_back({UIDock::Position::Down,
-                     -1,
-                     tr("Timeline"),
-                     mTimeline,
-                     false,
-                     false,
-                     false});
-    docks.push_back({UIDock::Position::Right,
-                     -1,
-                     tr("Fill and Stroke"),
-                     mFillStrokeSettings,
-                     false,
-                     true,
-                     false});
-    docks.push_back({UIDock::Position::Right,
-                     -1,
-                     tr("Properties"),
-                     mTabProperties,
-                     false,
-                     true,
-                     false});
-    mUI->addDocks(docks);
-    setCentralWidget(mUI);
-
+    setupLayout();
     readSettings(openProject);
 }
 
@@ -619,6 +482,24 @@ void MainWindow::setupToolBar()
         const auto toolbar = mToolBox->getToolBar(Ui::ToolBox::Controls);
         if (toolbar) { addToolBar(Qt::TopToolBarArea, toolbar); }
     }
+
+    mCanvasToolBar = new Ui::CanvasToolBar(this);
+    installNumericFilter(mCanvasToolBar->getResolutionComboBox());
+
+    mCanvasToolBar->addSeparator();
+    mCanvasToolBar->addAction(QIcon::fromTheme("workspace"),
+                              tr("Layout"));
+    const auto workspaceLayoutCombo = mLayoutHandler->comboWidget();
+    workspaceLayoutCombo->setMaximumWidth(150);
+    mCanvasToolBar->addWidget(workspaceLayoutCombo);
+
+    statusBar()->addPermanentWidget(mCanvasToolBar);
+
+    connect(&mAudioHandler, &AudioHandler::deviceChanged,
+            this, [this]() {
+        statusBar()->showMessage(tr("Changed audio output: %1").arg(mAudioHandler.getDeviceName()),
+                                 10000);
+    });
 }
 
 MainWindow *MainWindow::sGetInstance()
@@ -1005,6 +886,138 @@ void MainWindow::writeSettings()
 bool MainWindow::isEnabled()
 {
     return !mGrayOutWidget;
+}
+
+void MainWindow::setupMainWidgets()
+{
+    BoxSingleWidget::loadStaticPixmaps(eSizesUI::widget);
+
+    mFillStrokeSettings = new FillStrokeSettingsWidget(mDocument, this);
+
+    mLayoutHandler = new LayoutHandler(mDocument,
+                                       mAudioHandler,
+                                       this);
+    mTimeline = new TimelineDockWidget(mDocument,
+                                       mLayoutHandler,
+                                       this);
+    mRenderWidget = new RenderWidget(this);
+}
+
+void MainWindow::setupStackWidgets()
+{
+    mWelcomeDialog = new WelcomeDialog(mRecentMenu,
+                                       [this]() { SceneSettingsDialog::sNewSceneDialog(mDocument, this); },
+                                       []() { MainWindow::sGetInstance()->openFile(); },
+                                       this);
+
+    mStackWidget = new QStackedWidget(this);
+    mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
+    mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
+}
+
+void MainWindow::setupPropertiesWidgets()
+{
+    mObjectSettingsScrollArea = new ScrollArea(this);
+    mObjectSettingsScrollArea->setSizePolicy(QSizePolicy::Expanding,
+                                             QSizePolicy::Expanding);
+    mObjectSettingsScrollArea->setAutoFillBackground(true);
+    mObjectSettingsScrollArea->setPalette(ThemeSupport::getDarkPalette());
+
+    mObjectSettingsWidget = new BoxScrollWidget(mDocument,
+                                                mObjectSettingsScrollArea);
+    mObjectSettingsScrollArea->setWidget(mObjectSettingsWidget);
+    const int defaultRule = AppSupport::getSettings("ui",
+                                                    "propertiesFilter",
+                                                    (int)SWT_BoxRule::selected).toInt();
+    mObjectSettingsWidget->setCurrentRule(static_cast<SWT_BoxRule>(defaultRule));
+    mObjectSettingsWidget->setCurrentTarget(nullptr, SWT_Target::group);
+
+    // font widget
+    mFontWidget = new Ui::FontsWidget(this);
+    mFontWidget->setMaximumHeight(150);
+
+    // align widget
+    const auto alignWidget = new Ui::AlignWidget(this);
+
+    // assets widget
+    const auto assets = new AssetsWidget(this);
+
+    mTabProperties = new QTabWidget(this);
+    mTabProperties->setObjectName("TabWidgetWide");
+    mTabProperties->tabBar()->setFocusPolicy(Qt::NoFocus);
+    mTabProperties->setContentsMargins(0, 0, 0, 0);
+    mTabProperties->setTabPosition(QTabWidget::South);
+    eSizesUI::widget.add(mTabProperties, [this](const int size) {
+        mTabProperties->setIconSize(QSize(size, size));
+    });
+
+    const auto tabButtons = mTabProperties->findChildren<QToolButton*>();
+    for (const auto &button : tabButtons) {
+        button->setFocusPolicy(Qt::NoFocus); // don't allow buttons to take focus
+    }
+
+    const auto propertiesWidget = new QWidget(this);
+    const auto propertiesLayout = new QVBoxLayout(propertiesWidget);
+    propertiesLayout->setContentsMargins(0, 0, 0, 0);
+    propertiesLayout->setSpacing(0);
+
+    propertiesLayout->addWidget(mObjectSettingsScrollArea);
+    propertiesLayout->addWidget(mFontWidget);
+    propertiesLayout->addWidget(alignWidget);
+
+    mTabPropertiesIndex = mTabProperties->addTab(propertiesWidget,
+                                                 QIcon::fromTheme("drawPathAutoChecked"),
+                                                 tr("Properties"));
+    mTabAssetsIndex = mTabProperties->addTab(assets,
+                                             QIcon::fromTheme("asset_manager"),
+                                             tr("Assets"));
+    mTabQueueIndex = mTabProperties->addTab(mRenderWidget,
+                                            QIcon::fromTheme("render_animation"),
+                                            tr("Queue"));
+
+    connect(mObjectSettingsScrollArea->verticalScrollBar(),
+            &QScrollBar::valueChanged,
+            mObjectSettingsWidget, &BoxScrollWidget::changeVisibleTop);
+    connect(mObjectSettingsScrollArea, &ScrollArea::heightChanged,
+            mObjectSettingsWidget, &BoxScrollWidget::changeVisibleHeight);
+    connect(mObjectSettingsScrollArea, &ScrollArea::widthChanged,
+            mObjectSettingsWidget, &BoxScrollWidget::setWidth);
+}
+
+void MainWindow::setupLayout()
+{
+    mUI = new UILayout(this);
+    std::vector<UILayout::Item> docks;
+    docks.push_back({UIDock::Position::Up,
+                     -1,
+                     tr("Viewer"),
+                     mStackWidget,
+                     false,
+                     false,
+                     false});
+    docks.push_back({UIDock::Position::Down,
+                     -1,
+                     tr("Timeline"),
+                     mTimeline,
+                     false,
+                     false,
+                     false});
+    docks.push_back({UIDock::Position::Right,
+                     -1,
+                     tr("Fill and Stroke"),
+                     mFillStrokeSettings,
+                     false,
+                     true,
+                     false});
+    docks.push_back({UIDock::Position::Right,
+                     -1,
+                     tr("Properties"),
+                     mTabProperties,
+                     false,
+                     true,
+                     false});
+    mUI->addDocks(docks);
+    setCentralWidget(mUI);
 }
 
 void MainWindow::clearAll()

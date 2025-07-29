@@ -303,6 +303,10 @@ private:
     BoxScrollWidget *mObjectSettingsWidget;
     ScrollArea *mObjectSettingsScrollArea;
 
+    void setupMainWidgets();
+    void setupStackWidgets();
+    void setupPropertiesWidgets();
+    void setupLayout();
     void setupToolBar();
     void setupMenuBar();
     void setupMenuScene();
