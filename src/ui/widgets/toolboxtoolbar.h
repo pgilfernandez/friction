@@ -37,6 +37,8 @@ namespace Friction
     {
         class UI_EXPORT ToolboxToolBar : public ToolBar
         {
+            Q_OBJECT
+
         public:
             explicit ToolboxToolBar(const QString &name,
                                     const QString &title,
