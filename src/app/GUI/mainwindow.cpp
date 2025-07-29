@@ -39,6 +39,8 @@
 #include <QSpacerItem>
 #include <QMargins>
 #include <iostream>
+#include <QClipboard>
+#include <QMimeData>
 
 #include "GUI/edialogs.h"
 #include "dialogs/applyexpressiondialog.h"
@@ -309,6 +311,11 @@ MainWindow::MainWindow(Document& document,
         mTabProperties->setIconSize(QSize(size, size));
     });
 
+    const auto tabButtons = mTabProperties->findChildren<QToolButton*>();
+    for (const auto &button : tabButtons) {
+        button->setFocusPolicy(Qt::NoFocus); // don't allow buttons to take focus
+    }
+
     const auto propertiesWidget = new QWidget(this);
     const auto propertiesLayout = new QVBoxLayout(propertiesWidget);
     propertiesLayout->setContentsMargins(frictionMargins);
@@ -570,6 +577,23 @@ void MainWindow::setupMenuBar()
         cmdAddAction(qAct);
     }
 
+    { // import (paste) SVG from clipboard
+        mEditMenu->addAction(QIcon::fromTheme("paste"),
+                             tr("Paste from Clipboard"),
+                             [this]() {
+            const auto clipboard = QGuiApplication::clipboard();
+            if (clipboard) {
+                const auto mime = clipboard->mimeData();
+                qDebug() << mime->formats() << mime->text();
+                if (mime->hasText() && mime->text().contains("<svg")) {
+                    const QString svg = mime->text();
+                    try { mActions.importClipboard(svg); }
+                    catch (const std::exception& e) { gPrintExceptionCritical(e); }
+                }
+            }
+        }, QKeySequence(tr("Ctrl+Shift+V")));
+    }
+
     {
         const auto qAct = new NoShortcutAction(tr("Duplicate", "MenuBar_Edit"));
         mEditMenu->addAction(qAct);
@@ -585,9 +609,7 @@ void MainWindow::setupMenuBar()
         const auto qAct = new NoShortcutAction(tr("Delete", "MenuBar_Edit"));
         qAct->setIcon(QIcon::fromTheme("trash"));
         mEditMenu->addAction(qAct);
-#ifndef Q_OS_MAC
         qAct->setShortcut(Qt::Key_Delete);
-#endif
         mActions.deleteAction->connect(qAct);
         cmdAddAction(qAct);
     }
@@ -1120,7 +1142,9 @@ void MainWindow::setupMenuBar()
     help->addAction(QIcon::fromTheme("renderlayers"),
                     tr("Reinstall default Expressions Presets"),
                     this, &MainWindow::askInstallExpressionsPresets);
-
+    help->addAction(QIcon::fromTheme("color"),
+                    tr("Restore default fill and stroke"),
+                    this, &MainWindow::askRestoreFillStrokeDefault);
 
     // toolbar actions
     mToolbar->addAction(newAct);
@@ -1402,6 +1426,21 @@ void MainWindow::askInstallExpressionsPresets()
     AppSupport::setSettings("settings", "firstRunExprPresets", true);
 }
 
+void MainWindow::askRestoreFillStrokeDefault()
+{
+    const auto result = QMessageBox::question(this,
+                                              tr("Restore default fill and stroke?"),
+                                              tr("Are you sure you want to restore fill and stroke defaults?"));
+    if (result != QMessageBox::Yes) { return; }
+
+    auto settings = eSettings::sInstance;
+    settings->fLastFillFlatEnabled = false;
+    settings->fLastStrokeFlatEnabled = true;
+    settings->fLastUsedFillColor = Qt::white;
+    settings->fLastUsedStrokeColor = ThemeSupport::getThemeObjectColor();
+    settings->fLastUsedStrokeWidth = 10.;
+}
+
 void MainWindow::openWelcomeDialog()
 {
     mStackWidget->setCurrentIndex(mStackIndexWelcome);
@@ -1636,6 +1675,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *e)
         const auto keyEvent = static_cast<QKeyEvent*>(e);
         const int key = keyEvent->key();
         if (key == Qt::Key_Tab) {
+            if (enve_cast<QLineEdit*>(focusWidget)) { return true; }
             KeyFocusTarget::KFT_sTab();
             return true;
         }
@@ -1750,6 +1790,13 @@ void MainWindow::readSettings(const QString &openProject)
         mUI->setDockVisible("Fill and Stroke", false);
     }
 
+#ifdef Q_OS_LINUX
+    if (AppSupport::isWayland()) { // Disable fullscreen on wayland
+        isFull = false;
+        mViewFullScreenAct->setEnabled(false);
+    }
+#endif
+
     mViewFullScreenAct->blockSignals(true);
     mViewFullScreenAct->setChecked(isFull);
     mViewFullScreenAct->blockSignals(false);
@@ -1786,6 +1833,18 @@ void MainWindow::writeSettings()
     AppSupport::setSettings("ui", "geometry", saveGeometry());
     AppSupport::setSettings("ui", "maximized", isMaximized());
     AppSupport::setSettings("ui", "fullScreen", isFullScreen());
+
+    AppSupport::setSettings("FillStroke", "LastStrokeColor",
+                            eSettings::instance().fLastUsedStrokeColor);
+    AppSupport::setSettings("FillStroke", "LastStrokeWidth",
+                            eSettings::instance().fLastUsedStrokeWidth);
+    AppSupport::setSettings("FillStroke", "LastStrokeFlat",
+                            eSettings::instance().fLastStrokeFlatEnabled);
+
+    AppSupport::setSettings("FillStroke", "LastFillColor",
+                            eSettings::instance().fLastUsedFillColor);
+    AppSupport::setSettings("FillStroke", "LastFillFlat",
+                            eSettings::instance().fLastFillFlatEnabled);
 }
 
 bool MainWindow::isEnabled()

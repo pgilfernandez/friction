@@ -1544,26 +1544,28 @@ void BoundingBox::renderDataFinished(BoxRenderData *renderData) {
     }
 }
 
-//QString skBlendModeToSVG(const SkBlendMode mode) {
-//    switch(mode) {
-//    case SkBlendMode::kMultiply:    return "multiply";
-//    case SkBlendMode::kScreen:      return "screen";
-//    case SkBlendMode::kOverlay:     return "overlay";
-//    case SkBlendMode::kDarken:      return "darken";
-//    case SkBlendMode::kLighten:     return "lighten";
-//    case SkBlendMode::kColorDodge:  return "color-dodge";
-//    case SkBlendMode::kColorBurn:   return "color-burn";
-//    case SkBlendMode::kHardLight:   return "hard-light";
-//    case SkBlendMode::kSoftLight:   return "soft-light";
-//    case SkBlendMode::kDifference:  return "difference";
-//    case SkBlendMode::kExclusion:   return "exclusion";
-//    case SkBlendMode::kHue:         return "hue";
-//    case SkBlendMode::kSaturation:  return "saturation";
-//    case SkBlendMode::kColor:       return "color";
-//    case SkBlendMode::kLuminosity:  return "luminosity";
-//    default: return "";
-//    }
-//}
+QString skBlendModeToSVG(const SkBlendMode mode)
+{
+   switch (mode) {
+   case SkBlendMode::kPlus:        return "plus-ligher";
+   case SkBlendMode::kMultiply:    return "multiply";
+   case SkBlendMode::kScreen:      return "screen";
+   case SkBlendMode::kOverlay:     return "overlay";
+   case SkBlendMode::kDarken:      return "darken";
+   case SkBlendMode::kLighten:     return "lighten";
+   case SkBlendMode::kColorDodge:  return "color-dodge";
+   case SkBlendMode::kColorBurn:   return "color-burn";
+   case SkBlendMode::kHardLight:   return "hard-light";
+   case SkBlendMode::kSoftLight:   return "soft-light";
+   case SkBlendMode::kDifference:  return "difference";
+   case SkBlendMode::kExclusion:   return "exclusion";
+   case SkBlendMode::kHue:         return "hue";
+   case SkBlendMode::kSaturation:  return "saturation";
+   case SkBlendMode::kColor:       return "color";
+   case SkBlendMode::kLuminosity:  return "luminosity";
+   default: return "normal";
+   }
+}
 
 eTask* BoundingBox::saveSVGWithTransform(SvgExporter& exp,
                                          QDomElement& parent,
@@ -1581,6 +1583,13 @@ eTask* BoundingBox::saveSVGWithTransform(SvgExporter& exp,
         auto& ele = taskPtr->element();
         if (ptr) {
             ele.setAttribute("id", AppSupport::filterId(ptr->prp_getName()));
+
+            const QString blend = skBlendModeToSVG(ptr->getBlendMode());
+            if (expPtr->fBlendMix && blend != "normal") {
+                ele.setAttribute("style",
+                                 QString("mix-blend-mode: %1;").arg(blend));
+            }
+
             SvgExportHelpers::assignVisibility(*expPtr, ele, visRange);
 
             const auto transformEffects = ptr->mTransformEffectCollection.get();
@@ -1602,6 +1611,13 @@ eTask* BoundingBox::saveSVGWithTransform(SvgExporter& exp,
 
             if (maskId == ptr->prp_getName()) { // move mask to defs
                 auto& eleMask = taskPtr->initialize("mask");
+                // check for mask (DstOut)
+                if (ptr->getBlendMode() == SkBlendMode::kDstOut) {
+                    auto rect = eleMask.appendChild(expPtr->createElement("rect")).toElement();
+                    rect.setAttribute("width", "100%");
+                    rect.setAttribute("height", "100%");
+                    rect.setAttribute("fill", "white");
+                }
                 eleMask.setAttribute("id", QString("%1Mask").arg(AppSupport::filterId(ptr->prp_getName())));
                 eleMask.appendChild(withEffects);
                 expPtr->addToDefs(eleMask);

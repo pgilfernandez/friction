@@ -1020,14 +1020,14 @@ QPair<bool, int> AppSupport::handleXDGArgs(const bool &isRenderer,
                                            const QStringList &args)
 {
     QPair<bool,int> status(false, 0);
-    if (!AppSupport::isAppPortable() || isRenderer) { return status; }
+    if ((!isAppPortable() && !isAppImage()) || isRenderer) { return status; }
     if (args.contains("--xdg-remove")) {
-        const bool removedXDG = AppSupport::removeXDGDesktopIntegration();
+        const bool removedXDG = removeXDGDesktopIntegration();
         qWarning() << "Removed XDG Integration:" << removedXDG;
         status.first = true;
         status.second = removedXDG ? 0 : -1;
     } else if (args.contains("--xdg-install")) {
-        const bool installedXDG = AppSupport::setupXDGDesktopIntegration();
+        const bool installedXDG = setupXDGDesktopIntegration();
         qWarning() << "Installed XDG Integration:" << installedXDG;
         status.first = true;
         status.second = installedXDG ? 0 : -1;
@@ -1062,4 +1062,28 @@ void AppSupport::handlePortableFirstRun()
 const QString AppSupport::filterId(const QString &input)
 {
     return QString(input).simplified().replace(" ", "");
+}
+
+const QColor AppSupport::adjustColorVisibility(const QColor &color,
+                                               const QColor &background)
+{
+    qDebug() << "compare" << "color" << color << "background" << background;
+
+    if (color.alpha() == 0) { // if no alpha return gray
+        return QColor(128, 128, 128);
+    }
+    if (color == background &&
+        (color == Qt::black || color == Qt::white)) {
+        // if same color and that is white or black return gray
+        return QColor(128, 128, 128, color.alpha());
+    }
+
+    qreal luminanceColor = color.valueF();
+    qreal luminanceBackground = background.valueF();
+
+    if (std::abs(luminanceColor - luminanceBackground) < 0.4) { // return a darker/lighter color
+        if (luminanceBackground > 0.5) { return color.darker(150); }
+        else { return color.lighter(150); }
+    }
+    return color;
 }

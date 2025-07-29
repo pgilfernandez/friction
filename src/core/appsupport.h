@@ -138,6 +138,8 @@ public:
     static void printHelp(const bool &isRenderer);
     static void handlePortableFirstRun();
     static const QString filterId(const QString &input);
+    static const QColor adjustColorVisibility(const QColor &color,
+                                              const QColor &background);
 };
 
 #endif // APPSUPPORT_H
