@@ -174,6 +174,12 @@ MainWindow::MainWindow(Document& document,
                                        this);
     mRenderWidget = new RenderWidget(this);
 
+    // align widget
+    const auto alignWidget = new Ui::AlignWidget(this);
+
+    // assets widget
+    const auto assets = new AssetsWidget(this);
+
     // properties widget
     mObjectSettingsScrollArea = new ScrollArea(this);
     mObjectSettingsScrollArea->setSizePolicy(QSizePolicy::Expanding,
@@ -195,8 +201,6 @@ MainWindow::MainWindow(Document& document,
     connect(mObjectSettingsScrollArea, &ScrollArea::widthChanged,
             mObjectSettingsWidget, &BoxScrollWidget::setWidth);
 
-    const auto assets = new AssetsWidget(this);
-
     setupToolBar();
     setupMenuBar();
 
@@ -212,32 +216,6 @@ MainWindow::MainWindow(Document& document,
                                                       .arg(mAudioHandler.getDeviceName()),
                                                       10000); });
 
-    // align widget
-    const auto alignWidget = new AlignWidget(this);
-    alignWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    connect(alignWidget, &AlignWidget::alignTriggered,
-            this, [this](const Qt::Alignment align,
-                   const AlignPivot pivot,
-                   const AlignRelativeTo relativeTo) {
-        const auto scene = *mDocument.fActiveScene;
-        if (!scene) { return; }
-        scene->alignSelectedBoxes(align, pivot, relativeTo);
-        mDocument.actionFinished();
-    });
-    {   // show/hide widget menu option
-        const auto act = mViewMenu->addAction(tr("Align in Properties"));
-        act->setCheckable(true);
-        act->setChecked(AppSupport::getSettings("ui",
-                                                "PropertiesShowAlign",
-                                                true).toBool());
-        alignWidget->setVisible(act->isChecked());
-        connect(act, &QAction::triggered,
-                this, [alignWidget](bool checked) {
-            alignWidget->setVisible(checked);
-            AppSupport::setSettings("ui", "PropertiesShowAlign", checked);
-        });
-    }
-
     // stack widget
     mWelcomeDialog = new WelcomeDialog(mRecentMenu,
        [this]() { SceneSettingsDialog::sNewSceneDialog(mDocument, this); },
@@ -247,7 +225,6 @@ MainWindow::MainWindow(Document& document,
     mStackWidget = new QStackedWidget(this);
     mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
     mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
-
 
     mCanvasToolBar = new Ui::CanvasToolBar(this);
     installNumericFilter(mCanvasToolBar->getResolutionComboBox());
@@ -1515,10 +1492,6 @@ void MainWindow::setupToolBar()
         const auto toolbar = mToolBox->getToolBar(Ui::ToolBox::Controls);
         if (toolbar) { addToolBar(Qt::TopToolBarArea, toolbar); }
     }
-    {
-        const auto toolbar = mToolBox->getToolBar(Ui::ToolBox::Extra);
-        if (toolbar) { addToolBar(Qt::BottomToolBarArea, toolbar); }
-    }
 }
 
 MainWindow *MainWindow::sGetInstance()
@@ -1613,7 +1586,7 @@ void MainWindow::setCurrentBox(BoundingBox *box)
 void MainWindow::setCurrentBoxFocus(BoundingBox *box)
 {
     if (!box) { return; }
-    if (const auto target = enve_cast<TextBox*>(box)) {
+    if (enve_cast<TextBox*>(box)) {
         focusFontWidget(mDocument.fCanvasMode == CanvasMode::textCreate);
     } else {
         focusColorWidget();
@@ -2243,28 +2216,6 @@ void MainWindow::cmdAddAction(QAction *act)
 {
     if (!act || eSettings::instance().fCommandPalette.contains(act)) { return; }
     eSettings::sInstance->fCommandPalette.append(act);
-}
-
-void MainWindow::extAddAction(const CanvasMode &mode,
-                              QAction *act,
-                              const bool selected)
-{
-    if (!act) { return; }
-    const auto toolbar = enve_cast<Ui::ToolboxToolBar*>(mToolBox->getToolBar(Ui::ToolBox::Extra));
-    if (!toolbar) { return; }
-    if (selected) { toolbar->addCanvasSelectedAction(mode, act); }
-    else { toolbar->addCanvasAction(mode, act); }
-}
-
-void MainWindow::extAddWidget(const CanvasMode &mode,
-                              QWidget *wid,
-                              const bool selected)
-{
-    if (!wid) { return; }
-    const auto toolbar = enve_cast<Ui::ToolboxToolBar*>(mToolBox->getToolBar(Ui::ToolBox::Extra));
-    if (!toolbar) { return; }
-    if (selected) { toolbar->addCanvasSelectedWidget(mode, wid); }
-    else { toolbar->addCanvasWidget(mode, wid); }
 }
 
 LayoutHandler *MainWindow::getLayoutHandler()
