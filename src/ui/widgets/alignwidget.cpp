@@ -6,8 +6,7 @@
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# the Free Software Foundation, version 3.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,8 +19,6 @@
 # See 'README.md' for more information.
 #
 */
-
-// Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
 #include "alignwidget.h"
 #include "Private/document.h"
@@ -42,6 +39,8 @@
 #define INDEX_REL_LAST_SELECTED 1
 #define INDEX_REL_LAST_SELECTED_PIVOT 2
 #define INDEX_REL_BOUNDINGBOX 3
+
+using namespace Friction::Ui;
 
 AlignWidget::AlignWidget(QWidget* const parent,
                          QToolBar* const toolbar)
