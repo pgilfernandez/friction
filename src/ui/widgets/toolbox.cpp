@@ -39,6 +39,7 @@ ToolBox::ToolBox(Actions &actions,
     , mGroupMain(nullptr)
     , mGroupNodes(nullptr)
     , mGroupDraw(nullptr)
+    , mGroupColorPicker(nullptr)
     , mDrawPathMaxError(nullptr)
     , mDrawPathSmooth(nullptr)
     , mLocalPivot(nullptr)
@@ -80,14 +81,15 @@ void ToolBox::setupToolBox(QWidget *parent)
                         parent,
                         true);
     mControls = new ToolControls(parent);
-    mExtra = new ToolboxToolBar(tr("Extra Tools"),
+    // disable for now
+    /*mExtra = new ToolboxToolBar(tr("Extra Tools"),
                                 "ToolBoxExtra",
-                                parent);
-    mExtra->addAction(QString());
+                                parent);*/
 
     mGroupMain = new QActionGroup(this);
     mGroupNodes = new QActionGroup(this);
     mGroupDraw = new QActionGroup(this);
+    mGroupColorPicker = new QActionGroup(this);
 
     setupDocument();
     setupMainActions();
@@ -424,21 +426,22 @@ void ToolBox::setupDrawActions()
 
 void ToolBox::setupColorPickerActions()
 {
-    mColorPickerButton = new QPushButton(mExtra);
+    mColorPickerButton = new QPushButton(mControls);
     mColorPickerButton->setObjectName("FlatButton");
     mColorPickerButton->setIcon(QIcon::fromTheme("pick"));
-    mColorPickerLabel = new QLabel(mExtra);
+    mColorPickerLabel = new QLabel(mControls);
 
-    mExtra->addCanvasWidget(CanvasMode::pickFillStroke,
-                            mColorPickerButton);
-    mExtra->addCanvasWidget(CanvasMode::pickFillStroke,
-                            mColorPickerLabel);
+    mGroupColorPicker->addAction(mControls->addSeparator());
+    mGroupColorPicker->addAction(mControls->addWidget(mColorPickerButton));
+    mGroupColorPicker->addAction(mControls->addWidget(mColorPickerLabel));
+
+    mGroupColorPicker->setVisible(false);
 }
 
 void ToolBox::setCurrentCanvas(Canvas * const target)
 {
     mControls->setCurrentCanvas(target);
-    mExtra->setCurrentCanvas(target);
+    //mExtra->setCurrentCanvas(target);
 }
 
 void ToolBox::setCanvasMode(const CanvasMode &mode)
@@ -457,8 +460,9 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
 
     mLocalPivot->setEnabled(boxMode || pointMode);
 
-    mExtra->setCanvasMode(mode);
+    //mExtra->setCanvasMode(mode);
 
+    mGroupColorPicker->setVisible(pickMode);
     if (pickMode) { updateColorPicker(Qt::black); }
 }
 

@@ -28,6 +28,7 @@
 #include <QObject>
 #include <QActionGroup>
 #include <QPushButton>
+#include <QLabel>
 
 #include "Private/document.h"
 
@@ -80,6 +81,7 @@ namespace Friction
             QActionGroup *mGroupMain;
             QActionGroup *mGroupNodes;
             QActionGroup *mGroupDraw;
+            QActionGroup *mGroupColorPicker;
 
             QDoubleSlider *mDrawPathMaxError;
             QDoubleSlider *mDrawPathSmooth;

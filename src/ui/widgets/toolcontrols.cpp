@@ -26,20 +26,6 @@
 #include "Private/document.h"
 #include "Boxes/circle.h"
 #include "Boxes/rectangle.h"
-#include "widgets/toolbutton.h"
-
-#include <QWidgetAction>
-#include <QStandardItemModel>
-#include <QPushButton>
-
-#define INDEX_ALIGN_GEOMETRY 0
-#define INDEX_ALIGN_GEOMETRY_PIVOT 1
-#define INDEX_ALIGN_PIVOT 2
-
-#define INDEX_REL_SCENE 0
-#define INDEX_REL_LAST_SELECTED 1
-#define INDEX_REL_LAST_SELECTED_PIVOT 2
-#define INDEX_REL_BOUNDINGBOX 3
 
 using namespace Friction::Ui;
 
@@ -65,10 +51,6 @@ ToolControls::ToolControls(QWidget *parent)
     , mTransformBottomRight(nullptr)
     , mTransformPivot(nullptr)
     , mTransformOpacity(nullptr)
-    , mTransformAlign(nullptr)
-    , mTranformAlignPivot(nullptr)
-    , mTransformAlignRelativeTo(nullptr)
-    , mAlignEnabled(false)
 {
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -93,7 +75,6 @@ void ToolControls::setCurrentCanvas(Canvas * const target)
 void ToolControls::setCurrentBox(BoundingBox * const target)
 {
     setTransform(target);
-    mTransformAlign->setEnabled(target && mAlignEnabled);
 }
 
 void ToolControls::setCanvasMode(const CanvasMode &mode)
@@ -111,23 +92,6 @@ void ToolControls::setCanvasMode(const CanvasMode &mode)
                                mode == CanvasMode::rectCreate;
     mTransformRadius->setVisible(hasRadius && (showRectangle || mode == CanvasMode::circleCreate));
     mTransformBottomRight->setVisible(hasRectangle && showRectangle);
-
-    const bool canShowAlign = mode == CanvasMode::boxTransform;
-    mTransformAlign->setVisible(canShowAlign && mAlignEnabled);
-}
-
-void ToolControls::setAlignEnabled(const bool enabled,
-                                   const bool trigger)
-{
-    mAlignEnabled = enabled;
-    mTransformAlign->setEnabled(enabled);
-    if (!trigger) { return; }
-    setCanvasMode(mCanvasMode);
-}
-
-bool ToolControls::isAlignEnabled()
-{
-    return mAlignEnabled;
 }
 
 void ToolControls::setTransform(BoundingBox * const target)
@@ -216,11 +180,11 @@ void ToolControls::resetWidgets()
     mTransformBottomRight->setEnabled(false);
     mTransformPivot->setEnabled(false);
     mTransformOpacity->setEnabled(false);
-    mTransformAlign->setEnabled(false);
 
-    mTransformAlign->setVisible(false);
     mTransformRadius->setVisible(false);
     mTransformBottomRight->setVisible(false);
+    mTransformPivot->setVisible(false);
+    mTransformOpacity->setVisible(false);
 }
 
 void ToolControls::setupWidgets()
@@ -232,7 +196,6 @@ void ToolControls::setupWidgets()
     mTransformBottomRight = new QActionGroup(this);
     mTransformPivot = new QActionGroup(this);
     mTransformOpacity = new QActionGroup(this);
-    mTransformAlign = new QActionGroup(this);
 
     setupTransform();
 }
@@ -290,7 +253,6 @@ void ToolControls::setupTransform()
     mTransformRadius->addAction(addSeparator());
     mTransformRadius->addAction(addWidget(mTransformRY));
 
-    setupAlign();
     resetWidgets();
 
     mTransformX->setValueRange(0, 1);
@@ -317,150 +279,4 @@ void ToolControls::setupTransform()
     mTransformPY->setDisplayedValue(0);
     mTransformOX->setValueRange(0, 100);
     mTransformOX->setDisplayedValue(100);
-}
-
-void ToolControls::setupAlign()
-{
-    const auto button = new ToolButton(this, false);
-    const auto buttonAct = new QWidgetAction(this);
-
-    const auto frame = new QWidget(this);
-    const auto frameLayout = new QHBoxLayout(frame);
-
-    buttonAct->setDefaultWidget(frame);
-    button->addAction(buttonAct);
-    button->setObjectName("AutoPopupButton");
-    button->setToolTip(tr("Align (click to expand)"));
-    button->setIcon(QIcon::fromTheme("alignCenter"));
-    button->setFocusPolicy(Qt::NoFocus);
-    button->setPopupMode(ToolButton::InstantPopup);
-
-    mTransformAlign->addAction(addWidget(button));
-
-    mTranformAlignPivot = new QComboBox(this);
-    mTranformAlignPivot->setMinimumWidth(20);
-    mTranformAlignPivot->setFocusPolicy(Qt::NoFocus);
-    mTranformAlignPivot->addItem(tr("Geometry")); // INDEX_ALIGN_GEOMETRY
-    mTranformAlignPivot->addItem(tr("Geometry by Pivot")); // INDEX_ALIGN_GEOMETRY_PIVOT
-    mTranformAlignPivot->addItem(tr("Pivot")); // INDEX_ALIGN_PIVOT
-
-    mTransformAlignRelativeTo = new QComboBox(this);
-    mTransformAlignRelativeTo->setMinimumWidth(20);
-    mTransformAlignRelativeTo->setFocusPolicy(Qt::NoFocus);
-    mTransformAlignRelativeTo->addItem(tr("Scene")); // INDEX_REL_SCENE
-    mTransformAlignRelativeTo->addItem(tr("Last Selected")); // INDEX_REL_LAST_SELECTED
-    mTransformAlignRelativeTo->addItem(tr("Last Selected Pivot")); // INDEX_REL_LAST_SELECTED_PIVOT
-    mTransformAlignRelativeTo->addItem(tr("Bounding Box")); // INDEX_REL_BOUNDINGBOX
-
-    frameLayout->addWidget(new QLabel(tr("Align"), this));
-    frameLayout->addWidget(mTranformAlignPivot);
-    frameLayout->addWidget(new QLabel(tr("To"), this));
-    frameLayout->addWidget(mTransformAlignRelativeTo);
-
-    setComboBoxItemState(mTransformAlignRelativeTo, INDEX_REL_LAST_SELECTED_PIVOT, false);
-    setComboBoxItemState(mTransformAlignRelativeTo, INDEX_REL_BOUNDINGBOX, false);
-
-    const auto leftButton = new QPushButton(QIcon::fromTheme("pivot-align-left"),
-                                            tr(""), this);
-    leftButton->setFocusPolicy(Qt::NoFocus);
-    leftButton->setToolTip(tr("Align Left"));
-    connect(leftButton, &QPushButton::clicked,
-            this, [this]() { triggerAlign(Qt::AlignLeft); });
-    const auto mAlignLeftAct = mTransformAlign->addAction(addWidget(leftButton));
-    mTransformAlign->addAction(addSeparator());
-
-    const auto hCenterButton = new QPushButton(QIcon::fromTheme("pivot-align-hcenter"),
-                                               tr(""), this);
-    hCenterButton->setFocusPolicy(Qt::NoFocus);
-    hCenterButton->setToolTip(tr("Align Horizontal Center"));
-    connect(hCenterButton, &QPushButton::clicked,
-            this, [this]() { triggerAlign(Qt::AlignHCenter); });
-    mTransformAlign->addAction(addWidget(hCenterButton));
-    mTransformAlign->addAction(addSeparator());
-
-    const auto rightButton = new QPushButton(QIcon::fromTheme("pivot-align-right"),
-                                             tr(""), this);
-    rightButton->setFocusPolicy(Qt::NoFocus);
-    rightButton->setToolTip(tr("Align Right"));
-    connect(rightButton, &QPushButton::clicked,
-            this, [this]() { triggerAlign(Qt::AlignRight); });
-    const auto mAlignRightAct = mTransformAlign->addAction(addWidget(rightButton));
-    mTransformAlign->addAction(addSeparator());
-
-    const auto topButton = new QPushButton(QIcon::fromTheme("pivot-align-top"),
-                                           tr(""), this);
-    topButton->setFocusPolicy(Qt::NoFocus);
-    topButton->setToolTip(tr("Align Top"));
-    connect(topButton, &QPushButton::clicked,
-            this, [this]() { triggerAlign(Qt::AlignTop); });
-    const auto mAlignTopAct = mTransformAlign->addAction(addWidget(topButton));
-    mTransformAlign->addAction(addSeparator());
-
-    const auto vCenterButton = new QPushButton(QIcon::fromTheme("pivot-align-vcenter"),
-                                               tr(""), this);
-    vCenterButton->setFocusPolicy(Qt::NoFocus);
-    vCenterButton->setToolTip(tr("Align Vertical Center"));
-    connect(vCenterButton, &QPushButton::clicked,
-            this, [this]() { triggerAlign(Qt::AlignVCenter); });
-    mTransformAlign->addAction(addWidget(vCenterButton));
-    mTransformAlign->addAction(addSeparator());
-
-    const auto bottomButton = new QPushButton(QIcon::fromTheme("pivot-align-bottom"),
-                                              tr(""), this);
-    bottomButton->setFocusPolicy(Qt::NoFocus);
-    bottomButton->setToolTip(tr("Align Bottom"));
-    connect(bottomButton, &QPushButton::clicked,
-            this, [this]() { triggerAlign(Qt::AlignBottom); });
-    const auto mAlignBottomAct = mTransformAlign->addAction(addWidget(bottomButton));
-
-    connect(mTranformAlignPivot,
-            QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, [this](int index) {
-        setComboBoxItemState(mTransformAlignRelativeTo,
-                             INDEX_REL_LAST_SELECTED_PIVOT,
-                             index == INDEX_ALIGN_PIVOT);
-        setComboBoxItemState(mTransformAlignRelativeTo,
-                             INDEX_REL_BOUNDINGBOX,
-                             index == INDEX_ALIGN_PIVOT);
-        if (index == INDEX_ALIGN_PIVOT) { mTransformAlignRelativeTo->setCurrentIndex(INDEX_REL_BOUNDINGBOX); }
-        else { mTransformAlignRelativeTo->setCurrentIndex(INDEX_REL_SCENE); }
-    });
-
-    connect(mTransformAlignRelativeTo,
-            QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, [mAlignLeftAct,
-                   mAlignRightAct,
-                   mAlignTopAct,
-                   mAlignBottomAct](int index) {
-        mAlignLeftAct->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
-        mAlignRightAct->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
-        mAlignTopAct->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
-        mAlignBottomAct->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
-    });
-}
-
-void ToolControls::triggerAlign(const Qt::Alignment &align)
-{
-    if (!mCanvas) { return; }
-
-    const auto alignPivot = static_cast<AlignPivot>(mTranformAlignPivot->currentIndex());
-    const auto relativeTo = static_cast<AlignRelativeTo>(mTransformAlignRelativeTo->currentIndex());
-
-    mCanvas->alignSelectedBoxes(align, alignPivot, relativeTo);
-    mCanvas->finishedAction();
-}
-
-void ToolControls::setComboBoxItemState(QComboBox *box,
-                                        int index,
-                                        bool enabled)
-{
-    auto model = qobject_cast<QStandardItemModel*>(box->model());
-    if (!model) { return; }
-
-    if (index >= box->count() || index < 0) { return; }
-
-    auto item = model->item(index);
-    if (!item) { return; }
-
-    item->setEnabled(enabled);
 }

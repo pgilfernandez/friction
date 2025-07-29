@@ -31,7 +31,6 @@
 
 #include <QComboBox>
 #include <QActionGroup>
-#include <QLabel>
 
 namespace Friction
 {
@@ -46,20 +45,12 @@ namespace Friction
             void setCurrentCanvas(Canvas * const target);
             void setCurrentBox(BoundingBox * const target);
             void setCanvasMode(const CanvasMode &mode);
-            void setAlignEnabled(const bool enabled,
-                                 const bool trigger = true);
-            bool isAlignEnabled();
 
         private:
             void setTransform(BoundingBox * const target);
             void resetWidgets();
             void setupWidgets();
             void setupTransform();
-            void setupAlign();
-            void triggerAlign(const Qt::Alignment &align);
-            void setComboBoxItemState(QComboBox *box,
-                                      int index,
-                                      bool enabled);
 
             ConnContextQPtr<Canvas> mCanvas;
             CanvasMode mCanvasMode;
@@ -84,12 +75,6 @@ namespace Friction
             QActionGroup *mTransformBottomRight;
             QActionGroup *mTransformPivot;
             QActionGroup *mTransformOpacity;
-            QActionGroup *mTransformAlign;
-
-            QComboBox *mTranformAlignPivot;
-            QComboBox *mTransformAlignRelativeTo;
-
-            bool mAlignEnabled;
         };
     }
 }
