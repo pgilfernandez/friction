@@ -76,11 +76,15 @@ FontsWidget::FontsWidget(QWidget *parent,
             this, &FontsWidget::emitSizeChanged);
 
     QBoxLayout* mMainLayout;
-    if (mToolbar) { mMainLayout = new QHBoxLayout(this); }
-    else { mMainLayout = new QVBoxLayout(this); }
+    if (mToolbar) {
+        mMainLayout = new QHBoxLayout(this);
+        mMainLayout->setContentsMargins(0, 0, 0, 0);
+        setContentsMargins(0, 0, 0, 0);
+    } else {
+        mMainLayout = new QVBoxLayout(this);
+        mMainLayout->setContentsMargins(5, 5, 5, 0);
+    }
 
-    mMainLayout->setContentsMargins(5, 5, 5, 0);
-    //setContentsMargins(0, 0, 0, 0);
     setLayout(mMainLayout);
 
     mFontFamilyCombo->setSizePolicy(QSizePolicy::Expanding,
@@ -91,9 +95,10 @@ FontsWidget::FontsWidget(QWidget *parent,
                                    QSizePolicy::Preferred);
 
     if (mToolbar) {
-        mFontFamilyCombo->setMaximumWidth(240);
+        mFontFamilyCombo->setMaximumWidth(200);
         mFontStyleCombo->setMaximumWidth(120);
         mFontSizeSlider->setMaximumWidth(120);
+        mFontSizeSlider->setMinimumWidth(80);
     } else {
         mFontFamilyCombo->setMinimumWidth(120);
         mFontStyleCombo->setMinimumWidth(80);
@@ -181,7 +186,7 @@ FontsWidget::FontsWidget(QWidget *parent,
         mAlignTop->setFixedHeight(eSizesUI::button);
         mAlignVCenter->setFixedHeight(eSizesUI::button);
         mAlignBottom->setFixedHeight(eSizesUI::button);
-        if (mToolbar) { mTextInput->setMaximumHeight(eSizesUI::button); }
+        //if (mToolbar) { mTextInput->setMaximumHeight(eSizesUI::button); }
     });
 
     if (!mToolbar) {
@@ -406,12 +411,14 @@ void FontsWidget::setBoxTarget(TextBox * const target)
             mBlockTextUpdate = false;
         });
         mBoxTarget << connect(this, &FontsWidget::fontFamilyAndStyleChanged,
-                              target, [target](const QString &family,
+                              target, [target, this](const QString &family,
                                                const SkFontStyle &style) {
+            mBlockTextUpdate = true;
             target->setFontFamilyAndStyle(family, style);
             Document::sInstance->fFontFamily = family;
             Document::sInstance->fFontStyle = style;
             Document::sInstance->actionFinished();
+            mBlockTextUpdate = false;
         });
         mBoxTarget << connect(this, &FontsWidget::textAlignmentChanged,
                               target, [target](const Qt::Alignment &align) {
