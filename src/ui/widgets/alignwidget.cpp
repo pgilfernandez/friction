@@ -43,12 +43,16 @@
 #define INDEX_REL_LAST_SELECTED_PIVOT 2
 #define INDEX_REL_BOUNDINGBOX 3
 
-AlignWidget::AlignWidget(QWidget* const parent)
+AlignWidget::AlignWidget(QWidget* const parent,
+                         const bool horiz)
     : QWidget(parent)
     , mAlignPivot(nullptr)
     , mRelativeTo(nullptr)
 {
-    const auto mainLayout = new QVBoxLayout(this);
+    QBoxLayout* mainLayout;
+    if (horiz) { mainLayout = new QHBoxLayout(this); }
+    else { mainLayout = new QVBoxLayout(this); }
+
     mainLayout->setContentsMargins(5, 5, 5, 5);
     setLayout(mainLayout);
 
@@ -57,7 +61,12 @@ AlignWidget::AlignWidget(QWidget* const parent)
 
     combosLay->addWidget(new QLabel(tr("Align"), this));
     mAlignPivot = new QComboBox(this);
-    mAlignPivot->setMinimumWidth(20);
+
+    if (horiz) {
+        mAlignPivot->setMinimumWidth(100);
+        mAlignPivot->setMaximumWidth(200);
+    } else { mAlignPivot->setMinimumWidth(20); }
+
     mAlignPivot->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mAlignPivot->setFocusPolicy(Qt::NoFocus);
     mAlignPivot->addItem(tr("Geometry")); // INDEX_ALIGN_GEOMETRY
@@ -67,7 +76,12 @@ AlignWidget::AlignWidget(QWidget* const parent)
 
     combosLay->addWidget(new QLabel(tr("To"), this));
     mRelativeTo = new QComboBox(this);
-    mRelativeTo->setMinimumWidth(20);
+
+    if (horiz) {
+        mRelativeTo->setMinimumWidth(100);
+        mRelativeTo->setMaximumWidth(200);
+    } else { mRelativeTo->setMinimumWidth(20); }
+
     mRelativeTo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mRelativeTo->setFocusPolicy(Qt::NoFocus);
     mRelativeTo->addItem(tr("Scene")); // INDEX_REL_SCENE
@@ -137,6 +151,8 @@ AlignWidget::AlignWidget(QWidget* const parent)
     });
     buttonsLay->addWidget(bottomButton);
 
+    if (horiz) { buttonsLay->addStretch(); }
+
     connect(mAlignPivot,
             QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, [this](int index) {
@@ -176,6 +192,8 @@ AlignWidget::AlignWidget(QWidget* const parent)
         vCenterButton->setFixedHeight(eSizesUI::button);
         bottomButton->setFixedHeight(eSizesUI::button);
     });
+
+    if (horiz) { mainLayout->addStretch(); }
 }
 
 void AlignWidget::triggerAlign(const Qt::Alignment align)

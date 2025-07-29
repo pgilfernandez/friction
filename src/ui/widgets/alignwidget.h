@@ -38,7 +38,8 @@ class UI_EXPORT AlignWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit AlignWidget(QWidget* const parent = nullptr);
+    explicit AlignWidget(QWidget* const parent = nullptr,
+                         const bool horiz = false);
 
 signals:
     void alignTriggered(const Qt::Alignment,
