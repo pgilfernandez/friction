@@ -646,9 +646,11 @@ Friction--Ui--ToolboxToolBar::separator:horizontal {
     width: 2px;
 }
 
-Friction--Ui--ToolControls QComboBox,
-Friction--Ui--ToolboxToolBar QComboBox {
+Friction--Ui--ToolControls QComboBox {
     padding: .1em;
+}
+Friction--Ui--ToolboxToolBar QComboBox {
+    padding-left: .2em;
 }
 
 ExpressionEditor {
