@@ -30,6 +30,8 @@
 
 #include <QWidget>
 #include <QComboBox>
+#include <QToolBar>
+#include <QPushButton>
 
 #include "canvas.h"
 
@@ -39,7 +41,7 @@ class UI_EXPORT AlignWidget : public QWidget
 
 public:
     explicit AlignWidget(QWidget* const parent = nullptr,
-                         const bool horiz = false);
+                         QToolBar* const toolbar = nullptr);
 
 signals:
     void alignTriggered(const Qt::Alignment,
@@ -47,6 +49,15 @@ signals:
                         const AlignRelativeTo);
 
 private:
+    void setup();
+    void setupToolbar();
+    QAction* addAlignAction(const Qt::Alignment &align,
+                            const QString &icon,
+                            const QString &title);
+    QPushButton* addAlignButton(const Qt::Alignment &align,
+                                const QString &icon,
+                                const QString &title);
+    void connectAlignPivot();
     void triggerAlign(const Qt::Alignment align);
     void setComboBoxItemState(QComboBox *box,
                               int index,
@@ -54,6 +65,7 @@ private:
 
     QComboBox *mAlignPivot;
     QComboBox *mRelativeTo;
+    QToolBar *mToolbar;
 };
 
 #endif // ALIGNWIDGET_H

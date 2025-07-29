@@ -24,6 +24,7 @@
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
 #include "alignwidget.h"
+#include "Private/document.h"
 
 #include <QLabel>
 #include <QHBoxLayout>
@@ -31,7 +32,6 @@
 #include <QStandardItemModel>
 
 #include "GUI/global.h"
-#include "Private/esettings.h"
 #include "themesupport.h"
 
 #define INDEX_ALIGN_GEOMETRY 0
@@ -44,15 +44,31 @@
 #define INDEX_REL_BOUNDINGBOX 3
 
 AlignWidget::AlignWidget(QWidget* const parent,
-                         const bool horiz)
+                         QToolBar* const toolbar)
     : QWidget(parent)
     , mAlignPivot(nullptr)
     , mRelativeTo(nullptr)
+    , mToolbar(toolbar)
 {
-    QBoxLayout* mainLayout;
-    if (horiz) { mainLayout = new QHBoxLayout(this); }
-    else { mainLayout = new QVBoxLayout(this); }
+    if (mToolbar) { setupToolbar(); }
+    else { setup(); }
 
+    connect(this, &AlignWidget::alignTriggered,
+            this, [](const Qt::Alignment align,
+                   const AlignPivot pivot,
+                   const AlignRelativeTo relativeTo) {
+        const auto scene = *Document::sInstance->fActiveScene;
+        if (!scene) { return; }
+        scene->alignSelectedBoxes(align, pivot, relativeTo);
+        Document::sInstance->actionFinished();
+    });
+}
+
+void AlignWidget::setup()
+{
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+    const auto mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(5, 5, 5, 5);
     setLayout(mainLayout);
 
@@ -61,11 +77,7 @@ AlignWidget::AlignWidget(QWidget* const parent,
 
     combosLay->addWidget(new QLabel(tr("Align"), this));
     mAlignPivot = new QComboBox(this);
-
-    if (horiz) {
-        mAlignPivot->setMinimumWidth(100);
-        mAlignPivot->setMaximumWidth(200);
-    } else { mAlignPivot->setMinimumWidth(20); }
+    mAlignPivot->setMinimumWidth(20);
 
     mAlignPivot->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mAlignPivot->setFocusPolicy(Qt::NoFocus);
@@ -76,11 +88,7 @@ AlignWidget::AlignWidget(QWidget* const parent,
 
     combosLay->addWidget(new QLabel(tr("To"), this));
     mRelativeTo = new QComboBox(this);
-
-    if (horiz) {
-        mRelativeTo->setMinimumWidth(100);
-        mRelativeTo->setMaximumWidth(200);
-    } else { mRelativeTo->setMinimumWidth(20); }
+    mRelativeTo->setMinimumWidth(20);
 
     mRelativeTo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mRelativeTo->setFocusPolicy(Qt::NoFocus);
@@ -97,62 +105,179 @@ AlignWidget::AlignWidget(QWidget* const parent,
     mainLayout->addLayout(buttonsLay);
     mainLayout->addStretch();
 
-    const auto leftButton = new QPushButton(this);
-    leftButton->setFocusPolicy(Qt::NoFocus);
-    leftButton->setIcon(QIcon::fromTheme("pivot-align-left"));
-    leftButton->setToolTip(tr("Align Left"));
-    connect(leftButton, &QPushButton::pressed, this, [this]() {
-        triggerAlign(Qt::AlignLeft);
-    });
+    const auto leftButton = addAlignButton(Qt::AlignLeft,
+                                           "pivot-align-left",
+                                           tr("Align Left"));
+    const auto hcenterButton = addAlignButton(Qt::AlignHCenter,
+                                              "pivot-align-hcenter",
+                                              tr("Align Horizontal Center"));
+    const auto rightButton = addAlignButton(Qt::AlignRight,
+                                            "pivot-align-right",
+                                            tr("Align Right"));
+    const auto topButton = addAlignButton(Qt::AlignTop,
+                                          "pivot-align-top",
+                                          tr("Align Top"));
+    const auto vcenterButton = addAlignButton(Qt::AlignVCenter,
+                                              "pivot-align-vcenter",
+                                              tr("Align Vertical Center"));
+    const auto bottomButton = addAlignButton(Qt::AlignBottom,
+                                             "pivot-align-bottom",
+                                             tr("Align Bottom"));
+
     buttonsLay->addWidget(leftButton);
-
-    const auto hCenterButton = new QPushButton(this);
-    hCenterButton->setFocusPolicy(Qt::NoFocus);
-    hCenterButton->setIcon(QIcon::fromTheme("pivot-align-hcenter"));
-    hCenterButton->setToolTip(tr("Align Horizontal Center"));
-    connect(hCenterButton, &QPushButton::pressed, this, [this]() {
-        triggerAlign(Qt::AlignHCenter);
-    });
-    buttonsLay->addWidget(hCenterButton);
-
-    const auto rightButton = new QPushButton(this);
-    rightButton->setFocusPolicy(Qt::NoFocus);
-    rightButton->setIcon(QIcon::fromTheme("pivot-align-right"));
-    rightButton->setToolTip(tr("Align Right"));
-    connect(rightButton, &QPushButton::pressed, this, [this]() {
-        triggerAlign(Qt::AlignRight);
-    });
+    buttonsLay->addWidget(hcenterButton);
     buttonsLay->addWidget(rightButton);
-
-    const auto topButton = new QPushButton(this);
-    topButton->setFocusPolicy(Qt::NoFocus);
-    topButton->setIcon(QIcon::fromTheme("pivot-align-top"));
-    topButton->setToolTip(tr("Align Top"));
-    connect(topButton, &QPushButton::pressed, this, [this]() {
-        triggerAlign(Qt::AlignTop);
-    });
     buttonsLay->addWidget(topButton);
-
-    const auto vCenterButton = new QPushButton(this);
-    vCenterButton->setFocusPolicy(Qt::NoFocus);
-    vCenterButton->setIcon(QIcon::fromTheme("pivot-align-vcenter"));
-    vCenterButton->setToolTip(tr("Align Vertical Center"));
-    connect(vCenterButton, &QPushButton::pressed, this, [this]() {
-        triggerAlign(Qt::AlignVCenter);
-    });
-    buttonsLay->addWidget(vCenterButton);
-
-    const auto bottomButton = new QPushButton(this);
-    bottomButton->setFocusPolicy(Qt::NoFocus);
-    bottomButton->setIcon(QIcon::fromTheme("pivot-align-bottom"));
-    bottomButton->setToolTip(tr("Align Bottom"));
-    connect(bottomButton, &QPushButton::pressed, this, [this]() {
-        triggerAlign(Qt::AlignBottom);
-    });
+    buttonsLay->addWidget(vcenterButton);
     buttonsLay->addWidget(bottomButton);
 
-    if (horiz) { buttonsLay->addStretch(); }
+    eSizesUI::widget.add(leftButton, [leftButton,
+                                      hcenterButton,
+                                      rightButton,
+                                      topButton,
+                                      vcenterButton,
+                                      bottomButton](const int size) {
+        Q_UNUSED(size)
+        leftButton->setFixedHeight(eSizesUI::button);
+        hcenterButton->setFixedHeight(eSizesUI::button);
+        rightButton->setFixedHeight(eSizesUI::button);
+        topButton->setFixedHeight(eSizesUI::button);
+        vcenterButton->setFixedHeight(eSizesUI::button);
+        bottomButton->setFixedHeight(eSizesUI::button);
+    });
 
+    connectAlignPivot();
+    connect(mRelativeTo,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [leftButton,
+                   rightButton,
+                   topButton,
+                   bottomButton](int index) {
+        leftButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
+        rightButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
+        topButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
+        bottomButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
+    });
+}
+
+void AlignWidget::setupToolbar()
+{
+    if (!mToolbar) { return; }
+
+    ThemeSupport::setToolbarButtonStyle("FlatButton",
+                                        mToolbar,
+                                        mToolbar->addAction(QIcon::fromTheme("alignCenter"),
+                                                            tr("Align")));
+
+    mAlignPivot = new QComboBox(this);
+    mAlignPivot->setMaximumWidth(200);
+
+    mAlignPivot->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    mAlignPivot->setFocusPolicy(Qt::NoFocus);
+    mAlignPivot->addItem(tr("Geometry")); // INDEX_ALIGN_GEOMETRY
+    mAlignPivot->addItem(tr("Geometry by Pivot")); // INDEX_ALIGN_GEOMETRY_PIVOT
+    mAlignPivot->addItem(tr("Pivot")); // INDEX_ALIGN_PIVOT
+    mToolbar->addSeparator();
+    mToolbar->addWidget(mAlignPivot);
+
+    mRelativeTo = new QComboBox(this);
+    mRelativeTo->setMaximumWidth(200);
+
+    mRelativeTo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    mRelativeTo->setFocusPolicy(Qt::NoFocus);
+    mRelativeTo->addItem(tr("To Scene")); // INDEX_REL_SCENE
+    mRelativeTo->addItem(tr("To Last Selected")); // INDEX_REL_LAST_SELECTED
+    mRelativeTo->addItem(tr("To Last Selected Pivot")); // INDEX_REL_LAST_SELECTED_PIVOT
+    mRelativeTo->addItem(tr("To Bounding Box")); // INDEX_REL_BOUNDINGBOX
+    mToolbar->addSeparator();
+    mToolbar->addWidget(mRelativeTo);
+
+    setComboBoxItemState(mRelativeTo,
+                         INDEX_REL_LAST_SELECTED_PIVOT,
+                         false);
+    setComboBoxItemState(mRelativeTo,
+                         INDEX_REL_BOUNDINGBOX,
+                         false);
+
+    const auto leftButton = addAlignButton(Qt::AlignLeft,
+                                           "pivot-align-left",
+                                           tr("Align Left"));
+    const auto hcenterButton = addAlignButton(Qt::AlignHCenter,
+                                              "pivot-align-hcenter",
+                                              tr("Align Horizontal Center"));
+    const auto rightButton = addAlignButton(Qt::AlignRight,
+                                            "pivot-align-right",
+                                            tr("Align Right"));
+    const auto topButton = addAlignButton(Qt::AlignTop,
+                                          "pivot-align-top",
+                                          tr("Align Top"));
+    const auto vcenterButton = addAlignButton(Qt::AlignVCenter,
+                                              "pivot-align-vcenter",
+                                              tr("Align Vertical Center"));
+    const auto bottomButton = addAlignButton(Qt::AlignBottom,
+                                             "pivot-align-bottom",
+                                             tr("Align Bottom"));
+
+    mToolbar->addSeparator();
+    mToolbar->addWidget(leftButton);
+    mToolbar->addSeparator();
+    mToolbar->addWidget(hcenterButton);
+    mToolbar->addSeparator();
+    mToolbar->addWidget(rightButton);
+    mToolbar->addSeparator();
+    mToolbar->addWidget(topButton);
+    mToolbar->addSeparator();
+    mToolbar->addWidget(vcenterButton);
+    mToolbar->addSeparator();
+    mToolbar->addWidget(bottomButton);
+    mToolbar->addSeparator();
+
+    eSizesUI::widget.add(mAlignPivot, [this](const int size) {
+        Q_UNUSED(size)
+        mAlignPivot->setFixedHeight(eSizesUI::button);
+        mRelativeTo->setFixedHeight(eSizesUI::button);
+    });
+
+    connectAlignPivot();
+    connect(mRelativeTo,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [leftButton,
+                   rightButton,
+                   topButton,
+                   bottomButton](int index) {
+        leftButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
+        rightButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
+        topButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
+        bottomButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
+    });
+}
+
+QAction *AlignWidget::addAlignAction(const Qt::Alignment &align,
+                                     const QString &icon,
+                                     const QString &title)
+{
+    const auto act = mToolbar->addAction(QIcon::fromTheme(icon), QString());
+    act->setToolTip(title);
+    connect(act, &QAction::triggered,
+            this, [this, align](){ triggerAlign(align); });
+    return act;
+}
+
+QPushButton *AlignWidget::addAlignButton(const Qt::Alignment &align,
+                                         const QString &icon,
+                                         const QString &title)
+{
+    const auto button = new QPushButton(this);
+    button->setFocusPolicy(Qt::NoFocus);
+    button->setIcon(QIcon::fromTheme(icon));
+    button->setToolTip(title);
+    connect(button, &QPushButton::pressed,
+            this, [this, align]() { triggerAlign(align); });
+    return button;
+}
+
+void AlignWidget::connectAlignPivot()
+{
     connect(mAlignPivot,
             QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, [this](int index) {
@@ -165,35 +290,6 @@ AlignWidget::AlignWidget(QWidget* const parent,
         if (index == INDEX_ALIGN_PIVOT) { mRelativeTo->setCurrentIndex(INDEX_REL_BOUNDINGBOX); }
         else { mRelativeTo->setCurrentIndex(INDEX_REL_SCENE); }
     });
-
-    connect(mRelativeTo,
-            QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, [leftButton,
-                   rightButton,
-                   topButton,
-                   bottomButton](int index) {
-        leftButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
-        rightButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
-        topButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
-        bottomButton->setEnabled(index != INDEX_REL_LAST_SELECTED_PIVOT);
-    });
-
-    eSizesUI::widget.add(leftButton, [leftButton,
-                                      hCenterButton,
-                                      rightButton,
-                                      topButton,
-                                      vCenterButton,
-                                      bottomButton](const int size) {
-        Q_UNUSED(size)
-        leftButton->setFixedHeight(eSizesUI::button);
-        hCenterButton->setFixedHeight(eSizesUI::button);
-        rightButton->setFixedHeight(eSizesUI::button);
-        topButton->setFixedHeight(eSizesUI::button);
-        vCenterButton->setFixedHeight(eSizesUI::button);
-        bottomButton->setFixedHeight(eSizesUI::button);
-    });
-
-    if (horiz) { mainLayout->addStretch(); }
 }
 
 void AlignWidget::triggerAlign(const Qt::Alignment align)
