@@ -54,9 +54,9 @@ AnimationDockWidget::AnimationDockWidget(QWidget *parent,
     generateEasingActions(easingButton, keysView);
 
     mFitToWidthButton = new QAction(QIcon::fromTheme("zoom_horizontal"),
-                                     tr("Fit Horizontal"), this);
+                                    tr("Fit Horizontal"), this);
     connect(mFitToWidthButton, &QAction::triggered,
-        keysView, &KeysView::keyframeZoomHorizontalAction);
+            keysView, &KeysView::keyframeZoomHorizontalAction);
 
     mLineButton = new QAction(QIcon::fromTheme("segmentLine"),
                               tr("Make Segment Line"), this);

@@ -640,23 +640,24 @@ void KeysView::graphUpdateAfterKeysChanged() {
     graphUpdateDimensions();
 }
 
-void KeysView::keyframeZoomHorizontalAction() {
-    if(!mCurrentScene) return;
+void KeysView::keyframeZoomHorizontalAction()
+{
+    if (!mCurrentScene) { return; }
     
     FrameRange range;
-    if(!mSelectedKeysAnimators.isEmpty()) {
+    if (!mSelectedKeysAnimators.isEmpty()) {
         int minFrame = INT_MAX;
         int maxFrame = INT_MIN;
         
-        for(const auto& anim : mSelectedKeysAnimators) {
+        for (const auto& anim : mSelectedKeysAnimators) {
             const int animMin = anim->anim_getLowestAbsFrameForSelectedKey(); 
             const int animMax = anim->anim_getHighestAbsFrameForSelectedKey();
             
-            if(animMin < minFrame) minFrame = animMin;
-            if(animMax > maxFrame) maxFrame = animMax;
+            if (animMin < minFrame) { minFrame = animMin; }
+            if (animMax > maxFrame) { maxFrame = animMax; }
         }
         
-        if(minFrame != INT_MAX && maxFrame != INT_MIN && minFrame < maxFrame) {
+        if (minFrame != INT_MAX && maxFrame != INT_MIN && minFrame < maxFrame) {
             range = {minFrame, maxFrame};
         } else {
             range = mCurrentScene->getFrameRange();
