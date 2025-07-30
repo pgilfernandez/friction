@@ -186,6 +186,8 @@ void MainWindow::setupMenuBar()
         if (toolbar) {
             toolbar->insertAction(toolbar->actions().at(0), redoQAct);
             toolbar->insertAction(toolbar->actions().at(0), undoQAct);
+            ThemeSupport::setToolbarButtonStyle("NodeButton", toolbar, redoQAct);
+            ThemeSupport::setToolbarButtonStyle("NodeButton", toolbar, undoQAct);
         }
     }
 
