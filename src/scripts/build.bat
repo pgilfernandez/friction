@@ -2,7 +2,7 @@
 
 REM ### BUILD FRICTION ON WINDOWS
 REM # Copyright (c) Ole-André Rodlie and contributors
-REM # GPLv3+
+REM # GPL3
 
 set OPT=%1
 set REL=OFF
@@ -24,6 +24,8 @@ if "%OPT%" == "debug" (
 set CWD=%cd%
 set SDK_DIR=%CWD%\sdk
 set SDK_VERSION=1.0.0
+set SDK_REV=r4
+set SDK_SUFFIX=windows-x64.7z
 
 set PATH=%SDK_DIR%\bin;%PATH%
 
@@ -36,8 +38,8 @@ set COMMIT=
 for /f %%i in ('git rev-parse --short^=8 HEAD') do set COMMIT=%%i
 
 if not exist "sdk\" ( 
-    curl -OL "https://github.com/friction2d/friction-sdk/releases/download/v%SDK_VERSION%/friction-sdk-%SDK_VERSION%r3-windows-x64.7z"
-    7z x friction-sdk-%SDK_VERSION%r3-windows-x64.7z
+    curl -OL "https://github.com/friction2d/friction-sdk/releases/download/v%SDK_VERSION%/friction-sdk-%SDK_VERSION%%SDK_REV%-%SDK_SUFFIX%"
+    7z x friction-sdk-%SDK_VERSION%%SDK_REV%-%SDK_SUFFIX%
 )
 
 if exist "build\" (
