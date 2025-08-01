@@ -832,6 +832,28 @@ void MainWindow::setupMenuBar()
     setMenuBar(mMenuBar);
     setupPropertiesActions();
 
+    mViewMenu->addSeparator();
+    {
+        const auto act = new QAction(QIcon::fromTheme("unlocked"),
+                                     tr("Unlock all toolbars"), this);
+        connect(act, &QAction::triggered, this, [this]() {
+            mToolbar->setMovable(true);
+            mToolBox->setMovable(true);
+            mColorToolBar->setMovable(true);
+        });
+        mViewMenu->addAction(act);
+    }
+    {
+        const auto act = new QAction(QIcon::fromTheme("locked"),
+                                     tr("Lock all toolbars"), this);
+        connect(act, &QAction::triggered, this, [this]() {
+            mToolbar->setMovable(false);
+            mToolBox->setMovable(false);
+            mColorToolBar->setMovable(false);
+        });
+        mViewMenu->addAction(act);
+    }
+
 #ifndef Q_OS_MAC
     const auto frictionButton = new QPushButton(this);
     frictionButton->setFlat(true);

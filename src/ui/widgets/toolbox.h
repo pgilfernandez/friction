@@ -71,6 +71,8 @@ namespace Friction
             const QList<QAction*> getMainActions();
             const QList<QAction*> getNodeActions();
 
+            void setMovable(const bool movable);
+
         private:
             Actions &mActions;
             Document &mDocument;

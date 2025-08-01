@@ -72,6 +72,13 @@ const QList<QAction*> ToolBox::getNodeActions()
     return mGroupNodes->actions();
 }
 
+void ToolBox::setMovable(const bool movable)
+{
+    mMain->setMovable(movable);
+    mControls->setMovable(movable);
+    if (mExtra) { mExtra->setMovable(movable); }
+}
+
 void ToolBox::setupToolBox(QWidget *parent)
 {
     if (!parent) { return; }
