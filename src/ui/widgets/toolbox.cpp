@@ -305,6 +305,9 @@ void ToolBox::setupNodesAction(const QIcon &icon,
 
 void ToolBox::setupNodesActions()
 {
+    mControls->addAction(mGroupNodes->addAction(QIcon::fromTheme("pointTransform"),
+                                                tr("Nodes")));
+
     setupNodesAction(QIcon::fromTheme("nodeConnect"),
                      tr("Connect Nodes"), NodeConnect);
     setupNodesAction(QIcon::fromTheme("nodeDisconnect"),
