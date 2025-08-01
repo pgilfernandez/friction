@@ -205,7 +205,8 @@ QComboBox,
 QPushButton,
 QToolButton,
 QAction,
-#NodeButton {
+#ToolBoxButton
+{
     background-color: %1;
     border-radius: 2%;
     border: 1px solid %2;
@@ -234,7 +235,7 @@ QToolButton:hover,
 QPushButton:checked,
 QToolButton:checked,
 QAction:checked,
-#NodeButton:hover
+#ToolBoxButton:hover
 {
     background-color: %3;
     border-color: %4;
@@ -659,13 +660,13 @@ ExpressionEditor {
     background: %6;
 }
 
-#NodeButton {
+#ToolBoxButton {
     margin-top: .05em;
     margin-bottom: .05em;
     margin-left: .1em;
     margin-right: .1em;
 }
 
-#NodeButton:disabled {
+#ToolBoxButton:disabled {
     background: transparent;
 }

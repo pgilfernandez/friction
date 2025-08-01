@@ -307,7 +307,7 @@ void ToolBox::setupNodesAction(const QIcon &icon,
         }
     });
     mControls->addAction(mGroupNodes->addAction(act));
-    ThemeSupport::setToolbarButtonStyle("NodeButton", mControls, act);
+    ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mControls, act);
 }
 
 void ToolBox::setupNodesActions()
@@ -337,7 +337,7 @@ void ToolBox::setupNodesActions()
     {
         // node visibility tool button
         const auto button = new QToolButton(mControls);
-        button->setObjectName("NodeButton");
+        button->setObjectName("ToolBoxButton");
         button->setPopupMode(QToolButton::InstantPopup);
         button->setFocusPolicy(Qt::NoFocus);
         const auto act1 = new QAction(QIcon::fromTheme("dissolvedAndNormalNodes"),
@@ -423,7 +423,7 @@ void ToolBox::setupDrawActions()
         });
         mControls->addAction(act);
         mGroupDraw->addAction(act);
-        ThemeSupport::setToolbarButtonStyle("NodeButton", mControls, act);
+        ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mControls, act);
     }
 
     mGroupDraw->setEnabled(false);
@@ -447,7 +447,7 @@ void ToolBox::setupColorPickerActions()
 void ToolBox::setCurrentCanvas(Canvas * const target)
 {
     mControls->setCurrentCanvas(target);
-    //mExtra->setCurrentCanvas(target);
+    if (mExtra) { mExtra->setCurrentCanvas(target); }
 }
 
 void ToolBox::setCanvasMode(const CanvasMode &mode)
@@ -466,7 +466,7 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
 
     mLocalPivot->setEnabled(boxMode || pointMode);
 
-    //mExtra->setCanvasMode(mode);
+    if (mExtra) { mExtra->setCanvasMode(mode); }
 
     mGroupColorPicker->setVisible(pickMode);
     if (pickMode) { updateColorPicker(Qt::black); }
