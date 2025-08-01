@@ -396,19 +396,15 @@ void ToolBox::setupDrawActions()
                                                QString()));
     mGroupDraw->addAction(mControls->addWidget(labelMax));
     mGroupDraw->addAction(mControls->addSeparator());
-    mGroupDraw->addAction(mControls->addSeparator());
     mGroupDraw->addAction(mControls->addWidget(mDrawPathMaxError));
 
-    mGroupDraw->addAction(mControls->addSeparator());
     mGroupDraw->addAction(mControls->addSeparator());
 
     mGroupDraw->addAction(mControls->addAction(QIcon::fromTheme("drawPath"),
                                                QString()));
     mGroupDraw->addAction(mControls->addWidget(labelSmooth));
     mGroupDraw->addAction(mControls->addSeparator());
-    mGroupDraw->addAction(mControls->addSeparator());
     mGroupDraw->addAction(mControls->addWidget(mDrawPathSmooth));
-    mGroupDraw->addAction(mControls->addSeparator());
     mGroupDraw->addAction(mControls->addSeparator());
 
     {
