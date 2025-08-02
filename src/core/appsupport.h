@@ -143,6 +143,7 @@ public:
     static const QString filterId(const QString &input);
     static const QColor adjustColorVisibility(const QColor &color,
                                               const QColor &background);
+    static void setFont(const QString &path);
 };
 
 #endif // APPSUPPORT_H

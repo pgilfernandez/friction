@@ -41,6 +41,7 @@
 #include <QtMath>
 #include <QRegularExpression>
 #include <QMessageBox>
+#include <QFontDatabase>
 
 #include <iostream>
 #include <ostream>
@@ -1106,4 +1107,19 @@ const QColor AppSupport::adjustColorVisibility(const QColor &color,
         else { return color.lighter(150); }
     }
     return color;
+}
+
+void AppSupport::setFont(const QString &path)
+{
+    if (!QFile::exists(path)) { return; }
+
+    int fontId = QFontDatabase::addApplicationFont(path);
+    if (fontId == -1) { return; }
+
+    QStringList fontFamilies = QFontDatabase::applicationFontFamilies(fontId);
+    if (fontFamilies.isEmpty()) { return; }
+
+    QFont font(fontFamilies.at(0));
+    font.setPointSizeF(QApplication::font().pointSizeF());
+    QApplication::setFont(font);
 }
