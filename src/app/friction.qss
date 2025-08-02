@@ -35,6 +35,7 @@ Colors and icon size from 'src/core/themesupport.cpp'.
 %11 = icon pixel ratio
 %12 = half icon pixel ratio
 %13 = getThemeColorTextDisabled
+%14 = quarter icon size
 
 */
 
@@ -640,8 +641,8 @@ Friction--Ui--ToolBar::separator:horizontal {
 }
 
 Friction--Ui--ToolBar QWidget[isFixedSpacer="true"] {
-    min-width: %10px;
-    max-width: %10px;
+    min-width: %14px;
+    max-width: %14px;
 }
 
 Friction--Ui--ToolControls::separator,

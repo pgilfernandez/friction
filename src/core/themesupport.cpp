@@ -238,7 +238,8 @@ const QString ThemeSupport::getThemeStyle(int iconSize)
                    QString::number(getIconSize(iconSize / 2).width()),
                    QString::number(getIconSize(qRound(iconPixelRatio)).width()),
                    QString::number(getIconSize(qRound(iconPixelRatio / 2)).width()),
-                   getThemeColorTextDisabled().name());
+                   getThemeColorTextDisabled().name(),
+                   QString::number(getIconSize(iconSize).width() / 4));
 }
 
 void ThemeSupport::setupTheme(const int iconSize)
