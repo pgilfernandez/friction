@@ -215,38 +215,45 @@ void ToolControls::setupTransform()
     mTransformPY = new QrealAnimatorValueSlider(nullptr, this);
     mTransformOX = new QrealAnimatorValueSlider(nullptr, this);
 
+    mTransformMove->addAction(addSpacer(true, true));
     mTransformMove->addAction(addAction(QIcon::fromTheme("boxTransform"),
                                         tr("Move")));
     mTransformMove->addAction(addWidget(mTransformX));
     mTransformMove->addAction(addSeparator());
     mTransformMove->addAction(addWidget(mTransformY));
 
+    mTransformRotate->addAction(addSpacer(true, true));
     mTransformRotate->addAction(addAction(QIcon::fromTheme("loop3"),
                                           tr("Rotate")));
     mTransformRotate->addAction(addWidget(mTransformR));
 
+    mTransformScale->addAction(addSpacer(true, true));
     mTransformScale->addAction(addAction(QIcon::fromTheme("fullscreen"),
                                          tr("Scale")));
     mTransformScale->addAction(addWidget(mTransformSX));
     mTransformScale->addAction(addSeparator());
     mTransformScale->addAction(addWidget(mTransformSY));
 
+    mTransformPivot->addAction(addSpacer(true, true));
     mTransformPivot->addAction(addAction(QIcon::fromTheme("pivot"),
                                          tr("Pivot")));
     mTransformPivot->addAction(addWidget(mTransformPX));
     mTransformPivot->addAction(addSeparator());
     mTransformPivot->addAction(addWidget(mTransformPY));
 
+    mTransformOpacity->addAction(addSpacer(true, true));
     mTransformOpacity->addAction(addAction(QIcon::fromTheme("alpha"),
                                            tr("Opacity")));
     mTransformOpacity->addAction(addWidget(mTransformOX));
 
+    mTransformBottomRight->addAction(addSpacer(true, true));
     mTransformBottomRight->addAction(addAction(QIcon::fromTheme("rectCreate"),
                                               tr("Rectangle")));
     mTransformBottomRight->addAction(addWidget(mTransformBX));
     mTransformBottomRight->addAction(addSeparator());
     mTransformBottomRight->addAction(addWidget(mTransformBY));
 
+    mTransformRadius->addAction(addSpacer(true, true));
     mTransformRadius->addAction(addAction(QIcon::fromTheme("circleCreate"),
                                           tr("Radius")));
     mTransformRadius->addAction(addWidget(mTransformRX));

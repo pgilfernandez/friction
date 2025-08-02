@@ -90,7 +90,7 @@ namespace Friction
 
             QAction *mLocalPivot;
 
-            QPushButton *mColorPickerButton;
+            QToolButton *mColorPickerButton;
             QLabel *mColorPickerLabel;
 
             void setupToolBox(QWidget *parent);

@@ -312,6 +312,7 @@ void ToolBox::setupNodesAction(const QIcon &icon,
 
 void ToolBox::setupNodesActions()
 {
+    mGroupNodes->addAction(mControls->addSpacer(true, true));
     mControls->addAction(mGroupNodes->addAction(QIcon::fromTheme("pointTransform"),
                                                 tr("Nodes")));
 
@@ -392,20 +393,21 @@ void ToolBox::setupDrawActions()
     const auto labelMax = new QLabel(tr("Max Error"), mControls);
     const auto labelSmooth = new QLabel(tr("Smooth"), mControls);
 
+    mGroupDraw->addAction(mControls->addSpacer(true, true));
     mGroupDraw->addAction(mControls->addAction(QIcon::fromTheme("drawPath"),
                                                QString()));
     mGroupDraw->addAction(mControls->addWidget(labelMax));
     mGroupDraw->addAction(mControls->addSeparator());
     mGroupDraw->addAction(mControls->addWidget(mDrawPathMaxError));
 
-    mGroupDraw->addAction(mControls->addSeparator());
+    mGroupDraw->addAction(mControls->addSpacer(true, true));
 
     mGroupDraw->addAction(mControls->addAction(QIcon::fromTheme("drawPath"),
                                                QString()));
     mGroupDraw->addAction(mControls->addWidget(labelSmooth));
     mGroupDraw->addAction(mControls->addSeparator());
     mGroupDraw->addAction(mControls->addWidget(mDrawPathSmooth));
-    mGroupDraw->addAction(mControls->addSeparator());
+    mGroupDraw->addAction(mControls->addSpacer(true, true));
 
     {
         const auto act = new QAction(mDocument.fDrawPathManual ?
@@ -432,11 +434,12 @@ void ToolBox::setupDrawActions()
 
 void ToolBox::setupColorPickerActions()
 {
-    mColorPickerButton = new QPushButton(mControls);
+    mColorPickerButton = new QToolButton(mControls);
     mColorPickerButton->setObjectName("FlatButton");
     mColorPickerButton->setIcon(QIcon::fromTheme("pick"));
     mColorPickerLabel = new QLabel(mControls);
 
+    mGroupColorPicker->addAction(mControls->addSpacer(true, true));
     mGroupColorPicker->addAction(mControls->addSeparator());
     mGroupColorPicker->addAction(mControls->addWidget(mColorPickerButton));
     mGroupColorPicker->addAction(mControls->addWidget(mColorPickerLabel));
