@@ -639,6 +639,11 @@ Friction--Ui--ToolBar::separator:horizontal {
     width: 1px;
 }
 
+Friction--Ui--ToolBar QWidget[isFixedSpacer="true"] {
+    min-width: %10px;
+    max-width: %10px;
+}
+
 Friction--Ui--ToolControls::separator,
 Friction--Ui--ToolboxToolBar::separator {
     background-color: transparent;
