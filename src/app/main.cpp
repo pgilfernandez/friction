@@ -116,6 +116,10 @@ int main(int argc, char *argv[])
 
     // init splash (windows-only)
 #ifdef Q_OS_WIN
+    // load custom font if exists
+    const auto fontBundle = QString("%1/font.ttf").arg(AppSupport::getAppPath());
+    if (QFile::exists(fontBundle)) { AppSupport::setFont(fontBundle); }
+
     QSplashScreen splash(QPixmap(":/icons/splash/splash-00001.png"));
     splash.show();
     splash.raise();
@@ -148,11 +152,6 @@ int main(int argc, char *argv[])
     // init settings
     eSettings settings(HardwareInfo::sCpuThreads(),
                        HardwareInfo::sRamKB());
-
-#ifdef Q_OS_WIN
-    const auto fontBundle = QString("%1/font.ttf").arg(AppSupport::getAppPath());
-    if (QFile::exists(fontBundle)) { AppSupport::setFont(fontBundle); }
-#endif
 
     // setup UI scaling and theme
     OS_FONT = QApplication::font();
