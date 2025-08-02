@@ -282,6 +282,18 @@ QToolBar::separator {
     border-color: none;
 }
 
+QToolBar#ToolControls QToolButton#moveButton,
+QToolBar#ToolControls QToolButton#rotateButton,
+QToolBar#ToolControls QToolButton#scaleButton,
+QToolBar#ToolControls QToolButton#pivotButton,
+QToolBar#ToolControls QToolButton#opacityButton,
+QToolBar#ToolControls QToolButton#rectangleButton,
+QToolBar#ToolControls QToolButton#circleButton,
+QToolBar#ToolControls QToolButton#nodesButton {
+    background-color: blue;
+    margin-left: 20px;
+}
+
 QToolButton[popupMode="1"] {
     padding-right: .3em;
 }

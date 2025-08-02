@@ -27,6 +27,8 @@
 #include "Boxes/circle.h"
 #include "Boxes/rectangle.h"
 
+#include <QToolButton>
+
 using namespace Friction::Ui;
 
 ToolControls::ToolControls(QWidget *parent)
@@ -80,6 +82,19 @@ void ToolControls::setCurrentBox(BoundingBox * const target)
 void ToolControls::setCanvasMode(const CanvasMode &mode)
 {
     mCanvasMode = mode;
+
+    bool boxMode   = mode == CanvasMode::boxTransform;
+    bool rectMode  = mode == CanvasMode::rectCreate;
+    bool circleMode= mode == CanvasMode::circleCreate;
+
+    mMoveAct    ->setVisible(boxMode);
+    mRotateAct  ->setVisible(boxMode);
+    mScaleAct   ->setVisible(boxMode);
+    mPivotAct   ->setVisible(boxMode);
+    mOpacityAct ->setVisible(boxMode);
+
+    mRectangleAct->setVisible(boxMode || rectMode);
+    mCircleAct   ->setVisible(boxMode || circleMode);
 
     const bool hasPivot = mTransformPX->hasTarget() && mTransformPY->hasTarget();
     const bool hasOpacity = mTransformOX->hasTarget();
@@ -215,40 +230,82 @@ void ToolControls::setupTransform()
     mTransformPY = new QrealAnimatorValueSlider(nullptr, this);
     mTransformOX = new QrealAnimatorValueSlider(nullptr, this);
 
-    mTransformMove->addAction(addAction(QIcon::fromTheme("boxTransform"),
-                                        tr("Move")));
+    // MOVE
+    mMoveAct = addAction(QIcon::fromTheme("boxTransform"), tr("Move"));
+    mTransformMove->addAction(mMoveAct);
+    this->addAction(mMoveAct);
+    if (auto *btn = qobject_cast<QToolButton*>(widgetForAction(mMoveAct))) {
+        btn->setObjectName("moveButton");
+    }
+    mMoveAct->setVisible(false);
     mTransformMove->addAction(addWidget(mTransformX));
     mTransformMove->addAction(addSeparator());
     mTransformMove->addAction(addWidget(mTransformY));
 
-    mTransformRotate->addAction(addAction(QIcon::fromTheme("loop3"),
-                                          tr("Rotate")));
+    // ROTATE
+    mRotateAct = addAction(QIcon::fromTheme("loop3"), tr("Rotate"));
+    mTransformRotate->addAction(mRotateAct);
+    this->addAction(mRotateAct);
+    if (auto *btn = qobject_cast<QToolButton*>(widgetForAction(mRotateAct))) {
+        btn->setObjectName("rotateButton");
+    }
+    mRotateAct->setVisible(false);
     mTransformRotate->addAction(addWidget(mTransformR));
 
-    mTransformScale->addAction(addAction(QIcon::fromTheme("fullscreen"),
-                                         tr("Scale")));
+    // SCALE
+    mScaleAct = addAction(QIcon::fromTheme("fullscreen"), tr("Scale"));
+    mTransformScale->addAction(mScaleAct);
+    this->addAction(mScaleAct);
+    if (auto *btn = qobject_cast<QToolButton*>(widgetForAction(mScaleAct))) {
+        btn->setObjectName("scaleButton");
+    }
+    mScaleAct->setVisible(false);
     mTransformScale->addAction(addWidget(mTransformSX));
     mTransformScale->addAction(addSeparator());
     mTransformScale->addAction(addWidget(mTransformSY));
 
-    mTransformPivot->addAction(addAction(QIcon::fromTheme("pivot"),
-                                         tr("Pivot")));
+    // PIVOT
+    mPivotAct = addAction(QIcon::fromTheme("pivot"), tr("Pivot"));
+    mTransformPivot->addAction(mPivotAct);
+    this->addAction(mPivotAct);
+    if (auto *btn = qobject_cast<QToolButton*>(widgetForAction(mPivotAct))) {
+        btn->setObjectName("pivotButton");
+    }
+    mPivotAct->setVisible(false);
     mTransformPivot->addAction(addWidget(mTransformPX));
     mTransformPivot->addAction(addSeparator());
     mTransformPivot->addAction(addWidget(mTransformPY));
 
-    mTransformOpacity->addAction(addAction(QIcon::fromTheme("alpha"),
-                                           tr("Opacity")));
+    // OPACITY
+    mOpacityAct = addAction(QIcon::fromTheme("alpha"), tr("Opacity"));
+    mTransformOpacity->addAction(mOpacityAct);
+    this->addAction(mOpacityAct);
+    if (auto *btn = qobject_cast<QToolButton*>(widgetForAction(mOpacityAct))) {
+        btn->setObjectName("opacityButton");
+    }
+    mOpacityAct->setVisible(false);
     mTransformOpacity->addAction(addWidget(mTransformOX));
 
-    mTransformBottomRight->addAction(addAction(QIcon::fromTheme("rectCreate"),
-                                              tr("Rectangle")));
+    // RECTANGLE
+    mRectangleAct = addAction(QIcon::fromTheme("rectCreate"), tr("Rectangle"));
+    mTransformBottomRight->addAction(mRectangleAct);
+    this->addAction(mRectangleAct);
+    if (auto *btn = qobject_cast<QToolButton*>(widgetForAction(mRectangleAct))) {
+        btn->setObjectName("rectangleButton");
+    }
+    mRectangleAct->setVisible(false);
     mTransformBottomRight->addAction(addWidget(mTransformBX));
     mTransformBottomRight->addAction(addSeparator());
     mTransformBottomRight->addAction(addWidget(mTransformBY));
 
-    mTransformRadius->addAction(addAction(QIcon::fromTheme("circleCreate"),
-                                          tr("Radius")));
+    // CIRCLE (_RADIUS_)
+    mCircleAct = addAction(QIcon::fromTheme("circleCreate"), tr("Radius"));
+    mTransformRadius->addAction(mCircleAct);
+    this->addAction(mCircleAct);
+    if (auto *btn = qobject_cast<QToolButton*>(widgetForAction(mCircleAct))) {
+        btn->setObjectName("circleButton");
+    }
+    mCircleAct->setVisible(false);
     mTransformRadius->addAction(addWidget(mTransformRX));
     mTransformRadius->addAction(addSeparator());
     mTransformRadius->addAction(addWidget(mTransformRY));

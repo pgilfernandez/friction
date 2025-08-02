@@ -2,7 +2,7 @@
 #
 # Friction - https://friction.graphics
 #
-# Copyright (c) Ole-André Rodlie and contributors
+# Copyright (c) Ole-André Rodlie and contributors   
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -67,6 +67,14 @@ namespace Friction
             QrealAnimatorValueSlider *mTransformPX;
             QrealAnimatorValueSlider *mTransformPY;
             QrealAnimatorValueSlider *mTransformOX;
+            
+            QAction *mMoveAct;
+            QAction *mRotateAct;
+            QAction *mScaleAct;
+            QAction *mPivotAct;
+            QAction *mOpacityAct;
+            QAction *mRectangleAct;
+            QAction *mCircleAct;
 
             QActionGroup *mTransformMove;
             QActionGroup *mTransformRotate;

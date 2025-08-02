@@ -305,8 +305,23 @@ void ToolBox::setupNodesAction(const QIcon &icon,
 
 void ToolBox::setupNodesActions()
 {
-    mControls->addAction(mGroupNodes->addAction(QIcon::fromTheme("pointTransform"),
-                                                tr("Nodes")));
+    // mControls->addAction(mGroupNodes->addAction(QIcon::fromTheme("pointTransform"),
+    //                                             tr("Nodes")));
+    // auto *nodesAct = mGroupNodes->addAction(QIcon::fromTheme("pointTransform"), tr("Nodes"));
+    // mControls->addAction(nodesAct);
+    // if (auto *btn = qobject_cast<QToolButton*>(mControls->widgetForAction(nodesAct))) {
+    //     btn->setObjectName("nodesButton");
+    // }
+
+    // 1) crea y guarda la acción
+    mNodesAct = mGroupNodes->addAction(QIcon::fromTheme("pointTransform"),tr("Nodes"));
+    // 2) añádela al toolbar
+    mControls->addAction(mNodesAct);
+    // 3) recupera el QToolButton y asígnale el objectName
+    if (auto *btn = qobject_cast<QToolButton*>(mControls->widgetForAction(mNodesAct))) {
+        btn->setObjectName("nodesButton");}
+    // la ocultas por defecto (igual que antes)
+    mNodesAct->setVisible(false);
 
     setupNodesAction(QIcon::fromTheme("nodeConnect"),
                      tr("Connect Nodes"), NodeConnect);
@@ -455,6 +470,7 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
     const bool pickMode = mode == CanvasMode::pickFillStroke ||
                           mode == CanvasMode::pickFillStrokeEvent;
 
+    mNodesAct->setVisible(pointMode);
     mGroupNodes->setEnabled(pointMode);
     mGroupNodes->setVisible(pointMode);
 
