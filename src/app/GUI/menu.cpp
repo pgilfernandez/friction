@@ -789,13 +789,16 @@ void MainWindow::setupMenuBar()
 
     help->addSeparator();
     help->addAction(QIcon::fromTheme("user-home"),
-                    tr("Friction Website"), this, []() {
-                        QDesktopServices::openUrl(QUrl("https://friction.graphics/"));
+                    tr("Website"), this, []() {
+                        QDesktopServices::openUrl(QUrl(AppSupport::getAppUrl()));
                     });
 
     help->addAction(QIcon::fromTheme("dialog-information"),
                     tr("Documentation"), this, []() {
-                        QDesktopServices::openUrl(QUrl("https://friction.graphics/documentation"));
+                        const QString docUrl = AppSupport::hasOfflineDocs() ?
+                                                   AppSupport::getOfflineDocs() :
+                                                   AppSupport::getOnlineDocs();
+                        QDesktopServices::openUrl(QUrl(docUrl));
                     });
 
     help->addSeparator();

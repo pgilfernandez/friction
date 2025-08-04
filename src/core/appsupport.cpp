@@ -1123,3 +1123,21 @@ void AppSupport::setFont(const QString &path)
     font.setPointSizeF(QApplication::font().pointSizeF());
     QApplication::setFont(font);
 }
+
+bool AppSupport::hasOfflineDocs()
+{
+    const QString html = QString("%1/html/index.html").arg(getAppPath());
+    return QFile::exists(html);
+}
+
+QString AppSupport::getOfflineDocs()
+{
+    const QString html = QString("%1/html/index.html").arg(getAppPath());
+    if (QFile::exists(html)) { return html; }
+    return QString();
+}
+
+QString AppSupport::getOnlineDocs()
+{
+    return QString("%1/documentation").arg(getAppUrl());
+}
