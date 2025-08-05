@@ -800,6 +800,15 @@ void BoundingBox::setupCanvasMenu(PropertyMenu * const menu)
     menu->addPlainAction(QIcon::fromTheme("pivot-align-center"), tr("Center Pivot"), [pScene]() {
         pScene->centerPivotForSelected();
     });
+    menu->addPlainAction(QIcon::fromTheme("alignCenter"), tr("Center Align"), [pScene]() {
+        pScene->alignSelectedBoxes(Qt::AlignHCenter,
+                                   AlignPivot::geometry,
+                                   AlignRelativeTo::scene);
+        pScene->alignSelectedBoxes(Qt::AlignVCenter,
+                                   AlignPivot::geometry,
+                                   AlignRelativeTo::scene);
+        pScene->finishedAction();
+    });
 
     menu->addSeparator();
 
