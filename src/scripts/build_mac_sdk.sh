@@ -23,7 +23,7 @@ set -e -x
 
 PYTHON_V=3.11.11
 NINJA_V=1.11.1
-CMAKE_V=3.31.8
+CMAKE_V=3.26.3
 NASM_V=2.14.02
 YASM_V=1.3.0
 PKGCONF_V=1.1.0
@@ -111,7 +111,10 @@ if [ ! -f "${CMAKE_BIN}" ]; then
     rm -rf ${CMAKE_SRC} || true
     tar xf ${DIST}/ffmpeg/${CMAKE_SRC}.tar.gz
     cd ${CMAKE_SRC}
-    ./configure ${COMMON_CONFIGURE} --parallel=${MKJOBS} -- -DCMAKE_USE_OPENSSL=OFF
+    if [ "${CPU}" = "arm64" ]; then
+        patch -p0 < ${DIST}/patches/cmake-zlib-macos154.diff
+    fi
+    ./configure ${COMMON_CONFIGURE} --no-system-libs --parallel=${MKJOBS} -- -DCMAKE_USE_OPENSSL=OFF
     make -j${MKJOBS}
     make install
 fi # cmake
