@@ -160,7 +160,7 @@ MainWindow::MainWindow(Document& document,
     Q_ASSERT(!sInstance);
     sInstance = this;
 
-    setWindowIcon(QIcon::fromTheme(AppSupport::getAppName()));
+    setWindowIcon(QIcon::fromTheme(AppSupport::getAppID()));
     setContextMenuPolicy(Qt::NoContextMenu);
 
     setupImporters();
