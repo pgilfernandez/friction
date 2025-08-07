@@ -187,7 +187,17 @@ void Circle::saveSVG(SvgExporter& exp, DomEleTask* const task) const {
     cX->saveQrealSVG(exp, ele, task->visRange(), "cx");
     cY->saveQrealSVG(exp, ele, task->visRange(), "cy");
     rX->saveQrealSVG(exp, ele, task->visRange(), "rx");
+    {
+        bool ok;
+        double v = ele.attribute("rx").toDouble(&ok);
+        if (ok) ele.setAttribute("rx", QString::number(qAbs(v)));
+    }
     rY->saveQrealSVG(exp, ele, task->visRange(), "ry");
+    {
+        bool ok;
+        double v = ele.attribute("ry").toDouble(&ok);
+        if (ok) ele.setAttribute("ry", QString::number(qAbs(v)));
+    }
 
     savePathBoxSVG(exp, ele, task->visRange());
 }
