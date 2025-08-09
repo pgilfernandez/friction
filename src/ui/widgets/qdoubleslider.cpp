@@ -232,44 +232,53 @@ void QDoubleSlider::paint(QPainter *p,
                           const QColor &allFill,
                           const QColor &sliderFill,
                           const QColor &stroke,
-                          const QColor &text) {
+                          const QColor &text)
+{
     p->save();
 
     p->setRenderHint(QPainter::Antialiasing);
     QRectF boundingRect = rect().adjusted(1, 1, -1, -1);
     p->setPen(Qt::NoPen);
-    if (mHovered) { p->setBrush(ThemeSupport::getThemeBaseDarkerColor()); }
+
+    if (mHovered && isEnabled()) { p->setBrush(ThemeSupport::getThemeBaseDarkerColor()); }
     else { p->setBrush(allFill); }
-    if(mLeftNeighbour) {
+
+    if (mLeftNeighbour) {
         p->setClipRect(width()/2, 0, width()/2, height());
-    } else if(mRightNeighbour) {
+    } else if (mRightNeighbour) {
         p->setClipRect(0, 0, width()/2, height());
     }
+
     const int xR = 2;
     p->drawRoundedRect(boundingRect, xR, xR);
-    if(mLeftNeighbour || mRightNeighbour) {
-        if(mLeftNeighbour) {
+    if (mLeftNeighbour || mRightNeighbour) {
+        if (mLeftNeighbour) {
             p->setClipRect(0, 0, width()/2, height());
-        } else if(mRightNeighbour) {
+        } else if (mRightNeighbour) {
             p->setClipRect(width()/2, 0, width()/2, height());
         }
         p->drawRect(boundingRect);
         p->setClipping(false);
     }
-    if(!textEditing()) {
-        if(mShowValueSlider) {
+
+    if (!textEditing()) {
+        if (mShowValueSlider) {
             p->setPen(Qt::NoPen);
             const qreal valFrac = (mValue - mMinValue)/(mMaxValue - mMinValue);
             const qreal valWidth = clamp(valFrac*width(), 0, width() - 3);
-            if (mHovered) { p->setBrush(ThemeSupport::getThemeHighlightDarkerColor()); }
+
+            if (mHovered && isEnabled()) { p->setBrush(ThemeSupport::getThemeHighlightDarkerColor()); }
             else { p->setBrush(sliderFill); }
+
             const qreal heightRemoval = qMax(0., eSizesUI::widget/2 - valWidth)*0.5;
             p->drawRoundedRect(QRectF(1, 1, valWidth, height() - 2).
                                adjusted(0, heightRemoval,
                                         0, -heightRemoval), xR, xR);
         }
-        p->setPen(mHovered ? Qt::white : text);
-        if(mShowName) {
+
+        p->setPen(mHovered && isEnabled() ? Qt::white : text);
+
+        if (mShowName) {
             p->drawText(rect(), Qt::AlignCenter,
                         mName + ": " + mValueString);
         } else {
@@ -279,17 +288,19 @@ void QDoubleSlider::paint(QPainter *p,
     p->setPen(QPen(stroke, 1));
     p->setBrush(Qt::NoBrush);
 
-    if(mLeftNeighbour) {
+    if (mLeftNeighbour) {
         p->setClipRect(width()/2, 0, width()/2, height());
-    } else if(mRightNeighbour) {
+    } else if (mRightNeighbour) {
         p->setClipRect(0, 0, width()/2, height());
     }
+
     p->drawRoundedRect(boundingRect, xR, xR);
-    if(mLeftNeighbour || mRightNeighbour) {
-        if(mLeftNeighbour) {
+
+    if (mLeftNeighbour || mRightNeighbour) {
+        if (mLeftNeighbour) {
             boundingRect.adjust(-1, 0, 0, 0);
             p->setClipRect(0, 0, width()/2, height());
-        } else if(mRightNeighbour) {
+        } else if (mRightNeighbour) {
             boundingRect.adjust(0, 0, 1, 0);
             p->setClipRect(width()/2, 0, width()/2, height());
         }
