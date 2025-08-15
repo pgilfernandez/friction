@@ -36,6 +36,7 @@ Colors and icon size from 'src/core/themesupport.cpp'.
 %12 = half icon pixel ratio
 %13 = getThemeColorTextDisabled
 %14 = quarter icon size
+%15 = getThemeColorOutputDestinationLineEdit
 
 */
 
@@ -277,7 +278,7 @@ QWidget#menuBarWidget QPushButton {
 QToolBar#animationDockWidget,
 #darkWidget
 {
-    background-color: rgb(33, 33, 38);
+    background-color: %6;
 }
 
 QToolBar::separator {
@@ -313,7 +314,7 @@ QMenuBar {
 
 QLineEdit#OutputDestinationLineEdit {
     border: 0;
-    background-color: rgb(40, 40, 47);
+    background-color: %15;
 }
 
 QPushButton#WelcomeButton,
@@ -353,8 +354,8 @@ QToolButton#FlatButton {
 
 QPushButton#FlatButton:hover,
 QToolButton#FlatButton:hover {
-    background-color: rgb(19, 19, 21);
-    border-color: rgb(104, 144, 206);
+    background-color: %3;
+    border-color: %4;
 }
 
 QPushButton#AboutButton:hover {

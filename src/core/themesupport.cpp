@@ -168,25 +168,50 @@ const QColor ThemeSupport::getThemeColorTextDisabled(int alpha)
     return getQColor(112, 112, 113, alpha);
 }
 
+const QColor ThemeSupport::getThemeColorOutputDestinationLineEdit(int alpha)
+{
+    return getQColor(40, 40, 47, alpha);
+}
+
+const QColor ThemeSupport::getThemeColorGray()
+{
+    return Qt::gray;
+}
+
+const QColor ThemeSupport::getThemeColorDarkGray()
+{
+    return Qt::darkGray;
+}
+
+const QColor ThemeSupport::getThemeColorBlack()
+{
+    return Qt::black;
+}
+
+const QColor ThemeSupport::getThemeColorWhite()
+{
+    return Qt::white;
+}
+
 const QPalette ThemeSupport::getDefaultPalette(const QColor &highlight)
 {
     QPalette palette;
     palette.setColor(QPalette::Window, getThemeAlternateColor());
-    palette.setColor(QPalette::WindowText, Qt::white);
+    palette.setColor(QPalette::WindowText, getThemeColorWhite());
     palette.setColor(QPalette::Base, getThemeBaseColor());
     palette.setColor(QPalette::AlternateBase, getThemeAlternateColor());
-    palette.setColor(QPalette::Link, Qt::white);
-    palette.setColor(QPalette::LinkVisited, Qt::white);
-    palette.setColor(QPalette::ToolTipText, Qt::white);
-    palette.setColor(QPalette::ToolTipBase, Qt::black);
-    palette.setColor(QPalette::Text, Qt::white);
+    palette.setColor(QPalette::Link, getThemeColorWhite());
+    palette.setColor(QPalette::LinkVisited, getThemeColorWhite());
+    palette.setColor(QPalette::ToolTipText, getThemeColorWhite());
+    palette.setColor(QPalette::ToolTipBase, getThemeColorBlack());
+    palette.setColor(QPalette::Text, getThemeColorWhite());
     palette.setColor(QPalette::Button, getThemeBaseColor());
-    palette.setColor(QPalette::ButtonText, Qt::white);
-    palette.setColor(QPalette::BrightText, Qt::white);
+    palette.setColor(QPalette::ButtonText, getThemeColorWhite());
+    palette.setColor(QPalette::BrightText, getThemeColorWhite());
     palette.setColor(QPalette::Highlight, highlight.isValid() ? highlight : getThemeHighlightColor());
-    palette.setColor(QPalette::HighlightedText, Qt::white);
-    palette.setColor(QPalette::Disabled, QPalette::Text, Qt::darkGray);
-    palette.setColor(QPalette::Disabled, QPalette::ButtonText, Qt::darkGray);
+    palette.setColor(QPalette::HighlightedText, getThemeColorWhite());
+    palette.setColor(QPalette::Disabled, QPalette::Text, getThemeColorDarkGray());
+    palette.setColor(QPalette::Disabled, QPalette::ButtonText, getThemeColorDarkGray());
     return palette;
 }
 
@@ -239,7 +264,8 @@ const QString ThemeSupport::getThemeStyle(int iconSize)
                    QString::number(getIconSize(qRound(iconPixelRatio)).width()),
                    QString::number(getIconSize(qRound(iconPixelRatio / 2)).width()),
                    getThemeColorTextDisabled().name(),
-                   QString::number(getIconSize(iconSize).width() / 4));
+                   QString::number(getIconSize(iconSize).width() / 4),
+                   getThemeColorOutputDestinationLineEdit().name());
 }
 
 void ThemeSupport::setupTheme(const int iconSize)
