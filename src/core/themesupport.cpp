@@ -173,23 +173,27 @@ const QColor ThemeSupport::getThemeColorOutputDestinationLineEdit(int alpha)
     return getQColor(40, 40, 47, alpha);
 }
 
-const QColor ThemeSupport::getThemeColorGray()
+const QColor ThemeSupport::getThemeColorGray(int alpha)
 {
+    Q_UNUSED(alpha)
     return Qt::gray;
 }
 
-const QColor ThemeSupport::getThemeColorDarkGray()
+const QColor ThemeSupport::getThemeColorDarkGray(int alpha)
 {
+    Q_UNUSED(alpha)
     return Qt::darkGray;
 }
 
-const QColor ThemeSupport::getThemeColorBlack()
+const QColor ThemeSupport::getThemeColorBlack(int alpha)
 {
+    Q_UNUSED(alpha)
     return Qt::black;
 }
 
-const QColor ThemeSupport::getThemeColorWhite()
+const QColor ThemeSupport::getThemeColorWhite(int alpha)
 {
+    Q_UNUSED(alpha)
     return Qt::white;
 }
 
