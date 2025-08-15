@@ -267,7 +267,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
         canvas->clear(SK_ColorBLACK);
         canvas->clipRect(canvasRect);
     } else {
-        canvas->clear(ThemeSupport::getThemeBaseSkColor());
+        canvas->clear(Friction::Core::Theme::getThemeBaseSkColor());
         paint.setColor(SK_ColorGRAY);
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setPathEffect(dashPathEffect);

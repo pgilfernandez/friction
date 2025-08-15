@@ -206,10 +206,10 @@ void QDoubleSlider::setValueRange(const qreal min, const qreal max) {
 }
 
 void QDoubleSlider::paint(QPainter * const p, const bool enabled) {
-    paint(p, enabled ? ThemeSupport::getThemeButtonBaseColor() : ThemeSupport::getThemeAlternateColor(),
-          enabled ? ThemeSupport::getThemeButtonBorderColor(150) : ThemeSupport::getThemeBaseColor(),
-          enabled ? ThemeSupport::getThemeButtonBorderColor() : ThemeSupport::getThemeColorDarkGray(),
-          enabled ? ThemeSupport::getThemeColorWhite() : ThemeSupport::getThemeColorDarkGray());
+    paint(p, enabled ? Friction::Core::Theme::getThemeButtonBaseColor() : Friction::Core::Theme::getThemeAlternateColor(),
+          enabled ? Friction::Core::Theme::getThemeButtonBorderColor(150) : Friction::Core::Theme::getThemeBaseColor(),
+          enabled ? Friction::Core::Theme::getThemeButtonBorderColor() : Friction::Core::Theme::getThemeColorDarkGray(),
+          enabled ? Friction::Core::Theme::getThemeColorWhite() : Friction::Core::Theme::getThemeColorDarkGray());
 }
 
 QString QDoubleSlider::valueToText(const qreal value) const {
@@ -240,7 +240,7 @@ void QDoubleSlider::paint(QPainter *p,
     QRectF boundingRect = rect().adjusted(1, 1, -1, -1);
     p->setPen(Qt::NoPen);
 
-    if (mHovered && isEnabled()) { p->setBrush(ThemeSupport::getThemeBaseDarkerColor()); }
+    if (mHovered && isEnabled()) { p->setBrush(Friction::Core::Theme::getThemeBaseDarkerColor()); }
     else { p->setBrush(allFill); }
 
     if (mLeftNeighbour) {
@@ -267,7 +267,7 @@ void QDoubleSlider::paint(QPainter *p,
             const qreal valFrac = (mValue - mMinValue)/(mMaxValue - mMinValue);
             const qreal valWidth = clamp(valFrac*width(), 0, width() - 3);
 
-            if (mHovered && isEnabled()) { p->setBrush(ThemeSupport::getThemeHighlightDarkerColor()); }
+            if (mHovered && isEnabled()) { p->setBrush(Friction::Core::Theme::getThemeHighlightDarkerColor()); }
             else { p->setBrush(sliderFill); }
 
             const qreal heightRemoval = qMax(0., eSizesUI::widget/2 - valWidth)*0.5;

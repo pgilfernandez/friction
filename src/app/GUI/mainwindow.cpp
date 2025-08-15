@@ -382,7 +382,7 @@ void MainWindow::askRestoreFillStrokeDefault()
     settings->fLastFillFlatEnabled = false;
     settings->fLastStrokeFlatEnabled = true;
     settings->fLastUsedFillColor = Qt::white;
-    settings->fLastUsedStrokeColor = ThemeSupport::getThemeObjectColor();
+    settings->fLastUsedStrokeColor = Friction::Core::Theme::getThemeObjectColor();
     settings->fLastUsedStrokeWidth = 10.;
 }
 
@@ -921,7 +921,7 @@ void MainWindow::setupPropertiesWidgets()
     mObjectSettingsScrollArea->setSizePolicy(QSizePolicy::Expanding,
                                              QSizePolicy::Expanding);
     mObjectSettingsScrollArea->setAutoFillBackground(true);
-    mObjectSettingsScrollArea->setPalette(ThemeSupport::getDarkPalette());
+    mObjectSettingsScrollArea->setPalette(Friction::Core::Theme::getDarkPalette());
 
     mObjectSettingsWidget = new BoxScrollWidget(mDocument,
                                                 mObjectSettingsScrollArea);

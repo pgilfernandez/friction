@@ -307,7 +307,7 @@ void ToolBox::setupNodesAction(const QIcon &icon,
         }
     });
     mControls->addAction(mGroupNodes->addAction(act));
-    ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mControls, act);
+    Friction::Core::Theme::setToolbarButtonStyle("ToolBoxButton", mControls, act);
 }
 
 void ToolBox::setupNodesActions()
@@ -425,7 +425,7 @@ void ToolBox::setupDrawActions()
         });
         mControls->addAction(act);
         mGroupDraw->addAction(act);
-        ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mControls, act);
+        Friction::Core::Theme::setToolbarButtonStyle("ToolBoxButton", mControls, act);
     }
 
     mGroupDraw->setEnabled(false);

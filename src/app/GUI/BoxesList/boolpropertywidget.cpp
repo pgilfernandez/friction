@@ -65,11 +65,11 @@ void BoolPropertyWidget::paintEvent(QPaintEvent *) {
     }
 
     p.setRenderHint(QPainter::Antialiasing);
-    p.setBrush(ThemeSupport::getThemeButtonBorderColor());
+    p.setBrush(Friction::Core::Theme::getThemeButtonBorderColor());
     if(mHovered) {
-        p.setPen(ThemeSupport::getThemeHighlightSelectedColor());
+        p.setPen(Friction::Core::Theme::getThemeHighlightSelectedColor());
     } else {
-        p.setPen(ThemeSupport::getThemeButtonBaseColor());
+        p.setPen(Friction::Core::Theme::getThemeButtonBaseColor());
     }
 
     p.drawRoundedRect(rect().adjusted(1, 1, -1, -1), 5., 5.);

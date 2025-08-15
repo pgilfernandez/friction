@@ -42,7 +42,7 @@ void HddCachableCacheHandler::drawCacheOnTimeline(QPainter * const p,
 //    if(!isOne4Dec(unit))
 //        p->translate((uStartFrame - quStartFrame)*pixelsPerFrame, 0);
 
-    p->setBrush(ThemeSupport::getThemeHighlightColor(55));
+    p->setBrush(Friction::Core::Theme::getThemeHighlightColor(55));
     p->setPen(Qt::NoPen);
 
     int lastDrawnFrame = uStartFrame;
@@ -69,10 +69,10 @@ void HddCachableCacheHandler::drawCacheOnTimeline(QPainter * const p,
         const bool storesInMemory = cont->storesDataInMemory();
         //if(storesInMemory != lastStoresInMemory) {
             if(storesInMemory) {
-                if(cont->inUse()) p->setBrush(ThemeSupport::getThemeHighlightColor(110));
-                else p->setBrush(ThemeSupport::getThemeHighlightColor(55));
+                if(cont->inUse()) p->setBrush(Friction::Core::Theme::getThemeHighlightColor(110));
+                else p->setBrush(Friction::Core::Theme::getThemeHighlightColor(55));
             } else {
-                p->setBrush(ThemeSupport::getThemeHighlightColor(55));
+                p->setBrush(Friction::Core::Theme::getThemeHighlightColor(55));
             }
             //lastStoresInMemory = storesInMemory;
         //}

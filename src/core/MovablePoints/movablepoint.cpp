@@ -94,14 +94,14 @@ void MovablePoint::drawOnAbsPosSk(SkCanvas * const canvas,
     canvas->drawCircle(absPos, scaledRadius, paint);
 
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(toSkColor(ThemeSupport::getThemeButtonBaseColor()));
+    paint.setColor(toSkColor(Friction::Core::Theme::getThemeButtonBaseColor()));
     paint.setStrokeWidth(invScale);
     canvas->drawCircle(absPos, scaledRadius, paint);
 
     if(keyOnCurrent) {
         const float halfRadius = scaledRadius*0.5f;
 
-        paint.setColor(toSkColor(ThemeSupport::getThemeColorRed()));
+        paint.setColor(toSkColor(Friction::Core::Theme::getThemeColorRed()));
         paint.setStyle(SkPaint::kFill_Style);
         canvas->drawCircle(absPos, halfRadius, paint);
 

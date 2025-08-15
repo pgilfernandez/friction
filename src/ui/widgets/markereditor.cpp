@@ -55,8 +55,8 @@ MarkerEditor::MarkerEditor(Canvas *scene,
 void MarkerEditor::setup()
 {
     mTree->setPalette(
-        ThemeSupport::getDefaultPalette(
-            ThemeSupport::getThemeButtonBorderColor()));
+        Friction::Core::Theme::getDefaultPalette(
+            Friction::Core::Theme::getThemeButtonBorderColor()));
 
     mTree->setHeaderLabels(QStringList()
                            << tr("Visibility")

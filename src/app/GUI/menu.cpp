@@ -186,8 +186,8 @@ void MainWindow::setupMenuBar()
         if (toolbar) {
             toolbar->insertAction(toolbar->actions().at(0), redoQAct);
             toolbar->insertAction(toolbar->actions().at(0), undoQAct);
-            ThemeSupport::setToolbarButtonStyle("ToolBoxButton", toolbar, redoQAct);
-            ThemeSupport::setToolbarButtonStyle("ToolBoxButton", toolbar, undoQAct);
+            Friction::Core::Theme::setToolbarButtonStyle("ToolBoxButton", toolbar, redoQAct);
+            Friction::Core::Theme::setToolbarButtonStyle("ToolBoxButton", toolbar, undoQAct);
         }
     }
 

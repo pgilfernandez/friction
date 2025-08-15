@@ -155,7 +155,7 @@ void QrealPoint::draw(QPainter * const p,
     Q_UNUSED(paintColor)
     const QPointF center(getAbsFrame(), getValue());
 
-    p->setBrush(ThemeSupport::getThemeBaseDarkColor());
+    p->setBrush(Friction::Core::Theme::getThemeBaseDarkColor());
     if (mHovered) { gDrawCosmeticEllipse(p, center, mRadius + 1, mRadius + 1); }
     else { gDrawCosmeticEllipse(p, center, mRadius, mRadius); }
 

@@ -536,12 +536,12 @@ void KeysView::paintEvent(QPaintEvent *) {
 
     //if(mGraphViewed) p.fillRect(rect(), QColor(33, 33, 38));
     //else p.fillRect(rect(), QColor(33, 33, 38));
-    p.fillRect(rect(), ThemeSupport::getThemeBaseColor());
+    p.fillRect(rect(), Friction::Core::Theme::getThemeBaseColor());
 
     if(mPixelsPerFrame < 0.001) return;
     if(!mGraphViewed) {
         int currY = eSizesUI::widget;
-        p.setPen(QPen(ThemeSupport::getThemeTimelineColor(), 2));
+        p.setPen(QPen(Friction::Core::Theme::getThemeTimelineColor(), 2));
         while(currY < height()) {
             p.drawLine(0, currY, width(), currY);
             currY += eSizesUI::widget;
@@ -549,7 +549,7 @@ void KeysView::paintEvent(QPaintEvent *) {
     }
     p.translate(eSizesUI::widget/2, 0);
 
-    p.setPen(QPen(ThemeSupport::getThemeTimelineColor(), 2));
+    p.setPen(QPen(Friction::Core::Theme::getThemeTimelineColor(), 2));
     qreal xT = mPixelsPerFrame*0.5;
     int iInc = 1;
     bool mult5 = true;
@@ -575,7 +575,7 @@ void KeysView::paintEvent(QPaintEvent *) {
         bool hasOut = hasFrameOut(i+1);
         bool hasMark = hasFrameMarker(i+1);
         if (!hasIn && !hasOut && !hasMark) { continue; }
-        const QColor col = hasMark ? ThemeSupport::getThemeFrameMarkerColor() : ThemeSupport::getThemeColorGreen();
+        const QColor col = hasMark ? Friction::Core::Theme::getThemeFrameMarkerColor() : Friction::Core::Theme::getThemeColorGreen();
         p.setPen(QPen(col, 2, Qt::DotLine));
         const qreal xTT = xT + (i - mMinViewedFrame + 1)*mPixelsPerFrame;
         p.drawLine(QPointF(xTT, 0), QPointF(xTT, height()));
@@ -585,7 +585,7 @@ void KeysView::paintEvent(QPaintEvent *) {
         if (mCurrentScene->getCurrentFrame() <= maxFrame &&
            mCurrentScene->getCurrentFrame() >= minFrame) {
             xT = (mCurrentScene->getCurrentFrame() - mMinViewedFrame)*mPixelsPerFrame + mPixelsPerFrame*0.5;
-            p.setPen(QPen(ThemeSupport::getThemeHighlightColor(), 2));
+            p.setPen(QPen(Friction::Core::Theme::getThemeHighlightColor(), 2));
             p.drawLine(QPointF(xT, 0), QPointF(xT, height()));
         }
     }
@@ -622,7 +622,7 @@ void KeysView::paintEvent(QPaintEvent *) {
         mValueInput.draw(&p, height() - eSizesUI::widget);
     if(hasFocus()) {
         p.setBrush(Qt::NoBrush);
-        p.setPen(QPen(ThemeSupport::getThemeHighlightColor(), 4));
+        p.setPen(QPen(Friction::Core::Theme::getThemeHighlightColor(), 4));
         p.drawRect(0, 0, width(), height());
     }
 

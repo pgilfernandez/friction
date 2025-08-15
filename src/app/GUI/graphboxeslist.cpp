@@ -255,7 +255,7 @@ void KeysView::graphPaint(QPainter *p) {
             yL -= incY;
             currValue += mValueInc;
         }
-        p->setPen(ThemeSupport::getThemeTimelineColor());
+        p->setPen(Friction::Core::Theme::getThemeTimelineColor());
         p->drawLines(lines, nLines);
         delete[] lines;
     }

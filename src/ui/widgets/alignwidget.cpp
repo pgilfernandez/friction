@@ -163,10 +163,10 @@ void AlignWidget::setupToolbar()
 {
     if (!mToolbar) { return; }
 
-    ThemeSupport::setToolbarButtonStyle("FlatButton",
-                                        mToolbar,
-                                        mToolbar->addAction(QIcon::fromTheme("alignCenter"),
-                                                            tr("Align")));
+    Friction::Core::Theme::setToolbarButtonStyle("FlatButton",
+                                                 mToolbar,
+                                                 mToolbar->addAction(QIcon::fromTheme("alignCenter"),
+                                                                     tr("Align")));
 
     mAlignPivot = new QComboBox(this);
     mAlignPivot->setMaximumWidth(200);

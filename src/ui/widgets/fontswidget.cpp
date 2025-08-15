@@ -169,7 +169,7 @@ FontsWidget::FontsWidget(QWidget *parent,
     if (mToolbar) {
         mTextInput->setMaximumHeight(eSizesUI::button);
     }
-    mTextInput->setPalette(ThemeSupport::getDarkerPalette());
+    mTextInput->setPalette(Friction::Core::Theme::getDarkerPalette());
     mTextInput->setAutoFillBackground(true);
     mTextInput->setFocusPolicy(Qt::ClickFocus);
     mTextInput->setPlaceholderText(tr("Enter text ..."));

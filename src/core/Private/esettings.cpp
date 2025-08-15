@@ -272,19 +272,19 @@ eSettings::eSettings(const int cpuThreads,
     gSettings << std::make_shared<eColorSetting>(
                      fObjectKeyframeColor,
                      "objectKeyframeColor",
-                     ThemeSupport::getThemeColorBlue());
+                     Friction::Core::Theme::getThemeColorBlue());
     gSettings << std::make_shared<eColorSetting>(
                      fPropertyGroupKeyframeColor,
                      "propertyGroupKeyframeColor",
-                     ThemeSupport::getThemeColorGreen());
+                     Friction::Core::Theme::getThemeColorGreen());
     gSettings << std::make_shared<eColorSetting>(
                      fPropertyKeyframeColor,
                      "propertyKeyframeColor",
-                     ThemeSupport::getThemeColorRed());
+                     Friction::Core::Theme::getThemeColorRed());
     gSettings << std::make_shared<eColorSetting>(
                      fSelectedKeyframeColor,
                      "selectedKeyframeColor",
-                     ThemeSupport::getThemeColorYellow());
+                     Friction::Core::Theme::getThemeColorYellow());
 
     /*gSettings << std::make_shared<eColorSetting>(
                      fVisibilityRangeColor,

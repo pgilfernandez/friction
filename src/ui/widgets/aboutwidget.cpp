@@ -58,10 +58,10 @@ AboutWidget::AboutWidget(QWidget *parent)
                                       "<br><span style=\"font-size: large;\">%1</span>"
                                       "<br><span style=\"font-size: medium;\">%6<br>%7<br>Qt %8</span></h1>"
                                       "</div>").arg(AppSupport::getAppVersion(),
-                                                    QString::number(ThemeSupport::getIconSize(logoSize).width()),
+                                                    QString::number(Friction::Core::Theme::getIconSize(logoSize).width()),
                                                     AppSupport::getAppDisplayName(),
                                                     AppSupport::getAppID(),
-                                                    QString::number(ThemeSupport::getIconSize(qRound(logoSize * devicePixelRatioF())).width()),
+                                                    QString::number(Friction::Core::Theme::getIconSize(qRound(logoSize * devicePixelRatioF())).width()),
                                                     osName,
                                                     HardwareInfo::sGpuRendererString(),
                                                     qVersion());

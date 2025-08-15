@@ -595,7 +595,7 @@ void BoxSingleWidget::setTargetAbstraction(SWT_Abstraction *abs) {
 void BoxSingleWidget::loadStaticPixmaps(int iconSize)
 {
     if (sStaticPixmapsLoaded) { return; }
-    if (!ThemeSupport::hasIconSize(iconSize)) {
+    if (!Friction::Core::Theme::hasIconSize(iconSize)) {
         QMessageBox::warning(nullptr,
                              tr("Icon issues"),
                              tr("<p>Requested icon size <b>%1</b> is not available,"
@@ -604,7 +604,7 @@ void BoxSingleWidget::loadStaticPixmaps(int iconSize)
                                 " in Windows without restarting."
                                 " If you still have issues after restarting please report this issue.</p>").arg(iconSize));
     }
-    const auto pixmapSize = ThemeSupport::getIconSize(iconSize);
+    const auto pixmapSize = Friction::Core::Theme::getIconSize(iconSize);
     qDebug() << "pixmaps size" << pixmapSize;
     VISIBLE_ICON = new QPixmap(QIcon::fromTheme("visible").pixmap(pixmapSize));
     INVISIBLE_ICON = new QPixmap(QIcon::fromTheme("hidden").pixmap(pixmapSize));
@@ -825,12 +825,12 @@ void BoxSingleWidget::paintEvent(QPaintEvent *) {
 
     int nameX = mFillWidget->x();
 
-    if (mHover) { p.fillRect(rect(), ThemeSupport::getThemeHighlightColor(40)); }
+    if (mHover) { p.fillRect(rect(), Friction::Core::Theme::getThemeHighlightColor(40)); }
 
     const auto bsTarget = enve_cast<eBoxOrSound*>(prop);
     if (!bsTarget && prop->prp_isSelected()) {
         p.fillRect(mFillWidget->geometry(),
-                   ThemeSupport::getThemeHighlightSelectedColor(25));
+                   Friction::Core::Theme::getThemeHighlightSelectedColor(25));
     }
     if (bsTarget) {
         nameX += eSizesUI::widget/4;
@@ -839,7 +839,7 @@ void BoxSingleWidget::paintEvent(QPaintEvent *) {
             p.fillRect(rect(), QColor(0, 0, 0, 50));
             if (bsTarget->isSelected()) {
                 p.fillRect(mFillWidget->geometry(),
-                           ThemeSupport::getThemeHighlightSelectedColor(50));
+                           Friction::Core::Theme::getThemeHighlightSelectedColor(50));
                 p.setPen(Qt::white);
             } else {
                 p.setPen(Qt::white);

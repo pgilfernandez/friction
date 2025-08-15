@@ -61,10 +61,10 @@ WelcomeDialog::WelcomeDialog(QMenu *recentMenu,
                                          "<h1 style=\"font-weight: normal; margin-top: 0; padding-top: 0;\">%3<br><span style=\"font-size: large;\">%1</span></h1>"
                                          "</div>")
                                         .arg(AppSupport::getAppVersion(),
-                                             QString::number(ThemeSupport::getIconSize(logoSize).width()),
+                                             QString::number(Friction::Core::Theme::getIconSize(logoSize).width()),
                                              AppSupport::getAppDisplayName(),
                                              AppSupport::getAppID(),
-                                             QString::number(ThemeSupport::getIconSize(qRound(logoSize * devicePixelRatioF())).width())));
+                                             QString::number(Friction::Core::Theme::getIconSize(qRound(logoSize * devicePixelRatioF())).width())));
 
     const auto buttonWid = new QWidget(this);
     buttonWid->setContentsMargins(0, 0, 0, 0);

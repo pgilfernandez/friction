@@ -277,16 +277,16 @@ void QrealAnimatorValueSlider::paint(QPainter *p)
         if (rec) {
             const bool disabled = isTargetDisabled() || !isEnabled();
             QDoubleSlider::paint(p,
-                                 disabled ? ThemeSupport::getThemeButtonBaseColor(200) : ThemeSupport::getThemeHighlightAlternativeColor(),
-                                 key ? (disabled ? ThemeSupport::getThemeAlternateColor() : ThemeSupport::getThemeHighlightSelectedColor()) : (disabled ? ThemeSupport::getThemeAlternateColor() : ThemeSupport::getThemeHighlightColor()),
-                                 key ? (disabled ? ThemeSupport::getThemeColorGray() : ThemeSupport::getThemeHighlightSelectedColor()) : (disabled ? ThemeSupport::getThemeColorDarkGray() : ThemeSupport::getThemeButtonBorderColor()),
-                                 disabled ? ThemeSupport::getThemeColorDarkGray() : ThemeSupport::getThemeColorBlack());
+                                 disabled ? Friction::Core::Theme::getThemeButtonBaseColor(200) : Friction::Core::Theme::getThemeHighlightAlternativeColor(),
+                                 key ? (disabled ? Friction::Core::Theme::getThemeAlternateColor() : Friction::Core::Theme::getThemeHighlightSelectedColor()) : (disabled ? Friction::Core::Theme::getThemeAlternateColor() : Friction::Core::Theme::getThemeHighlightColor()),
+                                 key ? (disabled ? Friction::Core::Theme::getThemeColorGray() : Friction::Core::Theme::getThemeHighlightSelectedColor()) : (disabled ? Friction::Core::Theme::getThemeColorDarkGray() : Friction::Core::Theme::getThemeButtonBorderColor()),
+                                 disabled ? Friction::Core::Theme::getThemeColorDarkGray() : Friction::Core::Theme::getThemeColorBlack());
         } else {
             QDoubleSlider::paint(p, !isTargetDisabled() && isEnabled());
         }
         if (!textEditing() && mTarget->hasExpression()) {
             if (mTarget->hasValidExpression()) {
-                p->setBrush(ThemeSupport::getThemeHighlightColor());
+                p->setBrush(Friction::Core::Theme::getThemeHighlightColor());
             } else {
                 p->setBrush(QColor(255, 125, 0));
             }
