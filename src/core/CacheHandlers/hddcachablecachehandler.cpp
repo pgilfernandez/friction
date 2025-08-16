@@ -26,14 +26,17 @@
 #include "hddcachablecachehandler.h"
 #include "pointhelpers.h"
 #include "themesupport.h"
+#include "Private/esettings.h"
 
 void HddCachableCacheHandler::drawCacheOnTimeline(QPainter * const p,
                                                   const QRectF& drawRect,
                                                   const int startFrame,
                                                   const int endFrame,
                                                   const qreal unit,
-                                                  const int maxX) const {
-    if(startFrame > endFrame) return;
+                                                  const int maxX) const
+{
+    if (startFrame > endFrame) { return; }
+
     p->save();
     const qreal quStartFrame = startFrame/unit;
     const int uStartFrame = isInteger4Dec(quStartFrame) ?
@@ -42,7 +45,9 @@ void HddCachableCacheHandler::drawCacheOnTimeline(QPainter * const p,
 //    if(!isOne4Dec(unit))
 //        p->translate((uStartFrame - quStartFrame)*pixelsPerFrame, 0);
 
-    p->setBrush(Friction::Core::Theme::getThemeHighlightColor(55));
+    const auto colors = eSettings::instance().fColors;
+
+    p->setBrush(Friction::Core::Theme::getThemeHighlightColor(55)); // TODO
     p->setPen(Qt::NoPen);
 
     int lastDrawnFrame = uStartFrame;
@@ -69,10 +74,10 @@ void HddCachableCacheHandler::drawCacheOnTimeline(QPainter * const p,
         const bool storesInMemory = cont->storesDataInMemory();
         //if(storesInMemory != lastStoresInMemory) {
             if(storesInMemory) {
-                if(cont->inUse()) p->setBrush(Friction::Core::Theme::getThemeHighlightColor(110));
-                else p->setBrush(Friction::Core::Theme::getThemeHighlightColor(55));
+                if(cont->inUse()) p->setBrush(Friction::Core::Theme::getThemeHighlightColor(110)); // TODO
+                else p->setBrush(Friction::Core::Theme::getThemeHighlightColor(55)); // TODO
             } else {
-                p->setBrush(Friction::Core::Theme::getThemeHighlightColor(55));
+                p->setBrush(Friction::Core::Theme::getThemeHighlightColor(55)); // TODO
             }
             //lastStoresInMemory = storesInMemory;
         //}

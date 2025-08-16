@@ -39,7 +39,7 @@
 #include "themesupport.h"
 
 QColor KeysView::sGetAnimatorColor(const int i) {
-    return ANIMATOR_COLORS.at(i % ANIMATOR_COLORS.length());
+    return mAnimatorColors.at(i % mAnimatorColors.length());
 }
 
 bool KeysView::graphIsSelected(GraphAnimator * const anim) {
@@ -198,8 +198,11 @@ void KeysView::graphMakeSegmentsSmoothAction() {
     graphMakeSegmentsSmoothAction(true);
 }
 
-void KeysView::graphPaint(QPainter *p) {
+void KeysView::graphPaint(QPainter *p)
+{
     p->setBrush(Qt::NoBrush);
+
+    const auto colors = eSettings::instance().fColors;
 
     /*qreal maxX = width();
     int currAlpha = 75;
@@ -236,15 +239,16 @@ void KeysView::graphPaint(QPainter *p) {
     //p->drawText(QRectF(xL - 20, 0, 40, 20),
     //            Qt::AlignCenter, QString::number(mCurrentFrame));
     p->drawLine(xL, 20, xL, height());*/
-    if(graph_mValueLinesVisible) {
-        p->setPen(QColor(255, 255, 255));
+
+    if (graph_mValueLinesVisible) {
+        p->setPen(QColor(255, 255, 255)); // TODO
         const qreal incY = mValueInc*mPixelsPerValUnit;
         qreal yL = height() + fmod(mMinShownVal, mValueInc)*mPixelsPerValUnit + incY;
         qreal currValue = mMinShownVal - fmod(mMinShownVal, mValueInc) - mValueInc;
         const int nLines = qCeil(yL/incY);
         const auto lines = new QLine[static_cast<uint>(nLines)];
         int currLine = 0;
-        while(yL > 0) {
+        while (yL > 0) {
             p->drawText(QRectF(-eSizesUI::widget/4, yL - incY,
                                2*eSizesUI::widget, 2*incY),
                         Qt::AlignCenter,
@@ -255,7 +259,7 @@ void KeysView::graphPaint(QPainter *p) {
             yL -= incY;
             currValue += mValueInc;
         }
-        p->setPen(Friction::Core::Theme::getThemeTimelineColor());
+        p->setPen(colors.timeline);
         p->drawLines(lines, nLines);
         delete[] lines;
     }
@@ -273,17 +277,17 @@ void KeysView::graphPaint(QPainter *p) {
     const int maxVisibleFrame = qCeil(mMaxViewedFrame +
                                       3*eSizesUI::widget/(2*mPixelsPerFrame));
     const FrameRange viewedRange = { minVisibleFrame, maxVisibleFrame};
-    for(int i = mGraphAnimators.count() - 1; i >= 0; i--) {
-        const QColor &col = ANIMATOR_COLORS.at(i % ANIMATOR_COLORS.length());
+    for (int i = mGraphAnimators.count() - 1; i >= 0; i--) {
+        const QColor &col = mAnimatorColors.at(i % mAnimatorColors.length());
         p->save();
         mGraphAnimators.at(i)->graph_drawKeysPath(p, col, viewedRange);
         p->restore();
     }
     p->setRenderHint(QPainter::Antialiasing, false);
 
-    if(mSelecting) {
+    if (mSelecting) {
         QPen pen;
-        pen.setColor(Qt::blue);
+        pen.setColor(Qt::blue); // TODO
         pen.setWidthF(2);
         pen.setStyle(Qt::DotLine);
         pen.setCosmetic(true);

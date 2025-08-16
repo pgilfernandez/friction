@@ -67,7 +67,7 @@ UIDock::UIDock(QWidget *parent,
 
         if (darkHeader) {
             headerWidget->setAutoFillBackground(true);
-            headerWidget->setPalette(Friction::Core::Theme::getDarkPalette());
+            headerWidget->setPalette(Friction::Core::Theme::getDarkPalette(eSettings::instance().fColors));
         }
 
         headerWidget->setContentsMargins(0, 0, 0, 0);

@@ -44,8 +44,17 @@
 #include "themesupport.h"
 
 KeysView::KeysView(BoxScrollWidget *boxesListVisible,
-                   QWidget *parent) :
-    QWidget(parent), mBoxesListWidget(boxesListVisible) {
+                   QWidget *parent)
+    : QWidget(parent)
+    , mBoxesListWidget(boxesListVisible)
+{
+    const auto colors = eSettings::instance().fColors;
+    mAnimatorColors.append(colors.red);
+    mAnimatorColors.append(colors.blue);
+    mAnimatorColors.append(colors.yellow);
+    mAnimatorColors.append(colors.pink);
+    mAnimatorColors.append(colors.green);
+
     mBoxesListWidget->setSiblingKeysView(this);
 
     setMouseTracking(true);
@@ -531,31 +540,34 @@ void KeysView::drawKeys(QPainter * const p,
     p->restore();
 }
 
-void KeysView::paintEvent(QPaintEvent *) {
+void KeysView::paintEvent(QPaintEvent *)
+{
     QPainter p(this);
+
+    const auto colors = eSettings::instance().fColors;
 
     //if(mGraphViewed) p.fillRect(rect(), QColor(33, 33, 38));
     //else p.fillRect(rect(), QColor(33, 33, 38));
-    p.fillRect(rect(), Friction::Core::Theme::getThemeBaseColor());
+    p.fillRect(rect(), colors.base);
 
-    if(mPixelsPerFrame < 0.001) return;
-    if(!mGraphViewed) {
+    if (mPixelsPerFrame < 0.001) { return; }
+    if (!mGraphViewed) {
         int currY = eSizesUI::widget;
-        p.setPen(QPen(Friction::Core::Theme::getThemeTimelineColor(), 2));
-        while(currY < height()) {
+        p.setPen(QPen(colors.timeline, 2));
+        while (currY < height()) {
             p.drawLine(0, currY, width(), currY);
             currY += eSizesUI::widget;
         }
     }
     p.translate(eSizesUI::widget/2, 0);
 
-    p.setPen(QPen(Friction::Core::Theme::getThemeTimelineColor(), 2));
+    p.setPen(QPen(colors.timeline, 2));
     qreal xT = mPixelsPerFrame*0.5;
     int iInc = 1;
     bool mult5 = true;
-    while(iInc*mPixelsPerFrame < eSizesUI::widget/2) {
-        if(mult5) iInc *= 5;
-        else iInc *= 2;
+    while (iInc*mPixelsPerFrame < eSizesUI::widget/2) {
+        if (mult5) { iInc *= 5; }
+        else { iInc *= 2; }
     }
     int minFrame = mMinViewedFrame;
     int maxFrame = mMaxViewedFrame;
@@ -564,7 +576,7 @@ void KeysView::paintEvent(QPaintEvent *) {
     minFrame = minFrame - minFrame%iInc - 1;
     maxFrame += qFloor((width() - 40 - xT)/mPixelsPerFrame) - maxFrame%iInc;
 
-    for(int i = minFrame; i <= maxFrame; i += iInc) {
+    for (int i = minFrame; i <= maxFrame; i += iInc) {
         const qreal xTT = xT + (i - mMinViewedFrame + 1)*mPixelsPerFrame;
         p.drawLine(QPointF(xTT, 0), QPointF(xTT, height()));
     }
@@ -575,7 +587,7 @@ void KeysView::paintEvent(QPaintEvent *) {
         bool hasOut = hasFrameOut(i+1);
         bool hasMark = hasFrameMarker(i+1);
         if (!hasIn && !hasOut && !hasMark) { continue; }
-        const QColor col = hasMark ? Friction::Core::Theme::getThemeFrameMarkerColor() : Friction::Core::Theme::getThemeColorGreen();
+        const QColor col = hasMark ? colors.marker : colors.green;
         p.setPen(QPen(col, 2, Qt::DotLine));
         const qreal xTT = xT + (i - mMinViewedFrame + 1)*mPixelsPerFrame;
         p.drawLine(QPointF(xTT, 0), QPointF(xTT, height()));
@@ -585,14 +597,14 @@ void KeysView::paintEvent(QPaintEvent *) {
         if (mCurrentScene->getCurrentFrame() <= maxFrame &&
            mCurrentScene->getCurrentFrame() >= minFrame) {
             xT = (mCurrentScene->getCurrentFrame() - mMinViewedFrame)*mPixelsPerFrame + mPixelsPerFrame*0.5;
-            p.setPen(QPen(Friction::Core::Theme::getThemeHighlightColor(), 2));
+            p.setPen(QPen(colors.timeline, 2));
             p.drawLine(QPointF(xT, 0), QPointF(xT, height()));
         }
     }
 
-    p.setPen(QPen(Qt::black, 1));
+    p.setPen(QPen(colors.black, 1));
 
-    if(mGraphViewed) {
+    if (mGraphViewed) {
         p.save();
         graphPaint(&p);
         p.restore();
@@ -607,8 +619,8 @@ void KeysView::paintEvent(QPaintEvent *) {
         const FrameRange viewedFrameRange{frameAtZeroXi, maxFrame};
         drawKeys(&p, mPixelsPerFrame, viewedFrameRange);
         p.restore();
-        if(mSelecting) {
-            p.setPen(QPen(Qt::white, 1.5, Qt::DotLine));
+        if (mSelecting) {
+            p.setPen(QPen(colors.white, 1.5, Qt::DotLine));
             p.setBrush(Qt::NoBrush);
             p.drawRect(QRectF((mSelectionRect.x() - mMinViewedFrame)*mPixelsPerFrame,
                               mSelectionRect.y() - mViewedTop,
@@ -618,11 +630,12 @@ void KeysView::paintEvent(QPaintEvent *) {
     }
 
     p.resetTransform();
-    if(mMovingKeys && mValueInput.inputEnabled())
+    if (mMovingKeys && mValueInput.inputEnabled()) {
         mValueInput.draw(&p, height() - eSizesUI::widget);
-    if(hasFocus()) {
+    }
+    if (hasFocus()) {
         p.setBrush(Qt::NoBrush);
-        p.setPen(QPen(Friction::Core::Theme::getThemeHighlightColor(), 4));
+        p.setPen(QPen(colors.timeline, 4));
         p.drawRect(0, 0, width(), height());
     }
 

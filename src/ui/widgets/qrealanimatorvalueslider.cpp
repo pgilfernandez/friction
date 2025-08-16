@@ -269,6 +269,7 @@ void QrealAnimatorValueSlider::paint(QPainter *p)
     if (!mTarget) {
         QDoubleSlider::paint(p);
     } else {
+        const auto colors = eSettings::instance().fColors;
         bool rec = false;
         bool key = false;
         const auto aTarget = static_cast<Animator*>(*mTarget);
@@ -277,18 +278,18 @@ void QrealAnimatorValueSlider::paint(QPainter *p)
         if (rec) {
             const bool disabled = isTargetDisabled() || !isEnabled();
             QDoubleSlider::paint(p,
-                                 disabled ? Friction::Core::Theme::getThemeButtonBaseColor(200) : Friction::Core::Theme::getThemeHighlightAlternativeColor(),
-                                 key ? (disabled ? Friction::Core::Theme::getThemeAlternateColor() : Friction::Core::Theme::getThemeHighlightSelectedColor()) : (disabled ? Friction::Core::Theme::getThemeAlternateColor() : Friction::Core::Theme::getThemeHighlightColor()),
-                                 key ? (disabled ? Friction::Core::Theme::getThemeColorGray() : Friction::Core::Theme::getThemeHighlightSelectedColor()) : (disabled ? Friction::Core::Theme::getThemeColorDarkGray() : Friction::Core::Theme::getThemeButtonBorderColor()),
-                                 disabled ? Friction::Core::Theme::getThemeColorDarkGray() : Friction::Core::Theme::getThemeColorBlack());
+                                 disabled ? Friction::Core::Theme::getThemeButtonBaseColor(200) /* TODO */ : colors.highlightAlternative,
+                                 key ? (disabled ? colors.alternate : colors.highlightSelected) : (disabled ? colors.alternate : colors.highlight),
+                                 key ? (disabled ? colors.gray : colors.highlightSelected) : (disabled ? colors.darkGray : colors.buttonBorder),
+                                 disabled ? colors.darkGray : colors.black);
         } else {
             QDoubleSlider::paint(p, !isTargetDisabled() && isEnabled());
         }
         if (!textEditing() && mTarget->hasExpression()) {
             if (mTarget->hasValidExpression()) {
-                p->setBrush(Friction::Core::Theme::getThemeHighlightColor());
+                p->setBrush(colors.highlight);
             } else {
-                p->setBrush(QColor(255, 125, 0));
+                p->setBrush(QColor(255, 125, 0)); // TODO
             }
             p->setPen(Qt::NoPen);
             p->setRenderHint(QPainter::Antialiasing);

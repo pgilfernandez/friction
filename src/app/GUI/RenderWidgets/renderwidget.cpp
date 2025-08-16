@@ -62,7 +62,9 @@ RenderWidget::RenderWidget(QWidget *parent)
     bottomWidget->setContentsMargins(0, 0, 0, 0);
     const auto bottomLayout = new QHBoxLayout(bottomWidget);
 
-    setPalette(Friction::Core::Theme::getDarkPalette());
+    const auto colors = eSettings::instance().fColors;
+
+    setPalette(Friction::Core::Theme::getDarkPalette(colors));
     setAutoFillBackground(true);
 
     bottomWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -126,7 +128,7 @@ RenderWidget::RenderWidget(QWidget *parent)
     });
 
     mContWidget = new QWidget(this);
-    mContWidget->setPalette(Friction::Core::Theme::getDarkPalette());
+    mContWidget->setPalette(Friction::Core::Theme::getDarkPalette(colors));
     mContWidget->setAutoFillBackground(true);
     mContWidget->setContentsMargins(0, 0, 0, 0);
     mContLayout = new QVBoxLayout(mContWidget);

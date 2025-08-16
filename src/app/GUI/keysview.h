@@ -34,12 +34,7 @@
 #include "framerange.h"
 #include "conncontextobjlist.h"
 #include "themesupport.h"
-
-const QList<QColor> ANIMATOR_COLORS = {Friction::Core::Theme::getThemeColorRed(),
-                                       Friction::Core::Theme::getThemeColorBlue(),
-                                       Friction::Core::Theme::getThemeColorYellow(),
-                                       Friction::Core::Theme::getThemeColorPink(),
-                                       Friction::Core::Theme::getThemeColorGreen()};
+#include "Private/esettings.h"
 
 class Key;
 class QrealKey;
@@ -154,7 +149,7 @@ signals:
 #endif
 
 public:
-    static QColor sGetAnimatorColor(const int i);
+    QColor sGetAnimatorColor(const int i);
 
     void graphResetValueScaleAndMinShownAction();
     void graphSetValueLinesDisabled(const bool disabled);
@@ -294,6 +289,8 @@ private:
     qreal mSavedMinShownValue = 0;
     qreal mValueInc = 0;
     int mValuePrec = 2;
+
+    QList<QColor> mAnimatorColors;
 };
 
 #endif // KEYSVIEW_H

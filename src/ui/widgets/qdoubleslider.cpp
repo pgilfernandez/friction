@@ -205,11 +205,14 @@ void QDoubleSlider::setValueRange(const qreal min, const qreal max) {
     if (mAutoAdjustWidth) { fitWidthToContent(); }
 }
 
-void QDoubleSlider::paint(QPainter * const p, const bool enabled) {
-    paint(p, enabled ? Friction::Core::Theme::getThemeButtonBaseColor() : Friction::Core::Theme::getThemeAlternateColor(),
-          enabled ? Friction::Core::Theme::getThemeButtonBorderColor(150) : Friction::Core::Theme::getThemeBaseColor(),
-          enabled ? Friction::Core::Theme::getThemeButtonBorderColor() : Friction::Core::Theme::getThemeColorDarkGray(),
-          enabled ? Friction::Core::Theme::getThemeColorWhite() : Friction::Core::Theme::getThemeColorDarkGray());
+void QDoubleSlider::paint(QPainter * const p,
+                          const bool enabled)
+{
+    const auto colors = eSettings::instance().fColors;
+    paint(p, enabled ? colors.buttonBase : colors.alternate,
+          enabled ? Friction::Core::Theme::getThemeButtonBorderColor(150) /* TODO */ : colors.base,
+          enabled ? colors.buttonBorder : colors.darkGray,
+          enabled ? colors.white : colors.darkGray);
 }
 
 QString QDoubleSlider::valueToText(const qreal value) const {
@@ -240,7 +243,9 @@ void QDoubleSlider::paint(QPainter *p,
     QRectF boundingRect = rect().adjusted(1, 1, -1, -1);
     p->setPen(Qt::NoPen);
 
-    if (mHovered && isEnabled()) { p->setBrush(Friction::Core::Theme::getThemeBaseDarkerColor()); }
+    const auto colors = eSettings::instance().fColors;
+
+    if (mHovered && isEnabled()) { p->setBrush(colors.darkerBase); }
     else { p->setBrush(allFill); }
 
     if (mLeftNeighbour) {
@@ -267,7 +272,7 @@ void QDoubleSlider::paint(QPainter *p,
             const qreal valFrac = (mValue - mMinValue)/(mMaxValue - mMinValue);
             const qreal valWidth = clamp(valFrac*width(), 0, width() - 3);
 
-            if (mHovered && isEnabled()) { p->setBrush(Friction::Core::Theme::getThemeHighlightDarkerColor()); }
+            if (mHovered && isEnabled()) { p->setBrush(colors.highlightDarker); }
             else { p->setBrush(sliderFill); }
 
             const qreal heightRemoval = qMax(0., eSizesUI::widget/2 - valWidth)*0.5;

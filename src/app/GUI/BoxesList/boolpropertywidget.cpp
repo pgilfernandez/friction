@@ -55,33 +55,38 @@ void BoolPropertyWidget::mousePressEvent(QMouseEvent *) {
     Document::sInstance->actionFinished();
 }
 
-void BoolPropertyWidget::paintEvent(QPaintEvent *) {
-    if(!mTarget && !mTargetContainer) return;
+void BoolPropertyWidget::paintEvent(QPaintEvent *)
+{
+    if (!mTarget && !mTargetContainer) { return; }
     QPainter p(this);
-    if(mTarget) {
-        if(mTarget->SWT_isDisabled()) p.setOpacity(.5);
-    } else if(mTargetContainer) {
-        if(mTargetContainer->SWT_isDisabled()) p.setOpacity(.5);
+
+    if (mTarget) {
+        if (mTarget->SWT_isDisabled()) { p.setOpacity(.5); }
+    } else if (mTargetContainer) {
+        if (mTargetContainer->SWT_isDisabled()) { p.setOpacity(.5); }
     }
 
+    const auto colors = eSettings::instance().fColors;
+
     p.setRenderHint(QPainter::Antialiasing);
-    p.setBrush(Friction::Core::Theme::getThemeButtonBorderColor());
-    if(mHovered) {
-        p.setPen(Friction::Core::Theme::getThemeHighlightSelectedColor());
+    p.setBrush(colors.buttonBorder);
+
+    if (mHovered) {
+        p.setPen(colors.highlightSelected);
     } else {
-        p.setPen(Friction::Core::Theme::getThemeButtonBaseColor());
+        p.setPen(colors.buttonBase);
     }
 
     p.drawRoundedRect(rect().adjusted(1, 1, -1, -1), 5., 5.);
 
     bool value;
-    if(mTargetContainer) {
+    if (mTargetContainer) {
         value = mTargetContainer->getValue();
     } else {
         value = mTarget->getValue();
     }
-    if(value) {
-        p.setPen(QPen(Qt::white, 2.));
+    if (value) {
+        p.setPen(QPen(colors.white, 2.));
         p.drawLine(QPoint(6, height()/2), QPoint(width()/2, height() - 6));
         p.drawLine(QPoint(width()/2, height() - 6), QPoint(width() - 6, 6));
     }

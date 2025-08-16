@@ -129,7 +129,7 @@ private:
 
     InteractiveMarker mGrabbedMarker;
 
-    QColor mHandleColor = Friction::Core::Theme::getThemeButtonBorderColor();
+    QColor mHandleColor = eSettings::instance().fColors.buttonBorder;
     qptr<Canvas> mCurrentCanvas;
 };
 

@@ -28,6 +28,7 @@
 #include "pointhelpers.h"
 #include "Animators/transformanimator.h"
 #include "themesupport.h"
+#include "Private/esettings.h"
 
 MovablePoint::MovablePoint(const MovablePointType type) : mType(type) {}
 
@@ -80,10 +81,11 @@ QPointF MovablePoint::getAbsolutePos() const {
 }
 
 void MovablePoint::drawOnAbsPosSk(SkCanvas * const canvas,
-        const SkPoint &absPos,
-        const float invScale,
-        const SkColor &fillColor,
-        const bool keyOnCurrent) {
+                                  const SkPoint &absPos,
+                                  const float invScale,
+                                  const SkColor &fillColor,
+                                  const bool keyOnCurrent)
+{
     const float scaledRadius = static_cast<float>(mRadius)*invScale;
 
     SkPaint paint;
@@ -93,21 +95,23 @@ void MovablePoint::drawOnAbsPosSk(SkCanvas * const canvas,
     paint.setStyle(SkPaint::kFill_Style);
     canvas->drawCircle(absPos, scaledRadius, paint);
 
+    const auto colors = eSettings::instance().fColors;
+
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(toSkColor(Friction::Core::Theme::getThemeButtonBaseColor()));
+    paint.setColor(toSkColor(colors.buttonBase));
     paint.setStrokeWidth(invScale);
     canvas->drawCircle(absPos, scaledRadius, paint);
 
-    if(keyOnCurrent) {
+    if (keyOnCurrent) {
         const float halfRadius = scaledRadius*0.5f;
 
-        paint.setColor(toSkColor(Friction::Core::Theme::getThemeColorRed()));
+        paint.setColor(toSkColor(colors.red));
         paint.setStyle(SkPaint::kFill_Style);
         canvas->drawCircle(absPos, halfRadius, paint);
 
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setStrokeWidth(0.5f*invScale);
-        paint.setColor(SK_ColorWHITE);
+        paint.setColor(SK_ColorWHITE); // TODO
         canvas->drawCircle(absPos, halfRadius, paint);
     }
 }

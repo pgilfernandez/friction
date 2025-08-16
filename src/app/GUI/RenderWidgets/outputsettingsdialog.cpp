@@ -319,9 +319,10 @@ void OutputSettingsDialog::updateAvailableCodecs() {
 
 void OutputSettingsDialog::setupFormatOptionsTree()
 {
-    mFormatOptionsTree->setPalette(
-        Friction::Core::Theme::getDefaultPalette(
-            Friction::Core::Theme::getThemeButtonBorderColor()));
+    const auto colors = eSettings::instance().fColors;
+
+    mFormatOptionsTree->setPalette(Friction::Core::Theme::getDefaultPalette(colors.buttonBorder,
+                                                                            colors));
 
     const auto area = new QScrollArea(this);
     const auto container = new QWidget(this);

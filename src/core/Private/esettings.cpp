@@ -169,6 +169,8 @@ eSettings::eSettings(const int cpuThreads,
     Q_ASSERT(!sInstance);
     sInstance = this;
 
+    fColors = getDefaultThemeColors();
+
     gSettings << std::make_shared<eIntSetting>(
                      fCpuThreadsCap,
                      "cpuThreadsCap", 0);
@@ -272,19 +274,19 @@ eSettings::eSettings(const int cpuThreads,
     gSettings << std::make_shared<eColorSetting>(
                      fObjectKeyframeColor,
                      "objectKeyframeColor",
-                     Friction::Core::Theme::getThemeColorBlue());
+                     fColors.blue);
     gSettings << std::make_shared<eColorSetting>(
                      fPropertyGroupKeyframeColor,
                      "propertyGroupKeyframeColor",
-                     Friction::Core::Theme::getThemeColorGreen());
+                     fColors.green);
     gSettings << std::make_shared<eColorSetting>(
                      fPropertyKeyframeColor,
                      "propertyKeyframeColor",
-                     Friction::Core::Theme::getThemeColorRed());
+                     fColors.red);
     gSettings << std::make_shared<eColorSetting>(
                      fSelectedKeyframeColor,
                      "selectedKeyframeColor",
-                     Friction::Core::Theme::getThemeColorYellow());
+                     fColors.yellow);
 
     /*gSettings << std::make_shared<eColorSetting>(
                      fVisibilityRangeColor,
@@ -374,4 +376,41 @@ void eSettings::saveKeyToFile(const QString &key)
             return;
         }
     }
+}
+
+const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
+{
+    Friction::Core::Theme::Colors colors;
+
+    colors.base = QColor(26, 26, 30);
+    colors.darkBase = QColor(25, 25, 25);
+    colors.darkerBase = QColor(19, 19, 21);
+    colors.alternate = QColor(33, 33, 39);
+    colors.highlight = QColor(104, 144, 206);
+    colors.highlightDarker = QColor(53, 101, 176);
+    colors.highlightAlternative = QColor(167, 185, 222);
+    colors.highlightSelected = QColor(150, 191, 255);
+    colors.buttonBase = QColor(49, 49, 59);
+    colors.buttonBorder = QColor(65, 65, 80);
+    colors.comboboxBase = QColor(36, 36, 53);
+    colors.timeline = QColor(44, 44, 49);
+    colors.range = QColor(56, 73, 101);
+    colors.rangeSelected = QColor(87, 120, 173);
+    colors.marker = QColor(255, 123, 0);
+    colors.object = QColor(0, 102, 255);
+    colors.red = QColor(199, 67, 72);
+    colors.blue = QColor(73, 142, 209);
+    colors.yellow = QColor(209, 183, 73);
+    colors.pink = QColor(169, 73, 209);
+    colors.green = QColor(73, 209, 132);
+    colors.darkGreen = QColor(27, 49, 39);
+    colors.orange = QColor(255, 123, 0);
+    colors.textDisabled = QColor(112, 112, 113);
+    colors.outputDestination = QColor(40, 40, 47);
+    colors.gray = Qt::gray;
+    colors.darkGray = Qt::darkGray;
+    colors.black = Qt::black;
+    colors.white = Qt::white;
+
+    return colors;
 }

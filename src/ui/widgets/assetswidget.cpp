@@ -151,7 +151,7 @@ AssetsWidget::AssetsWidget(QWidget *parent)
     , mTree(nullptr)
 {
     setAcceptDrops(true);
-    setPalette(Friction::Core::Theme::getDarkPalette());
+    setPalette(Friction::Core::Theme::getDarkPalette(eSettings::instance().fColors));
     setAutoFillBackground(true);
     setContentsMargins(0, 10, 0, 0);
     QVBoxLayout *mLayout = new QVBoxLayout(this);

@@ -53,7 +53,7 @@ TimelineWidget::TimelineWidget(Document &document,
     : QWidget(parent)
     , mDocument(document)
 {
-    setPalette(Friction::Core::Theme::getDarkerPalette());
+    setPalette(Friction::Core::Theme::getDarkerPalette(eSettings::instance().fColors));
     setAutoFillBackground(true);
 
     mMainLayout = new QGridLayout(this);

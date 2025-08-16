@@ -118,22 +118,28 @@ void BoxTargetWidget::mousePressEvent(QMouseEvent *event) {
     }
 }
 
-void BoxTargetWidget::paintEvent(QPaintEvent *) {
-    if(!mProperty) return;
+void BoxTargetWidget::paintEvent(QPaintEvent *)
+{
+    if (!mProperty) { return; }
     QPainter p(this);
-    if(mProperty->SWT_isDisabled()) p.setOpacity(.5);
+
+    if (mProperty->SWT_isDisabled()) { p.setOpacity(.5); }
     p.setRenderHint(QPainter::Antialiasing);
-    p.setBrush(Friction::Core::Theme::getThemeButtonBorderColor());
-    if(mDragging) {
-        p.setPen(Friction::Core::Theme::getThemeHighlightSelectedColor());
+
+    const auto colors = eSettings::instance().fColors;
+
+    p.setBrush(colors.buttonBorder);
+    if (mDragging) {
+        p.setPen(colors.highlightSelected);
     } else {
-        p.setPen(Friction::Core::Theme::getThemeButtonBaseColor());
+        p.setPen(colors.buttonBase);
     }
     p.drawRoundedRect(rect().adjusted(1, 1, -1, -1), 5., 5.);
 
-    p.setPen(Qt::white);
+    p.setPen(colors.white);
+
     const auto target = mProperty->getTarget();
-    if(!target) {
+    if (!target) {
         p.drawText(rect(), Qt::AlignCenter, "-none-");
     } else {
         p.drawText(rect(), Qt::AlignCenter, target->prp_getName());

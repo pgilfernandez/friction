@@ -40,6 +40,7 @@ namespace Friction
         {
         public:
             struct Colors {
+                // TODO: make more logical names
                 QColor base;
                 QColor darkBase;
                 QColor darkerBase;
@@ -71,43 +72,26 @@ namespace Friction
                 QColor white;
             };
             static const QColor getQColor(int r, int g, int b, int a = 255);
-            static const QColor getThemeBaseColor(int alpha = 255);
             static SkColor getThemeBaseSkColor(int alpha = 255);
-            static const QColor getThemeBaseDarkColor(int alpha = 255);
-            static const QColor getThemeBaseDarkerColor(int alpha = 255);
-            static const QColor getThemeAlternateColor(int alpha = 255);
             static const QColor getThemeHighlightColor(int alpha = 255);
-            static const QColor getThemeHighlightDarkerColor(int alpha = 255);
-            static const QColor getThemeHighlightAlternativeColor(int alpha = 255);
             static const QColor getThemeHighlightSelectedColor(int alpha = 255);
             static SkColor getThemeHighlightSkColor(int alpha = 255);
             static const QColor getThemeButtonBaseColor(int alpha = 255);
             static const QColor getThemeButtonBorderColor(int alpha = 255);
-            static const QColor getThemeComboBaseColor(int alpha = 255);
-            static const QColor getThemeTimelineColor(int alpha = 255);
             static const QColor getThemeRangeColor(int alpha = 255);
             static const QColor getThemeRangeSelectedColor(int alpha = 255);
-            static const QColor getThemeFrameMarkerColor(int alpha = 255);
             static const QColor getThemeObjectColor(int alpha = 255);
-            static const QColor getThemeColorRed(int alpha = 255);
-            static const QColor getThemeColorBlue(int alpha = 255);
-            static const QColor getThemeColorYellow(int alpha = 255);
-            static const QColor getThemeColorPink(int alpha = 255);
             static const QColor getThemeColorGreen(int alpha = 255);
-            static const QColor getThemeColorGreenDark(int alpha = 255);
             static const QColor getThemeColorOrange(int alpha = 255);
-            static const QColor getThemeColorTextDisabled(int alpha = 255);
-            static const QColor getThemeColorOutputDestinationLineEdit(int alpha = 255);
-            static const QColor getThemeColorGray(int alpha = 255);
-            static const QColor getThemeColorDarkGray(int alpha = 255);
-            static const QColor getThemeColorBlack(int alpha = 255);
-            static const QColor getThemeColorWhite(int alpha = 255);
-            static const QPalette getDefaultPalette(const QColor &highlight = QColor());
-            static const QPalette getDarkPalette(int alpha = 255);
-            static const QPalette getDarkerPalette(int alpha = 255);
-            static const QPalette getNotSoDarkPalette(int alpha = 255);
-            static const QString getThemeStyle(int iconSize = 20);
-            static void setupTheme(const int iconSize = 20);
+            static const QPalette getDefaultPalette(const QColor &highlight = QColor(),
+                                                    const Colors &colors = Colors());
+            static const QPalette getDarkPalette(const Colors &colors = Colors());
+            static const QPalette getDarkerPalette(const Colors &colors = Colors());
+            static const QPalette getNotSoDarkPalette(const Colors &colors = Colors());
+            static const QString getThemeStyle(int iconSize = 20,
+                                               const Colors &colors = Colors());
+            static void setupTheme(const int iconSize = 20,
+                                   const Colors &colors = Colors());
             static const QList<QSize> getAvailableIconSizes();
             static const QSize getIconSize(const int size);
             static bool hasIconSize(const int size);

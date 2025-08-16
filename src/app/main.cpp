@@ -199,7 +199,8 @@ int main(int argc, char *argv[])
     });
     ALPHA_MESH_PIX = &alphaMesh;
 
-    Friction::Core::Theme::setupTheme(eSizesUI::widget);
+    Friction::Core::Theme::setupTheme(eSizesUI::widget,
+                                      settings.fColors);
 
     // check permissions
     AppSupport::checkPerms(isRenderer);

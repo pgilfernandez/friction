@@ -815,57 +815,61 @@ void BoxSingleWidget::getKeysInRect(const QRectF &selectionRect,
     }
 }
 
-void BoxSingleWidget::paintEvent(QPaintEvent *) {
-    if(!mTarget) return;
+void BoxSingleWidget::paintEvent(QPaintEvent *)
+{
+    if (!mTarget) { return; }
     QPainter p(this);
     const auto target = mTarget->getTarget();
     const auto prop = enve_cast<Property*>(target);
-    if(!prop) return;
-    if(prop->SWT_isDisabled()) p.setOpacity(.5);
+
+    if (!prop) { return; }
+    if (prop->SWT_isDisabled()) { p.setOpacity(.5); }
 
     int nameX = mFillWidget->x();
 
-    if (mHover) { p.fillRect(rect(), Friction::Core::Theme::getThemeHighlightColor(40)); }
+    const auto colors = eSettings::instance().fColors;
+
+    if (mHover) { p.fillRect(rect(), Friction::Core::Theme::getThemeHighlightColor(40)); } // TODO
 
     const auto bsTarget = enve_cast<eBoxOrSound*>(prop);
     if (!bsTarget && prop->prp_isSelected()) {
         p.fillRect(mFillWidget->geometry(),
-                   Friction::Core::Theme::getThemeHighlightSelectedColor(25));
+                   Friction::Core::Theme::getThemeHighlightSelectedColor(25)); // TODO
     }
     if (bsTarget) {
         nameX += eSizesUI::widget/4;
         const bool ss = enve_cast<eSoundObjectBase*>(prop);
         if (ss || enve_cast<BoundingBox*>(prop)) {
-            p.fillRect(rect(), QColor(0, 0, 0, 50));
+            p.fillRect(rect(), QColor(0, 0, 0, 50)); // TODO
             if (bsTarget->isSelected()) {
                 p.fillRect(mFillWidget->geometry(),
-                           Friction::Core::Theme::getThemeHighlightSelectedColor(50));
-                p.setPen(Qt::white);
+                           Friction::Core::Theme::getThemeHighlightSelectedColor(50)); // TODO
+                p.setPen(colors.white);
             } else {
-                p.setPen(Qt::white);
+                p.setPen(colors.white);
             }
         } else if (enve_cast<BlendEffectBoxShadow*>(prop)) {
-            p.fillRect(rect(), QColor(0, 255, 125, 50));
+            p.fillRect(rect(), QColor(0, 255, 125, 50)); // TODO
             nameX += eSizesUI::widget;
         }
-    } else if(!enve_cast<ComplexAnimator*>(prop)) {
-        if(const auto graphAnim = enve_cast<GraphAnimator*>(prop)) {
+    } else if (!enve_cast<ComplexAnimator*>(prop)) {
+        if (const auto graphAnim = enve_cast<GraphAnimator*>(prop)) {
             const auto bswvp = static_cast<BoxScroller*>(mParent);
             const auto keysView = bswvp->getKeysView();
-            if(keysView) {
+            if (keysView) {
                 const bool selected = keysView->graphIsSelected(graphAnim);
-                if(selected) {
+                if (selected) {
                     const int id = keysView->graphGetAnimatorId(graphAnim);
                     const auto color = id >= 0 ?
                                 keysView->sGetAnimatorColor(id) :
-                                QColor(Qt::black);
+                                QColor(colors.black);
                     const QRect visRect(mVisibleButton->pos(),
                                         mVisibleButton->size());
                     const int adj = qRound(4*qreal(mVisibleButton->width())/20);
                     p.fillRect(visRect.adjusted(adj, adj, -adj, -adj), color);
                 }
             }
-            if(const auto path = enve_cast<SmartPathAnimator*>(prop)) {
+            if (const auto path = enve_cast<SmartPathAnimator*>(prop)) {
                 const QRect colRect(QPoint{nameX, 0},
                                     QSize{eSizesUI::widget, eSizesUI::widget});
                 p.setPen(Qt::NoPen);
@@ -879,10 +883,10 @@ void BoxSingleWidget::paintEvent(QPaintEvent *) {
             }
         } else nameX += eSizesUI::widget;
 
-        if(!enve_cast<Animator*>(prop)) nameX += eSizesUI::widget;
-        p.setPen(Qt::white);
+        if (!enve_cast<Animator*>(prop)) { nameX += eSizesUI::widget; }
+        p.setPen(colors.white);
     } else { //if(enve_cast<ComplexAnimator*>(target)) {
-        p.setPen(Qt::white);
+        p.setPen(colors.white);
     }
 
     const QRect textRect(nameX, 0, width() - nameX - eSizesUI::widget, eSizesUI::widget);
@@ -890,9 +894,9 @@ void BoxSingleWidget::paintEvent(QPaintEvent *) {
     QTextOption opts(Qt::AlignVCenter);
     opts.setWrapMode(QTextOption::NoWrap);
     p.drawText(textRect, name, opts);
-    if(mSelected) {
+    if (mSelected) {
         p.setBrush(Qt::NoBrush);
-        p.setPen(QPen(Qt::lightGray));
+        p.setPen(QPen(Qt::lightGray)); // TODO
         p.drawRect(rect().adjusted(0, 0, -1, -1));
     }
     p.end();

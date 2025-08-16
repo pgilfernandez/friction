@@ -46,16 +46,17 @@ void PathPivot::drawSk(SkCanvas * const canvas,
     Q_UNUSED(ctrlPressed)
     if (!isVisible(mode)) { return; }
     const SkPoint absPos = toSkPoint(getAbsolutePos());
+    const auto colors = eSettings::instance().fColors;
     drawOnAbsPosSk(canvas,
                    absPos,
                    invScale,
-                   toSkColor(Friction::Core::Theme::getThemeColorGreen(155)));
+                   toSkColor(Friction::Core::Theme::getThemeColorGreen(155))); // TODO
     canvas->save();
     canvas->translate(absPos.x(), absPos.y());
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(toSkColor(Friction::Core::Theme::getThemeButtonBaseColor()));
+    paint.setColor(toSkColor(colors.buttonBase));
     const float scaledHalfRadius = toSkScalar(getRadius()*0.5)*invScale;
     canvas->drawLine(-scaledHalfRadius, 0, scaledHalfRadius, 0, paint);
     canvas->drawLine(0, -scaledHalfRadius, 0, scaledHalfRadius, paint);

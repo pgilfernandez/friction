@@ -69,9 +69,14 @@ void FrameScrollBar::setCurrentCanvas(Canvas * const canvas)
     update();
 }
 
-void FrameScrollBar::paintEvent(QPaintEvent *) {
+void FrameScrollBar::paintEvent(QPaintEvent *)
+{
     QPainter p(this);
-    p.fillRect(rect(), Friction::Core::Theme::getThemeBaseDarkerColor());
+
+
+    const auto colors = eSettings::instance().fColors;
+
+    p.fillRect(rect(), colors.darkerBase);
 
     const int dFrame = mFrameRange.fMax - mFrameRange.fMin + (mRange ? 0 : 1);
     if (dFrame <= 0) { return; }
@@ -126,8 +131,8 @@ void FrameScrollBar::paintEvent(QPaintEvent *) {
 
     // draw the stuff ...
     if (!mRange) {
-        const auto colOrange = Friction::Core::Theme::getThemeFrameMarkerColor();
-        const auto colGreen = Friction::Core::Theme::getThemeColorGreen();
+        const auto colOrange = colors.marker;
+        const auto colGreen = colors.green;
         const auto frameIn = getFrameIn();
         const auto frameOut = getFrameOut();
 
@@ -152,8 +157,7 @@ void FrameScrollBar::paintEvent(QPaintEvent *) {
             const qreal xTT2 = xT + (frameOut.second - mFrameRange.fMin) * pixPerFrame;
             const int h = mFm.height();
             const auto rect = QRectF(xTT1, h, xTT2 - xTT1, height() - h);
-            p.fillRect(rect, QBrush(Friction::Core::Theme::getThemeColorGreenDark(),
-                                    Qt::SolidPattern));
+            p.fillRect(rect, QBrush(colors.darkGreen, Qt::SolidPattern));
             p.drawRect(rect);
         }
 
@@ -175,7 +179,7 @@ void FrameScrollBar::paintEvent(QPaintEvent *) {
                                      mFm.height());
             p.fillRect(rect, QBrush(col, Qt::SolidPattern));
             p.drawRect(rect);
-            p.setPen(Qt::black);
+            p.setPen(colors.black);
             p.drawText(rect, Qt::AlignCenter, drawValue);
         }
 
@@ -187,7 +191,7 @@ void FrameScrollBar::paintEvent(QPaintEvent *) {
         }
 
         // draw main
-        p.setPen(QPen(Qt::white, 2));
+        p.setPen(QPen(colors.white, 2));
         p.translate(-(eSizesUI::widget/2), 0);
         bool timecode = mDisplayTime && mFps > 0;
         if (qAbs(pixPerFrame) > 0.11) {
@@ -208,7 +212,7 @@ void FrameScrollBar::paintEvent(QPaintEvent *) {
             path.lineTo(handleRect.topLeft());
             path.lineTo(handleRect.topRight());
             path.lineTo(handleRect.left() + (handleRect.width() / 2), handleRect.bottom());
-            p.fillPath(path, Friction::Core::Theme::getThemeHighlightColor());
+            p.fillPath(path, colors.highlight);
         }
     }
 

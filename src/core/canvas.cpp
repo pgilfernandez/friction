@@ -264,11 +264,11 @@ void Canvas::renderSk(SkCanvas* const canvas,
     }
     canvas->save();
     if(mClipToCanvasSize) {
-        canvas->clear(SK_ColorBLACK);
+        canvas->clear(SK_ColorBLACK); // TODO
         canvas->clipRect(canvasRect);
     } else {
-        canvas->clear(Friction::Core::Theme::getThemeBaseSkColor());
-        paint.setColor(SK_ColorGRAY);
+        canvas->clear(Friction::Core::Theme::getThemeBaseSkColor()); // TODO
+        paint.setColor(SK_ColorGRAY); // TODO
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setPathEffect(dashPathEffect);
         canvas->drawRect(toSkRect(getCurrentBounds()), paint);
@@ -348,14 +348,14 @@ void Canvas::renderSk(SkCanvas* const canvas,
         const bool drawFitted = mDocument.fDrawPathManual &&
                                 mManualDrawPathState == ManualDrawPathState::drawn;
         if(drawFitted) {
-            paint.setARGB(255, 255, 0, 0);
+            paint.setARGB(255, 255, 0, 0); // TODO
             const auto& highlightPts = mDrawPath.forceSplits();
             for(const int ptId : highlightPts) {
                 const auto& pt = pts.at(ptId);
                 canvas->drawCircle(pt.x(), pt.y(), nodeSize, paint);
             }
             const auto& fitted = mDrawPath.getFitted();
-            paint.setARGB(255, 255, 0, 0);
+            paint.setARGB(255, 255, 0, 0); // TODO
             for(const auto& seg : fitted) {
                 const auto path = seg.toSkPath();
                 SkiaHelpers::drawOutlineOverlay(canvas, path, invZoom, SK_ColorWHITE);
@@ -368,7 +368,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
             }
         }
 
-        paint.setARGB(255, 0, 75, 155);
+        paint.setARGB(255, 0, 75, 155); // TODO
         if(mHoveredPoint_d && mHoveredPoint_d->isSmartNodePoint()) {
             const QPointF pos = mHoveredPoint_d->getAbsolutePos();
             const qreal r = 0.5*qInvZoom*mHoveredPoint_d->getRadius();
@@ -397,10 +397,10 @@ void Canvas::renderSk(SkCanvas* const canvas,
             paint.setStyle(SkPaint::kStroke_Style);
             paint.setPathEffect(dashPathEffect);
             paint.setStrokeWidth(2*invZoom);
-            paint.setColor(SkColorSetARGB(255, 0, 55, 255));
+            paint.setColor(SkColorSetARGB(255, 0, 55, 255)); // TODO
             canvas->drawRect(toSkRect(mSelectionRect), paint);
             paint.setStrokeWidth(invZoom);
-            paint.setColor(SkColorSetARGB(255, 150, 150, 255));
+            paint.setColor(SkColorSetARGB(255, 150, 150, 255)); // TODO
             canvas->drawRect(toSkRect(mSelectionRect), paint);
             //paint.setPathEffect(nullptr);
         }
@@ -418,7 +418,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
 
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setStrokeWidth(invZoom);
-    paint.setColor(SK_ColorGRAY);
+    paint.setColor(SK_ColorGRAY); // TODO
     paint.setPathEffect(nullptr);
     canvas->drawRect(canvasRect, paint);
 
