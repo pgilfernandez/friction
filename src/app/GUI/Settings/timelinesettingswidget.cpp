@@ -31,6 +31,7 @@
 #include <QLabel>
 
 #include "GUI/global.h"
+#include "themesupport.h"
 
 TimelineSettingsWidget::TimelineSettingsWidget(QWidget *parent) :
     SettingsWidget(parent) {
@@ -54,6 +55,17 @@ TimelineSettingsWidget::TimelineSettingsWidget(QWidget *parent) :
                                mSett.fPropertyKeyframeColor);
     mSelectedKeyframeColor = new ColorAnimatorButton(
                                mSett.fSelectedKeyframeColor);
+    mThemeButtonBaseColor = new ColorAnimatorButton(
+                               mSett.fThemeButtonBaseColor);
+    mThemeButtonBorderColor = new ColorAnimatorButton(mSett.fThemeButtonBorderColor);
+    mThemeBaseDarkerColor = new ColorAnimatorButton(mSett.fThemeBaseDarkerColor);
+    mThemeHighlightColor = new ColorAnimatorButton(mSett.fThemeHighlightColor);
+    mThemeBaseColor = new ColorAnimatorButton(mSett.fThemeBaseColor);
+    mThemeAlternateColor = new ColorAnimatorButton(mSett.fThemeAlternateColor);
+    mThemeColorOrange = new ColorAnimatorButton(mSett.fThemeColorOrange);
+    mThemeRangeSelectedColor = new ColorAnimatorButton(mSett.fThemeRangeSelectedColor);
+    mThemeColorTextDisabled = new ColorAnimatorButton(mSett.fThemeColorTextDisabled);
+    mThemeColorOutputDestinationLineEdit = new ColorAnimatorButton(mSett.fThemeColorOutputDestinationLineEdit);
 
     add2HWidgets(new QLabel("Object keyframe color"),
                  mObjectKeyframeColor);
@@ -63,6 +75,29 @@ TimelineSettingsWidget::TimelineSettingsWidget(QWidget *parent) :
                  mPropertyKeyframeColor);
     add2HWidgets(new QLabel("Selected keyframe color"),
                  mSelectedKeyframeColor);
+
+    addSeparator();
+    
+    add2HWidgets(new QLabel("Theme Button base color"),
+                 mThemeButtonBaseColor);
+    add2HWidgets(new QLabel("Theme Button border color"),
+                 mThemeButtonBorderColor);
+    add2HWidgets(new QLabel("Theme Base darker color"),
+                 mThemeBaseDarkerColor);
+    add2HWidgets(new QLabel("Theme Highlight color"),
+                 mThemeHighlightColor);
+    add2HWidgets(new QLabel("Theme Base color"),
+                 mThemeBaseColor);
+    add2HWidgets(new QLabel("Theme Alternate color"),
+                 mThemeAlternateColor);
+    add2HWidgets(new QLabel("Theme Color Orange"),
+                 mThemeColorOrange);
+    add2HWidgets(new QLabel("Theme Range selected color"),
+                 mThemeRangeSelectedColor);
+    add2HWidgets(new QLabel("Theme Text disabled color"),
+                 mThemeColorTextDisabled);
+    add2HWidgets(new QLabel("Theme Output-destination LineEdit color"),
+                 mThemeColorOutputDestinationLineEdit);
 
     /*addSeparator();
 
@@ -99,6 +134,22 @@ void TimelineSettingsWidget::applySettings() {
     mSett.fPropertyGroupKeyframeColor = mPropertyGroupKeyframeColor->color();
     mSett.fPropertyKeyframeColor = mPropertyKeyframeColor->color();
     mSett.fSelectedKeyframeColor = mSelectedKeyframeColor->color();
+    mSett.fThemeButtonBaseColor = mThemeButtonBaseColor->color();
+    mSett.fThemeButtonBorderColor = mThemeButtonBorderColor->color();
+    mSett.fThemeBaseDarkerColor = mThemeBaseDarkerColor->color();
+    mSett.fThemeHighlightColor = mThemeHighlightColor->color();
+    mSett.fThemeBaseColor = mThemeBaseColor->color();
+    mSett.fThemeAlternateColor = mThemeAlternateColor->color();
+    mSett.fThemeColorOrange = mThemeColorOrange->color();
+    mSett.fThemeRangeSelectedColor = mThemeRangeSelectedColor->color();
+    mSett.fThemeColorTextDisabled = mThemeColorTextDisabled->color();
+    mSett.fThemeColorOutputDestinationLineEdit = mThemeColorOutputDestinationLineEdit->color();
+
+    // Persistir todos los cambios registrados y reaplicar el tema
+    if (eSettings::sInstance) {
+        eSettings::sInstance->saveToFile();
+        ThemeSupport::setupTheme(16);
+    }
 
     //mSett.fVisibilityRangeColor = mVisibilityRangeColor->color();
     //mSett.fSelectedVisibilityRangeColor = mSelectedVisibilityRangeColor->color();
@@ -118,6 +169,16 @@ void TimelineSettingsWidget::updateSettings(bool restore)
     mPropertyGroupKeyframeColor->setColor(mSett.fPropertyGroupKeyframeColor);
     mPropertyKeyframeColor->setColor(mSett.fPropertyKeyframeColor);
     mSelectedKeyframeColor->setColor(mSett.fSelectedKeyframeColor);
+    mThemeButtonBaseColor->setColor(mSett.fThemeButtonBaseColor);
+    mThemeButtonBorderColor->setColor(mSett.fThemeButtonBorderColor);
+    mThemeBaseDarkerColor->setColor(mSett.fThemeBaseDarkerColor);
+    mThemeHighlightColor->setColor(mSett.fThemeHighlightColor);
+    mThemeBaseColor->setColor(mSett.fThemeBaseColor);
+    mThemeAlternateColor->setColor(mSett.fThemeAlternateColor);
+    mThemeColorOrange->setColor(mSett.fThemeColorOrange);
+    mThemeRangeSelectedColor->setColor(mSett.fThemeRangeSelectedColor);
+    mThemeColorTextDisabled->setColor(mSett.fThemeColorTextDisabled);
+    mThemeColorOutputDestinationLineEdit->setColor(mSett.fThemeColorOutputDestinationLineEdit);
 
     //mVisibilityRangeColor->setColor(mSett.fVisibilityRangeColor);
     //mSelectedVisibilityRangeColor->setColor(mSett.fSelectedVisibilityRangeColor);

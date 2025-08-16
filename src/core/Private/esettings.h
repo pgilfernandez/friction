@@ -156,6 +156,16 @@ public:
     QColor fPropertyGroupKeyframeColor;
     QColor fPropertyKeyframeColor;
     QColor fSelectedKeyframeColor;
+    QColor fThemeButtonBaseColor;
+    QColor fThemeButtonBorderColor;
+    QColor fThemeBaseDarkerColor;
+    QColor fThemeHighlightColor;
+    QColor fThemeBaseColor;
+    QColor fThemeAlternateColor;
+    QColor fThemeColorOrange;
+    QColor fThemeRangeSelectedColor;
+    QColor fThemeColorTextDisabled;
+    QColor fThemeColorOutputDestinationLineEdit;
 
     QColor fVisibilityRangeColor = ThemeSupport::getThemeRangeColor();
     QColor fSelectedVisibilityRangeColor = ThemeSupport::getThemeRangeSelectedColor();

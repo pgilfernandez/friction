@@ -285,6 +285,46 @@ eSettings::eSettings(const int cpuThreads,
                      fSelectedKeyframeColor,
                      "selectedKeyframeColor",
                      ThemeSupport::getThemeColorYellow());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeButtonBaseColor,
+                     "ThemeButtonBaseColor",
+                     ThemeSupport::getThemeButtonBaseColor());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeButtonBorderColor,
+                     "ThemeButtonBorderColor",
+                     ThemeSupport::getThemeButtonBorderColor());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeBaseDarkerColor,
+                     "ThemeBaseDarkerColor",
+                     ThemeSupport::getThemeBaseDarkerColor());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeHighlightColor,
+                     "ThemeHighlightColor",
+                     ThemeSupport::getThemeHighlightColor());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeBaseColor,
+                     "ThemeBaseColor",
+                     ThemeSupport::getThemeBaseColor());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeAlternateColor,
+                     "ThemeAlternateColor",
+                     ThemeSupport::getThemeAlternateColor());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeColorOrange,
+                     "ThemeColorOrange",
+                     ThemeSupport::getThemeColorOrange());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeRangeSelectedColor,
+                     "ThemeRangeSelectedColor",
+                     ThemeSupport::getThemeRangeSelectedColor());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeColorTextDisabled,
+                     "ThemeColorTextDisabled",
+                     ThemeSupport::getThemeColorTextDisabled());
+    gSettings << std::make_shared<eColorSetting>(
+                     fThemeColorOutputDestinationLineEdit,
+                     "ThemeColorOutputDestinationLineEdit",
+                     ThemeSupport::getThemeColorOutputDestinationLineEdit());
 
     /*gSettings << std::make_shared<eColorSetting>(
                      fVisibilityRangeColor,

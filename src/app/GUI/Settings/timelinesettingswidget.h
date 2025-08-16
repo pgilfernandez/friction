@@ -49,6 +49,16 @@ private:
     ColorAnimatorButton* mPropertyGroupKeyframeColor = nullptr;
     ColorAnimatorButton* mPropertyKeyframeColor = nullptr;
     ColorAnimatorButton* mSelectedKeyframeColor = nullptr;
+    ColorAnimatorButton* mThemeButtonBaseColor = nullptr;
+    ColorAnimatorButton* mThemeButtonBorderColor = nullptr;
+    ColorAnimatorButton* mThemeBaseDarkerColor = nullptr;
+    ColorAnimatorButton* mThemeHighlightColor = nullptr;
+    ColorAnimatorButton* mThemeBaseColor = nullptr;
+    ColorAnimatorButton* mThemeAlternateColor = nullptr;
+    ColorAnimatorButton* mThemeColorOrange = nullptr;
+    ColorAnimatorButton* mThemeRangeSelectedColor = nullptr;
+    ColorAnimatorButton* mThemeColorTextDisabled = nullptr;
+    ColorAnimatorButton* mThemeColorOutputDestinationLineEdit = nullptr;
 
     //ColorAnimatorButton* mVisibilityRangeColor = nullptr;
     //ColorAnimatorButton* mSelectedVisibilityRangeColor = nullptr;

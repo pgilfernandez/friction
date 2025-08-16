@@ -22,6 +22,7 @@
 */
 
 #include "themesupport.h"
+#include "Private/esettings.h"
 
 #include <QFile>
 #include <QIcon>
@@ -40,6 +41,10 @@ const QColor ThemeSupport::getQColor(int r,
 
 const QColor ThemeSupport::getThemeBaseColor(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeBaseColor;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(26, 26, 30, alpha);
 }
 
@@ -55,16 +60,28 @@ const QColor ThemeSupport::getThemeBaseDarkColor(int alpha)
 
 const QColor ThemeSupport::getThemeBaseDarkerColor(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeBaseDarkerColor;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(19, 19, 21, alpha);
 }
 
 const QColor ThemeSupport::getThemeAlternateColor(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeAlternateColor;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(33, 33, 39, alpha);
 }
 
 const QColor ThemeSupport::getThemeHighlightColor(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeHighlightColor;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(104, 144, 206, alpha);
 }
 
@@ -90,11 +107,19 @@ SkColor ThemeSupport::getThemeHighlightSkColor(int alpha)
 
 const QColor ThemeSupport::getThemeButtonBaseColor(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeButtonBaseColor;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(49, 49, 59, alpha);
 }
 
 const QColor ThemeSupport::getThemeButtonBorderColor(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeButtonBorderColor;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(65, 65, 80, alpha);
 }
 
@@ -115,6 +140,10 @@ const QColor ThemeSupport::getThemeRangeColor(int alpha)
 
 const QColor ThemeSupport::getThemeRangeSelectedColor(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeRangeSelectedColor;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(87, 120, 173, alpha);
 }
 
@@ -160,16 +189,28 @@ const QColor ThemeSupport::getThemeColorGreenDark(int alpha)
 
 const QColor ThemeSupport::getThemeColorOrange(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeColorOrange;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(255, 123, 0, alpha);
 }
 
 const QColor ThemeSupport::getThemeColorTextDisabled(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeColorTextDisabled;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(112, 112, 113, alpha);
 }
 
 const QColor ThemeSupport::getThemeColorOutputDestinationLineEdit(int alpha)
 {
+    if (eSettings::sInstance) {
+        const QColor userCol = eSettings::sInstance->fThemeColorOutputDestinationLineEdit;
+        if (userCol.isValid()) { QColor c = userCol; c.setAlpha(alpha); return c; }
+    }
     return getQColor(40, 40, 47, alpha);
 }
 
@@ -274,6 +315,10 @@ const QString ThemeSupport::getThemeStyle(int iconSize)
 
 void ThemeSupport::setupTheme(const int iconSize)
 {
+    if (eSettings::sInstance) {
+        eSettings::sInstance->loadFromFile();
+    }
+
     QIcon::setThemeSearchPaths(QStringList() << QString::fromUtf8(":/icons"));
     QIcon::setThemeName(QString::fromUtf8("hicolor"));
     qApp->setStyle(QString::fromUtf8("fusion"));
