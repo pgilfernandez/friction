@@ -67,7 +67,7 @@ void BoxPathPoint::drawSk(SkCanvas * const canvas,
     drawOnAbsPosSk(canvas,
                    absPos,
                    invScale,
-                   toSkColor(Friction::Core::Theme::getThemeColorOrange(155))); // TODO
+                   toSkColor(Friction::Core::Theme::transparentColor(colors.orange, 155)));
     canvas->save();
     canvas->translate(absPos.x(), absPos.y());
     SkPaint paint;

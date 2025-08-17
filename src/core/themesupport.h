@@ -81,16 +81,6 @@ namespace Friction
                 QColor white;
             };
             static const QColor transparentColor(QColor c, int a);
-            static const QColor getQColor(int r, int g, int b, int a = 255);
-            static const QColor getThemeHighlightColor(int alpha = 255);
-            static const QColor getThemeHighlightSelectedColor(int alpha = 255);
-            static const QColor getThemeButtonBaseColor(int alpha = 255);
-            static const QColor getThemeButtonBorderColor(int alpha = 255);
-            static const QColor getThemeRangeColor(int alpha = 255);
-            static const QColor getThemeRangeSelectedColor(int alpha = 255);
-            static const QColor getThemeObjectColor(int alpha = 255);
-            static const QColor getThemeColorGreen(int alpha = 255);
-            static const QColor getThemeColorOrange(int alpha = 255);
             static const QPalette getDefaultPalette(const QColor &highlight = QColor(),
                                                     const Colors &colors = Colors());
             static const QPalette getDarkPalette(const Colors &colors = Colors());

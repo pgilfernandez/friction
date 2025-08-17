@@ -210,7 +210,7 @@ void QDoubleSlider::paint(QPainter * const p,
 {
     const auto colors = eSettings::instance().fColors;
     paint(p, enabled ? colors.baseButton : colors.baseAlt,
-          enabled ? Friction::Core::Theme::getThemeButtonBorderColor(150) /* TODO */ : colors.base,
+          enabled ? Friction::Core::Theme::transparentColor(colors.baseBorder, 150) : colors.base,
           enabled ? colors.baseBorder : colors.darkGray,
           enabled ? colors.white : colors.darkGray);
 }

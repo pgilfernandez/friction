@@ -65,7 +65,7 @@ void PixmapActionButton::paintEvent(QPaintEvent *)
     const int pX = 0;
 
     const auto colors = eSettings::instance().fColors;
-    if (mHover) { p.fillRect(QRect(QPoint(pX, pX), pix->size()), Friction::Core::Theme::getThemeHighlightColor(50)); } // TODO
+    if (mHover) { p.fillRect(QRect(QPoint(pX, pX), pix->size()), Friction::Core::Theme::transparentColor(colors.highlight, 50)); }
     p.drawPixmap(pX, pX, *pix);
     p.end();
 }

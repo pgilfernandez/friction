@@ -148,18 +148,18 @@ public:
 
     // timeline settings
     bool fTimelineAlternateRow = true;
-    QColor fTimelineAlternateRowColor = QColor(0, 0, 0, 25);
+    QColor fTimelineAlternateRowColor;
     bool fTimelineHighlightRow = true;
-    QColor fTimelineHighlightRowColor = Friction::Core::Theme::getThemeHighlightColor(15);
+    QColor fTimelineHighlightRowColor;
 
     QColor fObjectKeyframeColor;
     QColor fPropertyGroupKeyframeColor;
     QColor fPropertyKeyframeColor;
     QColor fSelectedKeyframeColor;
 
-    QColor fVisibilityRangeColor = Friction::Core::Theme::getThemeRangeColor();
-    QColor fSelectedVisibilityRangeColor = Friction::Core::Theme::getThemeRangeSelectedColor();
-    QColor fAnimationRangeColor = QColor(0, 0, 0, 55);
+    QColor fVisibilityRangeColor;
+    QColor fSelectedVisibilityRangeColor;
+    QColor fAnimationRangeColor;
 
     // command palette
     QList<QAction*> fCommandPalette;
@@ -169,9 +169,7 @@ public:
     Friction::Core::ExpressionPresets fExpressions;
 
     // last used stroke color
-    QColor fLastUsedStrokeColor = AppSupport::getSettings("FillStroke",
-                                                          "LastStrokeColor",
-                                                          Friction::Core::Theme::getThemeObjectColor()).value<QColor>();
+    QColor fLastUsedStrokeColor;
 
     // last used stoke size
     qreal fLastUsedStrokeWidth = AppSupport::getSettings("FillStroke",
@@ -179,9 +177,7 @@ public:
                                                          10.).toDouble();
 
     // last used fill color
-    QColor fLastUsedFillColor = AppSupport::getSettings("FillStroke",
-                                                        "LastFillColor",
-                                                        QColor(Qt::white)).value<QColor>();
+    QColor fLastUsedFillColor;
 
     // last fill/stroke state
     bool fLastFillFlatEnabled = AppSupport::getSettings("FillStroke",

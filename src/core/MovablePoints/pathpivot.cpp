@@ -50,7 +50,7 @@ void PathPivot::drawSk(SkCanvas * const canvas,
     drawOnAbsPosSk(canvas,
                    absPos,
                    invScale,
-                   toSkColor(Friction::Core::Theme::getThemeColorGreen(155))); // TODO
+                   toSkColor(Friction::Core::Theme::transparentColor(colors.green, 155)));
     canvas->save();
     canvas->translate(absPos.x(), absPos.y());
     SkPaint paint;

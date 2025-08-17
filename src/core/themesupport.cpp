@@ -37,59 +37,6 @@ const QColor Theme::transparentColor(QColor c, int a)
     return c;
 }
 
-const QColor Theme::getQColor(int r,
-                              int g,
-                              int b,
-                              int a)
-{
-    return a == 255 ? QColor(r, g, b) : QColor(r, g, b, a);
-}
-
-const QColor Theme::getThemeHighlightColor(int alpha)
-{
-    return getQColor(104, 144, 206, alpha);
-}
-
-const QColor Theme::getThemeHighlightSelectedColor(int alpha)
-{
-    return getQColor(150, 191, 255, alpha);
-}
-
-const QColor Theme::getThemeButtonBaseColor(int alpha)
-{
-    return getQColor(49, 49, 59, alpha);
-}
-
-const QColor Theme::getThemeButtonBorderColor(int alpha)
-{
-    return getQColor(65, 65, 80, alpha);
-}
-
-const QColor Theme::getThemeRangeColor(int alpha)
-{
-    return getQColor(56, 73, 101, alpha);
-}
-
-const QColor Theme::getThemeRangeSelectedColor(int alpha)
-{
-    return getQColor(87, 120, 173, alpha);
-}
-
-const QColor Theme::getThemeObjectColor(int alpha)
-{
-    return getQColor(0, 102, 255, alpha);
-}
-
-const QColor Theme::getThemeColorGreen(int alpha)
-{
-    return getQColor(73, 209, 132, alpha);
-}
-
-const QColor Theme::getThemeColorOrange(int alpha)
-{
-    return getQColor(255, 123, 0, alpha);
-}
-
 const QPalette Theme::getDefaultPalette(const QColor &highlight,
                                         const Colors &colors)
 {

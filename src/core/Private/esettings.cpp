@@ -171,6 +171,18 @@ eSettings::eSettings(const int cpuThreads,
     sInstance = this;
 
     fColors = getDefaultThemeColors();
+    fVisibilityRangeColor = fColors.range;
+    fSelectedVisibilityRangeColor = fColors.rangeSelected;
+    fTimelineHighlightRowColor = fColors.highlight;
+    fTimelineHighlightRowColor = Friction::Core::Theme::transparentColor(fColors.highlight, 15);
+    fLastUsedStrokeColor = AppSupport::getSettings("FillStroke",
+                                                   "LastStrokeColor",
+                                                   fColors.object).value<QColor>();
+    fLastUsedFillColor = AppSupport::getSettings("FillStroke",
+                                                 "LastFillColor",
+                                                  fColors.white).value<QColor>();
+    fTimelineAlternateRowColor = Friction::Core::Theme::transparentColor(fColors.black, 25);
+    fAnimationRangeColor = Friction::Core::Theme::transparentColor(fColors.black, 55);
 
     gSettings << std::make_shared<eIntSetting>(
                      fCpuThreadsCap,
