@@ -829,12 +829,12 @@ void BoxSingleWidget::paintEvent(QPaintEvent *)
 
     const auto colors = eSettings::instance().fColors;
 
-    if (mHover) { p.fillRect(rect(), Friction::Core::Theme::getThemeHighlightColor(40)); } // TODO
+    if (mHover) { p.fillRect(rect(), Friction::Core::Theme::transparentColor(colors.highlight, 40)); }
 
     const auto bsTarget = enve_cast<eBoxOrSound*>(prop);
     if (!bsTarget && prop->prp_isSelected()) {
         p.fillRect(mFillWidget->geometry(),
-                   Friction::Core::Theme::getThemeHighlightSelectedColor(25)); // TODO
+                   Friction::Core::Theme::transparentColor(colors.highlightSelected, 25));
     }
     if (bsTarget) {
         nameX += eSizesUI::widget/4;
@@ -843,7 +843,7 @@ void BoxSingleWidget::paintEvent(QPaintEvent *)
             p.fillRect(rect(), QColor(0, 0, 0, 50)); // TODO
             if (bsTarget->isSelected()) {
                 p.fillRect(mFillWidget->geometry(),
-                           Friction::Core::Theme::getThemeHighlightSelectedColor(50)); // TODO
+                           Friction::Core::Theme::transparentColor(colors.highlightSelected, 50));
                 p.setPen(colors.white);
             } else {
                 p.setPen(colors.white);
@@ -896,7 +896,7 @@ void BoxSingleWidget::paintEvent(QPaintEvent *)
     p.drawText(textRect, name, opts);
     if (mSelected) {
         p.setBrush(Qt::NoBrush);
-        p.setPen(QPen(Qt::lightGray)); // TODO
+        p.setPen(QPen(colors.lightGray));
         p.drawRect(rect().adjusted(0, 0, -1, -1));
     }
     p.end();

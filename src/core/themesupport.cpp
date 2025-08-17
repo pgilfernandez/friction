@@ -31,6 +31,12 @@
 
 using namespace Friction::Core;
 
+const QColor Theme::transparentColor(QColor c, int a)
+{
+    c.setAlpha(a);
+    return c;
+}
+
 const QColor Theme::getQColor(int r,
                               int g,
                               int b,
@@ -134,15 +140,16 @@ const QPalette Theme::getNotSoDarkPalette(const Colors &colors)
     return pal;
 }
 
-const QString Theme::getThemeStyle(int iconSize,
-                                   const Colors &colors)
+const QString Theme::getStyle(int iconSize,
+                              const Colors &colors,
+                              const QString qss)
 {
     QString css;
-    QFile stylesheet(QString::fromUtf8(":/styles/friction.qss"));
+    QFile stylesheet(qss);
     if (stylesheet.open(QIODevice::ReadOnly | QIODevice::Text)) {
         css = stylesheet.readAll();
         stylesheet.close();
-    }
+    } else { return QString(); }
     const qreal iconPixelRatio = iconSize * qApp->desktop()->devicePixelRatioF();
     return css.arg(colors.baseButton.name(),
                    colors.baseBorder.name(),
@@ -168,7 +175,7 @@ void Theme::setupTheme(const int iconSize,
     QIcon::setThemeName(QString::fromUtf8("hicolor"));
     qApp->setStyle(QString::fromUtf8("fusion"));
     qApp->setPalette(getDefaultPalette(QColor(), colors));
-    qApp->setStyleSheet(getThemeStyle(iconSize, colors));
+    qApp->setStyleSheet(getStyle(iconSize, colors));
 }
 
 const QList<QSize> Theme::getAvailableIconSizes()

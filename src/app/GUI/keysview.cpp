@@ -597,7 +597,7 @@ void KeysView::paintEvent(QPaintEvent *)
         if (mCurrentScene->getCurrentFrame() <= maxFrame &&
            mCurrentScene->getCurrentFrame() >= minFrame) {
             xT = (mCurrentScene->getCurrentFrame() - mMinViewedFrame)*mPixelsPerFrame + mPixelsPerFrame*0.5;
-            p.setPen(QPen(colors.timeline, 2));
+            p.setPen(QPen(colors.highlight, 2));
             p.drawLine(QPointF(xT, 0), QPointF(xT, height()));
         }
     }

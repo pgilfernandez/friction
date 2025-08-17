@@ -72,11 +72,15 @@ namespace Friction
                 QColor orange;
                 QColor textDisabled;
                 QColor outputDestination;
+
                 QColor gray;
                 QColor darkGray;
+                QColor lightGray;
+
                 QColor black;
                 QColor white;
             };
+            static const QColor transparentColor(QColor c, int a);
             static const QColor getQColor(int r, int g, int b, int a = 255);
             static const QColor getThemeHighlightColor(int alpha = 255);
             static const QColor getThemeHighlightSelectedColor(int alpha = 255);
@@ -92,8 +96,9 @@ namespace Friction
             static const QPalette getDarkPalette(const Colors &colors = Colors());
             static const QPalette getDarkerPalette(const Colors &colors = Colors());
             static const QPalette getNotSoDarkPalette(const Colors &colors = Colors());
-            static const QString getThemeStyle(int iconSize = 20,
-                                               const Colors &colors = Colors());
+            static const QString getStyle(int iconSize = 20,
+                                          const Colors &colors = Colors(),
+                                          const QString qss = ":/styles/friction.qss");
             static void setupTheme(const int iconSize = 20,
                                    const Colors &colors = Colors());
             static const QList<QSize> getAvailableIconSizes();

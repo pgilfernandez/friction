@@ -412,8 +412,11 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.orange = QColor(255, 123, 0);
     colors.textDisabled = QColor(112, 112, 113);
     colors.outputDestination = QColor(40, 40, 47);
+
     colors.gray = Qt::gray;
     colors.darkGray = Qt::darkGray;
+    colors.lightGray = Qt::lightGray;
+
     colors.black = Qt::black;
     colors.white = Qt::white;
 
