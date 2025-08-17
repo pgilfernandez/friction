@@ -29,6 +29,7 @@
 #include "exceptions.h"
 
 #include "smartPointers/stdselfref.h"
+#include "skia/skqtconversions.h"
 
 struct eSetting
 {
@@ -383,20 +384,24 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     Friction::Core::Theme::Colors colors;
 
     colors.base = QColor(26, 26, 30);
-    colors.darkBase = QColor(25, 25, 25);
-    colors.darkerBase = QColor(19, 19, 21);
-    colors.alternate = QColor(33, 33, 39);
+    colors.baseAlt = QColor(33, 33, 39);
+    colors.baseButton = QColor(49, 49, 59);
+    colors.baseCombo = QColor(36, 36, 53);
+    colors.baseBorder = QColor(65, 65, 80);
+    colors.baseDark = QColor(25, 25, 25);
+    colors.baseDarker = QColor(19, 19, 21);
+    colors.baseSk = toSkColor(colors.base);
+
     colors.highlight = QColor(104, 144, 206);
+    colors.highlightAlt = QColor(167, 185, 222);
     colors.highlightDarker = QColor(53, 101, 176);
-    colors.highlightAlternative = QColor(167, 185, 222);
     colors.highlightSelected = QColor(150, 191, 255);
-    colors.buttonBase = QColor(49, 49, 59);
-    colors.buttonBorder = QColor(65, 65, 80);
-    colors.comboboxBase = QColor(36, 36, 53);
+    colors.highlightSk = toSkColor(colors.highlight);
+
     colors.timeline = QColor(44, 44, 49);
     colors.range = QColor(56, 73, 101);
     colors.rangeSelected = QColor(87, 120, 173);
-    colors.marker = QColor(255, 123, 0);
+
     colors.object = QColor(0, 102, 255);
     colors.red = QColor(199, 67, 72);
     colors.blue = QColor(73, 142, 209);
@@ -411,6 +416,9 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.darkGray = Qt::darkGray;
     colors.black = Qt::black;
     colors.white = Qt::white;
+
+    colors.marker = colors.orange;
+    colors.markerIO = colors.green;
 
     return colors;
 }

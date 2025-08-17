@@ -209,9 +209,9 @@ void QDoubleSlider::paint(QPainter * const p,
                           const bool enabled)
 {
     const auto colors = eSettings::instance().fColors;
-    paint(p, enabled ? colors.buttonBase : colors.alternate,
+    paint(p, enabled ? colors.baseButton : colors.baseAlt,
           enabled ? Friction::Core::Theme::getThemeButtonBorderColor(150) /* TODO */ : colors.base,
-          enabled ? colors.buttonBorder : colors.darkGray,
+          enabled ? colors.baseBorder : colors.darkGray,
           enabled ? colors.white : colors.darkGray);
 }
 
@@ -245,7 +245,7 @@ void QDoubleSlider::paint(QPainter *p,
 
     const auto colors = eSettings::instance().fColors;
 
-    if (mHovered && isEnabled()) { p->setBrush(colors.darkerBase); }
+    if (mHovered && isEnabled()) { p->setBrush(colors.baseDarker); }
     else { p->setBrush(allFill); }
 
     if (mLeftNeighbour) {

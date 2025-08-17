@@ -321,8 +321,7 @@ void OutputSettingsDialog::setupFormatOptionsTree()
 {
     const auto colors = eSettings::instance().fColors;
 
-    mFormatOptionsTree->setPalette(Friction::Core::Theme::getDefaultPalette(colors.buttonBorder,
-                                                                            colors));
+    mFormatOptionsTree->setPalette(Friction::Core::Theme::getDefaultPalette(colors.baseBorder, colors));
 
     const auto area = new QScrollArea(this);
     const auto container = new QWidget(this);

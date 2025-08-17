@@ -129,7 +129,7 @@ private:
 
     InteractiveMarker mGrabbedMarker;
 
-    QColor mHandleColor = eSettings::instance().fColors.buttonBorder;
+    QColor mHandleColor = eSettings::instance().fColors.baseBorder;
     qptr<Canvas> mCurrentCanvas;
 };
 

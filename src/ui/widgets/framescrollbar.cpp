@@ -76,7 +76,7 @@ void FrameScrollBar::paintEvent(QPaintEvent *)
 
     const auto colors = eSettings::instance().fColors;
 
-    p.fillRect(rect(), colors.darkerBase);
+    p.fillRect(rect(), colors.baseDarker);
 
     const int dFrame = mFrameRange.fMax - mFrameRange.fMin + (mRange ? 0 : 1);
     if (dFrame <= 0) { return; }

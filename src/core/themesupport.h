@@ -40,22 +40,28 @@ namespace Friction
         {
         public:
             struct Colors {
-                // TODO: make more logical names
                 QColor base;
-                QColor darkBase;
-                QColor darkerBase;
-                QColor alternate;
+                QColor baseAlt;
+                QColor baseButton;
+                QColor baseCombo;
+                QColor baseBorder;
+                QColor baseDark;
+                QColor baseDarker;
+                SkColor baseSk;
+
                 QColor highlight;
+                QColor highlightAlt;
                 QColor highlightDarker;
-                QColor highlightAlternative;
                 QColor highlightSelected;
-                QColor buttonBase;
-                QColor buttonBorder;
-                QColor comboboxBase;
+                SkColor highlightSk;
+
                 QColor timeline;
                 QColor range;
                 QColor rangeSelected;
+
                 QColor marker;
+                QColor markerIO;
+
                 QColor object;
                 QColor red;
                 QColor blue;
@@ -72,10 +78,8 @@ namespace Friction
                 QColor white;
             };
             static const QColor getQColor(int r, int g, int b, int a = 255);
-            static SkColor getThemeBaseSkColor(int alpha = 255);
             static const QColor getThemeHighlightColor(int alpha = 255);
             static const QColor getThemeHighlightSelectedColor(int alpha = 255);
-            static SkColor getThemeHighlightSkColor(int alpha = 255);
             static const QColor getThemeButtonBaseColor(int alpha = 255);
             static const QColor getThemeButtonBorderColor(int alpha = 255);
             static const QColor getThemeRangeColor(int alpha = 255);

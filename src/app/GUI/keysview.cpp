@@ -587,7 +587,7 @@ void KeysView::paintEvent(QPaintEvent *)
         bool hasOut = hasFrameOut(i+1);
         bool hasMark = hasFrameMarker(i+1);
         if (!hasIn && !hasOut && !hasMark) { continue; }
-        const QColor col = hasMark ? colors.marker : colors.green;
+        const QColor col = hasMark ? colors.marker : colors.markerIO;
         p.setPen(QPen(col, 2, Qt::DotLine));
         const qreal xTT = xT + (i - mMinViewedFrame + 1)*mPixelsPerFrame;
         p.drawLine(QPointF(xTT, 0), QPointF(xTT, height()));

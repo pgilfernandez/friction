@@ -98,7 +98,7 @@ void MovablePoint::drawOnAbsPosSk(SkCanvas * const canvas,
     const auto colors = eSettings::instance().fColors;
 
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(toSkColor(colors.buttonBase));
+    paint.setColor(toSkColor(colors.baseButton));
     paint.setStrokeWidth(invScale);
     canvas->drawCircle(absPos, scaledRadius, paint);
 

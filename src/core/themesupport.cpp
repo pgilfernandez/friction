@@ -39,11 +39,6 @@ const QColor Theme::getQColor(int r,
     return a == 255 ? QColor(r, g, b) : QColor(r, g, b, a);
 }
 
-SkColor Theme::getThemeBaseSkColor(int alpha)
-{
-    return SkColorSetARGB(alpha, 26, 26, 30);
-}
-
 const QColor Theme::getThemeHighlightColor(int alpha)
 {
     return getQColor(104, 144, 206, alpha);
@@ -52,11 +47,6 @@ const QColor Theme::getThemeHighlightColor(int alpha)
 const QColor Theme::getThemeHighlightSelectedColor(int alpha)
 {
     return getQColor(150, 191, 255, alpha);
-}
-
-SkColor Theme::getThemeHighlightSkColor(int alpha)
-{
-    return SkColorSetARGB(alpha, 104, 144, 206);
 }
 
 const QColor Theme::getThemeButtonBaseColor(int alpha)
@@ -98,10 +88,10 @@ const QPalette Theme::getDefaultPalette(const QColor &highlight,
                                         const Colors &colors)
 {
     QPalette palette;
-    palette.setColor(QPalette::Window, colors.alternate);
+    palette.setColor(QPalette::Window, colors.baseAlt);
     palette.setColor(QPalette::WindowText, colors.white);
     palette.setColor(QPalette::Base, colors.base);
-    palette.setColor(QPalette::AlternateBase, colors.alternate);
+    palette.setColor(QPalette::AlternateBase, colors.baseAlt);
     palette.setColor(QPalette::Link, colors.white);
     palette.setColor(QPalette::LinkVisited, colors.white);
     palette.setColor(QPalette::ToolTipText, colors.white);
@@ -129,16 +119,16 @@ const QPalette Theme::getDarkPalette(const Colors &colors)
 const QPalette Theme::getDarkerPalette(const Colors &colors)
 {
     QPalette pal = QPalette();
-    pal.setColor(QPalette::Window, colors.darkerBase);
-    pal.setColor(QPalette::Base, colors.darkerBase);
-    pal.setColor(QPalette::Button, colors.darkerBase);
+    pal.setColor(QPalette::Window, colors.baseDark);
+    pal.setColor(QPalette::Base, colors.baseDark);
+    pal.setColor(QPalette::Button, colors.baseDark);
     return pal;
 }
 
 const QPalette Theme::getNotSoDarkPalette(const Colors &colors)
 {
     QPalette pal = QPalette();
-    pal.setColor(QPalette::Window, colors.alternate);
+    pal.setColor(QPalette::Window, colors.baseAlt);
     pal.setColor(QPalette::Base, colors.base);
     pal.setColor(QPalette::Button, colors.base);
     return pal;
@@ -154,12 +144,12 @@ const QString Theme::getThemeStyle(int iconSize,
         stylesheet.close();
     }
     const qreal iconPixelRatio = iconSize * qApp->desktop()->devicePixelRatioF();
-    return css.arg(colors.buttonBase.name(),
-                   colors.buttonBorder.name(),
-                   colors.darkerBase.name(),
+    return css.arg(colors.baseButton.name(),
+                   colors.baseBorder.name(),
+                   colors.baseDarker.name(),
                    colors.highlight.name(),
                    colors.base.name(),
-                   colors.alternate.name(),
+                   colors.baseAlt.name(),
                    QString::number(getIconSize(iconSize).width()),
                    colors.orange.name(),
                    colors.rangeSelected.name(),

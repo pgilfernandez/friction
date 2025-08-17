@@ -278,9 +278,9 @@ void QrealAnimatorValueSlider::paint(QPainter *p)
         if (rec) {
             const bool disabled = isTargetDisabled() || !isEnabled();
             QDoubleSlider::paint(p,
-                                 disabled ? Friction::Core::Theme::getThemeButtonBaseColor(200) /* TODO */ : colors.highlightAlternative,
-                                 key ? (disabled ? colors.alternate : colors.highlightSelected) : (disabled ? colors.alternate : colors.highlight),
-                                 key ? (disabled ? colors.gray : colors.highlightSelected) : (disabled ? colors.darkGray : colors.buttonBorder),
+                                 disabled ? Friction::Core::Theme::getThemeButtonBaseColor(200) /* TODO */ : colors.highlightAlt,
+                                 key ? (disabled ? colors.baseAlt : colors.highlightSelected) : (disabled ? colors.baseAlt : colors.highlight),
+                                 key ? (disabled ? colors.gray : colors.highlightSelected) : (disabled ? colors.darkGray : colors.baseBorder),
                                  disabled ? colors.darkGray : colors.black);
         } else {
             QDoubleSlider::paint(p, !isTargetDisabled() && isEnabled());

@@ -55,7 +55,7 @@ MarkerEditor::MarkerEditor(Canvas *scene,
 void MarkerEditor::setup()
 {
     const auto colors = eSettings::instance().fColors;
-    mTree->setPalette(Friction::Core::Theme::getDefaultPalette(colors.buttonBorder, colors));
+    mTree->setPalette(Friction::Core::Theme::getDefaultPalette(colors.baseBorder, colors));
 
     mTree->setHeaderLabels(QStringList()
                            << tr("Visibility")

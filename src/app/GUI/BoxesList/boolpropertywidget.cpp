@@ -69,12 +69,12 @@ void BoolPropertyWidget::paintEvent(QPaintEvent *)
     const auto colors = eSettings::instance().fColors;
 
     p.setRenderHint(QPainter::Antialiasing);
-    p.setBrush(colors.buttonBorder);
+    p.setBrush(colors.baseBorder);
 
     if (mHovered) {
         p.setPen(colors.highlightSelected);
     } else {
-        p.setPen(colors.buttonBase);
+        p.setPen(colors.baseButton);
     }
 
     p.drawRoundedRect(rect().adjusted(1, 1, -1, -1), 5., 5.);

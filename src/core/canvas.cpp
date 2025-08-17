@@ -232,7 +232,8 @@ void drawTransparencyMesh(SkCanvas* const canvas,
 void Canvas::renderSk(SkCanvas* const canvas,
                       const QRect& drawRect,
                       const QMatrix& viewTrans,
-                      const bool mouseGrabbing) {
+                      const bool mouseGrabbing)
+{
     mDrawnSinceQue = true;
     SkPaint paint;
     paint.setStyle(SkPaint::kFill_Style);
@@ -247,6 +248,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
     const float intervals[2] = {eSizesUI::widget*0.25f*invZoom,
                                 eSizesUI::widget*0.25f*invZoom};
     const auto dashPathEffect = SkDashPathEffect::Make(intervals, 2, 0);
+    const auto colors = eSettings::instance().fColors;
 
     canvas->concat(skViewTrans);
     if(isPreviewingOrRendering()) {
@@ -267,7 +269,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
         canvas->clear(SK_ColorBLACK); // TODO
         canvas->clipRect(canvasRect);
     } else {
-        canvas->clear(Friction::Core::Theme::getThemeBaseSkColor()); // TODO
+        canvas->clear(colors.baseSk);
         paint.setColor(SK_ColorGRAY); // TODO
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setPathEffect(dashPathEffect);

@@ -56,7 +56,7 @@ void PathPivot::drawSk(SkCanvas * const canvas,
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(toSkColor(colors.buttonBase));
+    paint.setColor(toSkColor(colors.baseButton));
     const float scaledHalfRadius = toSkScalar(getRadius()*0.5)*invScale;
     canvas->drawLine(-scaledHalfRadius, 0, scaledHalfRadius, 0, paint);
     canvas->drawLine(0, -scaledHalfRadius, 0, scaledHalfRadius, paint);

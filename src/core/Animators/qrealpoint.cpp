@@ -158,7 +158,7 @@ void QrealPoint::draw(QPainter * const p,
 
     const auto colors = eSettings::instance().fColors;
 
-    p->setBrush(colors.darkBase);
+    p->setBrush(colors.baseDark);
     if (mHovered) { gDrawCosmeticEllipse(p, center, mRadius + 1, mRadius + 1); }
     else { gDrawCosmeticEllipse(p, center, mRadius, mRadius); }
 
