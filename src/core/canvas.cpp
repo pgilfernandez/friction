@@ -399,10 +399,10 @@ void Canvas::renderSk(SkCanvas* const canvas,
             paint.setStyle(SkPaint::kStroke_Style);
             paint.setPathEffect(dashPathEffect);
             paint.setStrokeWidth(2*invZoom);
-            paint.setColor(SkColorSetARGB(255, 0, 55, 255)); // TODO
+            paint.setColor(toSkColor(colors.highlight));
             canvas->drawRect(toSkRect(mSelectionRect), paint);
             paint.setStrokeWidth(invZoom);
-            paint.setColor(SkColorSetARGB(255, 150, 150, 255)); // TODO
+            paint.setColor(toSkColor(colors.highlightDarker));
             canvas->drawRect(toSkRect(mSelectionRect), paint);
             //paint.setPathEffect(nullptr);
         }

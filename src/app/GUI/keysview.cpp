@@ -620,7 +620,7 @@ void KeysView::paintEvent(QPaintEvent *)
         drawKeys(&p, mPixelsPerFrame, viewedFrameRange);
         p.restore();
         if (mSelecting) {
-            p.setPen(QPen(colors.white, 1.5, Qt::DotLine));
+            p.setPen(QPen(colors.highlight, 1.5, Qt::DotLine));
             p.setBrush(Qt::NoBrush);
             p.drawRect(QRectF((mSelectionRect.x() - mMinViewedFrame)*mPixelsPerFrame,
                               mSelectionRect.y() - mViewedTop,
