@@ -840,7 +840,7 @@ void BoxSingleWidget::paintEvent(QPaintEvent *)
         nameX += eSizesUI::widget/4;
         const bool ss = enve_cast<eSoundObjectBase*>(prop);
         if (ss || enve_cast<BoundingBox*>(prop)) {
-            p.fillRect(rect(), QColor(0, 0, 0, 50)); // TODO
+            p.fillRect(rect(), Friction::Core::Theme::transparentColor(colors.black, 50));
             if (bsTarget->isSelected()) {
                 p.fillRect(mFillWidget->geometry(),
                            Friction::Core::Theme::transparentColor(colors.highlightSelected, 50));

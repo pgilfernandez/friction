@@ -286,11 +286,8 @@ void QrealAnimatorValueSlider::paint(QPainter *p)
             QDoubleSlider::paint(p, !isTargetDisabled() && isEnabled());
         }
         if (!textEditing() && mTarget->hasExpression()) {
-            if (mTarget->hasValidExpression()) {
-                p->setBrush(colors.highlight);
-            } else {
-                p->setBrush(QColor(255, 125, 0)); // TODO
-            }
+            if (mTarget->hasValidExpression()) { p->setBrush(colors.highlight); }
+            else { p->setBrush(colors.orange); }
             p->setPen(Qt::NoPen);
             p->setRenderHint(QPainter::Antialiasing);
             p->drawEllipse({7, height()/2}, 3, 3);

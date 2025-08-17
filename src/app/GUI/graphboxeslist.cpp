@@ -241,7 +241,7 @@ void KeysView::graphPaint(QPainter *p)
     p->drawLine(xL, 20, xL, height());*/
 
     if (graph_mValueLinesVisible) {
-        p->setPen(QColor(255, 255, 255)); // TODO
+        p->setPen(colors.white);
         const qreal incY = mValueInc*mPixelsPerValUnit;
         qreal yL = height() + fmod(mMinShownVal, mValueInc)*mPixelsPerValUnit + incY;
         qreal currValue = mMinShownVal - fmod(mMinShownVal, mValueInc) - mValueInc;
@@ -287,7 +287,7 @@ void KeysView::graphPaint(QPainter *p)
 
     if (mSelecting) {
         QPen pen;
-        pen.setColor(Qt::blue); // TODO
+        pen.setColor(colors.highlight);
         pen.setWidthF(2);
         pen.setStyle(Qt::DotLine);
         pen.setCosmetic(true);
