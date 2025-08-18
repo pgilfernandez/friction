@@ -235,19 +235,22 @@ void BoundingBox::drawHoveredSk(SkCanvas *canvas, const float invScale) {
 
 void BoundingBox::drawHoveredPathSk(SkCanvas *canvas,
                                     const SkPath &path,
-                                    const float invScale) {
+                                    const float invScale)
+{
     canvas->save();
     SkPath mappedPath = path;
-    mappedPath.transform(toSkMatrix(
-                             mTransformAnimator->getTotalTransform()));
+    mappedPath.transform(toSkMatrix(mTransformAnimator->getTotalTransform()));
+
+    const auto colors = eSettings::instance().fColors;
+
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setColor(SK_ColorBLACK); // TODO
+    paint.setColor(toSkColor(colors.pathHoverOuter));
     paint.setStrokeWidth(2*invScale);
     paint.setStyle(SkPaint::kStroke_Style);
     canvas->drawPath(mappedPath, paint);
 
-    paint.setColor(SK_ColorRED); // TODO
+    paint.setColor(toSkColor(colors.pathHoverInner));
     paint.setStrokeWidth(invScale);
     canvas->drawPath(mappedPath, paint);
     canvas->restore();

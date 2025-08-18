@@ -83,6 +83,11 @@ namespace Friction
                 QColor transformOverlayBase;
                 QColor transformOverlayAlt;
 
+                QColor pointHoverOutline;
+
+                QColor pathHoverOuter;
+                QColor pathHoverInner;
+
                 QColor textDisabled;
                 QColor outputDestination; // remove
             };

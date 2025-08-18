@@ -438,6 +438,11 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.transformOverlayBase = colors.highlight;
     colors.transformOverlayAlt = colors.orange;
 
+    colors.pointHoverOutline = colors.red;
+
+    colors.pathHoverOuter = colors.black;
+    colors.pathHoverInner = colors.red;
+
     colors.textDisabled = QColor(112, 112, 113);
     colors.outputDestination = QColor(40, 40, 47);
 

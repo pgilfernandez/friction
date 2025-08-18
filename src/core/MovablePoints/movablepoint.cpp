@@ -47,12 +47,13 @@ const QPointF &MovablePoint::getSavedRelPos() const {
 }
 
 void MovablePoint::drawHovered(SkCanvas * const canvas,
-                               const float invScale) {
+                               const float invScale)
+{
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setStrokeWidth(1.5f*invScale);
-    paint.setColor(SK_ColorRED); // TODO
+    paint.setColor(toSkColor(eSettings::instance().fColors.pointHoverOutline));
     canvas->drawCircle(toSkPoint(getAbsolutePos()),
                        static_cast<float>(mRadius)*invScale, paint);
     //pen.setCosmetic(true);
