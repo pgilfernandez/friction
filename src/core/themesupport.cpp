@@ -116,13 +116,14 @@ const QString Theme::getStyle(int iconSize,
 }
 
 void Theme::setupTheme(const int iconSize,
-                       const Colors &colors)
+                       const Colors &colors,
+                       const QString qss)
 {
     QIcon::setThemeSearchPaths(QStringList() << QString::fromUtf8(":/icons"));
     QIcon::setThemeName(QString::fromUtf8("hicolor"));
     qApp->setStyle(QString::fromUtf8("fusion"));
     qApp->setPalette(getDefaultPalette(QColor(), colors));
-    qApp->setStyleSheet(getStyle(iconSize, colors));
+    qApp->setStyleSheet(getStyle(iconSize, colors, qss));
 }
 
 const QList<QSize> Theme::getAvailableIconSizes()

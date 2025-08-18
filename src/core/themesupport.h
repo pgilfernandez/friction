@@ -124,7 +124,8 @@ namespace Friction
                                           const Colors &colors = Colors(),
                                           const QString qss = ":/styles/friction.qss");
             static void setupTheme(const int iconSize = 20,
-                                   const Colors &colors = Colors());
+                                   const Colors &colors = Colors(),
+                                   const QString qss = ":/styles/friction.qss");
             static const QList<QSize> getAvailableIconSizes();
             static const QSize getIconSize(const int size);
             static bool hasIconSize(const int size);
