@@ -183,7 +183,7 @@ void CanvasWindow::renderSk(SkCanvas * const canvas)
 
     if (KFT_hasFocus()) {
         SkPaint paint;
-        paint.setColor(eSettings::instance().fColors.highlightSk);
+        paint.setColor(toSkColor(eSettings::instance().fColors.highlight));
         paint.setStrokeWidth(pixelRatio*4);
         paint.setStyle(SkPaint::kStroke_Style);
         canvas->drawRect(SkRect::MakeWH(width() * pixelRatio,

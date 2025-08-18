@@ -47,13 +47,15 @@ namespace Friction
                 QColor baseBorder;
                 QColor baseDark;
                 QColor baseDarker;
-                SkColor baseSk;
 
                 QColor highlight;
                 QColor highlightAlt;
                 QColor highlightDarker;
                 QColor highlightSelected;
-                SkColor highlightSk;
+
+                QColor scene;
+                QColor sceneClip;
+                QColor sceneBorder;
 
                 QColor timeline;
                 QColor range;

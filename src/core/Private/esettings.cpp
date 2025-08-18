@@ -402,13 +402,11 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.baseBorder = QColor(65, 65, 80);
     colors.baseDark = QColor(25, 25, 25);
     colors.baseDarker = QColor(19, 19, 21);
-    colors.baseSk = toSkColor(colors.base);
 
     colors.highlight = QColor(104, 144, 206);
     colors.highlightAlt = QColor(167, 185, 222);
     colors.highlightDarker = QColor(53, 101, 176);
     colors.highlightSelected = QColor(150, 191, 255);
-    colors.highlightSk = toSkColor(colors.highlight);
 
     colors.timeline = QColor(44, 44, 49);
     colors.range = QColor(56, 73, 101);
@@ -434,6 +432,10 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
 
     colors.marker = colors.orange;
     colors.markerIO = colors.green;
+
+    colors.scene = colors.base;
+    colors.sceneClip = colors.black;
+    colors.sceneBorder = colors.gray;
 
     return colors;
 }

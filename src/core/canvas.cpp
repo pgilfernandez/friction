@@ -253,7 +253,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
     canvas->concat(skViewTrans);
     if(isPreviewingOrRendering()) {
         if(mSceneFrame) {
-            canvas->clear(SK_ColorBLACK);
+            canvas->clear(toSkColor(colors.sceneClip));
             canvas->save();
             if(bgColor.alpha() != 255)
                 drawTransparencyMesh(canvas, canvasRect);
@@ -265,12 +265,12 @@ void Canvas::renderSk(SkCanvas* const canvas,
         return;
     }
     canvas->save();
-    if(mClipToCanvasSize) {
-        canvas->clear(SK_ColorBLACK); // TODO
+    if (mClipToCanvasSize) {
+        canvas->clear(toSkColor(colors.sceneClip));
         canvas->clipRect(canvasRect);
     } else {
-        canvas->clear(colors.baseSk);
-        paint.setColor(SK_ColorGRAY); // TODO
+        canvas->clear(toSkColor(colors.scene));
+        paint.setColor(toSkColor(colors.sceneBorder));
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setPathEffect(dashPathEffect);
         canvas->drawRect(toSkRect(getCurrentBounds()), paint);
@@ -360,13 +360,13 @@ void Canvas::renderSk(SkCanvas* const canvas,
             paint.setARGB(255, 255, 0, 0); // TODO
             for(const auto& seg : fitted) {
                 const auto path = seg.toSkPath();
-                SkiaHelpers::drawOutlineOverlay(canvas, path, invZoom, SK_ColorWHITE);
+                SkiaHelpers::drawOutlineOverlay(canvas, path, invZoom, SK_ColorWHITE); // TODO
                 const auto& p0 = seg.p0();
                 canvas->drawCircle(p0.x(), p0.y(), nodeSize, paint);
             }
             if(!mDrawPathTmp.isEmpty()) {
                 SkiaHelpers::drawOutlineOverlay(canvas, mDrawPathTmp,
-                                                invZoom, SK_ColorWHITE);
+                                                invZoom, SK_ColorWHITE); // TODO
             }
         }
 
