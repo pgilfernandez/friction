@@ -106,26 +106,28 @@ void MovablePoint::drawOnAbsPosSk(SkCanvas * const canvas,
     if (keyOnCurrent) {
         const float halfRadius = scaledRadius*0.5f;
 
-        paint.setColor(toSkColor(colors.red));
+        paint.setColor(toSkColor(colors.pointKeyInner));
         paint.setStyle(SkPaint::kFill_Style);
         canvas->drawCircle(absPos, halfRadius, paint);
 
         paint.setStyle(SkPaint::kStroke_Style);
         paint.setStrokeWidth(0.5f*invScale);
-        paint.setColor(toSkColor(colors.white));
+        paint.setColor(toSkColor(colors.pointKeyOuter));
         canvas->drawCircle(absPos, halfRadius, paint);
     }
 }
 
-void MovablePoint::drawSk(SkCanvas * const canvas, const CanvasMode mode,
-                          const float invScale, const bool keyOnCurrent,
-                          const bool ctrlPressed) {
+void MovablePoint::drawSk(SkCanvas * const canvas,
+                          const CanvasMode mode,
+                          const float invScale,
+                          const bool keyOnCurrent,
+                          const bool ctrlPressed)
+{
     Q_UNUSED(mode)
     Q_UNUSED(keyOnCurrent)
     Q_UNUSED(ctrlPressed)
-    const SkColor fillCol = mSelected ?
-                SkColorSetRGB(255, 0, 0) :
-                SkColorSetRGB(255, 175, 175);
+    const auto colors = eSettings::instance().fColors;
+    const SkColor fillCol = mSelected ? toSkColor(colors.pointSelected) : toSkColor(colors.point);
     const SkPoint absPos = toSkPoint(getAbsolutePos());
     drawOnAbsPosSk(canvas, absPos, invScale, fillCol);
 }

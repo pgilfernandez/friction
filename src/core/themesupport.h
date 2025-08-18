@@ -81,7 +81,11 @@ namespace Friction
                 QColor transformOverlayBase;
                 QColor transformOverlayAlt;
 
+                QColor point;
+                QColor pointSelected;
                 QColor pointHoverOutline;
+                QColor pointKeyOuter;
+                QColor pointKeyInner;
 
                 QColor pathHoverOuter;
                 QColor pathHoverInner;
