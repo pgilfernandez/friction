@@ -67,9 +67,11 @@ NullObjectType::NullObjectType(ColorAnimator* const color,
     updatePath();
 }
 
-void NullObjectType::prp_drawCanvasControls(
-        SkCanvas* const canvas, const CanvasMode mode,
-        const float invScale, const bool ctrlPressed) {
+void NullObjectType::prp_drawCanvasControls(SkCanvas* const canvas,
+                                            const CanvasMode mode,
+                                            const float invScale,
+                                            const bool ctrlPressed)
+{
     Q_UNUSED(mode)
     Q_UNUSED(ctrlPressed)
 
@@ -84,14 +86,15 @@ void NullObjectType::prp_drawCanvasControls(
     paint.setAntiAlias(true);
     paint.setStrokeWidth(2.f*invScale);
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(SK_ColorLTGRAY); // TODO
+    paint.setColor(toSkColor(eSettings::instance().fColors.nullObject));
     canvas->drawPath(mappedPath, paint);
     paint.setStrokeWidth(1.f*invScale);
     paint.setColor(toSkColor(color));
     canvas->drawPath(mappedPath, paint);
 }
 
-void NullObjectType::updatePath() {
+void NullObjectType::updatePath()
+{
     mCurrentPath.reset();
     const int val = getCurrentValue();
     const Type type = static_cast<Type>(val);

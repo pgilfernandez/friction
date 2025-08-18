@@ -28,6 +28,7 @@
 #include "MovablePoints/smartctrlpoint.h"
 #include "pointhelpers.h"
 #include "pathpointshandler.h"
+#include "Private/esettings.h"
 
 bool NormalSegment::operator==(const NormalSegment &other) const {
     return mFirstNode == other.getFirstNode() &&
@@ -161,15 +162,18 @@ void NormalSegment::generateSkPath() {
 }
 
 void NormalSegment::drawHoveredSk(SkCanvas * const canvas,
-                            const float invScale) {
+                                  const float invScale)
+{
+    const auto colors = eSettings::instance().fColors;
+
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setColor(SK_ColorBLACK); // TODO
+    paint.setColor(toSkColor(colors.segmentHoverOuter));
     paint.setStrokeWidth(2.5f*invScale);
     paint.setStyle(SkPaint::kStroke_Style);
     canvas->drawPath(mSkPath, paint);
 
-    paint.setColor(SK_ColorRED); // TODO
+    paint.setColor(toSkColor(colors.segmentHoverInner));
     paint.setStrokeWidth(1.25f*invScale);
     canvas->drawPath(mSkPath, paint);
 }

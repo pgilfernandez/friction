@@ -30,8 +30,6 @@
 #include <QSize>
 #include <QToolBar>
 
-#include "include/core/SkColor.h"
-
 namespace Friction
 {
     namespace Core
@@ -87,6 +85,13 @@ namespace Friction
 
                 QColor pathHoverOuter;
                 QColor pathHoverInner;
+
+                QColor segmentHoverOuter;
+                QColor segmentHoverInner;
+
+                QColor boundingBox;
+
+                QColor nullObject;
 
                 QColor textDisabled;
                 QColor outputDestination; // remove

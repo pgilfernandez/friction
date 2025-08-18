@@ -443,6 +443,13 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.pathHoverOuter = colors.black;
     colors.pathHoverInner = colors.red;
 
+    colors.segmentHoverOuter = colors.black;
+    colors.segmentHoverInner = colors.red;
+
+    colors.boundingBox = colors.lightGray;
+
+    colors.nullObject = colors.lightGray;
+
     colors.textDisabled = QColor(112, 112, 113);
     colors.outputDestination = QColor(40, 40, 47);
 

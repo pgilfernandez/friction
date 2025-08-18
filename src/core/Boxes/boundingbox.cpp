@@ -734,10 +734,15 @@ void BoundingBox::applyPaintSetting(const PaintSettingsApplier &setting)
 { setting.apply(this); }
 
 void BoundingBox::drawBoundingRect(SkCanvas * const canvas,
-                                   const float invScale) {
-    SkiaHelpers::drawOutlineOverlay(canvas, mSkRelBoundingRectPath,
-                                    invScale, toSkMatrix(getTotalTransform()),
-                                    true, eSizesUI::widget*0.25f);
+                                   const float invScale)
+{
+    SkiaHelpers::drawOutlineOverlay(canvas,
+                                    mSkRelBoundingRectPath,
+                                    invScale,
+                                    toSkMatrix(getTotalTransform()),
+                                    true,
+                                    eSizesUI::widget*0.25f,
+                                    toSkColor(eSettings::instance().fColors.boundingBox));
 }
 
 QMatrix BoundingBox::getTotalTransform() const {
