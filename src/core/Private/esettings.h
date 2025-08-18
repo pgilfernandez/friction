@@ -129,16 +129,16 @@ public:
     bool fCanvasRtlSupport;
 
     qreal fPathNodeScaling;
-    QColor fPathNodeColor;
-    QColor fPathNodeSelectedColor;
+    //QColor fPathNodeColor;
+    //QColor fPathNodeSelectedColor;
 
     qreal fPathDissolvedNodeScaling;
-    QColor fPathDissolvedNodeColor;
-    QColor fPathDissolvedNodeSelectedColor;
+    //QColor fPathDissolvedNodeColor;
+    //QColor fPathDissolvedNodeSelectedColor;
 
     qreal fPathControlScaling;
-    QColor fPathControlColor;
-    QColor fPathControlSelectedColor;
+    //QColor fPathControlColor;
+    //QColor fPathControlSelectedColor;
 
     int fAdjustSceneFromFirstClip = AdjustSceneAsk;
 
@@ -148,18 +148,18 @@ public:
 
     // timeline settings
     bool fTimelineAlternateRow = true;
-    QColor fTimelineAlternateRowColor;
+    //QColor fTimelineAlternateRowColor;
     bool fTimelineHighlightRow = true;
-    QColor fTimelineHighlightRowColor;
+    //QColor fTimelineHighlightRowColor;
 
-    QColor fObjectKeyframeColor;
-    QColor fPropertyGroupKeyframeColor;
-    QColor fPropertyKeyframeColor;
-    QColor fSelectedKeyframeColor;
+    //QColor fObjectKeyframeColor;
+    //QColor fPropertyGroupKeyframeColor;
+    //QColor fPropertyKeyframeColor;
+    //QColor fSelectedKeyframeColor;
 
-    QColor fVisibilityRangeColor;
-    QColor fSelectedVisibilityRangeColor;
-    QColor fAnimationRangeColor;
+    //QColor fVisibilityRangeColor;
+    //QColor fSelectedVisibilityRangeColor;
+    //QColor fAnimationRangeColor;
 
     // command palette
     QList<QAction*> fCommandPalette;

@@ -571,38 +571,47 @@ void anim_drawKey(QPainter * const p,
     }
 }
 
-void Animator::prp_drawTimelineControls(
-        QPainter * const p, const qreal pixelsPerFrame,
-        const FrameRange &absFrameRange, const int rowHeight) {
+void Animator::prp_drawTimelineControls(QPainter * const p,
+                                        const qreal pixelsPerFrame,
+                                        const FrameRange &absFrameRange,
+                                        const int rowHeight)
+{
     p->translate(prp_getTotalFrameShift()*pixelsPerFrame, 0);
     const auto relRange = prp_absRangeToRelRange(absFrameRange);
     const auto idRange = anim_frameRangeToKeyIdRange(relRange);
     KeyFrameType type;
-    if(toBoundingBox()) type = KeyFrameType::object;
-    else if(toComplexAnimator()) type = KeyFrameType::propertyGroup;
-    else type = KeyFrameType::property;
-    const auto& sett = *eSettings::sInstance;
+    if (toBoundingBox()) { type = KeyFrameType::object; }
+    else if (toComplexAnimator()) { type = KeyFrameType::propertyGroup; }
+    else { type = KeyFrameType::property; }
+    const auto colors = eSettings::instance().fColors;
     QColor color;
     switch(type) {
     case KeyFrameType::object:
-        color = sett.fObjectKeyframeColor;
+        color = colors.keyframeObject;
         break;
     case KeyFrameType::propertyGroup:
-        color = sett.fPropertyGroupKeyframeColor;
+        color = colors.keyframePropertyGroup;
         break;
     case KeyFrameType::property:
-        color = sett.fPropertyKeyframeColor;
+        color = colors.keyframeProperty;
         break;
     }
     qreal radMult;
-    if(type == KeyFrameType::object) radMult = 0.3;
-    else radMult = 0.21;
+    if (type == KeyFrameType::object) { radMult = 0.3; }
+    else { radMult = 0.21; }
     const qreal keyRadius = rowHeight * radMult;
-    for(int i = idRange.fMin; i <= idRange.fMax; i++) {
-        if(i < 0 || i >= anim_mKeys.count()) continue;
+    for (int i = idRange.fMin; i <= idRange.fMax; i++) {
+        if (i < 0 || i >= anim_mKeys.count()) { continue; }
         const auto& key = anim_mKeys.atId(i);
-        anim_drawKey(p, key, pixelsPerFrame, absFrameRange.fMin, rowHeight,
-                     color, sett.fSelectedKeyframeColor, keyRadius, type);
+        anim_drawKey(p,
+                     key,
+                     pixelsPerFrame,
+                     absFrameRange.fMin,
+                     rowHeight,
+                     color,
+                     colors.keyframeSelected,
+                     keyRadius,
+                     type);
     }
 }
 

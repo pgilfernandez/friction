@@ -39,15 +39,17 @@ SmartCtrlPoint::SmartCtrlPoint(SmartNodePoint * const parentPoint,
     updateRadius();
 }
 
-void SmartCtrlPoint::drawSk(SkCanvas * const canvas, const CanvasMode mode,
-                            const float invScale, const bool keyOnCurrent,
-                            const bool ctrlPressed) {
+void SmartCtrlPoint::drawSk(SkCanvas * const canvas,
+                            const CanvasMode mode,
+                            const float invScale,
+                            const bool keyOnCurrent,
+                            const bool ctrlPressed)
+{
     Q_UNUSED(mode)
     Q_UNUSED(keyOnCurrent)
     Q_UNUSED(ctrlPressed)
-    const auto& sett = eSettings::instance();
-    const QColor settColor = isSelected() ? sett.fPathControlSelectedColor :
-                                            sett.fPathControlColor;
+    const auto colors = eSettings::instance().fColors;
+    const QColor settColor = isSelected() ? colors.pathControlSelected : colors.pathControl;
     const SkColor fillCol = toSkColor(settColor);
     const SkPoint absPos = toSkPoint(getAbsolutePos());
     drawOnAbsPosSk(canvas, absPos, invScale, fillCol);

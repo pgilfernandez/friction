@@ -242,16 +242,17 @@ void DurationRectangle::draw(QPainter * const p,
     }*/
 
     QColor fillColor;
-    const auto& sett = eSettings::instance();
-    if (isSelected()) { fillColor = sett.fSelectedVisibilityRangeColor; }
-    else { fillColor = sett.fVisibilityRangeColor; }
+    const auto colors = eSettings::instance().fColors;
+    if (isSelected()) { fillColor = colors.timelineRangeSelected; }
+    else { fillColor = colors.timelineRange; }
 
     p->fillRect(durRect.adjusted(0, 1, 0, -1), fillColor);
     if (mHovered) {
-        p->setPen(QPen(Qt::white, .5));
+        p->setPen(QPen(Qt::white, .5)); // TODO
         p->drawRect(durRect);
     }
 
+    // TODO colors:
     if (mMinFrame.isHovered()) { p->setPen(QPen(Qt::white)); }
     else { p->setPen(QPen(Qt::black)); }
     p->drawLine(durRect.topLeft(), durRect.bottomLeft());

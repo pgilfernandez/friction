@@ -71,6 +71,14 @@ namespace Friction
                 QColor timelineGrid;
                 QColor timelineRange;
                 QColor timelineRangeSelected;
+                QColor timelineHighlightRow;
+                QColor timelineAltRow;
+                QColor timelineAnimRange;
+
+                QColor keyframeObject;
+                QColor keyframePropertyGroup;
+                QColor keyframeProperty;
+                QColor keyframeSelected;
 
                 QColor marker;
                 QColor markerIO;
@@ -87,6 +95,12 @@ namespace Friction
                 QColor pointKeyOuter;
                 QColor pointKeyInner;
 
+                QColor pathNode;
+                QColor pathNodeSelected;
+                QColor pathDissolvedNode;
+                QColor pathDissolvedNodeSelected;
+                QColor pathControl;
+                QColor pathControlSelected;
                 QColor pathHoverOuter;
                 QColor pathHoverInner;
 

@@ -61,8 +61,8 @@ void AnimationRect::draw(QPainter * const p,
                           qCeil((drawFrameSpan - 1.0) * pixelsPerFrame),
                           drawRect.height());
 
-        const auto& sett = eSettings::instance();
-        p->fillRect(animDurRect.adjusted(0, 1, 0, -1), sett.fAnimationRangeColor);
+        const auto colors = eSettings::instance().fColors;
+        p->fillRect(animDurRect.adjusted(0, 1, 0, -1), colors.timelineAnimRange);
     }
     DurationRectangle::draw(p, drawRect, fps, pixelsPerFrame, absFrameRange);
 }

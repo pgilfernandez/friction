@@ -47,14 +47,14 @@ private:
     QCheckBox* mRtlSupport = nullptr;
 
     QSlider* mPathNodeSize;
-    ColorAnimatorButton* mPathNodeColor = nullptr;
-    ColorAnimatorButton* mPathNodeSelectedColor = nullptr;
+    //ColorAnimatorButton* mPathNodeColor = nullptr;
+    //ColorAnimatorButton* mPathNodeSelectedColor = nullptr;
     QSlider* mPathDissolvedNodeSize;
-    ColorAnimatorButton* mPathDissolvedNodeColor = nullptr;
-    ColorAnimatorButton* mPathDissolvedNodeSelectedColor = nullptr;
+    //ColorAnimatorButton* mPathDissolvedNodeColor = nullptr;
+    //ColorAnimatorButton* mPathDissolvedNodeSelectedColor = nullptr;
     QSlider* mPathControlSize;
-    ColorAnimatorButton* mPathControlColor = nullptr;
-    ColorAnimatorButton* mPathControlSelectedColor = nullptr;
+    //ColorAnimatorButton* mPathControlColor = nullptr;
+    //ColorAnimatorButton* mPathControlSelectedColor = nullptr;
     QComboBox* mAdjustSceneFromFirstClip = nullptr;
 };
 

@@ -45,10 +45,10 @@ private:
     //QCheckBox* mHighlightRowCheck = nullptr;
     //ColorAnimatorButton* mHighlightRowColor = nullptr;
 
-    ColorAnimatorButton* mObjectKeyframeColor = nullptr;
-    ColorAnimatorButton* mPropertyGroupKeyframeColor = nullptr;
-    ColorAnimatorButton* mPropertyKeyframeColor = nullptr;
-    ColorAnimatorButton* mSelectedKeyframeColor = nullptr;
+    //ColorAnimatorButton* mObjectKeyframeColor = nullptr;
+    //ColorAnimatorButton* mPropertyGroupKeyframeColor = nullptr;
+    //ColorAnimatorButton* mPropertyKeyframeColor = nullptr;
+    //ColorAnimatorButton* mSelectedKeyframeColor = nullptr;
 
     //ColorAnimatorButton* mVisibilityRangeColor = nullptr;
     //ColorAnimatorButton* mSelectedVisibilityRangeColor = nullptr;

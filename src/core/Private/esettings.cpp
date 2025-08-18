@@ -171,18 +171,17 @@ eSettings::eSettings(const int cpuThreads,
     sInstance = this;
 
     fColors = getDefaultThemeColors();
-    fVisibilityRangeColor = fColors.timelineRange;
-    fSelectedVisibilityRangeColor = fColors.timelineRangeSelected;
-    fTimelineHighlightRowColor = fColors.highlight;
-    fTimelineHighlightRowColor = Friction::Core::Theme::transparentColor(fColors.highlight, 15);
+    //fVisibilityRangeColor = fColors.timelineRange;
+    //fSelectedVisibilityRangeColor = fColors.timelineRangeSelected;
+    //fTimelineHighlightRowColor = Friction::Core::Theme::transparentColor(fColors.highlight, 15);
     fLastUsedStrokeColor = AppSupport::getSettings("FillStroke",
                                                    "LastStrokeColor",
                                                    fColors.defaultStroke).value<QColor>();
     fLastUsedFillColor = AppSupport::getSettings("FillStroke",
                                                  "LastFillColor",
                                                   fColors.defaultFill).value<QColor>();
-    fTimelineAlternateRowColor = Friction::Core::Theme::transparentColor(fColors.black, 25);
-    fAnimationRangeColor = Friction::Core::Theme::transparentColor(fColors.black, 55);
+    //fTimelineAlternateRowColor = Friction::Core::Theme::transparentColor(fColors.black, 25);
+    //fAnimationRangeColor = Friction::Core::Theme::transparentColor(fColors.black, 55);
 
     gSettings << std::make_shared<eIntSetting>(
                      fCpuThreadsCap,
@@ -222,38 +221,38 @@ eSettings::eSettings(const int cpuThreads,
                      fCanvasRtlSupport,
                      "rtlTextSupport", false);
 
-    gSettings << std::make_shared<eColorSetting>(
+    /*gSettings << std::make_shared<eColorSetting>(
                      fPathNodeColor,
                      "pathNodeColor",
-                     QColor(170, 240, 255));
+                     fColors.pathNode);
     gSettings << std::make_shared<eColorSetting>(
                      fPathNodeSelectedColor,
                      "pathNodeSelectedColor",
-                     QColor(0, 200, 255));
+                     fColors.pathNodeSelected);*/
     gSettings << std::make_shared<eQrealSetting>(
                      fPathNodeScaling,
                      "pathNodeScaling", 1.);
 
-    gSettings << std::make_shared<eColorSetting>(
+    /*gSettings << std::make_shared<eColorSetting>(
                      fPathDissolvedNodeColor,
                      "pathDissolvedNodeColor",
-                     QColor(255, 120, 120));
+                     fColors.pathDissolvedNode);
     gSettings << std::make_shared<eColorSetting>(
                      fPathDissolvedNodeSelectedColor,
                      "pathDissolvedNodeSelectedColor",
-                     QColor(255, 0, 0));
+                     fColors.pathNodeSelected);*/
     gSettings << std::make_shared<eQrealSetting>(
                      fPathDissolvedNodeScaling,
                      "pathDissolvedNodeScaling", 1.);
 
-    gSettings << std::make_shared<eColorSetting>(
+    /*gSettings << std::make_shared<eColorSetting>(
                      fPathControlColor,
                      "pathControlColor",
-                     QColor(255, 175, 175));
+                     fColors.pathControlSelected);
     gSettings << std::make_shared<eColorSetting>(
                      fPathControlSelectedColor,
                      "pathControlSelectedColor",
-                     QColor(255, 0, 0));
+                     QColor(255, 0, 0));*/
     gSettings << std::make_shared<eQrealSetting>(
                      fPathControlScaling,
                      "pathControlScaling", 1.);
@@ -284,22 +283,22 @@ eSettings::eSettings(const int cpuThreads,
                      "timelineHighlightRowColor",
                      QColor(255, 0, 0, 15));*/
 
-    gSettings << std::make_shared<eColorSetting>(
+    /*gSettings << std::make_shared<eColorSetting>(
                      fObjectKeyframeColor,
                      "objectKeyframeColor",
-                     fColors.blue);
+                     fColors.keyframeObject);
     gSettings << std::make_shared<eColorSetting>(
                      fPropertyGroupKeyframeColor,
                      "propertyGroupKeyframeColor",
-                     fColors.green);
+                     fColors.keyframePropertyGroup);
     gSettings << std::make_shared<eColorSetting>(
                      fPropertyKeyframeColor,
                      "propertyKeyframeColor",
-                     fColors.red);
+                     fColors.keyframeProperty);
     gSettings << std::make_shared<eColorSetting>(
                      fSelectedKeyframeColor,
                      "selectedKeyframeColor",
-                     fColors.yellow);
+                     fColors.keyframeSelected);*/
 
     /*gSettings << std::make_shared<eColorSetting>(
                      fVisibilityRangeColor,
@@ -424,6 +423,14 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.timelineGrid = QColor(44, 44, 49);
     colors.timelineRange = QColor(56, 73, 101);
     colors.timelineRangeSelected = QColor(87, 120, 173);
+    colors.timelineHighlightRow = Friction::Core::Theme::transparentColor(colors.highlight, 15);
+    colors.timelineAltRow = Friction::Core::Theme::transparentColor(colors.black, 25);
+    colors.timelineAnimRange = Friction::Core::Theme::transparentColor(colors.black, 55);
+
+    colors.keyframeObject = colors.blue;
+    colors.keyframePropertyGroup = colors.green;
+    colors.keyframeProperty = colors.red;
+    colors.keyframeSelected = colors.yellow;
 
     colors.marker = colors.orange;
     colors.markerIO = colors.green;
@@ -444,6 +451,12 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.pointKeyOuter = colors.white;
     colors.pointKeyInner = colors.red;
 
+    colors.pathNode = QColor(170, 240, 255);
+    colors.pathNodeSelected = QColor(0, 200, 255);
+    colors.pathDissolvedNode = QColor(255, 120, 120);
+    colors.pathDissolvedNodeSelected = QColor(255, 0, 0);
+    colors.pathControl = QColor(255, 175, 175);
+    colors.pathControlSelected = QColor(255, 0, 0);
     colors.pathHoverOuter = colors.black;
     colors.pathHoverInner = colors.red;
 
@@ -455,7 +468,7 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.nullObject = colors.lightGray;
 
     colors.textDisabled = QColor(112, 112, 113);
-    colors.outputDestination = QColor(40, 40, 47);
+    colors.outputDestination = QColor(40, 40, 47); // remove
 
     return colors;
 }

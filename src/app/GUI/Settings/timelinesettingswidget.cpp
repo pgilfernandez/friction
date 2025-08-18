@@ -46,7 +46,7 @@ TimelineSettingsWidget::TimelineSettingsWidget(QWidget *parent) :
 
     addSeparator();*/
 
-    mObjectKeyframeColor = new ColorAnimatorButton(
+    /*mObjectKeyframeColor = new ColorAnimatorButton(
                                mSett.fObjectKeyframeColor);
     mPropertyGroupKeyframeColor = new ColorAnimatorButton(
                                mSett.fPropertyGroupKeyframeColor);
@@ -62,7 +62,7 @@ TimelineSettingsWidget::TimelineSettingsWidget(QWidget *parent) :
     add2HWidgets(new QLabel("Property keyframe color"),
                  mPropertyKeyframeColor);
     add2HWidgets(new QLabel("Selected keyframe color"),
-                 mSelectedKeyframeColor);
+                 mSelectedKeyframeColor);*/
 
     /*addSeparator();
 
@@ -95,10 +95,10 @@ void TimelineSettingsWidget::applySettings() {
     //mSett.fTimelineHighlightRow = mHighlightRowCheck->isChecked();
     //mSett.fTimelineHighlightRowColor = mHighlightRowColor->color();
 
-    mSett.fObjectKeyframeColor = mObjectKeyframeColor->color();
-    mSett.fPropertyGroupKeyframeColor = mPropertyGroupKeyframeColor->color();
-    mSett.fPropertyKeyframeColor = mPropertyKeyframeColor->color();
-    mSett.fSelectedKeyframeColor = mSelectedKeyframeColor->color();
+    //mSett.fObjectKeyframeColor = mObjectKeyframeColor->color();
+    //mSett.fPropertyGroupKeyframeColor = mPropertyGroupKeyframeColor->color();
+    //mSett.fPropertyKeyframeColor = mPropertyKeyframeColor->color();
+    //mSett.fSelectedKeyframeColor = mSelectedKeyframeColor->color();
 
     //mSett.fVisibilityRangeColor = mVisibilityRangeColor->color();
     //mSett.fSelectedVisibilityRangeColor = mSelectedVisibilityRangeColor->color();
@@ -114,10 +114,10 @@ void TimelineSettingsWidget::updateSettings(bool restore)
     //mHighlightRowCheck->setChecked(mSett.fTimelineHighlightRow);
     //mHighlightRowColor->setColor(mSett.fTimelineHighlightRowColor);
 
-    mObjectKeyframeColor->setColor(mSett.fObjectKeyframeColor);
-    mPropertyGroupKeyframeColor->setColor(mSett.fPropertyGroupKeyframeColor);
-    mPropertyKeyframeColor->setColor(mSett.fPropertyKeyframeColor);
-    mSelectedKeyframeColor->setColor(mSett.fSelectedKeyframeColor);
+    //mObjectKeyframeColor->setColor(mSett.fObjectKeyframeColor);
+    //mPropertyGroupKeyframeColor->setColor(mSett.fPropertyGroupKeyframeColor);
+    //mPropertyKeyframeColor->setColor(mSett.fPropertyKeyframeColor);
+    //mSelectedKeyframeColor->setColor(mSett.fSelectedKeyframeColor);
 
     //mVisibilityRangeColor->setColor(mSett.fVisibilityRangeColor);
     //mSelectedVisibilityRangeColor->setColor(mSett.fSelectedVisibilityRangeColor);

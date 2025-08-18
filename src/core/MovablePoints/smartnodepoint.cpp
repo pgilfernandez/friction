@@ -282,52 +282,47 @@ void SmartNodePoint::drawSk(SkCanvas * const canvas,
                             const CanvasMode mode,
                             const float invScale,
                             const bool keyOnCurrent,
-                            const bool ctrlPressed) {
+                            const bool ctrlPressed)
+{
     const QPointF qAbsPos = getAbsolutePos();
     const SkPoint skAbsPos = toSkPoint(qAbsPos);
 
-    const auto& sett = eSettings::instance();
+    const auto colors = eSettings::instance().fColors;
 
-    if(getType() == NodeType::normal) {
-        const QColor settColor = isSelected() ? sett.fPathNodeSelectedColor :
-                                                sett.fPathNodeColor;
+    if (getType() == NodeType::normal) {
+        const QColor settColor = isSelected() ? colors.pathNodeSelected : colors.pathNode;
         const SkColor fillCol = toSkColor(settColor);
         drawOnAbsPosSk(canvas, skAbsPos, invScale, fillCol, keyOnCurrent);
 
-        if((mode == CanvasMode::pointTransform && isNextNormalSelected()) ||
-           (mode == CanvasMode::pathCreate && isSelected())) {
+        if ((mode == CanvasMode::pointTransform && isNextNormalSelected()) ||
+            (mode == CanvasMode::pathCreate && isSelected())) {
             SkPaint paint;
             paint.setAntiAlias(true);
-            if(mC2Pt->isVisible(mode)) {
-                drawCtrlPtLine(canvas, mC2Pt->getAbsolutePos(),
-                               qAbsPos, skAbsPos, invScale);
+            if (mC2Pt->isVisible(mode)) {
+                drawCtrlPtLine(canvas, mC2Pt->getAbsolutePos(), qAbsPos, skAbsPos, invScale);
                 mC2Pt->drawSk(canvas, mode, invScale, keyOnCurrent, ctrlPressed);
-            } else if(mode == CanvasMode::pathCreate) {
-                drawCtrlPtLine(canvas, mC2Pt->getAbsolutePos(),
-                               qAbsPos, skAbsPos, invScale);
+            } else if (mode == CanvasMode::pathCreate) {
+                drawCtrlPtLine(canvas, mC2Pt->getAbsolutePos(), qAbsPos, skAbsPos, invScale);
             }
         }
-        if((mode == CanvasMode::pointTransform && isPrevNormalSelected()) ||
-           (mode == CanvasMode::pathCreate && isSelected())) {
+        if ((mode == CanvasMode::pointTransform && isPrevNormalSelected()) ||
+            (mode == CanvasMode::pathCreate && isSelected())) {
             SkPaint paint;
             paint.setAntiAlias(true);
-            if(mC0Pt->isVisible(mode)) {
-                drawCtrlPtLine(canvas, mC0Pt->getAbsolutePos(),
-                               qAbsPos, skAbsPos, invScale);
+            if (mC0Pt->isVisible(mode)) {
+                drawCtrlPtLine(canvas, mC0Pt->getAbsolutePos(), qAbsPos, skAbsPos, invScale);
                 mC0Pt->drawSk(canvas, mode, invScale, keyOnCurrent, ctrlPressed);
-            } else if(mode == CanvasMode::pathCreate) {
-                drawCtrlPtLine(canvas, mC0Pt->getAbsolutePos(),
-                               qAbsPos, skAbsPos, invScale);
+            } else if (mode == CanvasMode::pathCreate) {
+                drawCtrlPtLine(canvas, mC0Pt->getAbsolutePos(), qAbsPos, skAbsPos, invScale);
             }
         }
-    } else if(getType() == NodeType::dissolved) {
-        const QColor settColor = isSelected() ? sett.fPathDissolvedNodeSelectedColor :
-                                                sett.fPathDissolvedNodeColor;
+    } else if (getType() == NodeType::dissolved) {
+        const QColor settColor = isSelected() ? colors.pathDissolvedNodeSelected : colors.pathDissolvedNode;
         const SkColor fillCol = toSkColor(settColor);
         drawOnAbsPosSk(canvas, skAbsPos, invScale, fillCol, keyOnCurrent);
     }
 
-    if(ctrlPressed) {
+    if (ctrlPressed) {
         SkPaint paint;
         paint.setAntiAlias(true);
 
@@ -348,12 +343,12 @@ void SmartNodePoint::drawSk(SkCanvas * const canvas,
         const float y = skAbsPos.y() + bounds.height()*0.5f;
 
         paint.setStyle(SkPaint::kFill_Style);
-        paint.setColor(SK_ColorWHITE); // TODO
+        paint.setColor(toSkColor(colors.white));
         auto drawRect = bounds.makeOffset(x, y);
         drawRect.outset(eSizesUI::font/4, eSizesUI::font/4);
         canvas->drawRect(drawRect, paint);
 
-        paint.setColor(SK_ColorBLACK); // TODO
+        paint.setColor(toSkColor(colors.black));
         canvas->drawString(cStr, x, y, font, paint);
     }
 }
