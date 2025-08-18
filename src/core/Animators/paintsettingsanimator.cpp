@@ -467,7 +467,7 @@ void UpdatePaintSettings::applyPainterSettingsSk(
         paint.setColor(toSkColor(fPaintColor));
         paint.setAlphaf(paint.getAlphaf()*opacity);
     } else {
-        paint.setColor(SkColorSetARGB(0, 0, 0, 0));
+        paint.setColor(SkColorSetARGB(0, 0, 0, 0)); // TODO
     }
 }
 

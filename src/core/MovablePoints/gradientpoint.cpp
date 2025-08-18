@@ -57,20 +57,20 @@ void GradientPoint::drawSk(SkCanvas * const canvas, const CanvasMode mode,
     canvas->drawCircle(absPos, scaledRadius, paint);
 
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(SK_ColorBLACK);
+    paint.setColor(SK_ColorBLACK); // TODO
     paint.setStrokeWidth(1.5f*invScale);
     canvas->drawCircle(absPos, scaledRadius, paint);
-    paint.setColor(SK_ColorWHITE);
+    paint.setColor(SK_ColorWHITE); // TODO
     paint.setStrokeWidth(0.75f*invScale);
     canvas->drawCircle(absPos, scaledRadius, paint);
 
     if(keyOnCurrent) {
-        paint.setColor(SK_ColorRED);
+        paint.setColor(SK_ColorRED); // TODO
         paint.setStyle(SkPaint::kFill_Style);
         canvas->drawCircle(absPos, scaledRadius*0.5f, paint);
 
         paint.setStyle(SkPaint::kStroke_Style);
-        paint.setColor(SK_ColorBLACK);
+        paint.setColor(SK_ColorBLACK); // TODO
         canvas->drawCircle(absPos, scaledRadius*0.5f, paint);
     }
     canvas->restore();

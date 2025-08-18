@@ -52,7 +52,7 @@ void MovablePoint::drawHovered(SkCanvas * const canvas,
     paint.setAntiAlias(true);
     paint.setStyle(SkPaint::kStroke_Style);
     paint.setStrokeWidth(1.5f*invScale);
-    paint.setColor(SK_ColorRED);
+    paint.setColor(SK_ColorRED); // TODO
     canvas->drawCircle(toSkPoint(getAbsolutePos()),
                        static_cast<float>(mRadius)*invScale, paint);
     //pen.setCosmetic(true);

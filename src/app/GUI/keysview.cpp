@@ -52,7 +52,7 @@ KeysView::KeysView(BoxScrollWidget *boxesListVisible,
     mAnimatorColors.append(colors.red);
     mAnimatorColors.append(colors.blue);
     mAnimatorColors.append(colors.yellow);
-    mAnimatorColors.append(colors.pink);
+    mAnimatorColors.append(colors.purple);
     mAnimatorColors.append(colors.green);
 
     mBoxesListWidget->setSiblingKeysView(this);
@@ -553,7 +553,7 @@ void KeysView::paintEvent(QPaintEvent *)
     if (mPixelsPerFrame < 0.001) { return; }
     if (!mGraphViewed) {
         int currY = eSizesUI::widget;
-        p.setPen(QPen(colors.timeline, 2));
+        p.setPen(QPen(colors.timelineGrid, 2));
         while (currY < height()) {
             p.drawLine(0, currY, width(), currY);
             currY += eSizesUI::widget;
@@ -561,7 +561,7 @@ void KeysView::paintEvent(QPaintEvent *)
     }
     p.translate(eSizesUI::widget/2, 0);
 
-    p.setPen(QPen(colors.timeline, 2));
+    p.setPen(QPen(colors.timelineGrid, 2));
     qreal xT = mPixelsPerFrame*0.5;
     int iInc = 1;
     bool mult5 = true;
@@ -635,7 +635,7 @@ void KeysView::paintEvent(QPaintEvent *)
     }
     if (hasFocus()) {
         p.setBrush(Qt::NoBrush);
-        p.setPen(QPen(colors.timeline, 4));
+        p.setPen(QPen(colors.highlight, 4));
         p.drawRect(0, 0, width(), height());
     }
 

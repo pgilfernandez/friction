@@ -40,6 +40,19 @@ namespace Friction
         {
         public:
             struct Colors {
+                QColor red;
+                QColor blue;
+                QColor yellow;
+                QColor purple;
+                QColor green;
+                QColor darkGreen;
+                QColor orange;
+                QColor gray;
+                QColor darkGray;
+                QColor lightGray;
+                QColor black;
+                QColor white;
+
                 QColor base;
                 QColor baseAlt;
                 QColor baseButton;
@@ -57,30 +70,21 @@ namespace Friction
                 QColor sceneClip;
                 QColor sceneBorder;
 
-                QColor timeline;
-                QColor range;
-                QColor rangeSelected;
+                QColor timelineGrid;
+                QColor timelineRange;
+                QColor timelineRangeSelected;
 
                 QColor marker;
                 QColor markerIO;
 
-                QColor object;
-                QColor red;
-                QColor blue;
-                QColor yellow;
-                QColor pink;
-                QColor green;
-                QColor darkGreen;
-                QColor orange;
+                QColor defaultStroke;
+                QColor defaultFill;
+
+                QColor transformOverlayBase;
+                QColor transformOverlayAlt;
+
                 QColor textDisabled;
-                QColor outputDestination;
-
-                QColor gray;
-                QColor darkGray;
-                QColor lightGray;
-
-                QColor black;
-                QColor white;
+                QColor outputDestination; // remove
             };
             static const QColor transparentColor(QColor c, int a);
             static const QPalette getDefaultPalette(const QColor &highlight = QColor(),

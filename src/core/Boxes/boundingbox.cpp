@@ -242,12 +242,12 @@ void BoundingBox::drawHoveredPathSk(SkCanvas *canvas,
                              mTransformAnimator->getTotalTransform()));
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setColor(SK_ColorBLACK);
+    paint.setColor(SK_ColorBLACK); // TODO
     paint.setStrokeWidth(2*invScale);
     paint.setStyle(SkPaint::kStroke_Style);
     canvas->drawPath(mappedPath, paint);
 
-    paint.setColor(SK_ColorRED);
+    paint.setColor(SK_ColorRED); // TODO
     paint.setStrokeWidth(invScale);
     canvas->drawPath(mappedPath, paint);
     canvas->restore();

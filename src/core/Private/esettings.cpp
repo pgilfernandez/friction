@@ -171,16 +171,16 @@ eSettings::eSettings(const int cpuThreads,
     sInstance = this;
 
     fColors = getDefaultThemeColors();
-    fVisibilityRangeColor = fColors.range;
-    fSelectedVisibilityRangeColor = fColors.rangeSelected;
+    fVisibilityRangeColor = fColors.timelineRange;
+    fSelectedVisibilityRangeColor = fColors.timelineRangeSelected;
     fTimelineHighlightRowColor = fColors.highlight;
     fTimelineHighlightRowColor = Friction::Core::Theme::transparentColor(fColors.highlight, 15);
     fLastUsedStrokeColor = AppSupport::getSettings("FillStroke",
                                                    "LastStrokeColor",
-                                                   fColors.object).value<QColor>();
+                                                   fColors.defaultStroke).value<QColor>();
     fLastUsedFillColor = AppSupport::getSettings("FillStroke",
                                                  "LastFillColor",
-                                                  fColors.white).value<QColor>();
+                                                  fColors.defaultFill).value<QColor>();
     fTimelineAlternateRowColor = Friction::Core::Theme::transparentColor(fColors.black, 25);
     fAnimationRangeColor = Friction::Core::Theme::transparentColor(fColors.black, 55);
 
@@ -395,6 +395,19 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
 {
     Friction::Core::Theme::Colors colors;
 
+    colors.red = QColor(199, 67, 72);
+    colors.blue = QColor(73, 142, 209);
+    colors.yellow = QColor(209, 183, 73);
+    colors.purple = QColor(169, 73, 209);
+    colors.green = QColor(73, 209, 132);
+    colors.darkGreen = QColor(27, 49, 39);
+    colors.orange = QColor(255, 123, 0);
+    colors.gray = Qt::gray;
+    colors.darkGray = Qt::darkGray;
+    colors.lightGray = Qt::lightGray;
+    colors.black = Qt::black;
+    colors.white = Qt::white;
+
     colors.base = QColor(26, 26, 30);
     colors.baseAlt = QColor(33, 33, 39);
     colors.baseButton = QColor(49, 49, 59);
@@ -408,27 +421,9 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.highlightDarker = QColor(53, 101, 176);
     colors.highlightSelected = QColor(150, 191, 255);
 
-    colors.timeline = QColor(44, 44, 49);
-    colors.range = QColor(56, 73, 101);
-    colors.rangeSelected = QColor(87, 120, 173);
-
-    colors.object = QColor(0, 102, 255);
-    colors.red = QColor(199, 67, 72);
-    colors.blue = QColor(73, 142, 209);
-    colors.yellow = QColor(209, 183, 73);
-    colors.pink = QColor(169, 73, 209);
-    colors.green = QColor(73, 209, 132);
-    colors.darkGreen = QColor(27, 49, 39);
-    colors.orange = QColor(255, 123, 0);
-    colors.textDisabled = QColor(112, 112, 113);
-    colors.outputDestination = QColor(40, 40, 47);
-
-    colors.gray = Qt::gray;
-    colors.darkGray = Qt::darkGray;
-    colors.lightGray = Qt::lightGray;
-
-    colors.black = Qt::black;
-    colors.white = Qt::white;
+    colors.timelineGrid = QColor(44, 44, 49);
+    colors.timelineRange = QColor(56, 73, 101);
+    colors.timelineRangeSelected = QColor(87, 120, 173);
 
     colors.marker = colors.orange;
     colors.markerIO = colors.green;
@@ -436,6 +431,15 @@ const Friction::Core::Theme::Colors eSettings::getDefaultThemeColors()
     colors.scene = colors.base;
     colors.sceneClip = colors.black;
     colors.sceneBorder = colors.gray;
+
+    colors.defaultStroke = QColor(0, 102, 255);
+    colors.defaultFill = colors.white;
+
+    colors.transformOverlayBase = colors.highlight;
+    colors.transformOverlayAlt = colors.orange;
+
+    colors.textDisabled = QColor(112, 112, 113);
+    colors.outputDestination = QColor(40, 40, 47);
 
     return colors;
 }

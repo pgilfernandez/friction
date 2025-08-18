@@ -70,16 +70,18 @@ void PathPivot::drawTransforming(SkCanvas * const canvas,
 {
     drawSk(canvas, mode, invScale, false, false);
 
+    const auto colors = eSettings::instance().fColors;
+
     SkPaint paint;
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(SK_ColorYELLOW);
+    paint.setColor(toSkColor(colors.transformOverlayBase));
     paint.setAntiAlias(true);
     canvas->drawLine(toSkPoint(getAbsolutePos()),
                      toSkPoint(mMousePos), paint);
 
     SkPaint paintDashed;
     paintDashed.setStyle(SkPaint::kStroke_Style);
-    paintDashed.setColor(SK_ColorRED);
+    paintDashed.setColor(toSkColor(colors.transformOverlayAlt));
     const float intervals[2] = {interval, interval};
     paintDashed.setPathEffect(SkDashPathEffect::Make(intervals, 2, 0));
     paintDashed.setAntiAlias(true);

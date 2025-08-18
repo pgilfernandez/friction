@@ -152,7 +152,7 @@ void SkiaHelpers::drawOutlineOverlay(SkCanvas * const canvas,
     paint.setAntiAlias(true);
     paint.setStrokeWidth(1.5f*invScale);
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(SK_ColorBLACK);
+    paint.setColor(SK_ColorBLACK); // TODO
     canvas->drawPath(path, paint);
     paint.setStrokeWidth(0.75f*invScale);
     paint.setColor(color);

@@ -84,7 +84,7 @@ void NullObjectType::prp_drawCanvasControls(
     paint.setAntiAlias(true);
     paint.setStrokeWidth(2.f*invScale);
     paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(SK_ColorLTGRAY);
+    paint.setColor(SK_ColorLTGRAY); // TODO
     canvas->drawPath(mappedPath, paint);
     paint.setStrokeWidth(1.f*invScale);
     paint.setColor(toSkColor(color));

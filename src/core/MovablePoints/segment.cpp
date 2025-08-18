@@ -164,12 +164,12 @@ void NormalSegment::drawHoveredSk(SkCanvas * const canvas,
                             const float invScale) {
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setColor(SK_ColorBLACK);
+    paint.setColor(SK_ColorBLACK); // TODO
     paint.setStrokeWidth(2.5f*invScale);
     paint.setStyle(SkPaint::kStroke_Style);
     canvas->drawPath(mSkPath, paint);
 
-    paint.setColor(SK_ColorRED);
+    paint.setColor(SK_ColorRED); // TODO
     paint.setStrokeWidth(1.25f*invScale);
     canvas->drawPath(mSkPath, paint);
 }

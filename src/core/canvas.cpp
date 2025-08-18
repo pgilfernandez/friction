@@ -224,7 +224,7 @@ void drawTransparencyMesh(SkCanvas* const canvas,
     const auto shader = bitmap.makeShader(SkTileMode::kRepeat,
                                           SkTileMode::kRepeat, &matr);
     paint.setShader(shader);
-    paint.setColor(SkColorSetARGB(255, 100, 100, 100));
+    paint.setColor(SkColorSetARGB(255, 100, 100, 100)); // TODO
     canvas->drawRect(drawRect, paint);
 }
 
@@ -389,7 +389,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
                           filter, mDocument.fOnionVisible);
         const SkIRect bRect = toSkIRect(mPaintTarget.pixelBoundingRect());
         paint.setStyle(SkPaint::kStroke_Style);
-        paint.setColor(SK_ColorRED);
+        paint.setColor(SK_ColorRED); // TODO
         paint.setPathEffect(dashPathEffect);
         canvas->drawIRect(bRect, paint);
         paint.setPathEffect(nullptr);

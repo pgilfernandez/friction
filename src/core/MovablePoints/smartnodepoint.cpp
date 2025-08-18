@@ -266,12 +266,12 @@ void drawCtrlPtLine(SkCanvas * const canvas,
         const SkPoint skCtrlAbsPos = toSkPoint(qCtrlAbsPos);
         SkPaint paint;
         paint.setAntiAlias(true);
-        paint.setColor(SK_ColorBLACK);
+        paint.setColor(SK_ColorBLACK); // TODO
         paint.setStrokeWidth(1.5f*invScale);
         paint.setStyle(SkPaint::kStroke_Style);
         canvas->drawLine(skAbsPos, skCtrlAbsPos, paint);
 
-        paint.setColor(SK_ColorWHITE);
+        paint.setColor(SK_ColorWHITE); // TODO
         paint.setStrokeWidth(0.75f*invScale);
         canvas->drawLine(skAbsPos, skCtrlAbsPos, paint);
     }
@@ -348,12 +348,12 @@ void SmartNodePoint::drawSk(SkCanvas * const canvas,
         const float y = skAbsPos.y() + bounds.height()*0.5f;
 
         paint.setStyle(SkPaint::kFill_Style);
-        paint.setColor(SK_ColorWHITE);
+        paint.setColor(SK_ColorWHITE); // TODO
         auto drawRect = bounds.makeOffset(x, y);
         drawRect.outset(eSizesUI::font/4, eSizesUI::font/4);
         canvas->drawRect(drawRect, paint);
 
-        paint.setColor(SK_ColorBLACK);
+        paint.setColor(SK_ColorBLACK); // TODO
         canvas->drawString(cStr, x, y, font, paint);
     }
 }

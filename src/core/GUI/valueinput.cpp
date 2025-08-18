@@ -51,9 +51,9 @@ void ValueInput::draw(SkCanvas *canvas, const int y) {
                                               textWidth + eSizesUI::widget*pixelRatio,
                                               eSizesUI::widget*pixelRatio);
     paint.setStyle(SkPaint::kFill_Style);
-    paint.setColor(SkColorSetRGB(225, 225, 225));
+    paint.setColor(SkColorSetRGB(225, 225, 225)); // TODO
     canvas->drawRect(inputRect, paint);
-    paint.setColor(SK_ColorBLACK);
+    paint.setColor(SK_ColorBLACK); // TODO
     paint.setStyle(SkPaint::kStrokeAndFill_Style);
     paint.setStrokeWidth(.1f*pixelRatio);
 

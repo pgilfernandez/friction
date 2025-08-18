@@ -75,12 +75,12 @@ void GradientPoints::prp_drawCanvasControls(
         const SkPoint endPos = toSkPoint(mEndPoint->getAbsolutePos());
         SkPaint paint;
         paint.setAntiAlias(true);
-        paint.setColor(SK_ColorBLACK);
+        paint.setColor(SK_ColorBLACK); // TODO
         paint.setStrokeWidth(1.5f*invScale);
         paint.setStyle(SkPaint::kStroke_Style);
 
         canvas->drawLine(startPos, endPos, paint);
-        paint.setColor(SK_ColorWHITE);
+        paint.setColor(SK_ColorWHITE); // TODO
         paint.setStrokeWidth(0.75f*invScale);
         canvas->drawLine(startPos, endPos, paint);
         Property::prp_drawCanvasControls(canvas, mode, invScale, ctrlPressed);

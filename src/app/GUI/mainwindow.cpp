@@ -381,8 +381,8 @@ void MainWindow::askRestoreFillStrokeDefault()
     auto settings = eSettings::sInstance;
     settings->fLastFillFlatEnabled = false;
     settings->fLastStrokeFlatEnabled = true;
-    settings->fLastUsedFillColor = Qt::white;
-    settings->fLastUsedStrokeColor = settings->fColors.object;
+    settings->fLastUsedFillColor = settings->fColors.defaultFill;
+    settings->fLastUsedStrokeColor = settings->fColors.defaultStroke;
     settings->fLastUsedStrokeWidth = 10.;
 }
 

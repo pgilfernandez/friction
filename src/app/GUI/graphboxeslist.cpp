@@ -259,7 +259,7 @@ void KeysView::graphPaint(QPainter *p)
             yL -= incY;
             currValue += mValueInc;
         }
-        p->setPen(colors.timeline);
+        p->setPen(colors.timelineGrid);
         p->drawLines(lines, nLines);
         delete[] lines;
     }
