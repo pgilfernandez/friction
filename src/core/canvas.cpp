@@ -479,18 +479,34 @@ void Canvas::setFrameIn(const bool enabled,
                         const int frameIn)
 {
     if (enabled && mOut.enabled && frameIn >= mOut.frame) { return; }
+    const auto oIn = mIn;
     mIn.enabled = enabled;
     mIn.frame = frameIn;
     emit requestUpdate();
+    {
+        prp_pushUndoRedoName(tr("Frame In Changed"));
+        UndoRedo ur;
+        ur.fUndo = [this, oIn]() { setFrameIn(oIn.enabled, oIn.frame); };
+        ur.fRedo = [this, enabled, frameIn]() { setFrameIn(enabled, frameIn); };
+        prp_addUndoRedo(ur);
+    }
 }
 
 void Canvas::setFrameOut(const bool enabled,
                          const int frameOut)
 {
     if (enabled && mIn.enabled && frameOut <= mIn.frame) { return; }
+    const auto oOut = mOut;
     mOut.enabled = enabled;
     mOut.frame = frameOut;
     emit requestUpdate();
+    {
+        prp_pushUndoRedoName(tr("Frame Out Changed"));
+        UndoRedo ur;
+        ur.fUndo = [this, oOut]() { setFrameOut(oOut.enabled, oOut.frame); };
+        ur.fRedo = [this, enabled, frameOut]() { setFrameOut(enabled, frameOut); };
+        prp_addUndoRedo(ur);
+    }
 }
 
 const FrameMarker Canvas::getFrameIn() const
@@ -501,6 +517,34 @@ const FrameMarker Canvas::getFrameIn() const
 const FrameMarker Canvas::getFrameOut() const
 {
     return mOut;
+}
+
+void Canvas::clearFrameInOut()
+{
+    const auto oIn = mIn;
+    const auto oOut = mOut;
+
+    mIn.frame = 0;
+    mIn.enabled = false;
+    mOut.frame = 0;
+    mOut.enabled = false;
+
+    emit requestUpdate();
+    {
+        prp_pushUndoRedoName(tr("Cleared Frame In/Out"));
+        UndoRedo ur;
+        ur.fUndo = [this, oIn, oOut]() { restoreFrameInOut(oIn, oOut); };
+        ur.fRedo = [this]() { clearFrameInOut(); };
+        prp_addUndoRedo(ur);
+    }
+}
+
+void Canvas::restoreFrameInOut(const FrameMarker &frameIn,
+                               const FrameMarker &frameOut)
+{
+    mIn = frameIn;
+    mOut = frameOut;
+    emit requestUpdate();
 }
 
 void Canvas::setMarker(const QString &title,
@@ -619,12 +663,18 @@ void Canvas::moveMarkerFrame(const int markerFrame,
                              const int newFrame)
 {
     if (markerFrame == newFrame) { return; }
-    qDebug() << "moveMarkerFrame" << markerFrame << newFrame;
     int index = getMarkerIndex(markerFrame);
     if (index >= 0) {
         mMarkers.at(index).frame = newFrame;
         emit newFrameRange(mRange);
         emit markersChanged();
+        {
+            prp_pushUndoRedoName(tr("Moved Marker"));
+            UndoRedo ur;
+            ur.fUndo = [this, markerFrame, newFrame]() { moveMarkerFrame(newFrame, markerFrame); };
+            ur.fRedo = [this, markerFrame, newFrame]() { moveMarkerFrame(markerFrame, newFrame); };
+            prp_addUndoRedo(ur);
+        }
     }
 }
 
@@ -651,15 +701,29 @@ const std::vector<FrameMarker> Canvas::getMarkers()
 
 void Canvas::clearMarkers()
 {
+    const auto markers = mMarkers;
     mMarkers.clear();
     emit markersChanged();
     emit requestUpdate();
+    {
+        prp_pushUndoRedoName(tr("Cleared Markers"));
+        UndoRedo ur;
+        ur.fUndo = [this, markers]() { restoreMarkers(markers); };
+        ur.fRedo = [this]() { clearMarkers(); };
+        prp_addUndoRedo(ur);
+    }
 }
 
 void Canvas::updateMarkers()
 {
     emit newFrameRange(mRange);
     emit requestUpdate();
+}
+
+void Canvas::restoreMarkers(const std::vector<FrameMarker> &markers)
+{
+    mMarkers = markers;
+    updateMarkers();
 }
 
 void Canvas::addKeySelectedProperties()
