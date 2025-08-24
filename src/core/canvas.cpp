@@ -433,7 +433,7 @@ void Canvas::setCanvasSize(const int width,
 {
     if (width == mWidth && height == mHeight) { return; }
     {
-        prp_pushUndoRedoName("Scene Changed");
+        prp_pushUndoRedoName(tr("Scene Dimension Changed"));
         UndoRedo ur;
         const QSize origSize{mWidth, mHeight};
         const QSize newSize{width, height};
@@ -458,7 +458,7 @@ void Canvas::setFrameRange(const FrameRange &range,
 {
     if (undo) {
         {
-            prp_pushUndoRedoName("Scene Changed");
+            prp_pushUndoRedoName(tr("Frame Range Changed"));
             UndoRedo ur;
             const FrameRange origRange(mRange);
             const FrameRange newRange(range);
@@ -798,19 +798,19 @@ void Canvas::updatePivotIfNeeded()
 
 void Canvas::makePointCtrlsSymmetric()
 {
-    prp_pushUndoRedoName("Make Nodes Symmetric");
+    prp_pushUndoRedoName(tr("Make Nodes Symmetric"));
     setPointCtrlsMode(CtrlsMode::symmetric);
 }
 
 void Canvas::makePointCtrlsSmooth()
 {
-    prp_pushUndoRedoName("Make Nodes Smooth");
+    prp_pushUndoRedoName(tr("Make Nodes Smooth"));
     setPointCtrlsMode(CtrlsMode::smooth);
 }
 
 void Canvas::makePointCtrlsCorner()
 {
-    prp_pushUndoRedoName("Make Nodes Corner");
+    prp_pushUndoRedoName(tr("Make Nodes Corner"));
     setPointCtrlsMode(CtrlsMode::corner);
 }
 
@@ -1332,11 +1332,13 @@ void Canvas::addUndoRedo(const QString& name,
                          const stdfunc<void()>& undo,
                          const stdfunc<void()>& redo)
 {
+    qDebug() << "addUndoRedo" << name;
     mUndoRedoStack->addUndoRedo(name, undo, redo);
 }
 
 void Canvas::pushUndoRedoName(const QString& name) const
 {
+    qDebug() << "pushUndoRedoName" << name;
     mUndoRedoStack->pushName(name);
 }
 
@@ -1498,7 +1500,7 @@ void Canvas::writeGradients(eWriteStream &dst) const
 
 SceneBoundGradient *Canvas::createNewGradient()
 {
-    prp_pushUndoRedoName("Create Gradient");
+    prp_pushUndoRedoName(tr("Create Gradient"));
     const auto grad = enve::make_shared<SceneBoundGradient>(this);
     addGradient(grad);
     return grad.get();
@@ -1506,7 +1508,7 @@ SceneBoundGradient *Canvas::createNewGradient()
 
 void Canvas::addGradient(const qsptr<SceneBoundGradient>& grad)
 {
-    prp_pushUndoRedoName("Add Gradient");
+    prp_pushUndoRedoName(tr("Add Gradient"));
     mGradients.append(grad);
     emit gradientCreated(grad.get());
     {
@@ -1525,7 +1527,7 @@ bool Canvas::removeGradient(const qsptr<SceneBoundGradient> &gradient)
 {
     const auto guard = gradient;
     if (mGradients.removeOne(gradient)) {
-        prp_pushUndoRedoName("Remove Gradient");
+        prp_pushUndoRedoName(tr("Remove Gradient"));
         {
             UndoRedo ur;
             ur.fUndo = [this, guard]() {
