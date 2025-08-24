@@ -512,11 +512,16 @@ void Canvas::setMarker(const QString &title,
         } else { removeMarker(frame); }
         return;
     }
-    mMarkers.push_back({title.isEmpty() ?
-                            QString::number(mMarkers.size()) :
-                            title,
-                        true, frame});
+    const QString mark = title.isEmpty() ? QString::number(mMarkers.size()) : title;
+    mMarkers.push_back({mark, true, frame});
     emit requestUpdate();
+    {
+        prp_pushUndoRedoName(tr("Added Marker"));
+        UndoRedo ur;;
+        ur.fUndo = [this, frame]() { removeMarker(frame); };
+        ur.fRedo = [this, mark, frame]() { setMarker(mark, frame); };
+        prp_addUndoRedo(ur);
+    }
 }
 
 void Canvas::setMarker(const int frame)
@@ -532,6 +537,13 @@ void Canvas::setMarkerEnabled(const int frame,
     if (index < 0) { return; }
     mMarkers.at(index).enabled = enabled;
     updateMarkers();
+    {
+        prp_pushUndoRedoName(tr("Changed Marker State"));
+        UndoRedo ur;;
+        ur.fUndo = [this, frame, enabled]() { setMarkerEnabled(frame, !enabled); };
+        ur.fRedo = [this, frame, enabled]() { setMarkerEnabled(frame, enabled); };
+        prp_addUndoRedo(ur);
+    }
 }
 
 bool Canvas::hasMarker(const int frame,
@@ -543,6 +555,13 @@ bool Canvas::hasMarker(const int frame,
             if (removeExists) {
                 mMarkers.erase(mMarkers.begin() + index);
                 emit newFrameRange(mRange);
+                {
+                    prp_pushUndoRedoName(tr("Removed Marker"));
+                    UndoRedo ur;;
+                    ur.fUndo = [this, mark]() { setMarker(mark.title, mark.frame); };
+                    ur.fRedo = [this, mark]() { removeMarker(mark.frame); };
+                    prp_addUndoRedo(ur);
+                }
             }
             return true;
         }
@@ -580,9 +599,17 @@ bool Canvas::editMarker(const int frame,
 {
     int index = getMarkerIndex(frame);
     if (index >= 0) {
+        const auto mark = mMarkers.at(index);
         mMarkers.at(index).title = title;
         mMarkers.at(index).enabled = enabled;
         emit newFrameRange(mRange);
+        {
+            prp_pushUndoRedoName(tr("Changed Marker"));
+            UndoRedo ur;;
+            ur.fUndo = [this, mark]() { editMarker(mark.frame, mark.title, mark.enabled); };
+            ur.fRedo = [this, frame, title, enabled]() { editMarker(frame, title, enabled); };
+            prp_addUndoRedo(ur);
+        }
         return true;
     }
     return false;
