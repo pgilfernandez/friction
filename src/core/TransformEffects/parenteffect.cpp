@@ -32,15 +32,19 @@
 ParentEffect::ParentEffect() :
     FollowObjectEffectBase("parent", TransformEffectType::parent) {}
 
-void ParentEffect::applyEffect(
-        const qreal relFrame,
-        qreal& pivotX, qreal& pivotY,
-        qreal& posX, qreal& posY,
-        qreal& rot,
-        qreal& scaleX, qreal& scaleY,
-        qreal& shearX, qreal& shearY,
-        QMatrix& postTransform,
-        BoundingBox* const parent) {
+void ParentEffect::applyEffect(const qreal relFrame,
+                               qreal& pivotX,
+                               qreal& pivotY,
+                               qreal& posX,
+                               qreal& posY,
+                               qreal& rot,
+                               qreal& scaleX,
+                               qreal& scaleY,
+                               qreal& shearX,
+                               qreal& shearY,
+                               QMatrix& postTransform,
+                               BoundingBox* const parent)
+{
     Q_UNUSED(pivotX)
     Q_UNUSED(pivotY)
     Q_UNUSED(posX)
@@ -51,14 +55,39 @@ void ParentEffect::applyEffect(
     Q_UNUSED(shearX)
     Q_UNUSED(shearY)
 
-    if(!isVisible()) return;
+    if (!isVisible() || !parent) { return; }
 
-    if(!parent) return;
     const auto target = targetProperty()->getTarget();
-    if(!target) return;
+    if (!target) { return; }
+
     const qreal absFrame = prp_relFrameToAbsFrameF(relFrame);
     const qreal targetRelFrame = target->prp_absFrameToRelFrameF(absFrame);
-
     const auto targetTransAnim = target->getTransformAnimator();
+
     postTransform = targetTransAnim->getRelativeTransformAtFrame(targetRelFrame);
+
+    // influence
+
+    const qreal posXInfl = mPosInfluence->getEffectiveXValue(relFrame);
+    const qreal posYInfl = mPosInfluence->getEffectiveYValue(relFrame);
+    const qreal scaleXInfl = mScaleInfluence->getEffectiveXValue(relFrame);
+    const qreal scaleYInfl = mScaleInfluence->getEffectiveYValue(relFrame);
+    const qreal rotInfl = mRotInfluence->getEffectiveValue(relFrame);
+
+    const auto rotAnim = targetTransAnim->getRotAnimator();
+    const qreal targetRot = rotAnim->getEffectiveValue(targetRelFrame);
+
+    const auto scaleAnim = targetTransAnim->getScaleAnimator();
+    const qreal targetScaleX = scaleAnim->getEffectiveXValue(targetRelFrame);
+    const qreal targetScaleY = scaleAnim->getEffectiveYValue(targetRelFrame);
+
+    postTransform.setMatrix(postTransform.m11(),
+                            postTransform.m12(),
+                            postTransform.m21(),
+                            postTransform.m22(),
+                            postTransform.dx() * posXInfl,
+                            postTransform.dy() * posYInfl);
+    postTransform.scale(targetScaleX * scaleXInfl,
+                        targetScaleY * scaleYInfl);
+    postTransform.rotate(targetRot * rotInfl);
 }
