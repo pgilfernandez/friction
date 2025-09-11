@@ -69,5 +69,5 @@ add_subdirectory(src/ui)
 add_subdirectory(src/app)
 
 if(${BUILD_SKIA})
-    add_dependencies(frictioncore skia)
+    add_dependencies(frictioncore skialib)
 endif()
