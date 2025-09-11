@@ -36,12 +36,12 @@ if(${LINUX_DEPLOY})
     set(CMAKE_INSTALL_RPATH "$ORIGIN/../lib")
 endif()
 
-option(USE_SKIA_SYSTEM_LIBS "Use skia (third-party) system libraries on Linux" ON)
+option(SKIA_USE_SYSTEM_LIBS "Use skia (third-party) system libraries on Linux" ON)
 if(APPLE)
-    set(USE_SKIA_SYSTEM_LIBS OFF)
+    set(SKIA_USE_SYSTEM_LIBS OFF)
 endif()
 
-if(${USE_SKIA_SYSTEM_LIBS} AND UNIX)
+if(${SKIA_USE_SYSTEM_LIBS} AND UNIX)
     pkg_check_modules(EXPAT REQUIRED expat)
     pkg_check_modules(FREETYPE REQUIRED freetype2)
     pkg_check_modules(JPEG REQUIRED libjpeg)
@@ -52,6 +52,8 @@ if(${USE_SKIA_SYSTEM_LIBS} AND UNIX)
     pkg_check_modules(ZLIB REQUIRED zlib)
     pkg_check_modules(ICU REQUIRED icu-i18n)
     pkg_check_modules(HARFBUZZ REQUIRED harfbuzz)
+    pkg_check_modules(EGL REQUIRED egl)
+    pkg_check_modules(GLES REQUIRED glesv2)
 else()
     add_definitions(-DFRICTION_BUNDLE_SKIA_BUNDLE)
 endif()
@@ -116,10 +118,10 @@ include_directories(
     ${FFMPEG_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/../core
     ${CMAKE_CURRENT_SOURCE_DIR}/../ui
-    ${CMAKE_CURRENT_SOURCE_DIR}/../engine/skia
+    ${CMAKE_CURRENT_SOURCE_DIR}/../skia
 )
 
-if(${USE_SKIA_SYSTEM_LIBS} AND UNIX)
+if(${SKIA_USE_SYSTEM_LIBS} AND UNIX)
     include_directories(
         ${EXPAT_INCLUDE_DIRS}
         ${FREETYPE_INCLUDE_DIRS}
@@ -291,7 +293,7 @@ target_link_directories(
     ${SKIA_LIBRARIES_DIRS}
 )
 
-if(${USE_SKIA_SYSTEM_LIBS} AND UNIX)
+if(${SKIA_USE_SYSTEM_LIBS} AND UNIX)
     target_link_directories(
         ${PROJECT_NAME}
         PRIVATE
@@ -318,7 +320,7 @@ target_link_libraries(
     ${SKIA_LIBRARIES}
 )
 
-if(${USE_SKIA_SYSTEM_LIBS} AND UNIX)
+if(${SKIA_USE_SYSTEM_LIBS} AND UNIX)
     target_link_libraries(
         ${PROJECT_NAME}
         PRIVATE
