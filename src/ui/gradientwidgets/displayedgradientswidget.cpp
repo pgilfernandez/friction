@@ -203,6 +203,16 @@ void DisplayedGradientsWidget::duplicateSelectedGradient()
     setSelectedGradient(newGrad);
 }
 
+void DisplayedGradientsWidget::bookmarkColorsSelectedGradient()
+{
+    if (!mScene || !mSelectedGradient) { return; }
+    const int nColors = mSelectedGradient->ca_getNumberOfChildren();
+    for (int i = 0; i < nColors; ++i) {
+        const QColor col = mSelectedGradient->getColorAt(i);
+        Document::sInstance->addBookmarkColor(col);
+    }
+}
+
 void DisplayedGradientsWidget::gradientLeftPressed(const int gradId) {
     if(!mScene) return;
     if(gradId >= mScene->gradients().count() || gradId < 0) return;
@@ -228,6 +238,7 @@ void DisplayedGradientsWidget::gradientContextMenuReq(
     QAction* copyAct = nullptr;
     QAction* duplicateAct = nullptr;
     QAction* deleteAct = nullptr;
+    QAction* bookmarkAct = nullptr;
 
     if(gradPressed) {
         menu.addSeparator();
@@ -237,7 +248,7 @@ void DisplayedGradientsWidget::gradientContextMenuReq(
         menu.addSeparator();
         duplicateAct = menu.addAction("Duplicate Gradient");
         menu.addSeparator();
-        deleteAct = menu.addAction("Delete Gradient");
+        bookmarkAct = menu.addAction(QIcon::fromTheme("color"), tr("Bookmark Colors"));
     }
     const auto selectedAction = menu.exec(globalPos);
     if(selectedAction) {
@@ -263,6 +274,8 @@ void DisplayedGradientsWidget::gradientContextMenuReq(
             setSelectedGradient(newGrad);
         } else if(selectedAction == deleteAct) {
             mScene->removeGradient(pressedGradient->ref<SceneBoundGradient>());
+        } else if(selectedAction == bookmarkAct) {
+            bookmarkColorsSelectedGradient();
         }
         if(mSelectedGradient) emit triggered(mSelectedGradient);
         Document::sInstance->actionFinished();
