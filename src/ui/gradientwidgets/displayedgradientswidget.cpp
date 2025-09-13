@@ -231,8 +231,8 @@ void DisplayedGradientsWidget::gradientContextMenuReq(
     const auto clipboard = Document::sInstance->getPropertyClipboard();
     const bool compat = clipboard && clipboard->hasType<SceneBoundGradient>();
     QMenu menu(this);
-    const auto newAct = menu.addAction("New Gradient");
-    const auto pasteAct = menu.addAction("Paste Gradient");
+    const auto newAct = menu.addAction(QIcon::fromTheme("plus"), tr("New Gradient"));
+    const auto pasteAct = menu.addAction(QIcon::fromTheme("paste"), tr("Paste Gradient"));
     pasteAct->setEnabled(compat);
     QAction* pasteIntoAct = nullptr;
     QAction* copyAct = nullptr;
@@ -242,11 +242,13 @@ void DisplayedGradientsWidget::gradientContextMenuReq(
 
     if(gradPressed) {
         menu.addSeparator();
-        pasteIntoAct = menu.addAction("Paste Into Gradient");
+        pasteIntoAct = menu.addAction(QIcon::fromTheme("paste"), tr("Paste Into Gradient"));
         pasteIntoAct->setEnabled(compat);
-        copyAct = menu.addAction("Copy Gradient");
+        copyAct = menu.addAction(QIcon::fromTheme("copy"), tr("Copy Gradient"));
         menu.addSeparator();
-        duplicateAct = menu.addAction("Duplicate Gradient");
+        duplicateAct = menu.addAction(QIcon::fromTheme("duplicate"), tr("Duplicate Gradient"));
+        menu.addSeparator();
+        deleteAct = menu.addAction(QIcon::fromTheme("minus"), tr("Delete Gradient"));
         menu.addSeparator();
         bookmarkAct = menu.addAction(QIcon::fromTheme("color"), tr("Bookmark Colors"));
     }
