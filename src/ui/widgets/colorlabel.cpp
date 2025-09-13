@@ -51,7 +51,7 @@ void ColorLabel::mousePressEvent(QMouseEvent *e)
     menu.addAction(QIcon::fromTheme("color"), tr("Bookmark Color"));
     const auto act = menu.exec(e->globalPos());
     if (act) {
-        if (act->text() == tr("Bookmark")) {
+        if (act->text() == tr("Bookmark Color")) {
             const QColor col = QColor::fromHsvF(qreal(mHue),
                                                 qreal(mSaturation),
                                                 qreal(mValue),
