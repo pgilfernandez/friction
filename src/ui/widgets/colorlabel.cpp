@@ -48,7 +48,7 @@ void ColorLabel::mousePressEvent(QMouseEvent *e)
         return;
     }
     QMenu menu(this);
-    menu.addAction(QIcon::fromTheme("color"), tr("Bookmark"));
+    menu.addAction(QIcon::fromTheme("color"), tr("Bookmark Color"));
     const auto act = menu.exec(e->globalPos());
     if (act) {
         if (act->text() == tr("Bookmark")) {
