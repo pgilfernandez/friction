@@ -20,14 +20,19 @@
 set -e -x
 
 CWD=`pwd`
-SDK=${SDK:-"${CWD}/sdk"}
 REL=${REL:-"OFF"}
 BRANCH=${BRANCH:-`git rev-parse --abbrev-ref HEAD`}
 COMMIT=${COMMIT:-`git rev-parse --short=8 HEAD`}
 CUSTOM=${CUSTOM:-""}
-BUILD_DIR=${BUILD_DIR:-"${CWD}/build-release"}
 OSX=12.7
-CPU=`uname -m`
+CPU=`arch`
+
+if [ "${CPU}" = "i386" ]; then
+    CPU=x86_64
+fi
+
+SDK=${SDK:-"${CWD}/sdk/${CPU}"}
+BUILD_DIR=${BUILD_DIR:-"${CWD}/build-release-${CPU}"}
 
 export PATH="${SDK}/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export PKG_CONFIG_PATH="${SDK}/lib/pkgconfig"
