@@ -103,12 +103,7 @@ void Gradient::saveSVG(SvgExporter& exp) const {
             const auto color = getChild(i);
             auto stop = exp.createElement("stop");
             stop.setAttribute("offset", count == 1 ? 0. : qreal(i)/(count - 1));
-            color->saveColorSVG(exp, stop, exp.fAbsRange,
-                                "stop-color", false, false);
-            if (color->getColor().alphaF() != 1.) {
-                color->saveColorSVG(exp, stop, exp.fAbsRange,
-                                    "stop-opacity", false, true);
-            }
+            color->saveColorSVG(exp, stop, exp.fAbsRange, "stop-color");
             ele.appendChild(stop);
         }
     }

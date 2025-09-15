@@ -346,18 +346,10 @@ void PaintSettingsAnimator::saveSVG(SvgExporter& exp,
             exp.addToDefs(grad);
             parent.setAttribute(name, QString("url(#%1)").arg(thisGradId));
         } else {
-            parent.setAttribute(name, "black");
+            parent.setAttribute(name, "#000000");
         }
     } else {
-        if (name == "fill" || name == "stroke") {
-            mColor->saveColorSVG(exp, parent, visRange, name, false, false);
-            if (mColor->getColor().alphaF() != 1.) {
-                mColor->saveColorSVG(exp, parent, visRange,
-                                     QString("%1-opacity").arg(name), false, true);
-            }
-        } else {
-            mColor->saveColorSVG(exp, parent, visRange, name);
-        }
+        mColor->saveColorSVG(exp, parent, visRange, name);
     }
 }
 
