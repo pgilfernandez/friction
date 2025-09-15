@@ -133,15 +133,15 @@ void CurrentGradientWidget::colorRightPress(const int x, const QPoint &point) {
         menu.addAction(QIcon::fromTheme("color"), tr("Bookmark Color"));
         const auto selectedAction = menu.exec(point);
         if(selectedAction) {
-            if(selectedAction->text() == "Delete Color") {
+            if(selectedAction->text() == tr("Delete Color")) {
                 if(mGradient->ca_getNumberOfChildren() < 2) {
                     mColor->setColor(Qt::black);
                 } else {
                     mGradient->removeChild(mColor->ref<ColorAnimator>());
                 }
-            } else if(selectedAction->text() == "Add Color") {
+            } else if(selectedAction->text() == tr("Add Color")) {
                 mGradient->addColor(Qt::black);
-            } else if(selectedAction->text() == "Bookmark Color") {
+            } else if(selectedAction->text() == tr("Bookmark Color")) {
                 if (mColor) {
                     const QColor col = mColor->getColor();
                     Document::sInstance->addBookmarkColor(col);
