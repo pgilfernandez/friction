@@ -349,7 +349,15 @@ void PaintSettingsAnimator::saveSVG(SvgExporter& exp,
             parent.setAttribute(name, "black");
         }
     } else {
-        mColor->saveColorSVG(exp, parent, visRange, name);
+        if (name == "fill" || name == "stroke") {
+            mColor->saveColorSVG(exp, parent, visRange, name, false, false);
+            if (mColor->getColor().alphaF() != 1.) {
+                mColor->saveColorSVG(exp, parent, visRange,
+                                     QString("%1-opacity").arg(name), false, true);
+            }
+        } else {
+            mColor->saveColorSVG(exp, parent, visRange, name);
+        }
     }
 }
 

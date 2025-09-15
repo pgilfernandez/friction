@@ -96,14 +96,19 @@ void Gradient::saveSVG(SvgExporter& exp) const {
     if(count == 0) {
         auto stop = exp.createElement("stop");
         stop.setAttribute("offset", 0);
-        stop.setAttribute("stop-color", "black");
+        stop.setAttribute("stop-color", "#000000");
         ele.appendChild(stop);
     } else {
         for(int i = 0; i < count; i++) {
             const auto color = getChild(i);
             auto stop = exp.createElement("stop");
             stop.setAttribute("offset", count == 1 ? 0. : qreal(i)/(count - 1));
-            color->saveColorSVG(exp, stop, exp.fAbsRange, "stop-color");
+            color->saveColorSVG(exp, stop, exp.fAbsRange,
+                                "stop-color", false, false);
+            if (color->getColor().alphaF() != 1.) {
+                color->saveColorSVG(exp, stop, exp.fAbsRange,
+                                    "stop-opacity", false, true);
+            }
             ele.appendChild(stop);
         }
     }
