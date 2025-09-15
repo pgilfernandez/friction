@@ -295,7 +295,8 @@ void Document::clear() {
     const int nScenes = fScenes.count();
     for(int i = 0; i < nScenes; i++) removeScene(0);
     replaceClipboard(nullptr);
-    for(const auto brush : fBrushes) {
+    const auto iBrushes = fBrushes;
+    for (const auto brush : iBrushes) {
         removeBookmarkBrush(brush);
     }
     fBrushes.clear();
