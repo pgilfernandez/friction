@@ -224,10 +224,12 @@ void Document::addBookmarkColor(const QColor &color) {
     emit bookmarkColorAdded(color);
 }
 
-void Document::removeBookmarkColor(const QColor &color) {
+void Document::removeBookmarkColor(const QColor &color)
+{
     const auto rgba = color.rgba();
-    for(const auto& iColor : fColors) {
-        if(iColor.rgba() == rgba) {
+    for (int i = 0; i < fColors.count(); i++) {
+        if (fColors.at(i).rgba() == rgba) {
+            fColors.removeAt(i);
             emit bookmarkColorRemoved(color);
             break;
         }
