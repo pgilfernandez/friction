@@ -1619,7 +1619,7 @@ eTask* BoundingBox::saveSVGWithTransform(SvgExporter& exp,
                     auto rect = eleMask.appendChild(expPtr->createElement("rect")).toElement();
                     rect.setAttribute("width", "100%");
                     rect.setAttribute("height", "100%");
-                    rect.setAttribute("fill", "white");
+                    rect.setAttribute("fill", "#ffffff");
                 }
                 eleMask.setAttribute("id", QString("%1Mask").arg(AppSupport::filterId(ptr->prp_getName())));
                 eleMask.appendChild(withEffects);
