@@ -38,7 +38,7 @@ SettingsDialog::SettingsDialog(QWidget * const parent)
     addSettingsWidget(canvas, tr("Canvas"));
 
     const auto timeline = new TimelineSettingsWidget(this);
-    addSettingsWidget(timeline, tr("Timeline"));
+    addSettingsWidget(timeline, tr("Themes"));
 
     const auto plugins = new PluginsSettingsWidget(this);
     addSettingsWidget(plugins, tr("Shaders"));
