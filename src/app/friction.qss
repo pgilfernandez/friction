@@ -254,7 +254,7 @@ QDoubleSpinBox:hover,
 QSpinBox:hover,
 QLineEdit:hover,
 QTextEdit#TextEdit:hover {
-    background-color: black;
+    background-color: black; /* TODO: maybe create getThemeBaseDarkestColor? */
 }
 
 QComboBox::drop-down:button{
