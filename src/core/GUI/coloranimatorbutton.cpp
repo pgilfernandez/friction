@@ -27,8 +27,13 @@
 #include "Animators/coloranimator.h"
 #include "colorsetting.h"
 #include "GUI/ewidgets.h"
+#include "Private/esettings.h"
+
 #include <QVBoxLayout>
 #include <QDialog>
+#include <QPainter>
+#include <QStyleOptionFocusRect>
+
 
 ColorAnimatorButton::ColorAnimatorButton(QWidget * const parent) :
     BoxesListActionButton(parent) {
@@ -64,14 +69,54 @@ void ColorAnimatorButton::setColorTarget(ColorAnimator * const target) {
     update();
 }
 
-void ColorAnimatorButton::paintEvent(QPaintEvent *) {
-    const QColor color = mColorTarget ?
-                mColorTarget->getColor() : mColor;
-    QPainter p(this);
-    if(mHover) p.setPen(Qt::red);
-    else p.setPen(Qt::white);
-    p.setBrush(color);
-    p.drawRect(0, 0, width() - 1, height() - 1);
+void ColorAnimatorButton::paintEvent(QPaintEvent *event)
+{
+    Q_UNUSED(event)
+
+    const QColor swatch = mColorTarget ? mColorTarget->getColor() : mColor;
+    const QRectF rect(0.5, 0.5, width() - 1.0, height() - 1.0);
+    const bool isDisabled = !isEnabled();
+
+    const auto settings = eSettings::sInstance;
+    const auto themeColors = settings ? settings->fColors
+                                      : Friction::Core::Theme::Colors();
+
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    QColor fill = swatch;
+    if (isDisabled) {
+        fill.setAlphaF(fill.alphaF() * 0.35);
+    }
+    painter.setBrush(fill);
+
+    QColor border = mHover ? themeColors.highlight : themeColors.baseBorder;
+    if (!border.isValid()) {
+        border = palette().color(mHover ? QPalette::Highlight : QPalette::Mid);
+    }
+    if (isDisabled) {
+        border = themeColors.baseBorder.isValid()
+                     ? themeColors.baseBorder.lighter(150)
+                     : palette().color(QPalette::Midlight);
+    }
+    painter.setPen(QPen(border, 1.0));
+    painter.drawRoundedRect(rect, 2.0, 2.0);
+
+    QColor inner = fill;
+    if (inner.isValid()) {
+        inner = inner.lighter(mHover ? 115 : 100);
+        inner.setAlphaF(qMin(1.0, inner.alphaF() + 0.1));
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(inner);
+        painter.drawRoundedRect(rect.adjusted(2.0, 2.0, -2.0, -2.0), 1.5, 1.5);
+    }
+
+    if (hasFocus()) {
+        QStyleOptionFocusRect opt;
+        opt.initFrom(this);
+        opt.rect = rect.toAlignedRect().adjusted(2, 2, -2, -2);
+        style()->drawPrimitive(QStyle::PE_FrameFocusRect, &opt, &painter, this);
+    }
 }
 
 void ColorAnimatorButton::openColorSettingsDialog() {

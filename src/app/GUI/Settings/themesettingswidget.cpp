@@ -26,6 +26,7 @@
 #include "GUI/coloranimatorbutton.h"
 #include "Private/esettings.h"
 #include "appsupport.h"
+#include "GUI/global.h"
 
 #include <QColor>
 #include <QComboBox>
@@ -45,6 +46,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSignalBlocker>
+#include <QSpacerItem>
 #include <QWidget>
 
 
@@ -265,7 +267,9 @@ void ThemeSettingsWidget::setupColorGrid()
         mColorItems.append(item);
 
         layout->addWidget(label, row, 0);
-        layout->addWidget(button, row, 1, 1, 1, Qt::AlignLeft);
+        layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum),
+                        row, 1);
+        layout->addWidget(button, row, 2, 1, 1, Qt::AlignRight);
         ++row;
     }
 
