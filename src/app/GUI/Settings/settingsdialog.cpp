@@ -3,13 +3,15 @@
 #include "hardwareinfo.h"
 #include "exceptions.h"
 #include "GUI/global.h"
+#include "themesupport.h"
 
 #include "appsupport.h"
 
 #include "generalsettingswidget.h"
 #include "widgets/performancesettingswidget.h"
 #include "widgets/canvassettingswidget.h"
-#include "timelinesettingswidget.h"
+// #include "timelinesettingswidget.h"
+#include "themesettingswidget.h"
 #include "pluginssettingswidget.h"
 #include "widgets/presetsettingswidget.h"
 
@@ -37,8 +39,11 @@ SettingsDialog::SettingsDialog(QWidget * const parent)
     const auto canvas = new CanvasSettingsWidget(this);
     addSettingsWidget(canvas, tr("Canvas"));
 
-    const auto timeline = new TimelineSettingsWidget(this);
-    addSettingsWidget(timeline, tr("Themes"));
+    // const auto timeline = new TimelineSettingsWidget(this);
+    // addSettingsWidget(timeline, tr("Timeline"));
+
+    const auto themes = new ThemeSettingsWidget(this);
+    addSettingsWidget(themes, tr("Themes"));
 
     const auto plugins = new PluginsSettingsWidget(this);
     addSettingsWidget(plugins, tr("Shaders"));
@@ -95,6 +100,10 @@ SettingsDialog::SettingsDialog(QWidget * const parent)
             this, [this, statusBar]() {
         for (const auto widget : mSettingWidgets) {
             widget->applySettings();
+        }
+        if (eSettings::sInstance) {
+            Friction::Core::Theme::setupTheme(eSizesUI::widget,
+                                              eSettings::sInstance->fColors);
         }
         emit eSettings::sInstance->settingsChanged();
         try {

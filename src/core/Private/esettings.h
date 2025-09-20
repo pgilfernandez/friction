@@ -190,6 +190,7 @@ public:
     // theme colors
     const Friction::Core::Theme::Colors getDefaultThemeColors();
     Friction::Core::Theme::Colors fColors;
+    QString fActiveThemeName;
 
 signals:
     void settingsChanged();

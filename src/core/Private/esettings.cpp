@@ -28,8 +28,122 @@
 #include "GUI/global.h"
 #include "exceptions.h"
 
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
+
 #include "smartPointers/stdselfref.h"
 #include "skia/skqtconversions.h"
+
+namespace {
+using ThemeColors = Friction::Core::Theme::Colors;
+
+struct ColorDescriptor {
+    const char *name;
+    QColor ThemeColors::*member;
+};
+
+constexpr ColorDescriptor kColorDescriptors[] = {
+    {"red", &ThemeColors::red},
+    {"blue", &ThemeColors::blue},
+    {"yellow", &ThemeColors::yellow},
+    {"purple", &ThemeColors::purple},
+    {"green", &ThemeColors::green},
+    {"darkGreen", &ThemeColors::darkGreen},
+    {"orange", &ThemeColors::orange},
+    {"gray", &ThemeColors::gray},
+    {"darkGray", &ThemeColors::darkGray},
+    {"lightGray", &ThemeColors::lightGray},
+    {"black", &ThemeColors::black},
+    {"white", &ThemeColors::white},
+    {"base", &ThemeColors::base},
+    {"baseAlt", &ThemeColors::baseAlt},
+    {"baseButton", &ThemeColors::baseButton},
+    {"baseCombo", &ThemeColors::baseCombo},
+    {"baseBorder", &ThemeColors::baseBorder},
+    {"baseDark", &ThemeColors::baseDark},
+    {"baseDarker", &ThemeColors::baseDarker},
+    {"highlight", &ThemeColors::highlight},
+    {"highlightAlt", &ThemeColors::highlightAlt},
+    {"highlightDarker", &ThemeColors::highlightDarker},
+    {"highlightSelected", &ThemeColors::highlightSelected},
+    {"scene", &ThemeColors::scene},
+    {"sceneClip", &ThemeColors::sceneClip},
+    {"sceneBorder", &ThemeColors::sceneBorder},
+    {"timelineGrid", &ThemeColors::timelineGrid},
+    {"timelineRange", &ThemeColors::timelineRange},
+    {"timelineRangeSelected", &ThemeColors::timelineRangeSelected},
+    {"timelineHighlightRow", &ThemeColors::timelineHighlightRow},
+    {"timelineAltRow", &ThemeColors::timelineAltRow},
+    {"timelineAnimRange", &ThemeColors::timelineAnimRange},
+    {"keyframeObject", &ThemeColors::keyframeObject},
+    {"keyframePropertyGroup", &ThemeColors::keyframePropertyGroup},
+    {"keyframeProperty", &ThemeColors::keyframeProperty},
+    {"keyframeSelected", &ThemeColors::keyframeSelected},
+    {"marker", &ThemeColors::marker},
+    {"markerIO", &ThemeColors::markerIO},
+    {"defaultStroke", &ThemeColors::defaultStroke},
+    {"defaultFill", &ThemeColors::defaultFill},
+    {"transformOverlayBase", &ThemeColors::transformOverlayBase},
+    {"transformOverlayAlt", &ThemeColors::transformOverlayAlt},
+    {"point", &ThemeColors::point},
+    {"pointSelected", &ThemeColors::pointSelected},
+    {"pointHoverOutline", &ThemeColors::pointHoverOutline},
+    {"pointKeyOuter", &ThemeColors::pointKeyOuter},
+    {"pointKeyInner", &ThemeColors::pointKeyInner},
+    {"pathNode", &ThemeColors::pathNode},
+    {"pathNodeSelected", &ThemeColors::pathNodeSelected},
+    {"pathDissolvedNode", &ThemeColors::pathDissolvedNode},
+    {"pathDissolvedNodeSelected", &ThemeColors::pathDissolvedNodeSelected},
+    {"pathControl", &ThemeColors::pathControl},
+    {"pathControlSelected", &ThemeColors::pathControlSelected},
+    {"pathHoverOuter", &ThemeColors::pathHoverOuter},
+    {"pathHoverInner", &ThemeColors::pathHoverInner},
+    {"segmentHoverOuter", &ThemeColors::segmentHoverOuter},
+    {"segmentHoverInner", &ThemeColors::segmentHoverInner},
+    {"boundingBox", &ThemeColors::boundingBox},
+    {"nullObject", &ThemeColors::nullObject},
+    {"textDisabled", &ThemeColors::textDisabled},
+    {"outputDestination", &ThemeColors::outputDestination}
+};
+
+const QString kThemesGroup = QStringLiteral("themes");
+const QString kThemesCurrentColorsKey = QStringLiteral("currentColors");
+const QString kThemesActiveKey = QStringLiteral("active");
+
+bool deserializeColors(const QJsonObject &object, ThemeColors &colors)
+{
+    for (const auto &descriptor : kColorDescriptors) {
+        const auto value = object.value(QString::fromLatin1(descriptor.name));
+        if (value.isUndefined()) { continue; }
+        if (!value.isString()) { return false; }
+        QColor color(value.toString());
+        if (!color.isValid()) { return false; }
+        colors.*(descriptor.member) = color;
+    }
+    return true;
+}
+
+void loadStoredTheme(ThemeColors &colors, QString &activeName)
+{
+    const QString storedColors = AppSupport::getSettings(kThemesGroup,
+                                                         kThemesCurrentColorsKey,
+                                                         QString()).toString();
+    if (!storedColors.isEmpty()) {
+        QJsonParseError parseError{};
+        const auto doc = QJsonDocument::fromJson(storedColors.toUtf8(), &parseError);
+        if (parseError.error == QJsonParseError::NoError && doc.isObject()) {
+            ThemeColors temp = colors;
+            if (deserializeColors(doc.object(), temp)) {
+                colors = temp;
+            }
+        }
+    }
+    activeName = AppSupport::getSettings(kThemesGroup,
+                                         kThemesActiveKey,
+                                         QString()).toString();
+}
+} // namespace
 
 struct eSetting
 {
@@ -171,6 +285,7 @@ eSettings::eSettings(const int cpuThreads,
     sInstance = this;
 
     fColors = getDefaultThemeColors();
+    loadStoredTheme(fColors, fActiveThemeName);
     //fVisibilityRangeColor = fColors.timelineRange;
     //fSelectedVisibilityRangeColor = fColors.timelineRangeSelected;
     //fTimelineHighlightRowColor = Friction::Core::Theme::transparentColor(fColors.highlight, 15);
