@@ -39,9 +39,6 @@ SettingsDialog::SettingsDialog(QWidget * const parent)
     const auto canvas = new CanvasSettingsWidget(this);
     addSettingsWidget(canvas, tr("Canvas"));
 
-    // const auto timeline = new TimelineSettingsWidget(this);
-    // addSettingsWidget(timeline, tr("Timeline"));
-
     const auto themes = new ThemeSettingsWidget(this);
     addSettingsWidget(themes, tr("Themes"));
 

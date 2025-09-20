@@ -188,7 +188,6 @@ set(
     GUI/RenderWidgets/rendersettingsdisplaywidget.cpp
     GUI/Settings/generalsettingswidget.cpp
     GUI/Settings/settingsdialog.cpp
-    GUI/Settings/timelinesettingswidget.cpp
     GUI/Settings/themesettingswidget.cpp
     GUI/Settings/pluginssettingswidget.cpp
     GUI/canvasbasewrappernode.cpp
@@ -241,7 +240,6 @@ set(
     GUI/RenderWidgets/rendersettingsdisplaywidget.h
     GUI/Settings/generalsettingswidget.h
     GUI/Settings/settingsdialog.h
-    GUI/Settings/timelinesettingswidget.h
     GUI/Settings/themesettingswidget.h
     GUI/Settings/pluginssettingswidget.h
     GUI/canvasbasewrappernode.h
