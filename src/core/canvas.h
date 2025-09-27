@@ -738,6 +738,10 @@ private:
 
     void scaleSelected(const eMouseEvent &e);
     void rotateSelected(const eMouseEvent &e);
+    bool prepareRotation(const QPointF &startPos, bool fromHandle = false);
+    void updateRotateHandleGeometry(qreal invScale);
+    bool tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale);
+    QRectF selectedBoxesBoundingRect() const;
 
     void drawPathClear();
     void drawPathFinish(const qreal invScale);
@@ -807,6 +811,12 @@ protected:
     qreal mCurrentNormalSegmentT;
 
     ValueInput mValueInput;
+
+    bool mRotateHandleVisible = false;
+    QPointF mRotateHandlePos;
+    QPointF mRotateHandleAnchor;
+    qreal mRotateHandleRadius = 0;
+    bool mRotatingFromHandle = false;
 
     bool mPreviewing = false;
     bool mRenderingPreview = false;

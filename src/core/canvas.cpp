@@ -22,6 +22,12 @@
 #include "canvas.h"
 #include <QPainter>
 #include <QMouseEvent>
+#include <QLineF>
+#include <QTransform>
+#include <QVector2D>
+#include <limits>
+#include <cmath>
+#include <algorithm>
 #include <QDebug>
 #include <QApplication>
 #include "Boxes/videobox.h"
@@ -318,6 +324,31 @@ void Canvas::renderSk(SkCanvas* const canvas,
             canvas->restore();
         }
     //}
+
+    updateRotateHandleGeometry(qInvZoom);
+
+    if (mRotateHandleVisible) {
+        const SkPoint anchorPt = toSkPoint(mRotateHandleAnchor);
+        const SkPoint handlePt = toSkPoint(mRotateHandlePos);
+
+        SkPaint linePaint;
+        linePaint.setAntiAlias(true);
+        linePaint.setColor(toSkColor(ThemeSupport::getThemeButtonBaseColor(200)));
+        linePaint.setStrokeWidth(toSkScalar(qMax<qreal>(1.0, eSizesUI::widget*0.08f*qInvZoom)));
+        canvas->drawLine(anchorPt, handlePt, linePaint);
+
+        SkPaint fillPaint;
+        fillPaint.setAntiAlias(true);
+        fillPaint.setColor(ThemeSupport::getThemeHighlightSkColor(190));
+        canvas->drawCircle(handlePt.x(), handlePt.y(), toSkScalar(mRotateHandleRadius), fillPaint);
+
+        SkPaint borderPaint;
+        borderPaint.setAntiAlias(true);
+        borderPaint.setStyle(SkPaint::kStroke_Style);
+        borderPaint.setStrokeWidth(toSkScalar(qMax<qreal>(1.0, eSizesUI::widget*0.05f*qInvZoom)));
+        borderPaint.setColor(toSkColor(ThemeSupport::getThemeButtonBorderColor(220)));
+        canvas->drawCircle(handlePt.x(), handlePt.y(), toSkScalar(mRotateHandleRadius), borderPaint);
+    }
 
     if(mCurrentMode == CanvasMode::boxTransform ||
        mCurrentMode == CanvasMode::pointTransform) {
@@ -1185,7 +1216,7 @@ void Canvas::setParentToLastSelected()
     }
 }
 
-bool Canvas::startRotatingAction(const eKeyEvent &e)
+bool Canvas::prepareRotation(const QPointF &startPos, bool fromHandle)
 {
     if (mCurrentMode != CanvasMode::boxTransform &&
         mCurrentMode != CanvasMode::pointTransform) { return false; }
@@ -1193,16 +1224,133 @@ bool Canvas::startRotatingAction(const eKeyEvent &e)
     if (mCurrentMode == CanvasMode::pointTransform) {
         if (mSelectedPoints_d.isEmpty()) { return false; }
     }
+
+    mRotatingFromHandle = fromHandle;
     mValueInput.clearAndDisableInput();
     mValueInput.setupRotate();
 
-    mRotPivot->setMousePos(e.fPos);
+    mRotPivot->setMousePos(startPos);
     mTransMode = TransformMode::rotate;
     mRotHalfCycles = 0;
     mLastDRot = 0;
 
     mDoubleClick = false;
     mStartTransform = true;
+    return true;
+}
+
+bool Canvas::startRotatingAction(const eKeyEvent &e)
+{
+    if (!prepareRotation(e.fPos)) { return false; }
+    e.fGrabMouse();
+    return true;
+}
+
+QRectF Canvas::selectedBoxesBoundingRect() const
+{
+    QRectF combined;
+    bool hasRect = false;
+    for (const auto &box : mSelectedBoxes) {
+        if (!box) { continue; }
+        const QRectF boxRect = box->getAbsBoundingRect();
+        if (!boxRect.isValid() || boxRect.isNull()) { continue; }
+        if (!hasRect) {
+            combined = boxRect;
+            hasRect = true;
+        } else {
+            combined = combined.united(boxRect);
+        }
+    }
+    return hasRect ? combined : QRectF();
+}
+
+void Canvas::updateRotateHandleGeometry(qreal invScale)
+{
+    mRotateHandleVisible = false;
+    mRotateHandleRadius = 0;
+
+    if (mCurrentMode != CanvasMode::boxTransform) { return; }
+    if (mSelectedBoxes.isEmpty()) { return; }
+
+    const qreal baseSize = static_cast<qreal>(eSizesUI::widget) * invScale;
+    const qreal clampedBase = qMax<qreal>(baseSize, 1.0);
+    const qreal radius = qMax<qreal>(clampedBase * 0.5, 6.0 * invScale);
+
+    qreal rotationDeg = 0;
+    if (const auto refBox = mSelectedBoxes.last()) {
+        if (const auto animator = refBox->getTransformAnimator()) {
+            rotationDeg = animator->rot();
+        }
+    }
+
+    QTransform rotationTransform;
+    rotationTransform.rotate(rotationDeg);
+
+    QVector2D rightVec(rotationTransform.map(QPointF(1, 0)));
+    QVector2D upVec(rotationTransform.map(QPointF(0, -1)));
+
+    if (rightVec.isNull()) { rightVec = QVector2D(1.0f, 0.0f); }
+    else { rightVec.normalize(); }
+    if (upVec.isNull()) { upVec = QVector2D(0.0f, -1.0f); }
+    else { upVec.normalize(); }
+
+    double minRight = std::numeric_limits<double>::infinity();
+    double maxRight = -std::numeric_limits<double>::infinity();
+    double maxUp = -std::numeric_limits<double>::infinity();
+    bool hasPoint = false;
+
+    for (const auto &box : mSelectedBoxes) {
+        if (!box) { continue; }
+        const QRectF rect = box->getRelBoundingRect();
+        const QPointF corners[] = {
+            rect.topLeft(), rect.topRight(), rect.bottomLeft(), rect.bottomRight()
+        };
+        for (const QPointF &corner : corners) {
+            const QPointF worldPt = box->mapRelPosToAbs(corner);
+            const QVector2D worldVec(worldPt);
+            const double projRight = QVector2D::dotProduct(worldVec, rightVec);
+            const double projUp = QVector2D::dotProduct(worldVec, upVec);
+            minRight = std::min(minRight, projRight);
+            maxRight = std::max(maxRight, projRight);
+            maxUp = std::max(maxUp, projUp);
+            hasPoint = true;
+        }
+    }
+
+    if (!hasPoint || !std::isfinite(minRight) || !std::isfinite(maxRight) || !std::isfinite(maxUp)) {
+        return;
+    }
+
+    const double centerRight = (minRight + maxRight) * 0.5;
+    QVector2D anchorVec = rightVec * centerRight + upVec * maxUp;
+    QPointF anchor = anchorVec.toPointF();
+
+    QVector2D outward = upVec;
+    if (outward.lengthSquared() < 1e-6f) {
+        outward = QVector2D(0.0f, -1.0f);
+    }
+
+    const qreal handleOffset = 50.0;
+    QPointF handle = (anchorVec + outward * handleOffset).toPointF();
+
+    mRotateHandleAnchor = anchor;
+    mRotateHandlePos = handle;
+    mRotateHandleRadius = radius;
+    mRotateHandleVisible = true;
+}
+
+bool Canvas::tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale)
+{
+    updateRotateHandleGeometry(invScale);
+    if (!mRotateHandleVisible) { return false; }
+
+    const qreal hitRadius = mRotateHandleRadius * 1.2;
+    if (hitRadius <= 0) { return false; }
+
+    const QLineF toHandle(mRotateHandlePos, e.fPos);
+    if (toHandle.length() > hitRadius) { return false; }
+
+    if (!prepareRotation(e.fPos, true)) { return false; }
     e.fGrabMouse();
     return true;
 }

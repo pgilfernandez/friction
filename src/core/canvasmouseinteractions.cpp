@@ -56,6 +56,7 @@
 #include <QMouseEvent>
 #include <QMenu>
 #include <QInputDialog>
+#include <QApplication>
 
 void Canvas::handleMovePathMousePressEvent(const eMouseEvent& e) {
     mPressedBox = mCurrentContainer->getBoxAt(e.fPos);
@@ -207,6 +208,13 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
     mStartTransform = true;
 
     const qreal invScale = 1/e.fScale;
+    const qreal invScaleUi = (qApp ? qApp->devicePixelRatio() : 1.0) * invScale;
+
+    if (tryStartRotateWithGizmo(e, invScaleUi)) {
+        mPressedPoint = nullptr;
+        return;
+    }
+
     mPressedPoint = getPointAtAbsPos(e.fPos, mCurrentMode, invScale);
 
     if(mRotPivot->isPointAtAbsPos(e.fPos, mCurrentMode, invScale)) {
@@ -296,6 +304,7 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
 }
 
 void Canvas::cancelCurrentTransform() {
+    mRotatingFromHandle = false;
     if(mCurrentMode == CanvasMode::pointTransform) {
         if(mCurrentNormalSegment.isValid()) {
             mCurrentNormalSegment.cancelPassThroughTransform();
@@ -571,6 +580,7 @@ void Canvas::applyPixelColor(const QColor &color,
 
 void Canvas::handleLeftMouseRelease(const eMouseEvent &e) {
     if(e.fMouseGrabbing) e.fReleaseMouse();
+    mRotatingFromHandle = false;
     if(mCurrentNormalSegment.isValid()) {
         if(!mStartTransform) mCurrentNormalSegment.finishPassThroughTransform();
         mHoveredNormalSegment = mCurrentNormalSegment;
