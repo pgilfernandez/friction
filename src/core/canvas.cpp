@@ -55,9 +55,9 @@
 namespace {
 constexpr qreal kRotateGizmoSweepDeg = 210.0; // default sweep of gizmo arc
 constexpr qreal kRotateGizmoBaseOffsetDeg = 30.0; // default angular offset for gizmo arc
-constexpr qreal kRotateGizmoRadiusPx = 80.0; // gizmo radius in screen pixels
-constexpr qreal kRotateGizmoStrokePx = 5.0; // arc stroke thickness in screen pixels
-constexpr qreal kRotateGizmoHitWidthPx = 5.0; // hit area thickness in screen pixels
+constexpr qreal kRotateGizmoRadiusPx = 40.0; // gizmo radius in screen pixels
+constexpr qreal kRotateGizmoStrokePx = 12.0; // arc stroke thickness in screen pixels
+constexpr qreal kRotateGizmoHitWidthPx = 12.0; // hit area thickness in screen pixels
 constexpr qreal kAxisGizmoWidthPx = 8.0; // axis gizmo rectangle width in screen pixels
 constexpr qreal kAxisGizmoHeightPx = 80.0; // axis gizmo rectangle height in screen pixels
 constexpr qreal kAxisGizmoYOffsetPx = 60.0; // vertical distance of Y gizmo from pivot in pixels
@@ -346,7 +346,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
                                                 toSkScalar(center.x() + radius),
                                                 toSkScalar(center.y() + radius));
 
-        qreal startAngle = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0); // base arc offset + box rotation
+        qreal startAngle = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0); // base arc offset for gizmo draw
         if (startAngle < 0) { startAngle += 360.0; }
         const float startAngleF = static_cast<float>(startAngle);
         const float sweepAngleF = static_cast<float>(mRotateHandleSweepDeg); // arc spans mRotateHandleSweepDeg degrees
@@ -1337,47 +1337,31 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         return;
     }
 
-    qreal rotationDeg = 0;
-    if (const auto refBox = mSelectedBoxes.last()) {
-        if (const auto animator = refBox->getTransformAnimator()) {
-            rotationDeg = animator->rot();
-        }
-    }
-    mRotateHandleAngleDeg = rotationDeg;
+    mRotateHandleAngleDeg = 0.0; // keep gizmo orientation screen-aligned
 
     const QPointF pivot = mRotPivot->getAbsolutePos();
     mRotateHandleAnchor = pivot;
     const qreal radiusWorld = kRotateGizmoRadiusPx * invScale;
     mRotateHandleRadius = radiusWorld; // gizmo arc radius converted to scene units
     mRotateHandleSweepDeg = kRotateGizmoSweepDeg; // default sweep angle
-    mRotateHandleStartOffsetDeg = kRotateGizmoBaseOffsetDeg; // default base angle before rotation
+    mRotateHandleStartOffsetDeg = kRotateGizmoBaseOffsetDeg; // default base angle offset
 
-    const qreal angleRad = qDegreesToRadians(mRotateHandleAngleDeg); // follow box rotation
-    const qreal cosA = std::cos(angleRad);
-    const qreal sinA = std::sin(angleRad);
     const QPointF offset(0.0, -radiusWorld);
-    const QPointF rotatedOffset(offset.x() * cosA - offset.y() * sinA,
-                                offset.x() * sinA + offset.y() * cosA);
-    mRotateHandlePos = pivot + rotatedOffset;
+    mRotateHandlePos = pivot + offset;
 
     const qreal axisWidthWorld = kAxisGizmoWidthPx * invScale;
     const qreal axisHeightWorld = kAxisGizmoHeightPx * invScale;
     const qreal axisGapYWorld = kAxisGizmoYOffsetPx * invScale;
     const qreal axisGapXWorld = kAxisGizmoXOffsetPx * invScale;
 
-    const auto rotateLocal = [&](qreal localX, qreal localY) {
-        return QPointF(localX * cosA - localY * sinA,
-                       localX * sinA + localY * cosA);
-    };
-
-    mAxisYGeom.center = pivot + rotateLocal(0.0, -axisGapYWorld);
+    mAxisYGeom.center = pivot + QPointF(0.0, -axisGapYWorld);
     mAxisYGeom.size = QSizeF(axisWidthWorld, axisHeightWorld);
-    mAxisYGeom.angleDeg = mRotateHandleAngleDeg;
+    mAxisYGeom.angleDeg = 0.0;
     mAxisYGeom.visible = true;
 
-    mAxisXGeom.center = pivot + rotateLocal(axisGapXWorld, 0.0);
+    mAxisXGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
     mAxisXGeom.size = QSizeF(axisHeightWorld, axisWidthWorld);
-    mAxisXGeom.angleDeg = mRotateHandleAngleDeg;
+    mAxisXGeom.angleDeg = 0.0;
     mAxisXGeom.visible = true;
 
     mRotateHandleVisible = true;
