@@ -817,6 +817,7 @@ protected:
     qreal mRotateHandleRadius = 0;
     qreal mRotateHandleAngleDeg = 0; // cached visual rotation of the gizmo
     qreal mRotateHandleSweepDeg = 90.0; // cached arc span used for draw + hit-test
+    qreal mRotateHandleStartOffsetDeg = 45.0; // cached base offset applied before box rotation
     bool mRotatingFromHandle = false;
 
     bool mPreviewing = false;

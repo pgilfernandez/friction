@@ -53,7 +53,8 @@
 #include "themesupport.h"
 
 namespace {
-constexpr qreal kRotateGizmoSweepDeg = 180.0; // default sweep of gizmo arc
+constexpr qreal kRotateGizmoSweepDeg = 210.0; // default sweep of gizmo arc
+constexpr qreal kRotateGizmoBaseOffsetDeg = 30.0; // default angular offset for gizmo arc
 }
 
 Canvas::Canvas(Document &document,
@@ -339,7 +340,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
                                                 toSkScalar(center.x() + radius),
                                                 toSkScalar(center.y() + radius));
 
-        qreal startAngle = std::fmod(45.0 + mRotateHandleAngleDeg, 360.0); // base arc offset + box rotation
+        qreal startAngle = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0); // base arc offset + box rotation
         if (startAngle < 0) { startAngle += 360.0; }
         const float startAngleF = static_cast<float>(startAngle);
         const float sweepAngleF = static_cast<float>(mRotateHandleSweepDeg); // arc spans mRotateHandleSweepDeg degrees
@@ -1275,6 +1276,7 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mRotateHandleAnchor = pivot;
     mRotateHandleRadius = 230.0; // gizmo arc radius in scene units
     mRotateHandleSweepDeg = kRotateGizmoSweepDeg; // default sweep angle
+    mRotateHandleStartOffsetDeg = kRotateGizmoBaseOffsetDeg; // default base angle before rotation
 
     const qreal angleRad = qDegreesToRadians(mRotateHandleAngleDeg); // follow box rotation
     const qreal cosA = std::cos(angleRad);
@@ -1308,7 +1310,7 @@ bool Canvas::tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale)
 
     const double angleCCW = qRadiansToDegrees(std::atan2(center.y() - e.fPos.y(), e.fPos.x() - center.x()));
     double skAngle = std::fmod(360.0 + (360.0 - angleCCW), 360.0);
-    const double arcStart = std::fmod(45.0 + mRotateHandleAngleDeg, 360.0); // mirror drawing start
+    const double arcStart = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0); // mirror drawing start
     const double normalizedStart = arcStart < 0 ? arcStart + 360.0 : arcStart;
     const double delta = std::fmod((skAngle - normalizedStart + 360.0), 360.0);
     if (delta > mRotateHandleSweepDeg) {
