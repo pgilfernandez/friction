@@ -56,8 +56,12 @@ namespace {
 constexpr qreal kRotateGizmoSweepDeg = 210.0; // default sweep of gizmo arc
 constexpr qreal kRotateGizmoBaseOffsetDeg = 30.0; // default angular offset for gizmo arc
 constexpr qreal kRotateGizmoRadiusPx = 80.0; // gizmo radius in screen pixels
-constexpr qreal kRotateGizmoStrokePx = 15.0; // arc stroke thickness in screen pixels
-constexpr qreal kRotateGizmoHitWidthPx = 15.0; // hit area thickness in screen pixels
+constexpr qreal kRotateGizmoStrokePx = 5.0; // arc stroke thickness in screen pixels
+constexpr qreal kRotateGizmoHitWidthPx = 5.0; // hit area thickness in screen pixels
+constexpr qreal kAxisGizmoWidthPx = 8.0; // axis gizmo rectangle width in screen pixels
+constexpr qreal kAxisGizmoHeightPx = 80.0; // axis gizmo rectangle height in screen pixels
+constexpr qreal kAxisGizmoYOffsetPx = 60.0; // vertical distance of Y gizmo from pivot in pixels
+constexpr qreal kAxisGizmoXOffsetPx = 60.0; // horizontal distance of X gizmo from pivot in pixels
 }
 
 Canvas::Canvas(Document &document,
@@ -355,6 +359,49 @@ void Canvas::renderSk(SkCanvas* const canvas,
         const SkColor arcColor = ThemeSupport::getThemeHighlightSkColor(mRotateHandleHovered ? 255 : 190);
         arcPaint.setColor(arcColor);
         canvas->drawArc(arcRect, startAngleF, sweepAngleF, false, arcPaint);
+
+        auto drawAxisRect = [&](AxisConstraint axis, const AxisGizmoGeometry &geom, const QColor &baseColor) {
+            if (!geom.visible) { return; }
+            const bool hovered = axis == AxisConstraint::X ? mAxisXHovered : mAxisYHovered;
+            const bool active = (mAxisConstraint == axis);
+            QColor color = baseColor;
+            color.setAlpha(active ? 255 : hovered ? 235 : baseColor.alpha());
+
+            SkPaint fillPaint;
+            fillPaint.setAntiAlias(true);
+            fillPaint.setStyle(SkPaint::kFill_Style);
+            fillPaint.setColor(toSkColor(color));
+
+            SkPaint borderPaint;
+            borderPaint.setAntiAlias(true);
+            borderPaint.setStyle(SkPaint::kStroke_Style);
+            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
+            borderPaint.setColor(toSkColor(color.darker(150)));
+
+            const qreal halfW = geom.size.width() * 0.5;
+            const qreal halfH = geom.size.height() * 0.5;
+            const qreal angleRadGeom = qDegreesToRadians(geom.angleDeg);
+            const qreal cosG = std::cos(angleRadGeom);
+            const qreal sinG = std::sin(angleRadGeom);
+            auto mapPoint = [&](qreal localX, qreal localY) -> SkPoint {
+                const qreal worldX = geom.center.x() + localX * cosG - localY * sinG;
+                const qreal worldY = geom.center.y() + localX * sinG + localY * cosG;
+                return SkPoint::Make(toSkScalar(worldX), toSkScalar(worldY));
+            };
+
+            SkPath path;
+            path.moveTo(mapPoint(-halfW, -halfH));
+            path.lineTo(mapPoint(halfW, -halfH));
+            path.lineTo(mapPoint(halfW, halfH));
+            path.lineTo(mapPoint(-halfW, halfH));
+            path.close();
+
+            canvas->drawPath(path, fillPaint);
+            canvas->drawPath(path, borderPaint);
+        };
+
+        drawAxisRect(AxisConstraint::Y, mAxisYGeom, ThemeSupport::getThemeColorGreen(190));
+        drawAxisRect(AxisConstraint::X, mAxisXGeom, ThemeSupport::getThemeColorRed(190));
     }
 
     if(mCurrentMode == CanvasMode::boxTransform ||
@@ -1255,22 +1302,45 @@ bool Canvas::startRotatingAction(const eKeyEvent &e)
 
 void Canvas::updateRotateHandleGeometry(qreal invScale)
 {
-    Q_UNUSED(invScale);
-
     mRotateHandleVisible = false;
     mRotateHandleRadius = 0;
 
     if ((mCurrentMode != CanvasMode::boxTransform &&
-         mCurrentMode != CanvasMode::pointTransform)) { setRotateHandleHover(false); return; }
-    if (mSelectedBoxes.isEmpty()) { setRotateHandleHover(false); return; }
-    if (!mRotPivot) { setRotateHandleHover(false); return; }
+         mCurrentMode != CanvasMode::pointTransform)) {
+        setRotateHandleHover(false);
+        setAxisGizmoHover(AxisConstraint::X, false);
+        setAxisGizmoHover(AxisConstraint::Y, false);
+        mAxisXGeom = AxisGizmoGeometry();
+        mAxisYGeom = AxisGizmoGeometry();
+        mAxisConstraint = AxisConstraint::None;
+        mAxisHandleActive = false;
+        return;
+    }
+    if (mSelectedBoxes.isEmpty()) {
+        setRotateHandleHover(false);
+        setAxisGizmoHover(AxisConstraint::X, false);
+        setAxisGizmoHover(AxisConstraint::Y, false);
+        mAxisXGeom = AxisGizmoGeometry();
+        mAxisYGeom = AxisGizmoGeometry();
+        mAxisConstraint = AxisConstraint::None;
+        mAxisHandleActive = false;
+        return;
+    }
+    if (!mRotPivot) {
+        setRotateHandleHover(false);
+        setAxisGizmoHover(AxisConstraint::X, false);
+        setAxisGizmoHover(AxisConstraint::Y, false);
+        mAxisXGeom = AxisGizmoGeometry();
+        mAxisYGeom = AxisGizmoGeometry();
+        mAxisConstraint = AxisConstraint::None;
+        mAxisHandleActive = false;
+        return;
+    }
 
     qreal rotationDeg = 0;
-    if (!mSelectedBoxes.isEmpty()) {
-        if (const auto refBox = mSelectedBoxes.last()) {
-            if (const auto animator = refBox->getTransformAnimator()) {
-                rotationDeg = animator->rot();
-            }
+    if (const auto refBox = mSelectedBoxes.last()) {
+        if (const auto animator = refBox->getTransformAnimator()) {
+            rotationDeg = animator->rot();
         }
     }
     mRotateHandleAngleDeg = rotationDeg;
@@ -1290,6 +1360,26 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
                                 offset.x() * sinA + offset.y() * cosA);
     mRotateHandlePos = pivot + rotatedOffset;
 
+    const qreal axisWidthWorld = kAxisGizmoWidthPx * invScale;
+    const qreal axisHeightWorld = kAxisGizmoHeightPx * invScale;
+    const qreal axisGapYWorld = kAxisGizmoYOffsetPx * invScale;
+    const qreal axisGapXWorld = kAxisGizmoXOffsetPx * invScale;
+
+    const auto rotateLocal = [&](qreal localX, qreal localY) {
+        return QPointF(localX * cosA - localY * sinA,
+                       localX * sinA + localY * cosA);
+    };
+
+    mAxisYGeom.center = pivot + rotateLocal(0.0, -axisGapYWorld);
+    mAxisYGeom.size = QSizeF(axisWidthWorld, axisHeightWorld);
+    mAxisYGeom.angleDeg = mRotateHandleAngleDeg;
+    mAxisYGeom.visible = true;
+
+    mAxisXGeom.center = pivot + rotateLocal(axisGapXWorld, 0.0);
+    mAxisXGeom.size = QSizeF(axisHeightWorld, axisWidthWorld);
+    mAxisXGeom.angleDeg = mRotateHandleAngleDeg;
+    mAxisXGeom.visible = true;
+
     mRotateHandleVisible = true;
 }
 
@@ -1300,6 +1390,32 @@ void Canvas::setRotateHandleHover(bool hovered)
     emit requestUpdate();
 }
 
+void Canvas::setAxisGizmoHover(AxisConstraint axis, bool hovered)
+{
+    bool *target = axis == AxisConstraint::X ? &mAxisXHovered : &mAxisYHovered;
+    if (*target == hovered) { return; }
+    *target = hovered;
+    emit requestUpdate();
+}
+
+bool Canvas::pointOnAxisGizmo(AxisConstraint axis, const QPointF &pos, qreal invScale) const
+{
+    Q_UNUSED(invScale);
+    if (!mRotateHandleVisible) { return false; }
+
+    const AxisGizmoGeometry &geom = axis == AxisConstraint::X ? mAxisXGeom : mAxisYGeom;
+    if (!geom.visible) { return false; }
+
+    const QPointF relative = pos - geom.center;
+    const qreal angleRadGeom = qDegreesToRadians(geom.angleDeg);
+    const qreal cosG = std::cos(angleRadGeom);
+    const qreal sinG = std::sin(angleRadGeom);
+    const qreal localX = relative.x() * cosG + relative.y() * sinG;
+    const qreal localY = -relative.x() * sinG + relative.y() * cosG;
+    const qreal halfW = geom.size.width() * 0.5;
+    const qreal halfH = geom.size.height() * 0.5;
+    return std::abs(localX) <= halfW && std::abs(localY) <= halfH;
+}
 bool Canvas::pointOnRotateGizmo(const QPointF &pos, qreal invScale) const
 {
     if (!mRotateHandleVisible) { return false; }
@@ -1336,6 +1452,47 @@ void Canvas::updateRotateHandleHover(const QPointF &pos, qreal invScale)
 {
     updateRotateHandleGeometry(invScale);
     setRotateHandleHover(pointOnRotateGizmo(pos, invScale));
+    setAxisGizmoHover(AxisConstraint::X, pointOnAxisGizmo(AxisConstraint::X, pos, invScale));
+    setAxisGizmoHover(AxisConstraint::Y, pointOnAxisGizmo(AxisConstraint::Y, pos, invScale));
+}
+
+bool Canvas::startAxisConstrainedMove(const eMouseEvent &e, AxisConstraint axis)
+{
+    if (mCurrentMode != CanvasMode::boxTransform &&
+        mCurrentMode != CanvasMode::pointTransform) { return false; }
+    if (mSelectedBoxes.isEmpty() && mSelectedPoints_d.isEmpty()) { return false; }
+
+    mValueInput.clearAndDisableInput();
+    mValueInput.setupMove();
+    mValueInput.setForce1D(true);
+    if (axis == AxisConstraint::X) {
+        mValueInput.setXOnlyMode();
+    } else {
+        mValueInput.setYOnlyMode();
+    }
+
+    mTransMode = TransformMode::move;
+    mDoubleClick = false;
+    mStartTransform = true;
+    mAxisConstraint = axis;
+    mAxisHandleActive = true;
+    setAxisGizmoHover(axis, true);
+    e.fGrabMouse();
+    return true;
+}
+
+bool Canvas::tryStartAxisGizmo(const eMouseEvent &e, qreal invScale)
+{
+    updateRotateHandleGeometry(invScale);
+    if (!mRotateHandleVisible) { return false; }
+
+    if (pointOnAxisGizmo(AxisConstraint::Y, e.fPos, invScale)) {
+        return startAxisConstrainedMove(e, AxisConstraint::Y);
+    }
+    if (pointOnAxisGizmo(AxisConstraint::X, e.fPos, invScale)) {
+        return startAxisConstrainedMove(e, AxisConstraint::X);
+    }
+    return false;
 }
 
 bool Canvas::tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale)

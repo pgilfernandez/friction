@@ -210,6 +210,10 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
     const qreal invScale = 1/e.fScale;
     const qreal invScaleUi = (qApp ? qApp->devicePixelRatio() : 1.0) * invScale;
 
+    if (tryStartAxisGizmo(e, invScaleUi)) {
+        mPressedPoint = nullptr;
+        return;
+    }
     if (tryStartRotateWithGizmo(e, invScaleUi)) {
         mPressedPoint = nullptr;
         return;
@@ -324,7 +328,15 @@ void Canvas::cancelCurrentTransform() {
         //mCanvasWindow->setCanvasMode(MOVE_PATH);
     }
     mValueInput.clearAndDisableInput();
+    mAxisHandleActive = false;
     mTransMode = TransformMode::none;
+    if (mAxisConstraint != AxisConstraint::None) {
+        mAxisConstraint = AxisConstraint::None;
+        mValueInput.setForce1D(false);
+        mValueInput.setXYMode();
+        setAxisGizmoHover(AxisConstraint::X, false);
+        setAxisGizmoHover(AxisConstraint::Y, false);
+    }
 }
 
 void Canvas::handleMovePointMouseRelease(const eMouseEvent &e) {
@@ -581,6 +593,14 @@ void Canvas::applyPixelColor(const QColor &color,
 void Canvas::handleLeftMouseRelease(const eMouseEvent &e) {
     if(e.fMouseGrabbing) e.fReleaseMouse();
     mRotatingFromHandle = false;
+    mAxisHandleActive = false;
+    if (mAxisConstraint != AxisConstraint::None) {
+        mAxisConstraint = AxisConstraint::None;
+        mValueInput.setForce1D(false);
+        mValueInput.setXYMode();
+        setAxisGizmoHover(AxisConstraint::X, false);
+        setAxisGizmoHover(AxisConstraint::Y, false);
+    }
     if(mCurrentNormalSegment.isValid()) {
         if(!mStartTransform) mCurrentNormalSegment.finishPassThroughTransform();
         mHoveredNormalSegment = mCurrentNormalSegment;

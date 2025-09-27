@@ -44,6 +44,7 @@
 #include "drawpath.h"
 #include <QMouseEvent>
 #include <QTabletEvent>
+#include <QSizeF>
 
 class AnimatedSurface;
 //class PaintBox;
@@ -78,6 +79,7 @@ enum class AlignRelativeTo {
 
 class CORE_EXPORT Canvas : public CanvasBase
 {
+    enum class AxisConstraint { None, X, Y };
     friend class CanvasWindow;
     typedef qCubicSegment1DAnimator::Action SegAction;
     Q_OBJECT
@@ -743,8 +745,18 @@ private:
     void updateRotateHandleHover(const QPointF &pos, qreal invScale);
     bool pointOnRotateGizmo(const QPointF &pos, qreal invScale) const;
     void setRotateHandleHover(bool hovered);
+    struct AxisGizmoGeometry {
+        QPointF center;
+        QSizeF size;
+        qreal angleDeg = 0.0;
+        bool visible = false;
+    };
     void updateRotateHandleGeometry(qreal invScale);
     bool tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale);
+    bool tryStartAxisGizmo(const eMouseEvent &e, qreal invScale);
+    bool startAxisConstrainedMove(const eMouseEvent &e, AxisConstraint axis);
+    bool pointOnAxisGizmo(AxisConstraint axis, const QPointF &pos, qreal invScale) const;
+    void setAxisGizmoHover(AxisConstraint axis, bool hovered);
 
     void drawPathClear();
     void drawPathFinish(const qreal invScale);
@@ -823,6 +835,12 @@ protected:
     qreal mRotateHandleSweepDeg = 90.0; // cached arc span used for draw + hit-test
     qreal mRotateHandleStartOffsetDeg = 45.0; // cached base offset applied before box rotation
     bool mRotateHandleHovered = false; // true when pointer hovers the gizmo
+    AxisGizmoGeometry mAxisXGeom;
+    AxisGizmoGeometry mAxisYGeom;
+    bool mAxisXHovered = false;
+    bool mAxisYHovered = false;
+    AxisConstraint mAxisConstraint = AxisConstraint::None;
+    bool mAxisHandleActive = false;
     bool mRotatingFromHandle = false;
 
     bool mPreviewing = false;
