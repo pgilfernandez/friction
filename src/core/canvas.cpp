@@ -55,6 +55,9 @@
 namespace {
 constexpr qreal kRotateGizmoSweepDeg = 210.0; // default sweep of gizmo arc
 constexpr qreal kRotateGizmoBaseOffsetDeg = 30.0; // default angular offset for gizmo arc
+constexpr qreal kRotateGizmoRadiusPx = 80.0; // gizmo radius in screen pixels
+constexpr qreal kRotateGizmoStrokePx = 15.0; // arc stroke thickness in screen pixels
+constexpr qreal kRotateGizmoHitWidthPx = 15.0; // hit area thickness in screen pixels
 }
 
 Canvas::Canvas(Document &document,
@@ -332,8 +335,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
     if (mRotateHandleVisible) {
         const QPointF center = mRotateHandleAnchor;
         const qreal radius = mRotateHandleRadius;
-        const qreal strokePx = 15.0; // gizmo stroke thickness in screen pixels
-        const qreal strokeWorld = strokePx * qInvZoom;
+        const qreal strokeWorld = kRotateGizmoStrokePx * qInvZoom;
 
         const SkRect arcRect = SkRect::MakeLTRB(toSkScalar(center.x() - radius),
                                                 toSkScalar(center.y() - radius),
@@ -350,7 +352,8 @@ void Canvas::renderSk(SkCanvas* const canvas,
         arcPaint.setStyle(SkPaint::kStroke_Style);
         arcPaint.setStrokeCap(SkPaint::kRound_Cap);
         arcPaint.setStrokeWidth(toSkScalar(strokeWorld));
-        arcPaint.setColor(ThemeSupport::getThemeHighlightSkColor(190));
+        const SkColor arcColor = ThemeSupport::getThemeHighlightSkColor(mRotateHandleHovered ? 255 : 190);
+        arcPaint.setColor(arcColor);
         canvas->drawArc(arcRect, startAngleF, sweepAngleF, false, arcPaint);
     }
 
@@ -1258,9 +1261,9 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mRotateHandleRadius = 0;
 
     if ((mCurrentMode != CanvasMode::boxTransform &&
-         mCurrentMode != CanvasMode::pointTransform)) { return; }
-    if (mSelectedBoxes.isEmpty()) { return; }
-    if (!mRotPivot) { return; }
+         mCurrentMode != CanvasMode::pointTransform)) { setRotateHandleHover(false); return; }
+    if (mSelectedBoxes.isEmpty()) { setRotateHandleHover(false); return; }
+    if (!mRotPivot) { setRotateHandleHover(false); return; }
 
     qreal rotationDeg = 0;
     if (!mSelectedBoxes.isEmpty()) {
@@ -1274,14 +1277,15 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
 
     const QPointF pivot = mRotPivot->getAbsolutePos();
     mRotateHandleAnchor = pivot;
-    mRotateHandleRadius = 230.0; // gizmo arc radius in scene units
+    const qreal radiusWorld = kRotateGizmoRadiusPx * invScale;
+    mRotateHandleRadius = radiusWorld; // gizmo arc radius converted to scene units
     mRotateHandleSweepDeg = kRotateGizmoSweepDeg; // default sweep angle
     mRotateHandleStartOffsetDeg = kRotateGizmoBaseOffsetDeg; // default base angle before rotation
 
     const qreal angleRad = qDegreesToRadians(mRotateHandleAngleDeg); // follow box rotation
     const qreal cosA = std::cos(angleRad);
     const qreal sinA = std::sin(angleRad);
-    const QPointF offset(0.0, -mRotateHandleRadius);
+    const QPointF offset(0.0, -radiusWorld);
     const QPointF rotatedOffset(offset.x() * cosA - offset.y() * sinA,
                                 offset.x() * sinA + offset.y() * cosA);
     mRotateHandlePos = pivot + rotatedOffset;
@@ -1289,35 +1293,53 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mRotateHandleVisible = true;
 }
 
+void Canvas::setRotateHandleHover(bool hovered)
+{
+    if (mRotateHandleHovered == hovered) { return; }
+    mRotateHandleHovered = hovered;
+    emit requestUpdate();
+}
+
+bool Canvas::pointOnRotateGizmo(const QPointF &pos, qreal invScale) const
+{
+    if (!mRotateHandleVisible) { return false; }
+    const qreal halfThicknessWorld = (kRotateGizmoHitWidthPx * invScale) * 0.5;
+    const QPointF center = mRotateHandleAnchor;
+    const qreal radius = mRotateHandleRadius;
+    if (radius <= 0) { return false; }
+
+    const qreal dx = pos.x() - center.x();
+    const qreal dy = pos.y() - center.y();
+    const qreal distance = std::hypot(dx, dy);
+    if (distance < radius - halfThicknessWorld || distance > radius + halfThicknessWorld) {
+        return false;
+    }
+
+    const double angleCCW = qRadiansToDegrees(std::atan2(center.y() - pos.y(), pos.x() - center.x()));
+    const double skAngle = std::fmod(360.0 + (360.0 - angleCCW), 360.0);
+    const double arcStart = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0);
+    const double normalizedStart = arcStart < 0 ? arcStart + 360.0 : arcStart;
+    const double delta = std::fmod((skAngle - normalizedStart + 360.0), 360.0);
+    return delta <= mRotateHandleSweepDeg;
+}
+
+void Canvas::updateRotateHandleHover(const QPointF &pos, qreal invScale)
+{
+    updateRotateHandleGeometry(invScale);
+    setRotateHandleHover(pointOnRotateGizmo(pos, invScale));
+}
+
 bool Canvas::tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale)
 {
     updateRotateHandleGeometry(invScale);
-    if (!mRotateHandleVisible) { return false; }
+    const bool hovered = pointOnRotateGizmo(e.fPos, invScale);
+    setRotateHandleHover(hovered);
+    if (!hovered) { return false; }
 
-    constexpr qreal thicknessPx = 15.0; // hit area thickness in screen pixels
-    const qreal halfThicknessWorld = (thicknessPx * invScale) * 0.5;
-    const QPointF center = mRotateHandleAnchor;
-    const qreal radius = mRotateHandleRadius;
-
-    const qreal dx = e.fPos.x() - center.x();
-    const qreal dy = e.fPos.y() - center.y();
-    const qreal distance = std::hypot(dx, dy);
-
-    if (distance < radius - halfThicknessWorld ||
-        distance > radius + halfThicknessWorld) {
+    if (!prepareRotation(e.fPos, true)) {
+        setRotateHandleHover(false);
         return false;
     }
-
-    const double angleCCW = qRadiansToDegrees(std::atan2(center.y() - e.fPos.y(), e.fPos.x() - center.x()));
-    double skAngle = std::fmod(360.0 + (360.0 - angleCCW), 360.0);
-    const double arcStart = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0); // mirror drawing start
-    const double normalizedStart = arcStart < 0 ? arcStart + 360.0 : arcStart;
-    const double delta = std::fmod((skAngle - normalizedStart + 360.0), 360.0);
-    if (delta > mRotateHandleSweepDeg) {
-        return false;
-    }
-
-    if (!prepareRotation(e.fPos, true)) { return false; }
     e.fGrabMouse();
     return true;
 }

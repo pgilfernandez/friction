@@ -657,6 +657,7 @@ public:
     bool startScalingAction(const eKeyEvent &e);
     bool startMovingAction(const eKeyEvent &e);
 
+
     void deselectAllBoxesAction();
     void selectAllBoxesAction();
     void selectAllPointsAction();
@@ -739,6 +740,9 @@ private:
     void scaleSelected(const eMouseEvent &e);
     void rotateSelected(const eMouseEvent &e);
     bool prepareRotation(const QPointF &startPos, bool fromHandle = false);
+    void updateRotateHandleHover(const QPointF &pos, qreal invScale);
+    bool pointOnRotateGizmo(const QPointF &pos, qreal invScale) const;
+    void setRotateHandleHover(bool hovered);
     void updateRotateHandleGeometry(qreal invScale);
     bool tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale);
 
@@ -818,6 +822,7 @@ protected:
     qreal mRotateHandleAngleDeg = 0; // cached visual rotation of the gizmo
     qreal mRotateHandleSweepDeg = 90.0; // cached arc span used for draw + hit-test
     qreal mRotateHandleStartOffsetDeg = 45.0; // cached base offset applied before box rotation
+    bool mRotateHandleHovered = false; // true when pointer hovers the gizmo
     bool mRotatingFromHandle = false;
 
     bool mPreviewing = false;
