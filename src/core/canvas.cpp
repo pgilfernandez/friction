@@ -1320,7 +1320,16 @@ bool Canvas::pointOnRotateGizmo(const QPointF &pos, qreal invScale) const
     const double arcStart = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0);
     const double normalizedStart = arcStart < 0 ? arcStart + 360.0 : arcStart;
     const double delta = std::fmod((skAngle - normalizedStart + 360.0), 360.0);
-    return delta <= mRotateHandleSweepDeg;
+
+    double extraAngleDeg = 0.0;
+    if (radius > 0) {
+        const qreal halfStrokeWorld = (kRotateGizmoStrokePx * invScale) * 0.5;
+        extraAngleDeg = qRadiansToDegrees(halfStrokeWorld / radius);
+    }
+
+    if (delta <= mRotateHandleSweepDeg + extraAngleDeg) { return true; }
+    if (extraAngleDeg > 0.0 && delta >= 360.0 - extraAngleDeg) { return true; }
+    return false;
 }
 
 void Canvas::updateRotateHandleHover(const QPointF &pos, qreal invScale)
