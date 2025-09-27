@@ -23,11 +23,8 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QLineF>
-#include <QTransform>
-#include <QVector2D>
-#include <limits>
+#include <QtMath>
 #include <cmath>
-#include <algorithm>
 #include <QDebug>
 #include <QApplication>
 #include "Boxes/videobox.h"
@@ -328,26 +325,28 @@ void Canvas::renderSk(SkCanvas* const canvas,
     updateRotateHandleGeometry(qInvZoom);
 
     if (mRotateHandleVisible) {
-        const SkPoint anchorPt = toSkPoint(mRotateHandleAnchor);
-        const SkPoint handlePt = toSkPoint(mRotateHandlePos);
+        const QPointF center = mRotateHandleAnchor;
+        const qreal radius = mRotateHandleRadius;
+        const qreal strokePx = 15.0;
+        const qreal strokeWorld = strokePx * qInvZoom;
 
-        SkPaint linePaint;
-        linePaint.setAntiAlias(true);
-        linePaint.setColor(toSkColor(ThemeSupport::getThemeButtonBaseColor(200)));
-        linePaint.setStrokeWidth(toSkScalar(qMax<qreal>(1.0, eSizesUI::widget*0.08f*qInvZoom)));
-        canvas->drawLine(anchorPt, handlePt, linePaint);
+        const SkRect arcRect = SkRect::MakeLTRB(toSkScalar(center.x() - radius),
+                                                toSkScalar(center.y() - radius),
+                                                toSkScalar(center.x() + radius),
+                                                toSkScalar(center.y() + radius));
 
-        SkPaint fillPaint;
-        fillPaint.setAntiAlias(true);
-        fillPaint.setColor(ThemeSupport::getThemeHighlightSkColor(190));
-        canvas->drawCircle(handlePt.x(), handlePt.y(), toSkScalar(mRotateHandleRadius), fillPaint);
+        qreal startAngle = std::fmod(45.0 + mRotateHandleAngleDeg, 360.0);
+        if (startAngle < 0) { startAngle += 360.0; }
+        const float startAngleF = static_cast<float>(startAngle);
+        const float sweepAngleF = 90.0f;
 
-        SkPaint borderPaint;
-        borderPaint.setAntiAlias(true);
-        borderPaint.setStyle(SkPaint::kStroke_Style);
-        borderPaint.setStrokeWidth(toSkScalar(qMax<qreal>(1.0, eSizesUI::widget*0.05f*qInvZoom)));
-        borderPaint.setColor(toSkColor(ThemeSupport::getThemeButtonBorderColor(220)));
-        canvas->drawCircle(handlePt.x(), handlePt.y(), toSkScalar(mRotateHandleRadius), borderPaint);
+        SkPaint arcPaint;
+        arcPaint.setAntiAlias(true);
+        arcPaint.setStyle(SkPaint::kStroke_Style);
+        arcPaint.setStrokeCap(SkPaint::kRound_Cap);
+        arcPaint.setStrokeWidth(toSkScalar(strokeWorld));
+        arcPaint.setColor(ThemeSupport::getThemeHighlightSkColor(190));
+        canvas->drawArc(arcRect, startAngleF, sweepAngleF, false, arcPaint);
     }
 
     if(mCurrentMode == CanvasMode::boxTransform ||
@@ -1246,96 +1245,40 @@ bool Canvas::startRotatingAction(const eKeyEvent &e)
     return true;
 }
 
-QRectF Canvas::selectedBoxesBoundingRect() const
-{
-    QRectF combined;
-    bool hasRect = false;
-    for (const auto &box : mSelectedBoxes) {
-        if (!box) { continue; }
-        const QRectF boxRect = box->getAbsBoundingRect();
-        if (!boxRect.isValid() || boxRect.isNull()) { continue; }
-        if (!hasRect) {
-            combined = boxRect;
-            hasRect = true;
-        } else {
-            combined = combined.united(boxRect);
-        }
-    }
-    return hasRect ? combined : QRectF();
-}
-
 void Canvas::updateRotateHandleGeometry(qreal invScale)
 {
+    Q_UNUSED(invScale);
+
     mRotateHandleVisible = false;
     mRotateHandleRadius = 0;
 
-    if (mCurrentMode != CanvasMode::boxTransform) { return; }
+    if ((mCurrentMode != CanvasMode::boxTransform &&
+         mCurrentMode != CanvasMode::pointTransform)) { return; }
     if (mSelectedBoxes.isEmpty()) { return; }
-
-    const qreal baseSize = static_cast<qreal>(eSizesUI::widget) * invScale;
-    const qreal clampedBase = qMax<qreal>(baseSize, 1.0);
-    const qreal radius = qMax<qreal>(clampedBase * 0.5, 6.0 * invScale);
+    if (!mRotPivot) { return; }
 
     qreal rotationDeg = 0;
-    if (const auto refBox = mSelectedBoxes.last()) {
-        if (const auto animator = refBox->getTransformAnimator()) {
-            rotationDeg = animator->rot();
+    if (!mSelectedBoxes.isEmpty()) {
+        if (const auto refBox = mSelectedBoxes.last()) {
+            if (const auto animator = refBox->getTransformAnimator()) {
+                rotationDeg = animator->rot();
+            }
         }
     }
+    mRotateHandleAngleDeg = rotationDeg;
 
-    QTransform rotationTransform;
-    rotationTransform.rotate(rotationDeg);
+    const QPointF pivot = mRotPivot->getAbsolutePos();
+    mRotateHandleAnchor = pivot;
+    mRotateHandleRadius = 230.0;
 
-    QVector2D rightVec(rotationTransform.map(QPointF(1, 0)));
-    QVector2D upVec(rotationTransform.map(QPointF(0, -1)));
+    const qreal angleRad = qDegreesToRadians(mRotateHandleAngleDeg);
+    const qreal cosA = std::cos(angleRad);
+    const qreal sinA = std::sin(angleRad);
+    const QPointF offset(0.0, -mRotateHandleRadius);
+    const QPointF rotatedOffset(offset.x() * cosA - offset.y() * sinA,
+                                offset.x() * sinA + offset.y() * cosA);
+    mRotateHandlePos = pivot + rotatedOffset;
 
-    if (rightVec.isNull()) { rightVec = QVector2D(1.0f, 0.0f); }
-    else { rightVec.normalize(); }
-    if (upVec.isNull()) { upVec = QVector2D(0.0f, -1.0f); }
-    else { upVec.normalize(); }
-
-    double minRight = std::numeric_limits<double>::infinity();
-    double maxRight = -std::numeric_limits<double>::infinity();
-    double maxUp = -std::numeric_limits<double>::infinity();
-    bool hasPoint = false;
-
-    for (const auto &box : mSelectedBoxes) {
-        if (!box) { continue; }
-        const QRectF rect = box->getRelBoundingRect();
-        const QPointF corners[] = {
-            rect.topLeft(), rect.topRight(), rect.bottomLeft(), rect.bottomRight()
-        };
-        for (const QPointF &corner : corners) {
-            const QPointF worldPt = box->mapRelPosToAbs(corner);
-            const QVector2D worldVec(worldPt);
-            const double projRight = QVector2D::dotProduct(worldVec, rightVec);
-            const double projUp = QVector2D::dotProduct(worldVec, upVec);
-            minRight = std::min(minRight, projRight);
-            maxRight = std::max(maxRight, projRight);
-            maxUp = std::max(maxUp, projUp);
-            hasPoint = true;
-        }
-    }
-
-    if (!hasPoint || !std::isfinite(minRight) || !std::isfinite(maxRight) || !std::isfinite(maxUp)) {
-        return;
-    }
-
-    const double centerRight = (minRight + maxRight) * 0.5;
-    QVector2D anchorVec = rightVec * centerRight + upVec * maxUp;
-    QPointF anchor = anchorVec.toPointF();
-
-    QVector2D outward = upVec;
-    if (outward.lengthSquared() < 1e-6f) {
-        outward = QVector2D(0.0f, -1.0f);
-    }
-
-    const qreal handleOffset = 50.0;
-    QPointF handle = (anchorVec + outward * handleOffset).toPointF();
-
-    mRotateHandleAnchor = anchor;
-    mRotateHandlePos = handle;
-    mRotateHandleRadius = radius;
     mRotateHandleVisible = true;
 }
 
@@ -1344,11 +1287,28 @@ bool Canvas::tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale)
     updateRotateHandleGeometry(invScale);
     if (!mRotateHandleVisible) { return false; }
 
-    const qreal hitRadius = mRotateHandleRadius * 1.2;
-    if (hitRadius <= 0) { return false; }
+    constexpr qreal thicknessPx = 15.0;
+    const qreal halfThicknessWorld = (thicknessPx * invScale) * 0.5;
+    const QPointF center = mRotateHandleAnchor;
+    const qreal radius = mRotateHandleRadius;
 
-    const QLineF toHandle(mRotateHandlePos, e.fPos);
-    if (toHandle.length() > hitRadius) { return false; }
+    const qreal dx = e.fPos.x() - center.x();
+    const qreal dy = e.fPos.y() - center.y();
+    const qreal distance = std::hypot(dx, dy);
+
+    if (distance < radius - halfThicknessWorld ||
+        distance > radius + halfThicknessWorld) {
+        return false;
+    }
+
+    const double angleCCW = qRadiansToDegrees(std::atan2(center.y() - e.fPos.y(), e.fPos.x() - center.x()));
+    double skAngle = std::fmod(360.0 + (360.0 - angleCCW), 360.0);
+    const double arcStart = std::fmod(45.0 + mRotateHandleAngleDeg, 360.0);
+    const double normalizedStart = arcStart < 0 ? arcStart + 360.0 : arcStart;
+    const double delta = std::fmod((skAngle - normalizedStart + 360.0), 360.0);
+    if (delta > 90.0) {
+        return false;
+    }
 
     if (!prepareRotation(e.fPos, true)) { return false; }
     e.fGrabMouse();

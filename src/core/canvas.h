@@ -741,7 +741,6 @@ private:
     bool prepareRotation(const QPointF &startPos, bool fromHandle = false);
     void updateRotateHandleGeometry(qreal invScale);
     bool tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale);
-    QRectF selectedBoxesBoundingRect() const;
 
     void drawPathClear();
     void drawPathFinish(const qreal invScale);
@@ -816,6 +815,7 @@ protected:
     QPointF mRotateHandlePos;
     QPointF mRotateHandleAnchor;
     qreal mRotateHandleRadius = 0;
+    qreal mRotateHandleAngleDeg = 0;
     bool mRotatingFromHandle = false;
 
     bool mPreviewing = false;
