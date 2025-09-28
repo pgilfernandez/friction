@@ -1350,6 +1350,10 @@ bool Canvas::prepareRotation(const QPointF &startPos, bool fromHandle)
     mValueInput.clearAndDisableInput();
     mValueInput.setupRotate();
 
+    if (fromHandle) {
+        setGizmosSuppressed(true);
+    }
+
     mRotPivot->setMousePos(startPos);
     mTransMode = TransformMode::rotate;
     mRotHalfCycles = 0;
@@ -1398,6 +1402,10 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
     };
+
+    if (mGizmosSuppressed) {
+        return;
+    }
 
     if ((mCurrentMode != CanvasMode::boxTransform &&
          mCurrentMode != CanvasMode::pointTransform)) {
@@ -1484,6 +1492,23 @@ void Canvas::setRotateHandleHover(bool hovered)
 {
     if (mRotateHandleHovered == hovered) { return; }
     mRotateHandleHovered = hovered;
+    emit requestUpdate();
+}
+
+void Canvas::setGizmosSuppressed(bool suppressed)
+{
+    if (mGizmosSuppressed == suppressed) { return; }
+    mGizmosSuppressed = suppressed;
+    if (suppressed) {
+        mRotateHandleHovered = false;
+        mAxisXHovered = false;
+        mAxisYHovered = false;
+        mScaleXHovered = false;
+        mScaleYHovered = false;
+        mScaleUniformHovered = false;
+        mShearXHovered = false;
+        mShearYHovered = false;
+    }
     emit requestUpdate();
 }
 
@@ -1684,6 +1709,7 @@ bool Canvas::startScaleConstrainedMove(const eMouseEvent &e, ScaleHandle handle)
     mScaleHandleActive = true;
     setScaleGizmoHover(handle, true);
     mRotPivot->setMousePos(e.fPos);
+    setGizmosSuppressed(true);
 
     e.fGrabMouse();
     return true;
@@ -1712,6 +1738,7 @@ bool Canvas::startShearConstrainedMove(const eMouseEvent &e, ShearHandle handle)
     mShearHandleActive = true;
     setShearGizmoHover(handle, true);
     mRotPivot->setMousePos(e.fPos);
+    setGizmosSuppressed(true);
 
     e.fGrabMouse();
     return true;
@@ -1769,6 +1796,7 @@ bool Canvas::startAxisConstrainedMove(const eMouseEvent &e, AxisConstraint axis)
     mAxisConstraint = axis;
     mAxisHandleActive = true;
     setAxisGizmoHover(axis, true);
+    setGizmosSuppressed(true);
     e.fGrabMouse();
     return true;
 }

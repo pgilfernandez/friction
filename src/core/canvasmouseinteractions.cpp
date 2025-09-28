@@ -339,6 +339,7 @@ void Canvas::cancelCurrentTransform() {
     mAxisHandleActive = false;
     mScaleHandleActive = false;
     mShearHandleActive = false;
+    setGizmosSuppressed(false);
     mTransMode = TransformMode::none;
     if (mAxisConstraint != AxisConstraint::None) {
         mAxisConstraint = AxisConstraint::None;
@@ -625,6 +626,7 @@ void Canvas::handleLeftMouseRelease(const eMouseEvent &e) {
     mAxisHandleActive = false;
     mScaleHandleActive = false;
     mShearHandleActive = false;
+    setGizmosSuppressed(false);
     if (mAxisConstraint != AxisConstraint::None) {
         mAxisConstraint = AxisConstraint::None;
         mValueInput.setForce1D(false);

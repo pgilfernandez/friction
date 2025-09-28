@@ -758,6 +758,7 @@ private:
     void updateRotateHandleHover(const QPointF &pos, qreal invScale);
     bool pointOnRotateGizmo(const QPointF &pos, qreal invScale) const;
     void setRotateHandleHover(bool hovered);
+    void setGizmosSuppressed(bool suppressed);
     struct AxisGizmoGeometry {
         QPointF center;
         QSizeF size;
@@ -886,6 +887,7 @@ protected:
     bool mAxisHandleActive = false;
     bool mScaleHandleActive = false;
     bool mShearHandleActive = false;
+    bool mGizmosSuppressed = false;
     bool mRotatingFromHandle = false;
 
     bool mPreviewing = false;
