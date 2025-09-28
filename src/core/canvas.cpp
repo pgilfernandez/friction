@@ -342,28 +342,29 @@ void Canvas::renderSk(SkCanvas* const canvas,
     updateRotateHandleGeometry(qInvZoom);
 
     if (mRotateHandleVisible) {
-        const QPointF center = mRotateHandleAnchor;
-        const qreal radius = mRotateHandleRadius;
-        const qreal strokeWorld = kRotateGizmoStrokePx * qInvZoom;
+            const QPointF center = mRotateHandleAnchor;
+            const qreal radius = mRotateHandleRadius;
+            const qreal strokeWorld = kRotateGizmoStrokePx * qInvZoom;
 
-        const SkRect arcRect = SkRect::MakeLTRB(toSkScalar(center.x() - radius),
-                                                toSkScalar(center.y() - radius),
-                                                toSkScalar(center.x() + radius),
-                                                toSkScalar(center.y() + radius));
+            const SkRect arcRect = SkRect::MakeLTRB(toSkScalar(center.x() - radius),
+                                                    toSkScalar(center.y() - radius),
+                                                    toSkScalar(center.x() + radius),
+                                                    toSkScalar(center.y() + radius));
 
-        qreal startAngle = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0); // base arc offset for gizmo draw
-        if (startAngle < 0) { startAngle += 360.0; }
-        const float startAngleF = static_cast<float>(startAngle);
-        const float sweepAngleF = static_cast<float>(mRotateHandleSweepDeg); // arc spans mRotateHandleSweepDeg degrees
+            qreal startAngle = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0); // base arc offset for gizmo draw
+            if (startAngle < 0) { startAngle += 360.0; }
+            const float startAngleF = static_cast<float>(startAngle);
+            const float sweepAngleF = static_cast<float>(mRotateHandleSweepDeg); // arc spans mRotateHandleSweepDeg degrees
 
-        SkPaint arcPaint;
-        arcPaint.setAntiAlias(true);
-        arcPaint.setStyle(SkPaint::kStroke_Style);
-        arcPaint.setStrokeCap(SkPaint::kButt_Cap);
-        arcPaint.setStrokeWidth(toSkScalar(strokeWorld));
-        const SkColor arcColor = ThemeSupport::getThemeHighlightSkColor(mRotateHandleHovered ? 255 : 190);
-        arcPaint.setColor(arcColor);
-        canvas->drawArc(arcRect, startAngleF, sweepAngleF, false, arcPaint);
+            SkPaint arcPaint;
+            arcPaint.setAntiAlias(true);
+            arcPaint.setStyle(SkPaint::kStroke_Style);
+            arcPaint.setStrokeCap(SkPaint::kButt_Cap);
+            arcPaint.setStrokeWidth(toSkScalar(strokeWorld));
+            const SkColor arcColor = ThemeSupport::getThemeHighlightSkColor(mRotateHandleHovered ? 255 : 190);
+            arcPaint.setColor(arcColor);
+            canvas->drawArc(arcRect, startAngleF, sweepAngleF, false, arcPaint);
+        }
 
         auto drawAxisRect = [&](AxisConstraint axis, const AxisGizmoGeometry &geom, const QColor &baseColor) {
             if (!geom.visible) { return; }
@@ -485,12 +486,29 @@ void Canvas::renderSk(SkCanvas* const canvas,
             borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
             borderPaint.setColor(toSkColor(color.darker(150)));
 
-            const SkRect skRect = SkRect::MakeLTRB(toSkScalar(geom.center.x() - geom.radius),
-                                               toSkScalar(geom.center.y() - geom.radius),
-                                               toSkScalar(geom.center.x() + geom.radius),
-                                               toSkScalar(geom.center.y() + geom.radius));
-            canvas->drawOval(skRect, fillPaint);
-            canvas->drawOval(skRect, borderPaint);
+            if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
+                SkPath path;
+                bool first = true;
+                for (const QPointF &pt : geom.polygonPoints) {
+                    const SkPoint skPt = SkPoint::Make(toSkScalar(pt.x()), toSkScalar(pt.y()));
+                    if (first) {
+                        path.moveTo(skPt);
+                        first = false;
+                    } else {
+                        path.lineTo(skPt);
+                    }
+                }
+                path.close();
+                canvas->drawPath(path, fillPaint);
+                canvas->drawPath(path, borderPaint);
+            } else {
+                const SkRect skRect = SkRect::MakeLTRB(toSkScalar(geom.center.x() - geom.radius),
+                                                       toSkScalar(geom.center.y() - geom.radius),
+                                                       toSkScalar(geom.center.x() + geom.radius),
+                                                       toSkScalar(geom.center.y() + geom.radius));
+                canvas->drawOval(skRect, fillPaint);
+                canvas->drawOval(skRect, borderPaint);
+            }
         };
 
         drawAxisRect(AxisConstraint::Y, mAxisYGeom, ThemeSupport::getThemeColorGreen(190));
@@ -1555,14 +1573,46 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mShearXGeom.center = QPointF((scaleYCenter.x() + scaleUniformCenter.x()) * 0.5,
                                  scaleCenterY);
     mShearXGeom.radius = shearRadiusWorld;
-    mShearXGeom.visible = true;
+    mShearXGeom.visible = mShowShearGizmo;
+    mShearXGeom.usePolygon = true;
+    {
+        const qreal halfWidth = shearRadiusWorld * 1.5;
+        const qreal topHeight = shearRadiusWorld * 0.8;
+        const qreal bottomHeight = shearRadiusWorld * 0.6;
+        const QPointF c = mShearXGeom.center;
+        mShearXGeom.polygonPoints = {
+            QPointF(c.x() - scaleHalf - halfWidth * 1.5, c.y()),
+            QPointF(c.x() - scaleHalf - halfWidth, c.y() - topHeight),
+            QPointF(c.x() - scaleHalf + halfWidth, c.y() - topHeight),
+            QPointF(c.x() - scaleHalf + halfWidth * 1.5, c.y()),
+            QPointF(c.x() - scaleHalf + halfWidth, c.y() + topHeight),
+            QPointF(c.x() - scaleHalf - halfWidth, c.y() + topHeight)
+        };
+    }
 
     mShearYGeom.center = QPointF(scaleCenterX,
                                  (scaleXCenter.y() + scaleUniformCenter.y()) * 0.5);
     mShearYGeom.radius = shearRadiusWorld;
-    mShearYGeom.visible = true;
+    mShearYGeom.visible = mShowShearGizmo;
+    mShearYGeom.usePolygon = true;
+    {
+        const qreal halfHeight = shearRadiusWorld * 1.5;
+        const qreal topWidth = shearRadiusWorld * 0.8;
+        const qreal bottomWidth = shearRadiusWorld * 0.6;
+        const QPointF c = mShearYGeom.center;
+        mShearYGeom.polygonPoints = {
+            QPointF(c.x(), c.y() + scaleHalf - halfHeight * 1.5),
+            QPointF(c.x() + topWidth, c.y() + scaleHalf - halfHeight),
+            QPointF(c.x() + topWidth, c.y() + scaleHalf + halfHeight),
+            QPointF(c.x(), c.y() + scaleHalf + halfHeight * 1.5),
+            QPointF(c.x() - topWidth, c.y() + scaleHalf + halfHeight),
+            QPointF(c.x() - topWidth, c.y() + scaleHalf - halfHeight)
+        };
+    }
 
-    mRotateHandleVisible = true;
+    const bool anyGizmoVisible = (mShowRotateGizmo || mShowPositionGizmo ||
+                                  mShowScaleGizmo || mShowShearGizmo);
+    mRotateHandleVisible = anyGizmoVisible;
 }
 
 void Canvas::setRotateHandleHover(bool hovered)
