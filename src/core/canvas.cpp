@@ -372,7 +372,11 @@ void Canvas::renderSk(SkCanvas* const canvas,
             const bool hovered = axis == AxisConstraint::X ? mAxisXHovered : mAxisYHovered;
             const bool active = (mAxisConstraint == axis);
             QColor color = baseColor;
-            color.setAlpha(active ? 255 : hovered ? 235 : baseColor.alpha());
+            if (active) {
+                color = color.lighter(135);
+            } else if (hovered) {
+                color = color.lighter(120);
+            }
 
             SkPaint fillPaint;
             fillPaint.setAntiAlias(true);
@@ -431,7 +435,11 @@ void Canvas::renderSk(SkCanvas* const canvas,
             }
             const bool active = (mScaleConstraint == handle);
             QColor color = baseColor;
-            color.setAlpha(active ? 255 : hovered ? 235 : baseColor.alpha());
+            if (active) {
+                color = color.lighter(135);
+            } else if (hovered) {
+                color = color.lighter(120);
+            }
 
             SkPaint fillPaint;
             fillPaint.setAntiAlias(true);
@@ -474,7 +482,11 @@ void Canvas::renderSk(SkCanvas* const canvas,
             bool hovered = (handle == ShearHandle::X) ? mShearXHovered : mShearYHovered;
             const bool active = (mShearConstraint == handle);
             QColor color = baseColor;
-            color.setAlpha(active ? 255 : hovered ? 235 : baseColor.alpha());
+            if (active) {
+                color = color.lighter(135);
+            } else if (hovered) {
+                color = color.lighter(120);
+            }
 
             SkPaint fillPaint;
             fillPaint.setAntiAlias(true);
