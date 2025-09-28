@@ -342,6 +342,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
     updateRotateHandleGeometry(qInvZoom);
 
     if (mRotateHandleVisible) {
+        if (mShowRotateGizmo) {
             const QPointF center = mRotateHandleAnchor;
             const qreal radius = mRotateHandleRadius;
             const qreal strokeWorld = kRotateGizmoStrokePx * qInvZoom;
