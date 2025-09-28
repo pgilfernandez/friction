@@ -681,7 +681,20 @@ void MainWindow::setupMenuBar()
     connect(mPathEffectsVisible, &QAction::triggered,
             &mActions, &Actions::setPathEffectsVisible);
 
-    mGizmosMenu = mViewMenu->addMenu(tr("Gizmos", "MenuBar_View"));
+    mGizmosMenu = mViewMenu->addMenu(tr("Transformation Gizmos", "MenuBar_View"));
+
+    mShowPositionGizmoAct = mGizmosMenu->addAction(tr("Translate", "MenuBar_View_Gizmos"));
+    mShowPositionGizmoAct->setCheckable(true);
+    mShowPositionGizmoAct->setChecked(mDocument.showPositionGizmo());
+    connect(mShowPositionGizmoAct, &QAction::toggled,
+            &mActions, &Actions::setPositionGizmoVisible);
+    connect(&mDocument, &Document::showPositionGizmoChanged,
+            this, [this](bool enabled) {
+                if (!mShowPositionGizmoAct) { return; }
+                QSignalBlocker blocker(mShowPositionGizmoAct);
+                mShowPositionGizmoAct->setChecked(enabled);
+            });
+    cmdAddAction(mShowPositionGizmoAct);
 
     mShowRotateGizmoAct = mGizmosMenu->addAction(tr("Rotation", "MenuBar_View_Gizmos"));
     mShowRotateGizmoAct->setCheckable(true);
@@ -695,19 +708,6 @@ void MainWindow::setupMenuBar()
                 mShowRotateGizmoAct->setChecked(enabled);
             });
     cmdAddAction(mShowRotateGizmoAct);
-
-    mShowPositionGizmoAct = mGizmosMenu->addAction(tr("Position", "MenuBar_View_Gizmos"));
-    mShowPositionGizmoAct->setCheckable(true);
-    mShowPositionGizmoAct->setChecked(mDocument.showPositionGizmo());
-    connect(mShowPositionGizmoAct, &QAction::toggled,
-            &mActions, &Actions::setPositionGizmoVisible);
-    connect(&mDocument, &Document::showPositionGizmoChanged,
-            this, [this](bool enabled) {
-                if (!mShowPositionGizmoAct) { return; }
-                QSignalBlocker blocker(mShowPositionGizmoAct);
-                mShowPositionGizmoAct->setChecked(enabled);
-            });
-    cmdAddAction(mShowPositionGizmoAct);
 
     mShowScaleGizmoAct = mGizmosMenu->addAction(tr("Scale", "MenuBar_View_Gizmos"));
     mShowScaleGizmoAct->setCheckable(true);

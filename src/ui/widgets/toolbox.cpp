@@ -122,13 +122,41 @@ void ToolBox::setupDocument()
     connect(&mDocument, &Document::currentPixelColor,
             this, &ToolBox::updateColorPicker);
     connect(&mDocument, &Document::showRotateGizmoChanged,
-            this, [this](bool enabled) { updateGizmoAction(mShowRotateGizmoAct, enabled); });
+            this, [this](bool enabled) {
+                if (!mShowRotateGizmoAct) { return; }
+                QSignalBlocker blocker(mShowRotateGizmoAct);
+                mShowRotateGizmoAct->setChecked(enabled);
+                mShowRotateGizmoAct->setIcon(QIcon::fromTheme(enabled ?
+                                                               "pivotLocal" :
+                                                               "pivotGlobal"));
+            });
     connect(&mDocument, &Document::showPositionGizmoChanged,
-            this, [this](bool enabled) { updateGizmoAction(mShowPositionGizmoAct, enabled); });
+            this, [this](bool enabled) {
+                if (!mShowPositionGizmoAct) { return; }
+                QSignalBlocker blocker(mShowPositionGizmoAct);
+                mShowPositionGizmoAct->setChecked(enabled);
+                mShowPositionGizmoAct->setIcon(QIcon::fromTheme(enabled ?
+                                                                  "pivotLocal" :
+                                                                  "pivotGlobal"));
+            });
     connect(&mDocument, &Document::showScaleGizmoChanged,
-            this, [this](bool enabled) { updateGizmoAction(mShowScaleGizmoAct, enabled); });
+            this, [this](bool enabled) {
+                if (!mShowScaleGizmoAct) { return; }
+                QSignalBlocker blocker(mShowScaleGizmoAct);
+                mShowScaleGizmoAct->setChecked(enabled);
+                mShowScaleGizmoAct->setIcon(QIcon::fromTheme(enabled ?
+                                                               "pivotLocal" :
+                                                               "pivotGlobal"));
+            });
     connect(&mDocument, &Document::showShearGizmoChanged,
-            this, [this](bool enabled) { updateGizmoAction(mShowShearGizmoAct, enabled); });
+            this, [this](bool enabled) {
+                if (!mShowShearGizmoAct) { return; }
+                QSignalBlocker blocker(mShowShearGizmoAct);
+                mShowShearGizmoAct->setChecked(enabled);
+                mShowShearGizmoAct->setIcon(QIcon::fromTheme(enabled ?
+                                                               "pivotLocal" :
+                                                               "pivotGlobal"));
+            });
 }
 
 void ToolBox::setupMainAction(const QIcon &icon,
@@ -280,44 +308,89 @@ void ToolBox::setupMainActions()
     });
     mGroupMain->addAction(mLocalPivot);
 
-    // Gizmo visibility toggles
-    auto makeGizmoAction = [this](QAction *&action,
-                                  const QString &label,
-                                  bool initial,
-                                  auto setter) {
-        action = new QAction(QIcon(), label, mMain);
-        action->setCheckable(true);
-        updateGizmoAction(action, initial);
-        connect(action, &QAction::toggled, &mActions, setter);
-        connect(action, &QAction::toggled, this, [this, action](bool checked) {
-            updateGizmoAction(action, checked);
-        });
-        mGroupGizmos->addAction(action);
-        mMain->addAction(action);
-        ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mMain, action);
-    };
-
-    makeGizmoAction(mShowRotateGizmoAct,
-                    tr("Rotation Gizmo"),
-                    mDocument.showRotateGizmo(),
-                    &Actions::setRotateGizmoVisible);
-
-    makeGizmoAction(mShowPositionGizmoAct,
-                    tr("Position Gizmo"),
-                    mDocument.showPositionGizmo(),
-                    &Actions::setPositionGizmoVisible);
-
-    makeGizmoAction(mShowScaleGizmoAct,
-                    tr("Scale Gizmo"),
-                    mDocument.showScaleGizmo(),
-                    &Actions::setScaleGizmoVisible);
-
-    makeGizmoAction(mShowShearGizmoAct,
-                    tr("Shear Gizmo"),
-                    mDocument.showShearGizmo(),
-                    &Actions::setShearGizmoVisible);
-
     mMain->addActions(mGroupMain->actions());
+
+    // Gizmo visibility toggles
+
+    mShowPositionGizmoAct = new QAction(mDocument.showPositionGizmo() ?
+                                    QIcon::fromTheme("gizmo_translate_on") :
+                                    QIcon::fromTheme("gizmo_translate_off"),
+                                    tr("Translate Gizmo"),
+                                    mMain);
+    mShowPositionGizmoAct->setCheckable(true);
+    mShowPositionGizmoAct->setChecked(mDocument.showPositionGizmo());
+    // mShowPositionGizmoAct->setShortcut(QKeySequence());
+    connect(mShowPositionGizmoAct, &QAction::toggled,
+            &mActions, &Actions::setPositionGizmoVisible);
+    connect(mShowPositionGizmoAct, &QAction::toggled,
+            this, [this](bool checked) {
+                mShowPositionGizmoAct->setIcon(checked ?
+                         QIcon::fromTheme("gizmo_translate_on") :
+                         QIcon::fromTheme("gizmo_translate_off"));
+            });
+    mGroupGizmos->addAction(mShowPositionGizmoAct);
+    mMain->addAction(mShowPositionGizmoAct);
+    ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mMain, mShowPositionGizmoAct);
+
+    mShowRotateGizmoAct = new QAction(mDocument.showRotateGizmo() ?
+                                    QIcon::fromTheme("gizmo_rotate_on") :
+                                    QIcon::fromTheme("gizmo_rotate_off"),
+                                    tr("Rotation Gizmo"),
+                                    mMain);
+    mShowRotateGizmoAct->setCheckable(true);
+    mShowRotateGizmoAct->setChecked(mDocument.showRotateGizmo());
+    // mShowRotateGizmoAct->setShortcut(QKeySequence());
+    connect(mShowRotateGizmoAct, &QAction::toggled,
+            &mActions, &Actions::setRotateGizmoVisible);
+    connect(mShowRotateGizmoAct, &QAction::toggled,
+            this, [this](bool checked) {
+                mShowRotateGizmoAct->setIcon(checked ?
+                         QIcon::fromTheme("gizmo_rotate_on") :
+                         QIcon::fromTheme("gizmo_rotate_off"));
+            });
+    mGroupGizmos->addAction(mShowRotateGizmoAct);
+    mMain->addAction(mShowRotateGizmoAct);
+    ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mMain, mShowRotateGizmoAct);
+
+    mShowScaleGizmoAct = new QAction(mDocument.showScaleGizmo() ?
+                                    QIcon::fromTheme("gizmo_scale_on") :
+                                    QIcon::fromTheme("gizmo_scale_off"),
+                                    tr("Scale Gizmo"),
+                                    mMain);
+    mShowScaleGizmoAct->setCheckable(true);
+    mShowScaleGizmoAct->setChecked(mDocument.showScaleGizmo());
+    // mShowScaleGizmoAct->setShortcut(QKeySequence());
+    connect(mShowScaleGizmoAct, &QAction::toggled,
+            &mActions, &Actions::setScaleGizmoVisible);
+    connect(mShowScaleGizmoAct, &QAction::toggled,
+            this, [this](bool checked) {
+                mShowScaleGizmoAct->setIcon(checked ?
+                         QIcon::fromTheme("gizmo_scale_on") :
+                         QIcon::fromTheme("gizmo_scale_off"));
+            });
+    mGroupGizmos->addAction(mShowScaleGizmoAct);
+    mMain->addAction(mShowScaleGizmoAct);
+    ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mMain, mShowScaleGizmoAct);
+
+    mShowShearGizmoAct = new QAction(mDocument.showShearGizmo() ?
+                                    QIcon::fromTheme("gizmo_shear_on") :
+                                    QIcon::fromTheme("gizmo_shear_off"),
+                                    tr("Shear Gizmo"),
+                                    mMain);
+    mShowShearGizmoAct->setCheckable(true);
+    mShowShearGizmoAct->setChecked(mDocument.showShearGizmo());
+    // mShowShearGizmoAct->setShortcut(QKeySequence());
+    connect(mShowShearGizmoAct, &QAction::toggled,
+            &mActions, &Actions::setShearGizmoVisible);
+    connect(mShowShearGizmoAct, &QAction::toggled,
+            this, [this](bool checked) {
+                mShowShearGizmoAct->setIcon(checked ?
+                         QIcon::fromTheme("gizmo_shear_on") :
+                         QIcon::fromTheme("gizmo_shear_off"));
+            });
+    mGroupGizmos->addAction(mShowShearGizmoAct);
+    mMain->addAction(mShowShearGizmoAct);
+    ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mMain, mShowShearGizmoAct);
 }
 
 void ToolBox::setupNodesAction(const QIcon &icon,
@@ -498,14 +571,6 @@ void ToolBox::setupColorPickerActions()
     mGroupColorPicker->addAction(mControls->addWidget(mColorPickerLabel));
 
     mGroupColorPicker->setVisible(false);
-}
-
-void ToolBox::updateGizmoAction(QAction *action, bool enabled)
-{
-    if (!action) { return; }
-    QSignalBlocker blocker(action);
-    action->setChecked(enabled);
-    action->setIcon(QIcon::fromTheme(enabled ? "pivotLocal" : "pivotGlobal"));
 }
 
 void ToolBox::setCurrentCanvas(Canvas * const target)

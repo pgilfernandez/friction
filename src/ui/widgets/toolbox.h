@@ -113,8 +113,6 @@ namespace Friction
             void setupDrawActions();
             void setupColorPickerActions();
 
-            void updateGizmoAction(QAction *action, bool enabled);
-
             void setCurrentCanvas(Canvas * const target);
             void setCanvasMode(const CanvasMode &mode);
 

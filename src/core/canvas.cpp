@@ -56,7 +56,7 @@
 namespace {
 constexpr qreal kRotateGizmoSweepDeg = 90.0; // default sweep of gizmo arc
 constexpr qreal kRotateGizmoBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
-constexpr qreal kRotateGizmoRadiusPx = 30.0; // gizmo radius in screen pixels
+constexpr qreal kRotateGizmoRadiusPx = 40.0; // gizmo radius in screen pixels
 constexpr qreal kRotateGizmoStrokePx = 6.0; // arc stroke thickness in screen pixels
 constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx; // hit area thickness in screen pixels
 constexpr qreal kAxisGizmoWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
