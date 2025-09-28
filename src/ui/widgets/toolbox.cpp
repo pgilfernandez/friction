@@ -311,10 +311,10 @@ void ToolBox::setupMainActions()
     mMain->addActions(mGroupMain->actions());
 
     // Gizmo visibility toggles
-
+    // TODO: add icons (they will be gizmo_translate_on, gizmo_translate_off, etc)
     mShowPositionGizmoAct = new QAction(mDocument.showPositionGizmo() ?
-                                    QIcon::fromTheme("gizmo_translate_on") :
-                                    QIcon::fromTheme("gizmo_translate_off"),
+                                    QIcon::fromTheme("transform_translate") :
+                                    QIcon::fromTheme("transform_translate"),
                                     tr("Translate Gizmo"),
                                     mMain);
     mShowPositionGizmoAct->setCheckable(true);
@@ -325,16 +325,16 @@ void ToolBox::setupMainActions()
     connect(mShowPositionGizmoAct, &QAction::toggled,
             this, [this](bool checked) {
                 mShowPositionGizmoAct->setIcon(checked ?
-                         QIcon::fromTheme("gizmo_translate_on") :
-                         QIcon::fromTheme("gizmo_translate_off"));
+                         QIcon::fromTheme("transform_translate") :
+                         QIcon::fromTheme("transform_translate"));
             });
     mGroupGizmos->addAction(mShowPositionGizmoAct);
     mMain->addAction(mShowPositionGizmoAct);
     ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mMain, mShowPositionGizmoAct);
 
     mShowRotateGizmoAct = new QAction(mDocument.showRotateGizmo() ?
-                                    QIcon::fromTheme("gizmo_rotate_on") :
-                                    QIcon::fromTheme("gizmo_rotate_off"),
+                                    QIcon::fromTheme("transform_rotate") :
+                                    QIcon::fromTheme("transform_rotate"),
                                     tr("Rotation Gizmo"),
                                     mMain);
     mShowRotateGizmoAct->setCheckable(true);
@@ -345,16 +345,16 @@ void ToolBox::setupMainActions()
     connect(mShowRotateGizmoAct, &QAction::toggled,
             this, [this](bool checked) {
                 mShowRotateGizmoAct->setIcon(checked ?
-                         QIcon::fromTheme("gizmo_rotate_on") :
-                         QIcon::fromTheme("gizmo_rotate_off"));
+                         QIcon::fromTheme("transform_rotate") :
+                         QIcon::fromTheme("transform_rotate"));
             });
     mGroupGizmos->addAction(mShowRotateGizmoAct);
     mMain->addAction(mShowRotateGizmoAct);
     ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mMain, mShowRotateGizmoAct);
 
     mShowScaleGizmoAct = new QAction(mDocument.showScaleGizmo() ?
-                                    QIcon::fromTheme("gizmo_scale_on") :
-                                    QIcon::fromTheme("gizmo_scale_off"),
+                                    QIcon::fromTheme("transform_scale") :
+                                    QIcon::fromTheme("transform_scale"),
                                     tr("Scale Gizmo"),
                                     mMain);
     mShowScaleGizmoAct->setCheckable(true);
@@ -365,16 +365,16 @@ void ToolBox::setupMainActions()
     connect(mShowScaleGizmoAct, &QAction::toggled,
             this, [this](bool checked) {
                 mShowScaleGizmoAct->setIcon(checked ?
-                         QIcon::fromTheme("gizmo_scale_on") :
-                         QIcon::fromTheme("gizmo_scale_off"));
+                         QIcon::fromTheme("transform_scale") :
+                         QIcon::fromTheme("transform_scale"));
             });
     mGroupGizmos->addAction(mShowScaleGizmoAct);
     mMain->addAction(mShowScaleGizmoAct);
     ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mMain, mShowScaleGizmoAct);
 
     mShowShearGizmoAct = new QAction(mDocument.showShearGizmo() ?
-                                    QIcon::fromTheme("gizmo_shear_on") :
-                                    QIcon::fromTheme("gizmo_shear_off"),
+                                    QIcon::fromTheme("transform_pivot") :
+                                    QIcon::fromTheme("transform_pivot"),
                                     tr("Shear Gizmo"),
                                     mMain);
     mShowShearGizmoAct->setCheckable(true);
@@ -385,8 +385,8 @@ void ToolBox::setupMainActions()
     connect(mShowShearGizmoAct, &QAction::toggled,
             this, [this](bool checked) {
                 mShowShearGizmoAct->setIcon(checked ?
-                         QIcon::fromTheme("gizmo_shear_on") :
-                         QIcon::fromTheme("gizmo_shear_off"));
+                         QIcon::fromTheme("transform_pivot") :
+                         QIcon::fromTheme("transform_pivot"));
             });
     mGroupGizmos->addAction(mShowShearGizmoAct);
     mMain->addAction(mShowShearGizmoAct);
