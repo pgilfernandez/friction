@@ -198,6 +198,11 @@ private:
 signals:
     void canvasModeSet(CanvasMode);
 
+    void showRotateGizmoChanged(bool);
+    void showPositionGizmoChanged(bool);
+    void showScaleGizmoChanged(bool);
+    void showShearGizmoChanged(bool);
+
     void sceneCreated(Canvas*);
     void sceneRemoved(Canvas*);
     void sceneRemoved(int);

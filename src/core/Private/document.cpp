@@ -120,6 +120,7 @@ void Document::setShowRotateGizmo(bool show)
     for (const auto &scene : fScenes) {
         if (scene) { scene->setShowRotateGizmo(show); }
     }
+    emit showRotateGizmoChanged(show);
 }
 
 void Document::setShowPositionGizmo(bool show)
@@ -129,6 +130,7 @@ void Document::setShowPositionGizmo(bool show)
     for (const auto &scene : fScenes) {
         if (scene) { scene->setShowPositionGizmo(show); }
     }
+    emit showPositionGizmoChanged(show);
 }
 
 void Document::setShowScaleGizmo(bool show)
@@ -138,6 +140,7 @@ void Document::setShowScaleGizmo(bool show)
     for (const auto &scene : fScenes) {
         if (scene) { scene->setShowScaleGizmo(show); }
     }
+    emit showScaleGizmoChanged(show);
 }
 
 void Document::setShowShearGizmo(bool show)
@@ -147,6 +150,7 @@ void Document::setShowShearGizmo(bool show)
     for (const auto &scene : fScenes) {
         if (scene) { scene->setShowShearGizmo(show); }
     }
+    emit showShearGizmoChanged(show);
 }
 
 Canvas *Document::createNewScene(const bool emitCreated) {

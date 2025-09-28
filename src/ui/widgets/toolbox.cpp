@@ -24,6 +24,7 @@
 #include "themesupport.h"
 
 #include <QToolButton>
+#include <QSignalBlocker>
 
 using namespace Friction::Ui;
 
@@ -40,9 +41,14 @@ ToolBox::ToolBox(Actions &actions,
     , mGroupNodes(nullptr)
     , mGroupDraw(nullptr)
     , mGroupColorPicker(nullptr)
+    , mGroupGizmos(nullptr)
     , mDrawPathMaxError(nullptr)
     , mDrawPathSmooth(nullptr)
     , mLocalPivot(nullptr)
+    , mShowRotateGizmoAct(nullptr)
+    , mShowPositionGizmoAct(nullptr)
+    , mShowScaleGizmoAct(nullptr)
+    , mShowShearGizmoAct(nullptr)
     , mColorPickerButton(nullptr)
     , mColorPickerLabel(nullptr)
 {
@@ -97,6 +103,8 @@ void ToolBox::setupToolBox(QWidget *parent)
     mGroupNodes = new QActionGroup(this);
     mGroupDraw = new QActionGroup(this);
     mGroupColorPicker = new QActionGroup(this);
+    mGroupGizmos = new QActionGroup(this);
+    mGroupGizmos->setExclusive(false);
 
     setupDocument();
     setupMainActions();
@@ -113,6 +121,14 @@ void ToolBox::setupDocument()
             this, &ToolBox::setCanvasMode);
     connect(&mDocument, &Document::currentPixelColor,
             this, &ToolBox::updateColorPicker);
+    connect(&mDocument, &Document::showRotateGizmoChanged,
+            this, [this](bool enabled) { updateGizmoAction(mShowRotateGizmoAct, enabled); });
+    connect(&mDocument, &Document::showPositionGizmoChanged,
+            this, [this](bool enabled) { updateGizmoAction(mShowPositionGizmoAct, enabled); });
+    connect(&mDocument, &Document::showScaleGizmoChanged,
+            this, [this](bool enabled) { updateGizmoAction(mShowScaleGizmoAct, enabled); });
+    connect(&mDocument, &Document::showShearGizmoChanged,
+            this, [this](bool enabled) { updateGizmoAction(mShowShearGizmoAct, enabled); });
 }
 
 void ToolBox::setupMainAction(const QIcon &icon,
@@ -263,6 +279,43 @@ void ToolBox::setupMainActions()
                          QIcon::fromTheme("pivotGlobal"));
     });
     mGroupMain->addAction(mLocalPivot);
+
+    // Gizmo visibility toggles
+    auto makeGizmoAction = [this](QAction *&action,
+                                  const QString &label,
+                                  bool initial,
+                                  auto setter) {
+        action = new QAction(QIcon(), label, mMain);
+        action->setCheckable(true);
+        updateGizmoAction(action, initial);
+        connect(action, &QAction::toggled, &mActions, setter);
+        connect(action, &QAction::toggled, this, [this, action](bool checked) {
+            updateGizmoAction(action, checked);
+        });
+        mGroupGizmos->addAction(action);
+        mMain->addAction(action);
+        ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mMain, action);
+    };
+
+    makeGizmoAction(mShowRotateGizmoAct,
+                    tr("Rotation Gizmo"),
+                    mDocument.showRotateGizmo(),
+                    &Actions::setRotateGizmoVisible);
+
+    makeGizmoAction(mShowPositionGizmoAct,
+                    tr("Position Gizmo"),
+                    mDocument.showPositionGizmo(),
+                    &Actions::setPositionGizmoVisible);
+
+    makeGizmoAction(mShowScaleGizmoAct,
+                    tr("Scale Gizmo"),
+                    mDocument.showScaleGizmo(),
+                    &Actions::setScaleGizmoVisible);
+
+    makeGizmoAction(mShowShearGizmoAct,
+                    tr("Shear Gizmo"),
+                    mDocument.showShearGizmo(),
+                    &Actions::setShearGizmoVisible);
 
     mMain->addActions(mGroupMain->actions());
 }
@@ -447,6 +500,14 @@ void ToolBox::setupColorPickerActions()
     mGroupColorPicker->setVisible(false);
 }
 
+void ToolBox::updateGizmoAction(QAction *action, bool enabled)
+{
+    if (!action) { return; }
+    QSignalBlocker blocker(action);
+    action->setChecked(enabled);
+    action->setIcon(QIcon::fromTheme(enabled ? "pivotLocal" : "pivotGlobal"));
+}
+
 void ToolBox::setCurrentCanvas(Canvas * const target)
 {
     mControls->setCurrentCanvas(target);
@@ -468,6 +529,11 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
     mGroupDraw->setVisible(drawMode);
 
     mLocalPivot->setEnabled(boxMode || pointMode);
+    const bool gizmoToggleEnabled = boxMode || pointMode;
+    if (mShowRotateGizmoAct) { mShowRotateGizmoAct->setEnabled(gizmoToggleEnabled); }
+    if (mShowPositionGizmoAct) { mShowPositionGizmoAct->setEnabled(gizmoToggleEnabled); }
+    if (mShowScaleGizmoAct) { mShowScaleGizmoAct->setEnabled(gizmoToggleEnabled); }
+    if (mShowShearGizmoAct) { mShowShearGizmoAct->setEnabled(gizmoToggleEnabled); }
 
     if (mExtra) { mExtra->setCanvasMode(mode); }
 

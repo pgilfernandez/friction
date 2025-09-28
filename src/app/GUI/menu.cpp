@@ -32,6 +32,7 @@
 #include <QDesktopServices>
 #include <QClipboard>
 #include <QStatusBar>
+#include <QSignalBlocker>
 
 using namespace Friction;
 
@@ -687,6 +688,12 @@ void MainWindow::setupMenuBar()
     mShowRotateGizmoAct->setChecked(mDocument.showRotateGizmo());
     connect(mShowRotateGizmoAct, &QAction::toggled,
             &mActions, &Actions::setRotateGizmoVisible);
+    connect(&mDocument, &Document::showRotateGizmoChanged,
+            this, [this](bool enabled) {
+                if (!mShowRotateGizmoAct) { return; }
+                QSignalBlocker blocker(mShowRotateGizmoAct);
+                mShowRotateGizmoAct->setChecked(enabled);
+            });
     cmdAddAction(mShowRotateGizmoAct);
 
     mShowPositionGizmoAct = mGizmosMenu->addAction(tr("Position", "MenuBar_View_Gizmos"));
@@ -694,6 +701,12 @@ void MainWindow::setupMenuBar()
     mShowPositionGizmoAct->setChecked(mDocument.showPositionGizmo());
     connect(mShowPositionGizmoAct, &QAction::toggled,
             &mActions, &Actions::setPositionGizmoVisible);
+    connect(&mDocument, &Document::showPositionGizmoChanged,
+            this, [this](bool enabled) {
+                if (!mShowPositionGizmoAct) { return; }
+                QSignalBlocker blocker(mShowPositionGizmoAct);
+                mShowPositionGizmoAct->setChecked(enabled);
+            });
     cmdAddAction(mShowPositionGizmoAct);
 
     mShowScaleGizmoAct = mGizmosMenu->addAction(tr("Scale", "MenuBar_View_Gizmos"));
@@ -701,6 +714,12 @@ void MainWindow::setupMenuBar()
     mShowScaleGizmoAct->setChecked(mDocument.showScaleGizmo());
     connect(mShowScaleGizmoAct, &QAction::toggled,
             &mActions, &Actions::setScaleGizmoVisible);
+    connect(&mDocument, &Document::showScaleGizmoChanged,
+            this, [this](bool enabled) {
+                if (!mShowScaleGizmoAct) { return; }
+                QSignalBlocker blocker(mShowScaleGizmoAct);
+                mShowScaleGizmoAct->setChecked(enabled);
+            });
     cmdAddAction(mShowScaleGizmoAct);
 
     mShowShearGizmoAct = mGizmosMenu->addAction(tr("Shear", "MenuBar_View_Gizmos"));
@@ -708,6 +727,12 @@ void MainWindow::setupMenuBar()
     mShowShearGizmoAct->setChecked(mDocument.showShearGizmo());
     connect(mShowShearGizmoAct, &QAction::toggled,
             &mActions, &Actions::setShearGizmoVisible);
+    connect(&mDocument, &Document::showShearGizmoChanged,
+            this, [this](bool enabled) {
+                if (!mShowShearGizmoAct) { return; }
+                QSignalBlocker blocker(mShowShearGizmoAct);
+                mShowShearGizmoAct->setChecked(enabled);
+            });
     cmdAddAction(mShowShearGizmoAct);
 
     mViewMenu->addSeparator();

@@ -84,11 +84,16 @@ namespace Friction
             QActionGroup *mGroupNodes;
             QActionGroup *mGroupDraw;
             QActionGroup *mGroupColorPicker;
+            QActionGroup *mGroupGizmos;
 
             QDoubleSlider *mDrawPathMaxError;
             QDoubleSlider *mDrawPathSmooth;
 
             QAction *mLocalPivot;
+            QAction *mShowRotateGizmoAct;
+            QAction *mShowPositionGizmoAct;
+            QAction *mShowScaleGizmoAct;
+            QAction *mShowShearGizmoAct;
 
             QToolButton *mColorPickerButton;
             QLabel *mColorPickerLabel;
@@ -107,6 +112,8 @@ namespace Friction
             void setupNodesActions();
             void setupDrawActions();
             void setupColorPickerActions();
+
+            void updateGizmoAction(QAction *action, bool enabled);
 
             void setCurrentCanvas(Canvas * const target);
             void setCanvasMode(const CanvasMode &mode);
