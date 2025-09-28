@@ -27,12 +27,17 @@
 #include "FileCacheHandlers/filecachehandler.h"
 #include "canvas.h"
 #include "simpletask.h"
+#include "appsupport.h"
 
 Document* Document::sInstance = nullptr;
 
 Document::Document(TaskScheduler& taskScheduler) {
     Q_ASSERT(!sInstance);
     sInstance = this;
+    fShowRotateGizmo = AppSupport::getSettings("gizmos", "Rotate", true).toBool();
+    fShowPositionGizmo = AppSupport::getSettings("gizmos", "Position", true).toBool();
+    fShowScaleGizmo = AppSupport::getSettings("gizmos", "Scale", false).toBool();
+    fShowShearGizmo = AppSupport::getSettings("gizmos", "Shear", false).toBool();
     connect(&taskScheduler, &TaskScheduler::finishedAllQuedTasks,
             this, &Document::updateScenes);
 }
@@ -120,6 +125,7 @@ void Document::setShowRotateGizmo(bool show)
     for (const auto &scene : fScenes) {
         if (scene) { scene->setShowRotateGizmo(show); }
     }
+    AppSupport::setSettings("gizmos", "Rotate", show);
     emit showRotateGizmoChanged(show);
 }
 
@@ -130,6 +136,7 @@ void Document::setShowPositionGizmo(bool show)
     for (const auto &scene : fScenes) {
         if (scene) { scene->setShowPositionGizmo(show); }
     }
+    AppSupport::setSettings("gizmos", "Position", show);
     emit showPositionGizmoChanged(show);
 }
 
@@ -140,6 +147,7 @@ void Document::setShowScaleGizmo(bool show)
     for (const auto &scene : fScenes) {
         if (scene) { scene->setShowScaleGizmo(show); }
     }
+    AppSupport::setSettings("gizmos", "Scale", show);
     emit showScaleGizmoChanged(show);
 }
 
@@ -150,6 +158,7 @@ void Document::setShowShearGizmo(bool show)
     for (const auto &scene : fScenes) {
         if (scene) { scene->setShowShearGizmo(show); }
     }
+    AppSupport::setSettings("gizmos", "Shear", show);
     emit showShearGizmoChanged(show);
 }
 
