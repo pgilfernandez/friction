@@ -53,19 +53,19 @@
 #include "themesupport.h"
 
 namespace {
-constexpr qreal kRotateGizmoSweepDeg = 210.0; // default sweep of gizmo arc
-constexpr qreal kRotateGizmoBaseOffsetDeg = 30.0; // default angular offset for gizmo arc
-constexpr qreal kRotateGizmoRadiusPx = 40.0; // gizmo radius in screen pixels
-constexpr qreal kRotateGizmoStrokePx = 12.0; // arc stroke thickness in screen pixels
-constexpr qreal kRotateGizmoHitWidthPx = 12.0; // hit area thickness in screen pixels
-constexpr qreal kAxisGizmoWidthPx = 8.0; // axis gizmo rectangle width in screen pixels
-constexpr qreal kAxisGizmoHeightPx = 80.0; // axis gizmo rectangle height in screen pixels
-constexpr qreal kAxisGizmoYOffsetPx = 60.0; // vertical distance of Y gizmo from pivot in pixels
-constexpr qreal kAxisGizmoXOffsetPx = 60.0; // horizontal distance of X gizmo from pivot in pixels
-constexpr qreal kScaleGizmoSizePx = 30.0; // scale gizmo square size in screen pixels
-constexpr qreal kScaleGizmoGapPx = 12.0; // gap between position gizmos and scale gizmos in screen pixels
-constexpr qreal kShearGizmoRadiusPx = 16.0; // shear gizmo circle radius in screen pixels
-constexpr qreal kShearGizmoGapPx = 10.0; // gap between scale and shear gizmos in screen pixels
+constexpr qreal kRotateGizmoSweepDeg = 90.0; // default sweep of gizmo arc
+constexpr qreal kRotateGizmoBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
+constexpr qreal kRotateGizmoRadiusPx = 30.0; // gizmo radius in screen pixels
+constexpr qreal kRotateGizmoStrokePx = 6.0; // arc stroke thickness in screen pixels
+constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx; // hit area thickness in screen pixels
+constexpr qreal kAxisGizmoWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
+constexpr qreal kAxisGizmoHeightPx = 60.0; // axis gizmo rectangle height in screen pixels
+constexpr qreal kAxisGizmoYOffsetPx = 40.0; // vertical distance of Y gizmo from pivot in pixels
+constexpr qreal kAxisGizmoXOffsetPx = 40.0; // horizontal distance of X gizmo from pivot in pixels
+constexpr qreal kScaleGizmoSizePx = 12.0; // scale gizmo square size in screen pixels
+constexpr qreal kScaleGizmoGapPx = 4.0; // gap between position gizmos and scale gizmos in screen pixels
+constexpr qreal kShearGizmoRadiusPx = 6.0; // shear gizmo circle radius in screen pixels
+constexpr qreal kShearGizmoGapPx = 4.0; // gap between scale and shear gizmos in screen pixels
 }
 
 Canvas::Canvas(Document &document,
@@ -358,7 +358,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
         SkPaint arcPaint;
         arcPaint.setAntiAlias(true);
         arcPaint.setStyle(SkPaint::kStroke_Style);
-        arcPaint.setStrokeCap(SkPaint::kRound_Cap);
+        arcPaint.setStrokeCap(SkPaint::kButt_Cap);
         arcPaint.setStrokeWidth(toSkScalar(strokeWorld));
         const SkColor arcColor = ThemeSupport::getThemeHighlightSkColor(mRotateHandleHovered ? 255 : 190);
         arcPaint.setColor(arcColor);
@@ -1429,15 +1429,13 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mRotateHandleAngleDeg = 0.0; // keep gizmo orientation screen-aligned
 
     const QPointF pivot = mRotPivot->getAbsolutePos();
-    mRotateHandleAnchor = pivot;
+    mRotateHandleAnchor = pivot + QPointF(kAxisGizmoWidthPx * 0.5 * invScale,
+                                          -kAxisGizmoWidthPx * 0.5 * invScale);
 
-    const qreal radiusWorld = kRotateGizmoRadiusPx * invScale;
-    mRotateHandleRadius = radiusWorld; // gizmo arc radius converted to scene units
+    const qreal baseRotateRadiusWorld = kRotateGizmoRadiusPx * invScale;
+    mRotateHandleRadius = baseRotateRadiusWorld;
     mRotateHandleSweepDeg = kRotateGizmoSweepDeg; // default sweep angle
     mRotateHandleStartOffsetDeg = kRotateGizmoBaseOffsetDeg; // default base angle offset
-
-    const QPointF offset(0.0, -radiusWorld);
-    mRotateHandlePos = pivot + offset;
 
     const qreal axisWidthWorld = kAxisGizmoWidthPx * invScale;
     const qreal axisHeightWorld = kAxisGizmoHeightPx * invScale;
@@ -1454,36 +1452,47 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mAxisXGeom.angleDeg = 0.0;
     mAxisXGeom.visible = true;
 
+    const qreal rotateOffsetWorld = mAxisYGeom.size.width() * 0.5;
+    mRotateHandleRadius = baseRotateRadiusWorld + rotateOffsetWorld;
+
+    const QPointF offset(0.0, -mRotateHandleRadius);
+    mRotateHandlePos = pivot + offset;
+
     const qreal scaleSizeWorld = kScaleGizmoSizePx * invScale;
     const qreal scaleHalf = scaleSizeWorld * 0.5;
     const qreal scaleGapWorld = kScaleGizmoGapPx * invScale;
-    const qreal yRectTop = mAxisYGeom.center.y() - (mAxisYGeom.size.height() * 0.5);
-    const qreal scaleCenterY = yRectTop - scaleGapWorld - scaleHalf;
+    const qreal axisYTop = mAxisYGeom.center.y() - (mAxisYGeom.size.height() * 0.5);
+    const qreal axisXRight = mAxisXGeom.center.x() + (mAxisXGeom.size.width() * 0.5);
+    const qreal scaleCenterY = axisYTop - scaleGapWorld - scaleHalf;
+    const qreal scaleCenterX = axisXRight + scaleGapWorld + scaleHalf;
 
     mScaleYGeom.center = QPointF(mAxisYGeom.center.x(), scaleCenterY);
     mScaleYGeom.halfExtent = scaleHalf;
     mScaleYGeom.visible = true;
 
-    const qreal scaleXOffset = scaleHalf * 2.0 + scaleGapWorld;
-    mScaleXGeom.center = QPointF(mAxisYGeom.center.x() + scaleXOffset, scaleCenterY);
+    mScaleXGeom.center = QPointF(scaleCenterX, mAxisXGeom.center.y());
     mScaleXGeom.halfExtent = scaleHalf;
     mScaleXGeom.visible = true;
 
-    mScaleUniformGeom.center = QPointF(pivot.x() + axisGapXWorld, scaleCenterY);
+    mScaleUniformGeom.center = QPointF(scaleCenterX, scaleCenterY);
     mScaleUniformGeom.halfExtent = scaleHalf;
     mScaleUniformGeom.visible = true;
 
     const qreal shearRadiusWorld = kShearGizmoRadiusPx * invScale;
-    const qreal shearGapWorld = kShearGizmoGapPx * invScale;
-    const qreal shearCenterY = scaleCenterY - scaleHalf - shearGapWorld - shearRadiusWorld;
 
-    mShearYGeom.center = QPointF(mScaleYGeom.center.x(), shearCenterY);
-    mShearYGeom.radius = shearRadiusWorld;
-    mShearYGeom.visible = true;
+    const QPointF scaleYCenter = mScaleYGeom.center;
+    const QPointF scaleXCenter = mScaleXGeom.center;
+    const QPointF scaleUniformCenter = mScaleUniformGeom.center;
 
-    mShearXGeom.center = QPointF(mScaleXGeom.center.x(), shearCenterY);
+    mShearXGeom.center = QPointF((scaleYCenter.x() + scaleUniformCenter.x()) * 0.5,
+                                 scaleCenterY);
     mShearXGeom.radius = shearRadiusWorld;
     mShearXGeom.visible = true;
+
+    mShearYGeom.center = QPointF(scaleCenterX,
+                                 (scaleXCenter.y() + scaleUniformCenter.y()) * 0.5);
+    mShearYGeom.radius = shearRadiusWorld;
+    mShearYGeom.visible = true;
 
     mRotateHandleVisible = true;
 }
