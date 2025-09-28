@@ -442,12 +442,29 @@ void Canvas::renderSk(SkCanvas* const canvas,
             borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
             borderPaint.setColor(toSkColor(color.darker(150)));
 
-            const SkRect skRect = SkRect::MakeLTRB(toSkScalar(geom.center.x() - geom.halfExtent),
-                                               toSkScalar(geom.center.y() - geom.halfExtent),
-                                               toSkScalar(geom.center.x() + geom.halfExtent),
-                                               toSkScalar(geom.center.y() + geom.halfExtent));
-            canvas->drawRect(skRect, fillPaint);
-            canvas->drawRect(skRect, borderPaint);
+            if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
+                SkPath path;
+                bool first = true;
+                for (const QPointF &pt : geom.polygonPoints) {
+                    const SkPoint skPt = SkPoint::Make(toSkScalar(pt.x()), toSkScalar(pt.y()));
+                    if (first) {
+                        path.moveTo(skPt);
+                        first = false;
+                    } else {
+                        path.lineTo(skPt);
+                    }
+                }
+                path.close();
+                canvas->drawPath(path, fillPaint);
+                canvas->drawPath(path, borderPaint);
+            } else {
+                const SkRect skRect = SkRect::MakeLTRB(toSkScalar(geom.center.x() - geom.halfExtent),
+                                                       toSkScalar(geom.center.y() - geom.halfExtent),
+                                                       toSkScalar(geom.center.x() + geom.halfExtent),
+                                                       toSkScalar(geom.center.y() + geom.halfExtent));
+                canvas->drawRect(skRect, fillPaint);
+                canvas->drawRect(skRect, borderPaint);
+            }
         };
 
         auto drawShearCircle = [&](ShearHandle handle, const ShearGizmoGeometry &geom, const QColor &baseColor) {
@@ -1507,14 +1524,27 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mScaleYGeom.center = QPointF(mAxisYGeom.center.x(), scaleCenterY);
     mScaleYGeom.halfExtent = scaleHalf;
     mScaleYGeom.visible = true;
+    mScaleYGeom.usePolygon = false;
+    mScaleYGeom.polygonPoints.clear();
 
     mScaleXGeom.center = QPointF(scaleCenterX, mAxisXGeom.center.y());
     mScaleXGeom.halfExtent = scaleHalf;
     mScaleXGeom.visible = true;
+    mScaleXGeom.usePolygon = false;
+    mScaleXGeom.polygonPoints.clear();
 
     mScaleUniformGeom.center = QPointF(scaleCenterX, scaleCenterY);
     mScaleUniformGeom.halfExtent = scaleHalf;
     mScaleUniformGeom.visible = true;
+    mScaleUniformGeom.usePolygon = true;
+    mScaleUniformGeom.polygonPoints = {
+        QPointF(mScaleUniformGeom.center.x() - scaleHalf * 3, mScaleUniformGeom.center.y() - scaleHalf),
+        QPointF(mScaleUniformGeom.center.x() + scaleHalf, mScaleUniformGeom.center.y() - scaleHalf),
+        QPointF(mScaleUniformGeom.center.x() + scaleHalf, mScaleUniformGeom.center.y() + scaleHalf * 3),
+        QPointF(mScaleUniformGeom.center.x() - scaleHalf, mScaleUniformGeom.center.y() + scaleHalf * 3),
+        QPointF(mScaleUniformGeom.center.x() - scaleHalf, mScaleUniformGeom.center.y() + scaleHalf),
+        QPointF(mScaleUniformGeom.center.x() - scaleHalf * 3, mScaleUniformGeom.center.y() + scaleHalf)
+    };
 
     const qreal shearRadiusWorld = kShearGizmoRadiusPx * invScale;
 
@@ -1632,6 +1662,11 @@ bool Canvas::pointOnScaleGizmo(ScaleHandle handle, const QPointF &pos, qreal inv
     }
 
     if (!geom->visible || geom->halfExtent <= 0.0) { return false; }
+
+    if (geom->usePolygon && geom->polygonPoints.size() >= 3) {
+        QPolygonF poly(geom->polygonPoints);
+        return poly.containsPoint(pos, Qt::OddEvenFill);
+    }
 
     const qreal half = geom->halfExtent;
     return std::abs(pos.x() - geom->center.x()) <= half &&
