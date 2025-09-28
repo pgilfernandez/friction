@@ -1496,7 +1496,7 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mAxisYGeom.center = pivot + QPointF(0.0, -axisGapYWorld);
     mAxisYGeom.size = QSizeF(axisWidthWorld, axisHeightWorld);
     mAxisYGeom.angleDeg = 0.0;
-    mAxisYGeom.visible = true;
+    mAxisYGeom.visible = mShowPositionGizmo;
     mAxisYGeom.usePolygon = true;
     mAxisYGeom.polygonPoints = {
         pivot + QPointF(0.0, - 10.0 * invScale),
@@ -1512,7 +1512,7 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mAxisXGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
     mAxisXGeom.size = QSizeF(axisHeightWorld, axisWidthWorld);
     mAxisXGeom.angleDeg = 0.0;
-    mAxisXGeom.visible = true;
+    mAxisXGeom.visible = mShowPositionGizmo;
     mAxisXGeom.usePolygon = true;
     mAxisXGeom.polygonPoints = {
         pivot + QPointF(10.0 * invScale, 0.0),
@@ -1541,19 +1541,19 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
 
     mScaleYGeom.center = QPointF(mAxisYGeom.center.x(), scaleCenterY);
     mScaleYGeom.halfExtent = scaleHalf;
-    mScaleYGeom.visible = true;
+    mScaleYGeom.visible = mShowScaleGizmo;
     mScaleYGeom.usePolygon = false;
     mScaleYGeom.polygonPoints.clear();
 
     mScaleXGeom.center = QPointF(scaleCenterX, mAxisXGeom.center.y());
     mScaleXGeom.halfExtent = scaleHalf;
-    mScaleXGeom.visible = true;
+    mScaleXGeom.visible = mShowScaleGizmo;
     mScaleXGeom.usePolygon = false;
     mScaleXGeom.polygonPoints.clear();
 
     mScaleUniformGeom.center = QPointF(scaleCenterX, scaleCenterY);
     mScaleUniformGeom.halfExtent = scaleHalf;
-    mScaleUniformGeom.visible = true;
+    mScaleUniformGeom.visible = mShowScaleGizmo;
     mScaleUniformGeom.usePolygon = true;
     mScaleUniformGeom.polygonPoints = {
         QPointF(mScaleUniformGeom.center.x() - scaleHalf * 3, mScaleUniformGeom.center.y() - scaleHalf),
@@ -1635,6 +1635,61 @@ void Canvas::setGizmosSuppressed(bool suppressed)
         mScaleUniformHovered = false;
         mShearXHovered = false;
         mShearYHovered = false;
+    }
+    emit requestUpdate();
+}
+
+void Canvas::setShowRotateGizmo(bool enabled)
+{
+    if (mShowRotateGizmo == enabled) { return; }
+    mShowRotateGizmo = enabled;
+    if (!enabled) {
+        setRotateHandleHover(false);
+        mRotatingFromHandle = false;
+        setGizmosSuppressed(false);
+    }
+    emit requestUpdate();
+}
+
+void Canvas::setShowPositionGizmo(bool enabled)
+{
+    if (mShowPositionGizmo == enabled) { return; }
+    mShowPositionGizmo = enabled;
+    if (!enabled) {
+        mAxisHandleActive = false;
+        mAxisConstraint = AxisConstraint::None;
+        setAxisGizmoHover(AxisConstraint::X, false);
+        setAxisGizmoHover(AxisConstraint::Y, false);
+        setGizmosSuppressed(false);
+    }
+    emit requestUpdate();
+}
+
+void Canvas::setShowScaleGizmo(bool enabled)
+{
+    if (mShowScaleGizmo == enabled) { return; }
+    mShowScaleGizmo = enabled;
+    if (!enabled) {
+        mScaleHandleActive = false;
+        mScaleConstraint = ScaleHandle::None;
+        setScaleGizmoHover(ScaleHandle::X, false);
+        setScaleGizmoHover(ScaleHandle::Y, false);
+        setScaleGizmoHover(ScaleHandle::Uniform, false);
+        setGizmosSuppressed(false);
+    }
+    emit requestUpdate();
+}
+
+void Canvas::setShowShearGizmo(bool enabled)
+{
+    if (mShowShearGizmo == enabled) { return; }
+    mShowShearGizmo = enabled;
+    if (!enabled) {
+        mShearHandleActive = false;
+        mShearConstraint = ShearHandle::None;
+        setShearGizmoHover(ShearHandle::X, false);
+        setShearGizmoHover(ShearHandle::Y, false);
+        setGizmosSuppressed(false);
     }
     emit requestUpdate();
 }
@@ -1741,7 +1796,14 @@ bool Canvas::pointOnShearGizmo(ShearHandle handle, const QPointF &pos, qreal inv
         return false;
     }
 
-    if (!geom->visible || geom->radius <= 0.0) { return false; }
+    if (!geom->visible) { return false; }
+
+    if (geom->usePolygon && geom->polygonPoints.size() >= 3) {
+        QPolygonF poly(geom->polygonPoints);
+        return poly.containsPoint(pos, Qt::OddEvenFill);
+    }
+
+    if (geom->radius <= 0.0) { return false; }
 
     const qreal distance = std::hypot(pos.x() - geom->center.x(),
                                       pos.y() - geom->center.y());
@@ -1774,7 +1836,7 @@ bool Canvas::pointOnAxisGizmo(AxisConstraint axis, const QPointF &pos, qreal inv
 
 bool Canvas::pointOnRotateGizmo(const QPointF &pos, qreal invScale) const
 {
-    if (!mRotateHandleVisible) { return false; }
+    if (!mRotateHandleVisible || !mShowRotateGizmo) { return false; }
     const qreal halfThicknessWorld = (kRotateGizmoHitWidthPx * invScale) * 0.5;
     const QPointF center = mRotateHandleAnchor;
     const qreal radius = mRotateHandleRadius;

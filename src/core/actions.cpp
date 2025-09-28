@@ -649,6 +649,30 @@ void Actions::setPathEffectsVisible(const bool bT) {
     afterAction();
 }
 
+void Actions::setRotateGizmoVisible(const bool visible)
+{
+    mDocument.setShowRotateGizmo(visible);
+    afterAction();
+}
+
+void Actions::setPositionGizmoVisible(const bool visible)
+{
+    mDocument.setShowPositionGizmo(visible);
+    afterAction();
+}
+
+void Actions::setScaleGizmoVisible(const bool visible)
+{
+    mDocument.setShowScaleGizmo(visible);
+    afterAction();
+}
+
+void Actions::setShearGizmoVisible(const bool visible)
+{
+    mDocument.setShowShearGizmo(visible);
+    afterAction();
+}
+
 #include "filesourcescache.h"
 //#include "svgimporter.h"
 #include "Boxes/videobox.h"

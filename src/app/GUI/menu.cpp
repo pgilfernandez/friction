@@ -680,6 +680,36 @@ void MainWindow::setupMenuBar()
     connect(mPathEffectsVisible, &QAction::triggered,
             &mActions, &Actions::setPathEffectsVisible);
 
+    mGizmosMenu = mViewMenu->addMenu(tr("Gizmos", "MenuBar_View"));
+
+    mShowRotateGizmoAct = mGizmosMenu->addAction(tr("Rotation", "MenuBar_View_Gizmos"));
+    mShowRotateGizmoAct->setCheckable(true);
+    mShowRotateGizmoAct->setChecked(mDocument.showRotateGizmo());
+    connect(mShowRotateGizmoAct, &QAction::toggled,
+            &mActions, &Actions::setRotateGizmoVisible);
+    cmdAddAction(mShowRotateGizmoAct);
+
+    mShowPositionGizmoAct = mGizmosMenu->addAction(tr("Position", "MenuBar_View_Gizmos"));
+    mShowPositionGizmoAct->setCheckable(true);
+    mShowPositionGizmoAct->setChecked(mDocument.showPositionGizmo());
+    connect(mShowPositionGizmoAct, &QAction::toggled,
+            &mActions, &Actions::setPositionGizmoVisible);
+    cmdAddAction(mShowPositionGizmoAct);
+
+    mShowScaleGizmoAct = mGizmosMenu->addAction(tr("Scale", "MenuBar_View_Gizmos"));
+    mShowScaleGizmoAct->setCheckable(true);
+    mShowScaleGizmoAct->setChecked(mDocument.showScaleGizmo());
+    connect(mShowScaleGizmoAct, &QAction::toggled,
+            &mActions, &Actions::setScaleGizmoVisible);
+    cmdAddAction(mShowScaleGizmoAct);
+
+    mShowShearGizmoAct = mGizmosMenu->addAction(tr("Shear", "MenuBar_View_Gizmos"));
+    mShowShearGizmoAct->setCheckable(true);
+    mShowShearGizmoAct->setChecked(mDocument.showShearGizmo());
+    connect(mShowShearGizmoAct, &QAction::toggled,
+            &mActions, &Actions::setShearGizmoVisible);
+    cmdAddAction(mShowShearGizmoAct);
+
     mViewMenu->addSeparator();
 
     mViewFullScreenAct = mViewMenu->addAction(tr("Full Screen"));

@@ -45,6 +45,7 @@
 #include <QMouseEvent>
 #include <QTabletEvent>
 #include <QSizeF>
+#include <QVector>
 
 class AnimatedSurface;
 //class PaintBox;
@@ -434,6 +435,15 @@ public:
         mPathEffectsVisible = bT;
     }
 
+    bool showRotateGizmo() const { return mShowRotateGizmo; }
+    void setShowRotateGizmo(bool enabled);
+    bool showPositionGizmo() const { return mShowPositionGizmo; }
+    void setShowPositionGizmo(bool enabled);
+    bool showScaleGizmo() const { return mShowScaleGizmo; }
+    void setShowScaleGizmo(bool enabled);
+    bool showShearGizmo() const { return mShowShearGizmo; }
+    void setShowShearGizmo(bool enabled);
+
     void setEasingAction(const QString &easing)
     {
         emit requestEasingAction(easing);
@@ -778,6 +788,8 @@ private:
         QPointF center;
         qreal radius = 0.0;
         bool visible = false;
+        bool usePolygon = false;
+        QVector<QPointF> polygonPoints;
     };
     void updateRotateHandleGeometry(qreal invScale);
     bool tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale);
@@ -892,6 +904,10 @@ protected:
     bool mScaleHandleActive = false;
     bool mShearHandleActive = false;
     bool mGizmosSuppressed = false;
+    bool mShowRotateGizmo = true;
+    bool mShowPositionGizmo = true;
+    bool mShowScaleGizmo = false;
+    bool mShowShearGizmo = false;
     bool mRotatingFromHandle = false;
 
     bool mPreviewing = false;

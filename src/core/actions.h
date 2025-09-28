@@ -91,6 +91,10 @@ public:
 
     void setRasterEffectsVisible(const bool bT);
     void setPathEffectsVisible(const bool bT);
+    void setRotateGizmoVisible(const bool visible);
+    void setPositionGizmoVisible(const bool visible);
+    void setScaleGizmoVisible(const bool visible);
+    void setShearGizmoVisible(const bool visible);
 
     eBoxOrSound* handleDropEvent(QDropEvent * const event,
                                  const QPointF &relDropPos = QPointF(0, 0),

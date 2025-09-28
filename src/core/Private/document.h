@@ -74,6 +74,10 @@ public:
 
     NodeVisiblity fNodeVisibility = NodeVisiblity::dissolvedAndNormal;
     bool fLocalPivot = true;
+    bool fShowRotateGizmo = true;
+    bool fShowPositionGizmo = true;
+    bool fShowScaleGizmo = true;
+    bool fShowShearGizmo = true;
     CanvasMode fCanvasMode;
 
     // bookmarked
@@ -119,6 +123,14 @@ public:
     QString projectDirectory() const;
 
     void setCanvasMode(const CanvasMode mode);
+    bool showRotateGizmo() const { return fShowRotateGizmo; }
+    void setShowRotateGizmo(bool show);
+    bool showPositionGizmo() const { return fShowPositionGizmo; }
+    void setShowPositionGizmo(bool show);
+    bool showScaleGizmo() const { return fShowScaleGizmo; }
+    void setShowScaleGizmo(bool show);
+    bool showShearGizmo() const { return fShowShearGizmo; }
+    void setShowShearGizmo(bool show);
 
     Canvas * createNewScene(const bool emitCreated = true);
     bool removeScene(const qsptr<Canvas>& scene);

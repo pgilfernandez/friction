@@ -113,10 +113,50 @@ void Document::setCanvasMode(const CanvasMode mode) {
     actionFinished();
 }
 
+void Document::setShowRotateGizmo(bool show)
+{
+    if (fShowRotateGizmo == show) { return; }
+    fShowRotateGizmo = show;
+    for (const auto &scene : fScenes) {
+        if (scene) { scene->setShowRotateGizmo(show); }
+    }
+}
+
+void Document::setShowPositionGizmo(bool show)
+{
+    if (fShowPositionGizmo == show) { return; }
+    fShowPositionGizmo = show;
+    for (const auto &scene : fScenes) {
+        if (scene) { scene->setShowPositionGizmo(show); }
+    }
+}
+
+void Document::setShowScaleGizmo(bool show)
+{
+    if (fShowScaleGizmo == show) { return; }
+    fShowScaleGizmo = show;
+    for (const auto &scene : fScenes) {
+        if (scene) { scene->setShowScaleGizmo(show); }
+    }
+}
+
+void Document::setShowShearGizmo(bool show)
+{
+    if (fShowShearGizmo == show) { return; }
+    fShowShearGizmo = show;
+    for (const auto &scene : fScenes) {
+        if (scene) { scene->setShowShearGizmo(show); }
+    }
+}
+
 Canvas *Document::createNewScene(const bool emitCreated) {
     const auto newScene = enve::make_shared<Canvas>(*this);
     fScenes.append(newScene);
     SWT_addChild(newScene.get());
+    newScene->setShowRotateGizmo(fShowRotateGizmo);
+    newScene->setShowPositionGizmo(fShowPositionGizmo);
+    newScene->setShowScaleGizmo(fShowScaleGizmo);
+    newScene->setShowShearGizmo(fShowShearGizmo);
     if (emitCreated) {
         emit sceneCreated(newScene.get());
     }

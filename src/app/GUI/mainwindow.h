@@ -264,6 +264,10 @@ private:
     QAction *mClipViewToCanvas;
     QAction *mRasterEffectsVisible;
     QAction *mPathEffectsVisible;
+    QAction *mShowRotateGizmoAct;
+    QAction *mShowPositionGizmoAct;
+    QAction *mShowScaleGizmoAct;
+    QAction *mShowShearGizmoAct;
 
     QAction *mAddToQueAct;
     QAction *mViewFullScreenAct;
@@ -281,6 +285,7 @@ private:
     QMenu *mEffectsMenu;
     QMenu *mSceneMenu;
     QMenu *mViewMenu;
+    QMenu *mGizmosMenu;
     QMenu *mPanelsMenu;
     QMenu *mRenderMenu;
 
