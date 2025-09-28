@@ -764,6 +764,8 @@ private:
         QSizeF size;
         qreal angleDeg = 0.0;
         bool visible = false;
+        bool usePolygon = false;
+        QVector<QPointF> polygonPoints;
     };
     struct ScaleGizmoGeometry {
         QPointF center;

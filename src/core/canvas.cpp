@@ -27,6 +27,7 @@
 #include <cmath>
 #include <QDebug>
 #include <QApplication>
+#include <QPolygonF>
 #include "Boxes/videobox.h"
 #include "MovablePoints/pathpivot.h"
 #include "Boxes/imagebox.h"
@@ -382,23 +383,37 @@ void Canvas::renderSk(SkCanvas* const canvas,
             borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
             borderPaint.setColor(toSkColor(color.darker(150)));
 
-            const qreal halfW = geom.size.width() * 0.5;
-            const qreal halfH = geom.size.height() * 0.5;
-            const qreal angleRadGeom = qDegreesToRadians(geom.angleDeg);
-            const qreal cosG = std::cos(angleRadGeom);
-            const qreal sinG = std::sin(angleRadGeom);
-            auto mapPoint = [&](qreal localX, qreal localY) -> SkPoint {
-                const qreal worldX = geom.center.x() + localX * cosG - localY * sinG;
-                const qreal worldY = geom.center.y() + localX * sinG + localY * cosG;
-                return SkPoint::Make(toSkScalar(worldX), toSkScalar(worldY));
-            };
-
             SkPath path;
-            path.moveTo(mapPoint(-halfW, -halfH));
-            path.lineTo(mapPoint(halfW, -halfH));
-            path.lineTo(mapPoint(halfW, halfH));
-            path.lineTo(mapPoint(-halfW, halfH));
-            path.close();
+            if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
+                bool first = true;
+                for (const QPointF &pt : geom.polygonPoints) {
+                    const SkPoint skPt = SkPoint::Make(toSkScalar(pt.x()), toSkScalar(pt.y()));
+                    if (first) {
+                        path.moveTo(skPt);
+                        first = false;
+                    } else {
+                        path.lineTo(skPt);
+                    }
+                }
+                path.close();
+            } else {
+                const qreal halfW = geom.size.width() * 0.5;
+                const qreal halfH = geom.size.height() * 0.5;
+                const qreal angleRadGeom = qDegreesToRadians(geom.angleDeg);
+                const qreal cosG = std::cos(angleRadGeom);
+                const qreal sinG = std::sin(angleRadGeom);
+                auto mapPoint = [&](qreal localX, qreal localY) -> SkPoint {
+                    const qreal worldX = geom.center.x() + localX * cosG - localY * sinG;
+                    const qreal worldY = geom.center.y() + localX * sinG + localY * cosG;
+                    return SkPoint::Make(toSkScalar(worldX), toSkScalar(worldY));
+                };
+
+                path.moveTo(mapPoint(-halfW, -halfH));
+                path.lineTo(mapPoint(halfW, -halfH));
+                path.lineTo(mapPoint(halfW, halfH));
+                path.lineTo(mapPoint(-halfW, halfH));
+                path.close();
+            }
 
             canvas->drawPath(path, fillPaint);
             canvas->drawPath(path, borderPaint);
@@ -1429,28 +1444,42 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mRotateHandleAngleDeg = 0.0; // keep gizmo orientation screen-aligned
 
     const QPointF pivot = mRotPivot->getAbsolutePos();
-    mRotateHandleAnchor = pivot + QPointF(kAxisGizmoWidthPx * 0.5 * invScale,
-                                          -kAxisGizmoWidthPx * 0.5 * invScale);
-
-    const qreal baseRotateRadiusWorld = kRotateGizmoRadiusPx * invScale;
-    mRotateHandleRadius = baseRotateRadiusWorld;
-    mRotateHandleSweepDeg = kRotateGizmoSweepDeg; // default sweep angle
-    mRotateHandleStartOffsetDeg = kRotateGizmoBaseOffsetDeg; // default base angle offset
 
     const qreal axisWidthWorld = kAxisGizmoWidthPx * invScale;
     const qreal axisHeightWorld = kAxisGizmoHeightPx * invScale;
     const qreal axisGapYWorld = kAxisGizmoYOffsetPx * invScale;
     const qreal axisGapXWorld = kAxisGizmoXOffsetPx * invScale;
 
+    const qreal anchorOffset = axisWidthWorld * 0.5;
+    mRotateHandleAnchor = pivot + QPointF(anchorOffset, -anchorOffset);
+
+    const qreal baseRotateRadiusWorld = kRotateGizmoRadiusPx * invScale;
+    mRotateHandleRadius = baseRotateRadiusWorld;
+    mRotateHandleSweepDeg = kRotateGizmoSweepDeg; // default sweep angle
+    mRotateHandleStartOffsetDeg = kRotateGizmoBaseOffsetDeg; // default base angle offset
+
     mAxisYGeom.center = pivot + QPointF(0.0, -axisGapYWorld);
     mAxisYGeom.size = QSizeF(axisWidthWorld, axisHeightWorld);
     mAxisYGeom.angleDeg = 0.0;
     mAxisYGeom.visible = true;
+    mAxisYGeom.usePolygon = true;
+    mAxisYGeom.polygonPoints = {
+        pivot + QPointF(0.0, - 10.0 * invScale),
+        pivot + QPointF(-2.0 * invScale, - 11.0 * invScale),
+        pivot + QPointF(-2.0 * invScale, - 55.0 * invScale),
+        pivot + QPointF(-6.0 * invScale, - 57.0 * invScale),
+        pivot + QPointF(0.0, - 70.0 * invScale),
+        pivot + QPointF(6.0 * invScale, - 57.0 * invScale),
+        pivot + QPointF(2.0 * invScale, - 55.0 * invScale),
+        pivot + QPointF(2.0 * invScale, - 11.0 * invScale)
+    };
 
     mAxisXGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
     mAxisXGeom.size = QSizeF(axisHeightWorld, axisWidthWorld);
     mAxisXGeom.angleDeg = 0.0;
     mAxisXGeom.visible = true;
+    mAxisXGeom.usePolygon = false;
+    mAxisXGeom.polygonPoints.clear();
 
     const qreal rotateOffsetWorld = mAxisYGeom.size.width() * 0.5;
     mRotateHandleRadius = baseRotateRadiusWorld + rotateOffsetWorld;
@@ -1632,6 +1661,11 @@ bool Canvas::pointOnAxisGizmo(AxisConstraint axis, const QPointF &pos, qreal inv
 
     const AxisGizmoGeometry &geom = axis == AxisConstraint::X ? mAxisXGeom : mAxisYGeom;
     if (!geom.visible) { return false; }
+
+    if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
+        QPolygonF poly(geom.polygonPoints);
+        return poly.containsPoint(pos, Qt::OddEvenFill);
+    }
 
     const QPointF relative = pos - geom.center;
     const qreal angleRadGeom = qDegreesToRadians(geom.angleDeg);
