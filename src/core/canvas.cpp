@@ -1478,8 +1478,17 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mAxisXGeom.size = QSizeF(axisHeightWorld, axisWidthWorld);
     mAxisXGeom.angleDeg = 0.0;
     mAxisXGeom.visible = true;
-    mAxisXGeom.usePolygon = false;
-    mAxisXGeom.polygonPoints.clear();
+    mAxisXGeom.usePolygon = true;
+    mAxisXGeom.polygonPoints = {
+        pivot + QPointF(10.0 * invScale, 0.0),
+        pivot + QPointF(11.0 * invScale, -2.0 * invScale),
+        pivot + QPointF(55.0 * invScale, -2.0 * invScale),
+        pivot + QPointF(57.0 * invScale, -6.0 * invScale),
+        pivot + QPointF(70.0 * invScale, 0.0),
+        pivot + QPointF(57.0 * invScale, 6.0 * invScale),
+        pivot + QPointF(55.0 * invScale, 2.0 * invScale),
+        pivot + QPointF(11.0 * invScale, 2.0 * invScale)
+    };
 
     const qreal rotateOffsetWorld = mAxisYGeom.size.width() * 0.5;
     mRotateHandleRadius = baseRotateRadiusWorld + rotateOffsetWorld;
