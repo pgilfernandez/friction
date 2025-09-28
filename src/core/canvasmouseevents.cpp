@@ -113,7 +113,7 @@ void Canvas::mouseMoveEvent(const eMouseEvent &e)
             mMovesToSkip--;
             return;
         }
-        if(mStartTransform && leftPressed && !mRotatingFromHandle && !mAxisHandleActive) {
+        if(mStartTransform && leftPressed && !mRotatingFromHandle && !mAxisHandleActive && !mScaleHandleActive && !mShearHandleActive) {
             if((mCurrentMode == CanvasMode::pointTransform &&
                 !mPressedPoint && !mCurrentNormalSegment.isValid()) ||
                (mCurrentMode == CanvasMode::boxTransform &&

@@ -80,6 +80,8 @@ enum class AlignRelativeTo {
 class CORE_EXPORT Canvas : public CanvasBase
 {
     enum class AxisConstraint { None, X, Y };
+    enum class ScaleHandle { None, X, Y, Uniform };
+    enum class ShearHandle { None, X, Y };
     friend class CanvasWindow;
     typedef qCubicSegment1DAnimator::Action SegAction;
     Q_OBJECT
@@ -158,6 +160,11 @@ public:
                          const QPointF &absOrigin,
                          const bool startTrans);
     void cancelSelectedBoxesTransform();
+    void shearSelectedBy(const qreal shearXBy,
+                         const qreal shearYBy,
+                         const QPointF &absOrigin,
+                         const bool startTrans);
+
     void cancelSelectedPointsTransform();
 
     void setSelectedCapStyle(const SkPaint::Cap capStyle);
@@ -189,6 +196,11 @@ public:
                                const qreal scaleYBy,
                                const QPointF &absOrigin,
                                const bool startTrans);
+    void shearSelectedPointsBy(const qreal shearXBy,
+                               const qreal shearYBy,
+                               const QPointF &absOrigin,
+                               const bool startTrans);
+
     void rotateSelectedPointsBy(const qreal rotBy,
                                 const QPointF &absOrigin,
                                 const bool startTrans);
@@ -740,6 +752,7 @@ private:
     //void openTextEditorForTextBox(TextBox *textBox);
 
     void scaleSelected(const eMouseEvent &e);
+    void shearSelected(const eMouseEvent &e);
     void rotateSelected(const eMouseEvent &e);
     bool prepareRotation(const QPointF &startPos, bool fromHandle = false);
     void updateRotateHandleHover(const QPointF &pos, qreal invScale);
@@ -751,11 +764,29 @@ private:
         qreal angleDeg = 0.0;
         bool visible = false;
     };
+    struct ScaleGizmoGeometry {
+        QPointF center;
+        qreal halfExtent = 0.0;
+        bool visible = false;
+    };
+    struct ShearGizmoGeometry {
+        QPointF center;
+        qreal radius = 0.0;
+        bool visible = false;
+    };
     void updateRotateHandleGeometry(qreal invScale);
     bool tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale);
+    bool tryStartScaleGizmo(const eMouseEvent &e, qreal invScale);
+    bool tryStartShearGizmo(const eMouseEvent &e, qreal invScale);
     bool tryStartAxisGizmo(const eMouseEvent &e, qreal invScale);
+    bool startScaleConstrainedMove(const eMouseEvent &e, ScaleHandle handle);
+    bool startShearConstrainedMove(const eMouseEvent &e, ShearHandle handle);
     bool startAxisConstrainedMove(const eMouseEvent &e, AxisConstraint axis);
+    bool pointOnScaleGizmo(ScaleHandle handle, const QPointF &pos, qreal invScale) const;
+    bool pointOnShearGizmo(ShearHandle handle, const QPointF &pos, qreal invScale) const;
     bool pointOnAxisGizmo(AxisConstraint axis, const QPointF &pos, qreal invScale) const;
+    void setScaleGizmoHover(ScaleHandle handle, bool hovered);
+    void setShearGizmoHover(ShearHandle handle, bool hovered);
     void setAxisGizmoHover(AxisConstraint axis, bool hovered);
 
     void drawPathClear();
@@ -837,10 +868,24 @@ protected:
     bool mRotateHandleHovered = false; // true when pointer hovers the gizmo
     AxisGizmoGeometry mAxisXGeom;
     AxisGizmoGeometry mAxisYGeom;
+    ScaleGizmoGeometry mScaleXGeom;
+    ScaleGizmoGeometry mScaleYGeom;
+    ScaleGizmoGeometry mScaleUniformGeom;
+    ShearGizmoGeometry mShearXGeom;
+    ShearGizmoGeometry mShearYGeom;
     bool mAxisXHovered = false;
     bool mAxisYHovered = false;
+    bool mScaleXHovered = false;
+    bool mScaleYHovered = false;
+    bool mScaleUniformHovered = false;
+    bool mShearXHovered = false;
+    bool mShearYHovered = false;
     AxisConstraint mAxisConstraint = AxisConstraint::None;
+    ScaleHandle mScaleConstraint = ScaleHandle::None;
+    ShearHandle mShearConstraint = ShearHandle::None;
     bool mAxisHandleActive = false;
+    bool mScaleHandleActive = false;
+    bool mShearHandleActive = false;
     bool mRotatingFromHandle = false;
 
     bool mPreviewing = false;
