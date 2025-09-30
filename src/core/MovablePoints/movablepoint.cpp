@@ -29,6 +29,7 @@
 #include "Animators/transformanimator.h"
 #include "themesupport.h"
 #include "canvasgizmos.h"
+#include "canvas.h"
 
 MovablePoint::MovablePoint(const MovablePointType type) : mType(type) {}
 
@@ -110,11 +111,24 @@ void MovablePoint::drawOnAbsPosSk(SkCanvas * const canvas,
         const SkScalar scaledSide = static_cast<float>(mRadius * 2.0) * invScale;
         const SkRect pivotSquare = SkRect::MakeLTRB(0.0f, 0.0f, scaledSide, scaledSide);
         canvas->drawRect(pivotSquare, squarePaint);
-        canvas->restore();
 
         if (Canvas* gizmoCanvasPtr = gizmoCanvas()) {
-            drawCanvasGizmos(*gizmoCanvasPtr, canvas, invScale, static_cast<qreal>(invScale));
+            // Debug: Activar temporalmente los gizmos de escala para testing
+            bool originalShowScale = gizmoCanvasPtr->showScaleGizmo();
+            gizmoCanvasPtr->setShowScaleGizmo(true);
+            
+            // Restaurar el canvas al origen antes de dibujar los gizmos
+            canvas->restore();
+            drawCanvasGizmos(*gizmoCanvasPtr, canvas, invScale, static_cast<qreal>(invScale), false);
+            // Volver a trasladar para el resto del dibujo del pivot
+            canvas->save();
+            canvas->translate(absPos.x(), absPos.y());
+            
+            // Restaurar el estado original
+            gizmoCanvasPtr->setShowScaleGizmo(originalShowScale);
         }
+
+        canvas->restore();
     }
 
     if(keyOnCurrent) {

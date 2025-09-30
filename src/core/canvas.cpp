@@ -239,7 +239,6 @@ void Canvas::renderSk(SkCanvas* const canvas,
                       const QRect& drawRect,
                       const QMatrix& viewTrans,
                       const bool mouseGrabbing) {
-    mGizmosDrawnThisFrame = false;
     mDrawnSinceQue = true;
     SkPaint paint;
     paint.setStyle(SkPaint::kFill_Style);
@@ -325,8 +324,6 @@ void Canvas::renderSk(SkCanvas* const canvas,
             canvas->restore();
         }
     //}
-
-    drawCanvasGizmos(*this, canvas, invZoom, qInvZoom);
 
     if(mCurrentMode == CanvasMode::boxTransform ||
        mCurrentMode == CanvasMode::pointTransform) {

@@ -29,23 +29,24 @@
 class Canvas;
 class SkCanvas;
 
-inline constexpr qreal kRotateGizmoSweepDeg = 90.0;
-inline constexpr qreal kRotateGizmoBaseOffsetDeg = 270.0;
-inline constexpr qreal kRotateGizmoRadiusPx = 40.0;
-inline constexpr qreal kRotateGizmoStrokePx = 6.0;
-inline constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx;
-inline constexpr qreal kAxisGizmoWidthPx = 5.0;
-inline constexpr qreal kAxisGizmoHeightPx = 60.0;
-inline constexpr qreal kAxisGizmoYOffsetPx = 40.0;
-inline constexpr qreal kAxisGizmoXOffsetPx = 40.0;
-inline constexpr qreal kScaleGizmoSizePx = 10.0;
-inline constexpr qreal kScaleGizmoGapPx = 4.0;
-inline constexpr qreal kShearGizmoRadiusPx = 6.0;
-inline constexpr qreal kShearGizmoGapPx = 4.0;
+extern const qreal kRotateGizmoSweepDeg;
+extern const qreal kRotateGizmoBaseOffsetDeg;
+extern const qreal kRotateGizmoRadiusPx;
+extern const qreal kRotateGizmoStrokePx;
+extern const qreal kRotateGizmoHitWidthPx;
+extern const qreal kAxisGizmoWidthPx;
+extern const qreal kAxisGizmoHeightPx;
+extern const qreal kAxisGizmoYOffsetPx;
+extern const qreal kAxisGizmoXOffsetPx;
+extern const qreal kScaleGizmoSizePx;
+extern const qreal kScaleGizmoGapPx;
+extern const qreal kShearGizmoRadiusPx;
+extern const qreal kShearGizmoGapPx;
 
 void drawCanvasGizmos(Canvas& canvas,
                        SkCanvas* const surface,
                        float invZoom,
-                       qreal qInvZoom);
+                       qreal qInvZoom,
+                       bool useLocalOrigin = false);
 
 #endif // CANVASGIZMOS_H

@@ -40,12 +40,12 @@ protected:
 public:
     void drawSk(SkCanvas * const canvas, const CanvasMode mode,
                 const float invScale, const bool keyOnCurrent,
-                const bool ctrlPressed);
+                const bool ctrlPressed) override;
     void drawTransforming(SkCanvas * const canvas,
                           const CanvasMode mode,
                           const float invScale,
                           const float interval);
-    bool isVisible(const CanvasMode mode) const;
+    bool isVisible(const CanvasMode mode) const override;
 
     void setMousePos(const QPointF& pos) { mMousePos = pos; }
 private:
