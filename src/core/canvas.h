@@ -89,6 +89,8 @@ class CORE_EXPORT Canvas : public CanvasBase
     e_OBJECT
     e_DECLARE_TYPE(Canvas)
 
+    friend void drawCanvasGizmos(Canvas&, SkCanvas*, float, qreal);
+
 protected:
     explicit Canvas(Document& document,
                     const int canvasWidth = 1920,
@@ -897,6 +899,7 @@ protected:
     bool mScaleUniformHovered = false;
     bool mShearXHovered = false;
     bool mShearYHovered = false;
+    bool mGizmosDrawnThisFrame = false;
     AxisConstraint mAxisConstraint = AxisConstraint::None;
     ScaleHandle mScaleConstraint = ScaleHandle::None;
     ShearHandle mShearConstraint = ShearHandle::None;

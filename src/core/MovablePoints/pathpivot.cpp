@@ -36,6 +36,11 @@ PathPivot::PathPivot(const Canvas * const parent) :
     setRadius(7);
 }
 
+Canvas* PathPivot::gizmoCanvas() const
+{
+    return const_cast<Canvas*>(mCanvas);
+}
+
 void PathPivot::drawSk(SkCanvas * const canvas,
                        const CanvasMode mode,
                        const float invScale,

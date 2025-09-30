@@ -25,6 +25,8 @@
 
 #ifndef MOVABLEPOINT_H
 #define MOVABLEPOINT_H
+
+class Canvas;
 #include <QPointF>
 #include <QRectF>
 #include <QPainter>
@@ -160,6 +162,7 @@ public:
 
     const QPointF &getSavedRelPos() const;
 protected:
+    virtual Canvas* gizmoCanvas() const { return nullptr; }
     void drawOnAbsPosSk(SkCanvas * const canvas,
                         const SkPoint &absPos,
                         const float invScale,

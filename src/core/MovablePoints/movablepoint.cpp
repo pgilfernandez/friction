@@ -28,6 +28,7 @@
 #include "pointhelpers.h"
 #include "Animators/transformanimator.h"
 #include "themesupport.h"
+#include "canvasgizmos.h"
 
 MovablePoint::MovablePoint(const MovablePointType type) : mType(type) {}
 
@@ -97,6 +98,24 @@ void MovablePoint::drawOnAbsPosSk(SkCanvas * const canvas,
     paint.setColor(toSkColor(ThemeSupport::getThemeButtonBaseColor()));
     paint.setStrokeWidth(invScale);
     canvas->drawCircle(absPos, scaledRadius, paint);
+
+    if (isPivotPoint()) {
+        SkPaint squarePaint;
+        squarePaint.setAntiAlias(true);
+        squarePaint.setStyle(SkPaint::kStroke_Style);
+        squarePaint.setColor(toSkColor(ThemeSupport::getThemeButtonBaseColor()));
+        squarePaint.setStrokeWidth(invScale);
+        canvas->save();
+        canvas->translate(absPos.x(), absPos.y());
+        const SkScalar scaledSide = static_cast<float>(mRadius * 2.0) * invScale;
+        const SkRect pivotSquare = SkRect::MakeLTRB(0.0f, 0.0f, scaledSide, scaledSide);
+        canvas->drawRect(pivotSquare, squarePaint);
+        canvas->restore();
+
+        if (Canvas* gizmoCanvasPtr = gizmoCanvas()) {
+            drawCanvasGizmos(*gizmoCanvasPtr, canvas, invScale, static_cast<qreal>(invScale));
+        }
+    }
 
     if(keyOnCurrent) {
         const float halfRadius = scaledRadius*0.5f;

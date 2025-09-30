@@ -52,22 +52,8 @@
 #include "Boxes/nullobject.h"
 #include "simpletask.h"
 #include "themesupport.h"
+#include "MovablePoints/canvasgizmos.h"
 
-namespace {
-constexpr qreal kRotateGizmoSweepDeg = 90.0; // default sweep of gizmo arc
-constexpr qreal kRotateGizmoBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
-constexpr qreal kRotateGizmoRadiusPx = 40.0; // gizmo radius in screen pixels
-constexpr qreal kRotateGizmoStrokePx = 6.0; // arc stroke thickness in screen pixels
-constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx; // hit area thickness in screen pixels
-constexpr qreal kAxisGizmoWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
-constexpr qreal kAxisGizmoHeightPx = 60.0; // axis gizmo rectangle height in screen pixels
-constexpr qreal kAxisGizmoYOffsetPx = 40.0; // vertical distance of Y gizmo from pivot in pixels
-constexpr qreal kAxisGizmoXOffsetPx = 40.0; // horizontal distance of X gizmo from pivot in pixels
-constexpr qreal kScaleGizmoSizePx = 10.0; // scale gizmo square size in screen pixels
-constexpr qreal kScaleGizmoGapPx = 4.0; // gap between position gizmos and scale gizmos in screen pixels
-constexpr qreal kShearGizmoRadiusPx = 6.0; // shear gizmo circle radius in screen pixels
-constexpr qreal kShearGizmoGapPx = 4.0; // gap between scale and shear gizmos in screen pixels
-}
 
 Canvas::Canvas(Document &document,
                const int canvasWidth,
@@ -253,6 +239,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
                       const QRect& drawRect,
                       const QMatrix& viewTrans,
                       const bool mouseGrabbing) {
+    mGizmosDrawnThisFrame = false;
     mDrawnSinceQue = true;
     SkPaint paint;
     paint.setStyle(SkPaint::kFill_Style);
@@ -339,199 +326,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
         }
     //}
 
-    updateRotateHandleGeometry(qInvZoom);
-
-    if (mRotateHandleVisible) {
-        if (mShowRotateGizmo) {
-            const QPointF center = mRotateHandleAnchor;
-            const qreal radius = mRotateHandleRadius;
-            const qreal strokeWorld = kRotateGizmoStrokePx * qInvZoom;
-
-            const SkRect arcRect = SkRect::MakeLTRB(toSkScalar(center.x() - radius),
-                                                    toSkScalar(center.y() - radius),
-                                                    toSkScalar(center.x() + radius),
-                                                    toSkScalar(center.y() + radius));
-
-            qreal startAngle = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0); // base arc offset for gizmo draw
-            if (startAngle < 0) { startAngle += 360.0; }
-            const float startAngleF = static_cast<float>(startAngle);
-            const float sweepAngleF = static_cast<float>(mRotateHandleSweepDeg); // arc spans mRotateHandleSweepDeg degrees
-
-            SkPaint arcPaint;
-            arcPaint.setAntiAlias(true);
-            arcPaint.setStyle(SkPaint::kStroke_Style);
-            arcPaint.setStrokeCap(SkPaint::kButt_Cap);
-            arcPaint.setStrokeWidth(toSkScalar(strokeWorld));
-            const SkColor arcColor = ThemeSupport::getThemeHighlightSkColor(mRotateHandleHovered ? 255 : 190);
-            arcPaint.setColor(arcColor);
-            canvas->drawArc(arcRect, startAngleF, sweepAngleF, false, arcPaint);
-        }
-
-        auto drawAxisRect = [&](AxisConstraint axis, const AxisGizmoGeometry &geom, const QColor &baseColor) {
-            if (!geom.visible) { return; }
-            const bool hovered = axis == AxisConstraint::X ? mAxisXHovered : mAxisYHovered;
-            const bool active = (mAxisConstraint == axis);
-            QColor color = baseColor;
-            if (active) {
-                color = color.lighter(135);
-            } else if (hovered) {
-                color = color.lighter(120);
-            }
-
-            SkPaint fillPaint;
-            fillPaint.setAntiAlias(true);
-            fillPaint.setStyle(SkPaint::kFill_Style);
-            fillPaint.setColor(toSkColor(color));
-
-            SkPaint borderPaint;
-            borderPaint.setAntiAlias(true);
-            borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            borderPaint.setColor(toSkColor(color.darker(150)));
-
-            SkPath path;
-            if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
-                bool first = true;
-                for (const QPointF &pt : geom.polygonPoints) {
-                    const SkPoint skPt = SkPoint::Make(toSkScalar(pt.x()), toSkScalar(pt.y()));
-                    if (first) {
-                        path.moveTo(skPt);
-                        first = false;
-                    } else {
-                        path.lineTo(skPt);
-                    }
-                }
-                path.close();
-            } else {
-                const qreal halfW = geom.size.width() * 0.5;
-                const qreal halfH = geom.size.height() * 0.5;
-                const qreal angleRadGeom = qDegreesToRadians(geom.angleDeg);
-                const qreal cosG = std::cos(angleRadGeom);
-                const qreal sinG = std::sin(angleRadGeom);
-                auto mapPoint = [&](qreal localX, qreal localY) -> SkPoint {
-                    const qreal worldX = geom.center.x() + localX * cosG - localY * sinG;
-                    const qreal worldY = geom.center.y() + localX * sinG + localY * cosG;
-                    return SkPoint::Make(toSkScalar(worldX), toSkScalar(worldY));
-                };
-
-                path.moveTo(mapPoint(-halfW, -halfH));
-                path.lineTo(mapPoint(halfW, -halfH));
-                path.lineTo(mapPoint(halfW, halfH));
-                path.lineTo(mapPoint(-halfW, halfH));
-                path.close();
-            }
-
-            canvas->drawPath(path, fillPaint);
-            canvas->drawPath(path, borderPaint);
-        };
-        auto drawScaleSquare = [&](ScaleHandle handle, const ScaleGizmoGeometry &geom, const QColor &baseColor) {
-            if (!geom.visible) { return; }
-            bool hovered = false;
-            switch (handle) {
-            case ScaleHandle::X: hovered = mScaleXHovered; break;
-            case ScaleHandle::Y: hovered = mScaleYHovered; break;
-            case ScaleHandle::Uniform: hovered = mScaleUniformHovered; break;
-            case ScaleHandle::None: default: hovered = false; break;
-            }
-            const bool active = (mScaleConstraint == handle);
-            QColor color = baseColor;
-            if (active) {
-                color = color.lighter(135);
-            } else if (hovered) {
-                color = color.lighter(120);
-            }
-
-            SkPaint fillPaint;
-            fillPaint.setAntiAlias(true);
-            fillPaint.setStyle(SkPaint::kFill_Style);
-            fillPaint.setColor(toSkColor(color));
-
-            SkPaint borderPaint;
-            borderPaint.setAntiAlias(true);
-            borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            borderPaint.setColor(toSkColor(color.darker(150)));
-
-            if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
-                SkPath path;
-                bool first = true;
-                for (const QPointF &pt : geom.polygonPoints) {
-                    const SkPoint skPt = SkPoint::Make(toSkScalar(pt.x()), toSkScalar(pt.y()));
-                    if (first) {
-                        path.moveTo(skPt);
-                        first = false;
-                    } else {
-                        path.lineTo(skPt);
-                    }
-                }
-                path.close();
-                canvas->drawPath(path, fillPaint);
-                canvas->drawPath(path, borderPaint);
-            } else {
-                const SkRect skRect = SkRect::MakeLTRB(toSkScalar(geom.center.x() - geom.halfExtent),
-                                                       toSkScalar(geom.center.y() - geom.halfExtent),
-                                                       toSkScalar(geom.center.x() + geom.halfExtent),
-                                                       toSkScalar(geom.center.y() + geom.halfExtent));
-                canvas->drawRect(skRect, fillPaint);
-                canvas->drawRect(skRect, borderPaint);
-            }
-        };
-
-        auto drawShearCircle = [&](ShearHandle handle, const ShearGizmoGeometry &geom, const QColor &baseColor) {
-            if (!geom.visible) { return; }
-            bool hovered = (handle == ShearHandle::X) ? mShearXHovered : mShearYHovered;
-            const bool active = (mShearConstraint == handle);
-            QColor color = baseColor;
-            if (active) {
-                color = color.lighter(135);
-            } else if (hovered) {
-                color = color.lighter(120);
-            }
-
-            SkPaint fillPaint;
-            fillPaint.setAntiAlias(true);
-            fillPaint.setStyle(SkPaint::kFill_Style);
-            fillPaint.setColor(toSkColor(color));
-
-            SkPaint borderPaint;
-            borderPaint.setAntiAlias(true);
-            borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            borderPaint.setColor(toSkColor(color.darker(150)));
-
-            if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
-                SkPath path;
-                bool first = true;
-                for (const QPointF &pt : geom.polygonPoints) {
-                    const SkPoint skPt = SkPoint::Make(toSkScalar(pt.x()), toSkScalar(pt.y()));
-                    if (first) {
-                        path.moveTo(skPt);
-                        first = false;
-                    } else {
-                        path.lineTo(skPt);
-                    }
-                }
-                path.close();
-                canvas->drawPath(path, fillPaint);
-                canvas->drawPath(path, borderPaint);
-            } else {
-                const SkRect skRect = SkRect::MakeLTRB(toSkScalar(geom.center.x() - geom.radius),
-                                                       toSkScalar(geom.center.y() - geom.radius),
-                                                       toSkScalar(geom.center.x() + geom.radius),
-                                                       toSkScalar(geom.center.y() + geom.radius));
-                canvas->drawOval(skRect, fillPaint);
-                canvas->drawOval(skRect, borderPaint);
-            }
-        };
-
-        drawAxisRect(AxisConstraint::Y, mAxisYGeom, ThemeSupport::getThemeColorGreen(190));
-        drawAxisRect(AxisConstraint::X, mAxisXGeom, ThemeSupport::getThemeColorRed(190));
-        drawScaleSquare(ScaleHandle::Y, mScaleYGeom, ThemeSupport::getThemeColorGreen(190));
-        drawScaleSquare(ScaleHandle::X, mScaleXGeom, ThemeSupport::getThemeColorRed(190));
-        drawScaleSquare(ScaleHandle::Uniform, mScaleUniformGeom, ThemeSupport::getThemeColorYellow(190));
-        drawShearCircle(ShearHandle::Y, mShearYGeom, ThemeSupport::getThemeColorGreen(190));
-        drawShearCircle(ShearHandle::X, mShearXGeom, ThemeSupport::getThemeColorRed(190));
-    }
+    drawCanvasGizmos(*this, canvas, invZoom, qInvZoom);
 
     if(mCurrentMode == CanvasMode::boxTransform ||
        mCurrentMode == CanvasMode::pointTransform) {

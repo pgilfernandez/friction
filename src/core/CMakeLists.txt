@@ -339,6 +339,7 @@ set(
     MovablePoints/animatedpoint.cpp
     MovablePoints/boxpathpoint.cpp
     MovablePoints/smartnodepoint.cpp
+    MovablePoints/canvasgizmos.cpp
     MovablePoints/segment.cpp
     MovablePoints/smartctrlpoint.cpp
     MovablePoints/pointshandler.cpp
@@ -677,6 +678,7 @@ set(
     MovablePoints/animatedpoint.h
     MovablePoints/boxpathpoint.h
     MovablePoints/smartnodepoint.h
+    MovablePoints/canvasgizmos.h
     MovablePoints/segment.h
     MovablePoints/smartctrlpoint.h
     MovablePoints/pointshandler.h

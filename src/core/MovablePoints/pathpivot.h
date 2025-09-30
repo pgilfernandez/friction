@@ -36,6 +36,7 @@ class CORE_EXPORT PathPivot : public NonAnimatedMovablePoint {
     e_OBJECT
 protected:
     PathPivot(const Canvas* const parent);
+    Canvas* gizmoCanvas() const override;
 public:
     void drawSk(SkCanvas * const canvas, const CanvasMode mode,
                 const float invScale, const bool keyOnCurrent,
