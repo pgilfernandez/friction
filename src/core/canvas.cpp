@@ -1144,8 +1144,10 @@ void Canvas::updatePivot()
 {
     if (mCurrentMode == CanvasMode::pointTransform) {
         mRotPivot->setAbsolutePos(getSelectedPointsAbsPivotPos());
+        pivotPosForGizmosValid = false;
     } else if (mCurrentMode == CanvasMode::boxTransform) {
         mRotPivot->setAbsolutePos(getSelectedBoxesAbsPivotPos());
+        pivotPosForGizmosValid = false;
     }
 }
 
@@ -1491,7 +1493,12 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
 
     mRotateHandleAngleDeg = 0.0; // keep gizmo orientation screen-aligned
 
-    const QPointF pivot = mRotPivot->getAbsolutePos();
+    QPointF pivot;
+    if (pivotPosForGizmosValid) {
+        pivot = pivotPosForGizmos;
+    } else {
+        pivot = mRotPivot->getAbsolutePos();
+    }
 
     const qreal axisWidthWorld = kAxisGizmoWidthPx * invScale;
     const qreal axisHeightWorld = kAxisGizmoHeightPx * invScale;
