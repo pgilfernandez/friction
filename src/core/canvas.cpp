@@ -70,7 +70,12 @@ constexpr qreal kScaleGizmoSizePx = 10.0; // scale gizmo square size in screen p
 constexpr qreal kScaleGizmoGapPx = 4.0; // gap between position gizmos and scale gizmos in screen pixels
 constexpr qreal kShearGizmoRadiusPx = 6.0; // shear gizmo circle radius in screen pixels
 constexpr qreal kShearGizmoGapPx = 4.0; // gap between scale and shear gizmos in screen pixels
-}
+
+const QColor kGizmoColorX = QColor(193, 40, 40);
+const QColor kGizmoColorY = QColor(131, 189, 43);
+const QColor kGizmoColorZ = QColor(55, 86, 196);
+const QColor kGizmoColorUniform = QColor(227, 188, 12);
+} // namespace
 
 Canvas::Canvas(Document &document,
                const int canvasWidth,
@@ -365,8 +370,9 @@ void Canvas::renderSk(SkCanvas* const canvas,
             arcPaint.setStyle(SkPaint::kStroke_Style);
             arcPaint.setStrokeCap(SkPaint::kButt_Cap);
             arcPaint.setStrokeWidth(toSkScalar(strokeWorld));
-            const SkColor arcColor = ThemeSupport::getThemeHighlightSkColor(mRotateHandleHovered ? 255 : 190);
-            arcPaint.setColor(arcColor);
+            QColor arcColor = kGizmoColorZ;
+            arcColor.setAlpha(mRotateHandleHovered ? 255 : 190);
+            arcPaint.setColor(toSkColor(arcColor));
             canvas->drawArc(arcRect, startAngleF, sweepAngleF, false, arcPaint);
         }
 
@@ -533,14 +539,14 @@ void Canvas::renderSk(SkCanvas* const canvas,
             }
         };
 
-        drawAxisRect(AxisConstraint::Y, mAxisYGeom, ThemeSupport::getThemeColorGreen(190));
-        drawAxisRect(AxisConstraint::X, mAxisXGeom, ThemeSupport::getThemeColorRed(190));
-        drawAxisRect(AxisConstraint::Uniform, mAxisUniformGeom, ThemeSupport::getThemeColorYellow(190));
-        drawScaleSquare(ScaleHandle::Y, mScaleYGeom, ThemeSupport::getThemeColorGreen(190));
-        drawScaleSquare(ScaleHandle::X, mScaleXGeom, ThemeSupport::getThemeColorRed(190));
-        drawScaleSquare(ScaleHandle::Uniform, mScaleUniformGeom, ThemeSupport::getThemeColorYellow(190));
-        drawShearCircle(ShearHandle::Y, mShearYGeom, ThemeSupport::getThemeColorGreen(190));
-        drawShearCircle(ShearHandle::X, mShearXGeom, ThemeSupport::getThemeColorRed(190));
+        drawAxisRect(AxisConstraint::Y, mAxisYGeom, QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 190));
+        drawAxisRect(AxisConstraint::X, mAxisXGeom, QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 190));
+        drawAxisRect(AxisConstraint::Uniform, mAxisUniformGeom, QColor(kGizmoColorZ.red(), kGizmoColorZ.green(), kGizmoColorZ.blue(), 190));
+        drawScaleSquare(ScaleHandle::Y, mScaleYGeom, QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 190));
+        drawScaleSquare(ScaleHandle::X, mScaleXGeom, QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 190));
+        drawScaleSquare(ScaleHandle::Uniform, mScaleUniformGeom, QColor(kGizmoColorUniform.red(), kGizmoColorUniform.green(), kGizmoColorUniform.blue(), 190));
+        drawShearCircle(ShearHandle::Y, mShearYGeom, QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 190));
+        drawShearCircle(ShearHandle::X, mShearXGeom, QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 190));
     }
 
     if(mCurrentMode == CanvasMode::boxTransform ||
