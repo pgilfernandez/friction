@@ -57,24 +57,27 @@ namespace {
 constexpr qreal kRotateGizmoSweepDeg = 90.0; // default sweep of gizmo arc
 constexpr qreal kRotateGizmoBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
 constexpr qreal kRotateGizmoRadiusPx = 45.0; // gizmo radius in screen pixels
-constexpr qreal kRotateGizmoStrokePx = 6.0; // arc stroke thickness in screen pixels
-constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx; // hit area thickness in screen pixels
+constexpr qreal kRotateGizmoStrokePx = 4.0; // arc stroke thickness in screen pixels
+constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx + 2.0; // hit area thickness in screen pixels
 constexpr qreal kAxisGizmoWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
 constexpr qreal kAxisGizmoHeightPx = 60.0; // axis gizmo rectangle height in screen pixels
 constexpr qreal kAxisGizmoYOffsetPx = 40.0; // vertical distance of Y gizmo from pivot in pixels
 constexpr qreal kAxisGizmoUniformOffsetPx = 7.0; // XY offset from pivot for Uniform position gizmo in pixels
-constexpr qreal kAxisGizmoUniformWidthPx = 25.0; // XY square width for Uniform position gizmo in pixels
+constexpr qreal kAxisGizmoUniformWidthPx = 26.0; // XY square width for Uniform position gizmo in pixels
 constexpr qreal kAxisGizmoUniformChamferPx = 1.0; // XY square chamfer for Uniform position gizmo in pixels
 constexpr qreal kAxisGizmoXOffsetPx = 40.0; // horizontal distance of X gizmo from pivot in pixels
 constexpr qreal kScaleGizmoSizePx = 10.0; // scale gizmo square size in screen pixels
-constexpr qreal kScaleGizmoGapPx = 4.0; // gap between position gizmos and scale gizmos in screen pixels
+constexpr qreal kScaleGizmoGapPx = 2.0; // gap between position gizmos and scale gizmos in screen pixels
 constexpr qreal kShearGizmoRadiusPx = 6.0; // shear gizmo circle radius in screen pixels
-constexpr qreal kShearGizmoGapPx = 4.0; // gap between scale and shear gizmos in screen pixels
+constexpr qreal kShearGizmoGapPx = 2.0; // gap between scale and shear gizmos in screen pixels
 
-const QColor kGizmoColorX = QColor(193, 40, 40);
-const QColor kGizmoColorY = QColor(131, 189, 43);
-const QColor kGizmoColorZ = QColor(55, 86, 196);
-const QColor kGizmoColorUniform = QColor(227, 188, 12);
+// Colors for gizmos, TODO: move to ThemeSupport
+const QColor kGizmoColorX = QColor(232, 32, 45);
+const QColor kGizmoColorY = QColor(134, 232, 32);
+const QColor kGizmoColorZ = QColor(32, 139, 232);
+const QColor kGizmoColorUniform = QColor(232, 215, 32);
+constexpr qreal kGizmoColorAlphaNormal = 220.0;
+constexpr qreal kGizmoColorAlphaHover = 245.0;
 } // namespace
 
 Canvas::Canvas(Document &document,
@@ -371,7 +374,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
             arcPaint.setStrokeCap(SkPaint::kButt_Cap);
             arcPaint.setStrokeWidth(toSkScalar(strokeWorld));
             QColor arcColor = kGizmoColorZ;
-            arcColor.setAlpha(mRotateHandleHovered ? 255 : 190);
+            arcColor.setAlpha(mRotateHandleHovered ? kGizmoColorAlphaHover : kGizmoColorAlphaNormal);
             arcPaint.setColor(toSkColor(arcColor));
             canvas->drawArc(arcRect, startAngleF, sweepAngleF, false, arcPaint);
         }
@@ -398,11 +401,11 @@ void Canvas::renderSk(SkCanvas* const canvas,
             fillPaint.setStyle(SkPaint::kFill_Style);
             fillPaint.setColor(toSkColor(color));
 
-            SkPaint borderPaint;
-            borderPaint.setAntiAlias(true);
-            borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            borderPaint.setColor(toSkColor(color.darker(150)));
+            // SkPaint borderPaint;
+            // borderPaint.setAntiAlias(true);
+            // borderPaint.setStyle(SkPaint::kStroke_Style);
+            // borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
+            // borderPaint.setColor(toSkColor(color.darker(150)));
 
             SkPath path;
             if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
@@ -437,7 +440,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
             }
 
             canvas->drawPath(path, fillPaint);
-            canvas->drawPath(path, borderPaint);
+            // canvas->drawPath(path, borderPaint);
         };
         auto drawScaleSquare = [&](ScaleHandle handle, const ScaleGizmoGeometry &geom, const QColor &baseColor) {
             if (!geom.visible) { return; }
@@ -461,11 +464,11 @@ void Canvas::renderSk(SkCanvas* const canvas,
             fillPaint.setStyle(SkPaint::kFill_Style);
             fillPaint.setColor(toSkColor(color));
 
-            SkPaint borderPaint;
-            borderPaint.setAntiAlias(true);
-            borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            borderPaint.setColor(toSkColor(color.darker(150)));
+            // SkPaint borderPaint;
+            // borderPaint.setAntiAlias(true);
+            // borderPaint.setStyle(SkPaint::kStroke_Style);
+            // borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
+            // borderPaint.setColor(toSkColor(color.darker(150)));
 
             if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
                 SkPath path;
@@ -481,14 +484,14 @@ void Canvas::renderSk(SkCanvas* const canvas,
                 }
                 path.close();
                 canvas->drawPath(path, fillPaint);
-                canvas->drawPath(path, borderPaint);
+                // canvas->drawPath(path, borderPaint);
             } else {
                 const SkRect skRect = SkRect::MakeLTRB(toSkScalar(geom.center.x() - geom.halfExtent),
                                                        toSkScalar(geom.center.y() - geom.halfExtent),
                                                        toSkScalar(geom.center.x() + geom.halfExtent),
                                                        toSkScalar(geom.center.y() + geom.halfExtent));
                 canvas->drawRect(skRect, fillPaint);
-                canvas->drawRect(skRect, borderPaint);
+                // canvas->drawRect(skRect, borderPaint);
             }
         };
 
@@ -508,11 +511,11 @@ void Canvas::renderSk(SkCanvas* const canvas,
             fillPaint.setStyle(SkPaint::kFill_Style);
             fillPaint.setColor(toSkColor(color));
 
-            SkPaint borderPaint;
-            borderPaint.setAntiAlias(true);
-            borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            borderPaint.setColor(toSkColor(color.darker(150)));
+            // SkPaint borderPaint;
+            // borderPaint.setAntiAlias(true);
+            // borderPaint.setStyle(SkPaint::kStroke_Style);
+            // borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
+            // borderPaint.setColor(toSkColor(color.darker(150)));
 
             if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
                 SkPath path;
@@ -528,25 +531,49 @@ void Canvas::renderSk(SkCanvas* const canvas,
                 }
                 path.close();
                 canvas->drawPath(path, fillPaint);
-                canvas->drawPath(path, borderPaint);
+                // canvas->drawPath(path, borderPaint);
             } else {
                 const SkRect skRect = SkRect::MakeLTRB(toSkScalar(geom.center.x() - geom.radius),
                                                        toSkScalar(geom.center.y() - geom.radius),
                                                        toSkScalar(geom.center.x() + geom.radius),
                                                        toSkScalar(geom.center.y() + geom.radius));
                 canvas->drawOval(skRect, fillPaint);
-                canvas->drawOval(skRect, borderPaint);
+                // canvas->drawOval(skRect, borderPaint);
             }
         };
 
-        drawAxisRect(AxisConstraint::Y, mAxisYGeom, QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 190));
-        drawAxisRect(AxisConstraint::X, mAxisXGeom, QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 190));
-        drawAxisRect(AxisConstraint::Uniform, mAxisUniformGeom, QColor(kGizmoColorZ.red(), kGizmoColorZ.green(), kGizmoColorZ.blue(), 190));
-        drawScaleSquare(ScaleHandle::Y, mScaleYGeom, QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 190));
-        drawScaleSquare(ScaleHandle::X, mScaleXGeom, QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 190));
-        drawScaleSquare(ScaleHandle::Uniform, mScaleUniformGeom, QColor(kGizmoColorUniform.red(), kGizmoColorUniform.green(), kGizmoColorUniform.blue(), 190));
-        drawShearCircle(ShearHandle::Y, mShearYGeom, QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 190));
-        drawShearCircle(ShearHandle::X, mShearXGeom, QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 190));
+        drawAxisRect(AxisConstraint::Y,
+                        mAxisYGeom, 
+                        QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 
+                        mAxisYHovered ? kGizmoColorAlphaHover : kGizmoColorAlphaNormal));
+        drawAxisRect(AxisConstraint::X,
+                        mAxisXGeom, 
+                        QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 
+                        mAxisXHovered ? kGizmoColorAlphaHover : kGizmoColorAlphaNormal));
+        drawAxisRect(AxisConstraint::Uniform,
+                        mAxisUniformGeom, 
+                        QColor(kGizmoColorZ.red(), kGizmoColorZ.green(), kGizmoColorZ.blue(), 
+                        mAxisUniformHovered ? kGizmoColorAlphaHover : kGizmoColorAlphaNormal));
+        drawScaleSquare(ScaleHandle::Y,
+                        mScaleYGeom, 
+                        QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 
+                        mScaleYHovered ? kGizmoColorAlphaHover : kGizmoColorAlphaNormal));
+        drawScaleSquare(ScaleHandle::X,
+                        mScaleXGeom, 
+                        QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 
+                        mScaleXHovered ? kGizmoColorAlphaHover : kGizmoColorAlphaNormal));
+        drawScaleSquare(ScaleHandle::Uniform,
+                        mScaleUniformGeom, 
+                        QColor(kGizmoColorUniform.red(), kGizmoColorUniform.green(), kGizmoColorUniform.blue(), 
+                        mScaleUniformHovered ? kGizmoColorAlphaHover : kGizmoColorAlphaNormal));
+        drawShearCircle(ShearHandle::Y,
+                        mShearYGeom, 
+                        QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 
+                        mShearYHovered ? kGizmoColorAlphaHover : kGizmoColorAlphaNormal));
+        drawShearCircle(ShearHandle::X,
+                        mShearXGeom, 
+                        QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 
+                        mShearXHovered ? kGizmoColorAlphaHover : kGizmoColorAlphaNormal));
     }
 
     if(mCurrentMode == CanvasMode::boxTransform ||
@@ -1523,7 +1550,8 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     const qreal axisGapYWorld = kAxisGizmoYOffsetPx * invScale;
     const qreal axisGapXWorld = kAxisGizmoXOffsetPx * invScale;
 
-    const qreal anchorOffset = axisWidthWorld * 0.5;
+    // const qreal anchorOffset = axisWidthWorld * 0.5;
+    const qreal anchorOffset = 2.0 * invScale;
     mRotateHandleAnchor = pivot + QPointF(anchorOffset, -anchorOffset);
 
     const qreal baseRotateRadiusWorld = kRotateGizmoRadiusPx * invScale;
