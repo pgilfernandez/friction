@@ -90,10 +90,10 @@ namespace Friction
             QDoubleSlider *mDrawPathSmooth;
 
             QAction *mLocalPivot;
-            QAction *mShowRotateGizmoAct;
-            QAction *mShowPositionGizmoAct;
-            QAction *mShowScaleGizmoAct;
-            QAction *mShowShearGizmoAct;
+            QAction *mShowPositionGizmo;
+            QAction *mShowRotationGizmo;
+            QAction *mShowScaleGizmo;
+            QAction *mShowShearGizmo;
 
             QToolButton *mColorPickerButton;
             QLabel *mColorPickerLabel;
