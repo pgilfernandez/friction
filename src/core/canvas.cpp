@@ -1517,8 +1517,7 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         return;
     }
 
-    if ((mCurrentMode != CanvasMode::boxTransform &&
-         mCurrentMode != CanvasMode::pointTransform)) {
+    if (mCurrentMode != CanvasMode::boxTransform) {
         setRotateHandleHover(false);
         resetAllGizmos();
         return;
