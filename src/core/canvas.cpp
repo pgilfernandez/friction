@@ -56,12 +56,15 @@
 namespace {
 constexpr qreal kRotateGizmoSweepDeg = 90.0; // default sweep of gizmo arc
 constexpr qreal kRotateGizmoBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
-constexpr qreal kRotateGizmoRadiusPx = 40.0; // gizmo radius in screen pixels
+constexpr qreal kRotateGizmoRadiusPx = 45.0; // gizmo radius in screen pixels
 constexpr qreal kRotateGizmoStrokePx = 6.0; // arc stroke thickness in screen pixels
 constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx; // hit area thickness in screen pixels
 constexpr qreal kAxisGizmoWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
 constexpr qreal kAxisGizmoHeightPx = 60.0; // axis gizmo rectangle height in screen pixels
 constexpr qreal kAxisGizmoYOffsetPx = 40.0; // vertical distance of Y gizmo from pivot in pixels
+constexpr qreal kAxisGizmoUniformOffsetPx = 7.0; // XY offset from pivot for Uniform position gizmo in pixels
+constexpr qreal kAxisGizmoUniformWidthPx = 25.0; // XY square width for Uniform position gizmo in pixels
+constexpr qreal kAxisGizmoUniformChamferPx = 1.0; // XY square chamfer for Uniform position gizmo in pixels
 constexpr qreal kAxisGizmoXOffsetPx = 40.0; // horizontal distance of X gizmo from pivot in pixels
 constexpr qreal kScaleGizmoSizePx = 10.0; // scale gizmo square size in screen pixels
 constexpr qreal kScaleGizmoGapPx = 4.0; // gap between position gizmos and scale gizmos in screen pixels
@@ -367,10 +370,16 @@ void Canvas::renderSk(SkCanvas* const canvas,
             canvas->drawArc(arcRect, startAngleF, sweepAngleF, false, arcPaint);
         }
 
-        auto drawAxisRect = [&](AxisConstraint axis, const AxisGizmoGeometry &geom, const QColor &baseColor) {
+        auto drawAxisRect = [&](AxisConstraint handle, const AxisGizmoGeometry &geom, const QColor &baseColor) {
             if (!geom.visible) { return; }
-            const bool hovered = axis == AxisConstraint::X ? mAxisXHovered : mAxisYHovered;
-            const bool active = (mAxisConstraint == axis);
+            bool hovered = false;
+            switch (handle) {
+            case AxisConstraint::X: hovered = mAxisXHovered; break;
+            case AxisConstraint::Y: hovered = mAxisYHovered; break;
+            case AxisConstraint::Uniform: hovered = mAxisUniformHovered; break;
+            case AxisConstraint::None: default: hovered = false; break;
+            }
+            const bool active = (mAxisConstraint == handle);
             QColor color = baseColor;
             if (active) {
                 color = color.lighter(135);
@@ -526,6 +535,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
 
         drawAxisRect(AxisConstraint::Y, mAxisYGeom, ThemeSupport::getThemeColorGreen(190));
         drawAxisRect(AxisConstraint::X, mAxisXGeom, ThemeSupport::getThemeColorRed(190));
+        drawAxisRect(AxisConstraint::Uniform, mAxisUniformGeom, ThemeSupport::getThemeColorYellow(190));
         drawScaleSquare(ScaleHandle::Y, mScaleYGeom, ThemeSupport::getThemeColorGreen(190));
         drawScaleSquare(ScaleHandle::X, mScaleXGeom, ThemeSupport::getThemeColorRed(190));
         drawScaleSquare(ScaleHandle::Uniform, mScaleUniformGeom, ThemeSupport::getThemeColorYellow(190));
@@ -1444,6 +1454,7 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     auto resetAllGizmos = [&]() {
         setAxisGizmoHover(AxisConstraint::X, false);
         setAxisGizmoHover(AxisConstraint::Y, false);
+        setAxisGizmoHover(AxisConstraint::Uniform, false);
         setScaleGizmoHover(ScaleHandle::X, false);
         setScaleGizmoHover(ScaleHandle::Y, false);
         setScaleGizmoHover(ScaleHandle::Uniform, false);
@@ -1452,6 +1463,7 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
 
         mAxisXGeom = AxisGizmoGeometry();
         mAxisYGeom = AxisGizmoGeometry();
+        mAxisUniformGeom = AxisGizmoGeometry();
         mScaleXGeom = ScaleGizmoGeometry();
         mScaleYGeom = ScaleGizmoGeometry();
         mScaleUniformGeom = ScaleGizmoGeometry();
@@ -1545,6 +1557,21 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         pivot + QPointF(11.0 * invScale, 2.0 * invScale)
     };
 
+    mAxisUniformGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
+    mAxisUniformGeom.size = QSizeF(axisHeightWorld, axisWidthWorld);
+    mAxisUniformGeom.visible = mShowPositionGizmo;
+    mAxisUniformGeom.usePolygon = true;
+    mAxisUniformGeom.polygonPoints = {
+        pivot + QPointF((kAxisGizmoUniformOffsetPx + kAxisGizmoUniformChamferPx) * invScale , - kAxisGizmoUniformOffsetPx * invScale),
+        pivot + QPointF(kAxisGizmoUniformOffsetPx * invScale, - (kAxisGizmoUniformOffsetPx + kAxisGizmoUniformChamferPx) * invScale),
+        pivot + QPointF(kAxisGizmoUniformOffsetPx * invScale, - (kAxisGizmoUniformWidthPx - kAxisGizmoUniformChamferPx) * invScale),
+        pivot + QPointF((kAxisGizmoUniformOffsetPx + kAxisGizmoUniformChamferPx) * invScale, - kAxisGizmoUniformWidthPx * invScale),
+        pivot + QPointF((kAxisGizmoUniformWidthPx - kAxisGizmoUniformChamferPx) * invScale, - kAxisGizmoUniformWidthPx * invScale),
+        pivot + QPointF(kAxisGizmoUniformWidthPx * invScale, - (kAxisGizmoUniformWidthPx - kAxisGizmoUniformChamferPx) * invScale),
+        pivot + QPointF(kAxisGizmoUniformWidthPx * invScale, - (kAxisGizmoUniformOffsetPx + kAxisGizmoUniformChamferPx) * invScale),
+        pivot + QPointF((kAxisGizmoUniformWidthPx - kAxisGizmoUniformChamferPx) * invScale, - kAxisGizmoUniformOffsetPx * invScale)
+    };
+
     const qreal rotateOffsetWorld = mAxisYGeom.size.width() * 0.5;
     mRotateHandleRadius = baseRotateRadiusWorld + rotateOffsetWorld;
 
@@ -1598,7 +1625,7 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     {
         const qreal halfWidth = shearRadiusWorld * 1.5;
         const qreal topHeight = shearRadiusWorld * 0.8;
-        const qreal bottomHeight = shearRadiusWorld * 0.6;
+        //const qreal bottomHeight = shearRadiusWorld * 0.6;
         const QPointF c = mShearXGeom.center;
         mShearXGeom.polygonPoints = {
             QPointF(c.x() - scaleHalf - halfWidth * 1.5, c.y()),
@@ -1618,7 +1645,7 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     {
         const qreal halfHeight = shearRadiusWorld * 1.5;
         const qreal topWidth = shearRadiusWorld * 0.8;
-        const qreal bottomWidth = shearRadiusWorld * 0.6;
+        //const qreal bottomWidth = shearRadiusWorld * 0.6;
         const QPointF c = mShearYGeom.center;
         mShearYGeom.polygonPoints = {
             QPointF(c.x(), c.y() + scaleHalf - halfHeight * 1.5),
@@ -1650,6 +1677,7 @@ void Canvas::setGizmosSuppressed(bool suppressed)
         mRotateHandleHovered = false;
         mAxisXHovered = false;
         mAxisYHovered = false;
+        mAxisUniformHovered = false;
         mScaleXHovered = false;
         mScaleYHovered = false;
         mScaleUniformHovered = false;
@@ -1680,6 +1708,7 @@ void Canvas::setShowPositionGizmo(bool enabled)
         mAxisConstraint = AxisConstraint::None;
         setAxisGizmoHover(AxisConstraint::X, false);
         setAxisGizmoHover(AxisConstraint::Y, false);
+        setAxisGizmoHover(AxisConstraint::Uniform, false);
         setGizmosSuppressed(false);
     }
     emit requestUpdate();
@@ -1716,7 +1745,22 @@ void Canvas::setShowShearGizmo(bool enabled)
 
 void Canvas::setAxisGizmoHover(AxisConstraint axis, bool hovered)
 {
-    bool *target = axis == AxisConstraint::X ? &mAxisXHovered : &mAxisYHovered;
+    bool *target = nullptr;
+    switch (axis) {
+    case AxisConstraint::X:
+        target = &mAxisXHovered;
+        break;
+    case AxisConstraint::Y:
+        target = &mAxisYHovered;
+        break;
+    case AxisConstraint::Uniform:
+        target = &mAxisUniformHovered;
+        break;
+    case AxisConstraint::None:
+    default:
+        return;
+    }
+
     if (*target == hovered) { return; }
     *target = hovered;
     emit requestUpdate();
@@ -1835,7 +1879,22 @@ bool Canvas::pointOnAxisGizmo(AxisConstraint axis, const QPointF &pos, qreal inv
     Q_UNUSED(invScale);
     if (!mRotateHandleVisible) { return false; }
 
-    const AxisGizmoGeometry &geom = axis == AxisConstraint::X ? mAxisXGeom : mAxisYGeom;
+    const AxisGizmoGeometry* geomPtr;
+    switch (axis) {
+        case AxisConstraint::X:
+            geomPtr = &mAxisXGeom;
+            break;
+        case AxisConstraint::Y:
+            geomPtr = &mAxisYGeom;
+            break;
+        case AxisConstraint::Uniform:
+            geomPtr = &mAxisUniformGeom;
+            break;
+        default:
+            return false;
+    }
+    const AxisGizmoGeometry &geom = *geomPtr;
+
     if (!geom.visible) { return false; }
 
     if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
@@ -1892,6 +1951,7 @@ void Canvas::updateRotateHandleHover(const QPointF &pos, qreal invScale)
     setRotateHandleHover(pointOnRotateGizmo(pos, invScale));
     setAxisGizmoHover(AxisConstraint::X, pointOnAxisGizmo(AxisConstraint::X, pos, invScale));
     setAxisGizmoHover(AxisConstraint::Y, pointOnAxisGizmo(AxisConstraint::Y, pos, invScale));
+    setAxisGizmoHover(AxisConstraint::Uniform, pointOnAxisGizmo(AxisConstraint::Uniform, pos, invScale));
     setScaleGizmoHover(ScaleHandle::X, pointOnScaleGizmo(ScaleHandle::X, pos, invScale));
     setScaleGizmoHover(ScaleHandle::Y, pointOnScaleGizmo(ScaleHandle::Y, pos, invScale));
     setScaleGizmoHover(ScaleHandle::Uniform, pointOnScaleGizmo(ScaleHandle::Uniform, pos, invScale));
@@ -2006,7 +2066,11 @@ bool Canvas::startAxisConstrainedMove(const eMouseEvent &e, AxisConstraint axis)
     if (axis == AxisConstraint::X) {
         mValueInput.setXOnlyMode();
     } else {
-        mValueInput.setYOnlyMode();
+        if (axis == AxisConstraint::Y) {
+            mValueInput.setYOnlyMode();
+        } else {
+            mValueInput.setXYMode();
+        }
     }
 
     mTransMode = TransformMode::move;
@@ -2025,6 +2089,9 @@ bool Canvas::tryStartAxisGizmo(const eMouseEvent &e, qreal invScale)
     updateRotateHandleGeometry(invScale);
     if (!mRotateHandleVisible) { return false; }
 
+    if (pointOnAxisGizmo(AxisConstraint::Uniform, e.fPos, invScale)) {
+        return startAxisConstrainedMove(e, AxisConstraint::Uniform);
+    }
     if (pointOnAxisGizmo(AxisConstraint::Y, e.fPos, invScale)) {
         return startAxisConstrainedMove(e, AxisConstraint::Y);
     }

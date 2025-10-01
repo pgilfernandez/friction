@@ -80,7 +80,7 @@ enum class AlignRelativeTo {
 
 class CORE_EXPORT Canvas : public CanvasBase
 {
-    enum class AxisConstraint { None, X, Y };
+    enum class AxisConstraint { None, X, Y, Uniform };
     enum class ScaleHandle { None, X, Y, Uniform };
     enum class ShearHandle { None, X, Y };
     friend class CanvasWindow;
@@ -885,6 +885,7 @@ protected:
     bool mRotateHandleHovered = false; // true when pointer hovers the gizmo
     AxisGizmoGeometry mAxisXGeom;
     AxisGizmoGeometry mAxisYGeom;
+    AxisGizmoGeometry mAxisUniformGeom;
     ScaleGizmoGeometry mScaleXGeom;
     ScaleGizmoGeometry mScaleYGeom;
     ScaleGizmoGeometry mScaleUniformGeom;
@@ -892,6 +893,7 @@ protected:
     ShearGizmoGeometry mShearYGeom;
     bool mAxisXHovered = false;
     bool mAxisYHovered = false;
+    bool mAxisUniformHovered = false;
     bool mScaleXHovered = false;
     bool mScaleYHovered = false;
     bool mScaleUniformHovered = false;
