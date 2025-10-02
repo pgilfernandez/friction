@@ -41,7 +41,6 @@ ToolBox::ToolBox(Actions &actions,
     , mGroupNodes(nullptr)
     , mGroupDraw(nullptr)
     , mGroupColorPicker(nullptr)
-    , mGroupGizmos(nullptr)
     , mDrawPathMaxError(nullptr)
     , mDrawPathSmooth(nullptr)
     , mLocalPivot(nullptr)
@@ -103,8 +102,6 @@ void ToolBox::setupToolBox(QWidget *parent)
     mGroupNodes = new QActionGroup(this);
     mGroupDraw = new QActionGroup(this);
     mGroupColorPicker = new QActionGroup(this);
-    mGroupGizmos = new QActionGroup(this);
-    mGroupGizmos->setExclusive(false);
 
     setupDocument();
     setupMainActions();
