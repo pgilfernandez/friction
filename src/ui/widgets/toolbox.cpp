@@ -270,8 +270,7 @@ void ToolBox::setupMainActions()
     mGroupMain->addAction(mLocalPivot);
 
     // Gizmos visibility toggles
-    // TODO: add an spacer without hover state
-    // mGroupMain->addAction(mControls->addSpacer(true, false));
+    mGroupMain->addAction(mControls->addSeparator());
 
     mShowPositionGizmo = new QAction(mDocument.showPositionGizmo() ?
                                 QIcon::fromTheme("gizmo_translate_on") :

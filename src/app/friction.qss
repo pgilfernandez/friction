@@ -676,3 +676,15 @@ ExpressionEditor {
 #ToolBoxButton:disabled {
     background: transparent;
 }
+
+Friction--Ui--ToolBar#ToolBoxMain::separator {
+    background-color: transparent;
+}
+
+Friction--Ui--ToolBar#ToolBoxMain::separator:vertical {
+    height: %10;
+}
+
+Friction--Ui--ToolBar#ToolBoxMain::separator:horizontal {
+    width: %10;
+}
