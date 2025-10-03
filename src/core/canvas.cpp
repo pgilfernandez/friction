@@ -77,10 +77,12 @@ const QColor kGizmoColorX = QColor(232, 32, 45);
 const QColor kGizmoColorY = QColor(134, 232, 32);
 const QColor kGizmoColorZ = QColor(32, 139, 232);
 const QColor kGizmoColorUniform = QColor(232, 215, 32);
-constexpr qreal kGizmoColorAlphaFillNormal = 60.0;
-constexpr qreal kGizmoColorAlphaFillHover = 220.0;
-constexpr qreal kGizmoColorAlphaStrokeNormal = 180.0;
-constexpr qreal kGizmoColorAlphaStrokeHover = 70.0;
+constexpr qreal kGizmoColorAlphaFillNormal = 100.0;
+constexpr qreal kGizmoColorAlphaFillHover = 200.0;
+constexpr qreal kGizmoColorAlphaStrokeNormal = 200.0;
+constexpr qreal kGizmoColorAlphaStrokeHover = 0.0;
+constexpr int kGizmoColorLightenNormal = 120;
+constexpr int kGizmoColorLightenHover = 100;
 } // namespace
 
 Canvas::Canvas(Document &document,
@@ -373,7 +375,8 @@ void Canvas::renderSk(SkCanvas* const canvas,
                 borderPaint.setStrokeJoin(SkPaint::kRound_Join);
                 borderPaint.setStrokeCap(SkPaint::kRound_Cap);
                 borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * qInvZoom * 0.2f));
-                QColor strokeColor = kGizmoColorZ;
+                const int strokeLighten = mRotateHandleHovered ? kGizmoColorLightenHover : kGizmoColorLightenNormal;
+                QColor strokeColor = kGizmoColorZ.lighter(strokeLighten);
                 strokeColor.setAlpha(mRotateHandleHovered ? static_cast<int>(kGizmoColorAlphaStrokeHover)
                                                           : static_cast<int>(kGizmoColorAlphaStrokeNormal));
                 borderPaint.setColor(toSkColor(strokeColor));
@@ -423,7 +426,8 @@ void Canvas::renderSk(SkCanvas* const canvas,
             borderPaint.setStyle(SkPaint::kStroke_Style);
             borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
             
-            QColor borderColor = color;
+            const int borderLighten = hovered ? kGizmoColorLightenHover : kGizmoColorLightenNormal;
+            QColor borderColor = color.lighter(borderLighten);
             const qreal strokeAlphaAxis = hovered ? kGizmoColorAlphaStrokeHover : kGizmoColorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaAxis));
             borderPaint.setColor(toSkColor(borderColor));
@@ -489,8 +493,8 @@ void Canvas::renderSk(SkCanvas* const canvas,
             borderPaint.setAntiAlias(true);
             borderPaint.setStyle(SkPaint::kStroke_Style);
             borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            // usar mismo color que fill para el borde, solo ajustar alpha
-            QColor borderColor = color;
+            const int borderLighten = hovered ? kGizmoColorLightenHover : kGizmoColorLightenNormal;
+            QColor borderColor = color.lighter(borderLighten);
             const qreal strokeAlphaScale = hovered ? kGizmoColorAlphaStrokeHover : kGizmoColorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaScale));
             borderPaint.setColor(toSkColor(borderColor));
@@ -540,8 +544,8 @@ void Canvas::renderSk(SkCanvas* const canvas,
             borderPaint.setAntiAlias(true);
             borderPaint.setStyle(SkPaint::kStroke_Style);
             borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            // usar mismo color que fill para el borde, solo ajustar alpha
-            QColor borderColor = color;
+            const int borderLighten = hovered ? kGizmoColorLightenHover : kGizmoColorLightenNormal;
+            QColor borderColor = color.lighter(borderLighten);
             const qreal strokeAlphaShear = hovered ? kGizmoColorAlphaStrokeHover : kGizmoColorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaShear));
             borderPaint.setColor(toSkColor(borderColor));
@@ -1738,12 +1742,12 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         //const qreal bottomHeight = shearRadiusWorld * 0.6;
         const QPointF c = mShearXGeom.center;
         mShearXGeom.polygonPoints = {
-            QPointF(c.x() - scaleHalf - halfWidth * 1.5, c.y()),
-            QPointF(c.x() - scaleHalf - halfWidth, c.y() - topHeight),
-            QPointF(c.x() - scaleHalf + halfWidth, c.y() - topHeight),
-            QPointF(c.x() - scaleHalf + halfWidth * 1.5, c.y()),
-            QPointF(c.x() - scaleHalf + halfWidth, c.y() + topHeight),
-            QPointF(c.x() - scaleHalf - halfWidth, c.y() + topHeight)
+            QPointF(c.x() - scaleHalf * 0.5 - halfWidth * 1.5, c.y()),
+            QPointF(c.x() - scaleHalf * 0.5 - halfWidth, c.y() - topHeight),
+            QPointF(c.x() - scaleHalf * 0.5 + halfWidth, c.y() - topHeight),
+            QPointF(c.x() - scaleHalf * 0.5 + halfWidth * 1.5, c.y()),
+            QPointF(c.x() - scaleHalf * 0.5 + halfWidth, c.y() + topHeight),
+            QPointF(c.x() - scaleHalf * 0.5 - halfWidth, c.y() + topHeight)
         };
     }
 
@@ -1758,12 +1762,12 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         //const qreal bottomWidth = shearRadiusWorld * 0.6;
         const QPointF c = mShearYGeom.center;
         mShearYGeom.polygonPoints = {
-            QPointF(c.x(), c.y() + scaleHalf - halfHeight * 1.5),
-            QPointF(c.x() + topWidth, c.y() + scaleHalf - halfHeight),
-            QPointF(c.x() + topWidth, c.y() + scaleHalf + halfHeight),
-            QPointF(c.x(), c.y() + scaleHalf + halfHeight * 1.5),
-            QPointF(c.x() - topWidth, c.y() + scaleHalf + halfHeight),
-            QPointF(c.x() - topWidth, c.y() + scaleHalf - halfHeight)
+            QPointF(c.x(), c.y() + scaleHalf * 0.5 - halfHeight * 1.5),
+            QPointF(c.x() + topWidth, c.y() + scaleHalf * 0.5 - halfHeight),
+            QPointF(c.x() + topWidth, c.y() + scaleHalf * 0.5 + halfHeight),
+            QPointF(c.x(), c.y() + scaleHalf * 0.5 + halfHeight * 1.5),
+            QPointF(c.x() - topWidth, c.y() + scaleHalf * 0.5 + halfHeight),
+            QPointF(c.x() - topWidth, c.y() + scaleHalf * 0.5 - halfHeight)
         };
     }
 
