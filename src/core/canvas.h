@@ -883,6 +883,8 @@ protected:
     qreal mRotateHandleSweepDeg = 90.0; // cached arc span used for draw + hit-test
     qreal mRotateHandleStartOffsetDeg = 45.0; // cached base offset applied before box rotation
     bool mRotateHandleHovered = false; // true when pointer hovers the gizmo
+    QVector<QPointF> mRotateHandlePolygon;
+    QVector<QPointF> mRotateHandleHitPolygon;
     AxisGizmoGeometry mAxisXGeom;
     AxisGizmoGeometry mAxisYGeom;
     AxisGizmoGeometry mAxisUniformGeom;
