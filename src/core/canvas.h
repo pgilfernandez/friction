@@ -47,6 +47,8 @@
 #include <QSizeF>
 #include <QVector>
 
+#include "gizmos.h"
+
 class AnimatedSurface;
 //class PaintBox;
 class TextBox;
@@ -80,9 +82,6 @@ enum class AlignRelativeTo {
 
 class CORE_EXPORT Canvas : public CanvasBase
 {
-    enum class AxisConstraint { None, X, Y, Uniform };
-    enum class ScaleHandle { None, X, Y, Uniform };
-    enum class ShearHandle { None, X, Y };
     friend class CanvasWindow;
     typedef qCubicSegment1DAnimator::Action SegAction;
     Q_OBJECT
@@ -435,13 +434,13 @@ public:
         mPathEffectsVisible = bT;
     }
 
-    bool showRotateGizmo() const { return mShowRotateGizmo; }
+    bool showRotateGizmo() const;
     void setShowRotateGizmo(bool enabled);
-    bool showPositionGizmo() const { return mShowPositionGizmo; }
+    bool showPositionGizmo() const;
     void setShowPositionGizmo(bool enabled);
-    bool showScaleGizmo() const { return mShowScaleGizmo; }
+    bool showScaleGizmo() const;
     void setShowScaleGizmo(bool enabled);
-    bool showShearGizmo() const { return mShowShearGizmo; }
+    bool showShearGizmo() const;
     void setShowShearGizmo(bool enabled);
 
     void setEasingAction(const QString &easing)
@@ -764,47 +763,47 @@ private:
     void scaleSelected(const eMouseEvent &e);
     void shearSelected(const eMouseEvent &e);
     void rotateSelected(const eMouseEvent &e);
-    bool prepareRotation(const QPointF &startPos, bool fromHandle = false);
-    void updateRotateHandleHover(const QPointF &pos, qreal invScale);
-    bool pointOnRotateGizmo(const QPointF &pos, qreal invScale) const;
+
+    bool prepareRotation(const QPointF &startPos,
+                         bool fromHandle = false);
+    void updateRotateHandleHover(const QPointF &pos,
+                                 qreal invScale);
+    bool pointOnRotateGizmo(const QPointF &pos,
+                            qreal invScale) const;
     void setRotateHandleHover(bool hovered);
     void setGizmosSuppressed(bool suppressed);
-    struct AxisGizmoGeometry {
-        QPointF center;
-        QSizeF size;
-        qreal angleDeg = 0.0;
-        bool visible = false;
-        bool usePolygon = false;
-        QVector<QPointF> polygonPoints;
-    };
-    struct ScaleGizmoGeometry {
-        QPointF center;
-        qreal halfExtent = 0.0;
-        bool visible = false;
-        bool usePolygon = false;
-        QVector<QPointF> polygonPoints;
-    };
-    struct ShearGizmoGeometry {
-        QPointF center;
-        qreal radius = 0.0;
-        bool visible = false;
-        bool usePolygon = false;
-        QVector<QPointF> polygonPoints;
-    };
+
     void updateRotateHandleGeometry(qreal invScale);
-    bool tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale);
-    bool tryStartScaleGizmo(const eMouseEvent &e, qreal invScale);
-    bool tryStartShearGizmo(const eMouseEvent &e, qreal invScale);
-    bool tryStartAxisGizmo(const eMouseEvent &e, qreal invScale);
-    bool startScaleConstrainedMove(const eMouseEvent &e, ScaleHandle handle);
-    bool startShearConstrainedMove(const eMouseEvent &e, ShearHandle handle);
-    bool startAxisConstrainedMove(const eMouseEvent &e, AxisConstraint axis);
-    bool pointOnScaleGizmo(ScaleHandle handle, const QPointF &pos, qreal invScale) const;
-    bool pointOnShearGizmo(ShearHandle handle, const QPointF &pos, qreal invScale) const;
-    bool pointOnAxisGizmo(AxisConstraint axis, const QPointF &pos, qreal invScale) const;
-    void setScaleGizmoHover(ScaleHandle handle, bool hovered);
-    void setShearGizmoHover(ShearHandle handle, bool hovered);
-    void setAxisGizmoHover(AxisConstraint axis, bool hovered);
+
+    bool tryStartRotateWithGizmo(const eMouseEvent &e,
+                                 qreal invScale);
+    bool tryStartScaleGizmo(const eMouseEvent &e,
+                            qreal invScale);
+    bool tryStartShearGizmo(const eMouseEvent &e,
+                            qreal invScale);
+    bool tryStartAxisGizmo(const eMouseEvent &e,
+                           qreal invScale);
+
+    bool startScaleConstrainedMove(const eMouseEvent &e,
+                                   Friction::Core::Gizmos::ScaleHandle handle);
+    bool startShearConstrainedMove(const eMouseEvent &e,
+                                   Friction::Core::Gizmos::ShearHandle handle);
+    bool startAxisConstrainedMove(const eMouseEvent &e,
+                                  Friction::Core::Gizmos::AxisConstraint axis);
+
+    bool pointOnScaleGizmo(Friction::Core::Gizmos::ScaleHandle handle,
+                           const QPointF &pos, qreal invScale) const;
+    bool pointOnShearGizmo(Friction::Core::Gizmos::ShearHandle handle,
+                           const QPointF &pos, qreal invScale) const;
+    bool pointOnAxisGizmo(Friction::Core::Gizmos::AxisConstraint axis,
+                          const QPointF &pos, qreal invScale) const;
+
+    void setScaleGizmoHover(Friction::Core::Gizmos::ScaleHandle handle,
+                            bool hovered);
+    void setShearGizmoHover(Friction::Core::Gizmos::ShearHandle handle,
+                            bool hovered);
+    void setAxisGizmoHover(Friction::Core::Gizmos::AxisConstraint axis,
+                           bool hovered);
 
     void drawPathClear();
     void drawPathFinish(const qreal invScale);
@@ -875,44 +874,7 @@ protected:
 
     ValueInput mValueInput;
 
-    bool mRotateHandleVisible = false;
-    QPointF mRotateHandlePos;
-    QPointF mRotateHandleAnchor;
-    qreal mRotateHandleRadius = 0;
-    qreal mRotateHandleAngleDeg = 0; // cached visual rotation of the gizmo
-    qreal mRotateHandleSweepDeg = 90.0; // cached arc span used for draw + hit-test
-    qreal mRotateHandleStartOffsetDeg = 45.0; // cached base offset applied before box rotation
-    bool mRotateHandleHovered = false; // true when pointer hovers the gizmo
-    QVector<QPointF> mRotateHandlePolygon;
-    QVector<QPointF> mRotateHandleHitPolygon;
-    AxisGizmoGeometry mAxisXGeom;
-    AxisGizmoGeometry mAxisYGeom;
-    AxisGizmoGeometry mAxisUniformGeom;
-    ScaleGizmoGeometry mScaleXGeom;
-    ScaleGizmoGeometry mScaleYGeom;
-    ScaleGizmoGeometry mScaleUniformGeom;
-    ShearGizmoGeometry mShearXGeom;
-    ShearGizmoGeometry mShearYGeom;
-    bool mAxisXHovered = false;
-    bool mAxisYHovered = false;
-    bool mAxisUniformHovered = false;
-    bool mScaleXHovered = false;
-    bool mScaleYHovered = false;
-    bool mScaleUniformHovered = false;
-    bool mShearXHovered = false;
-    bool mShearYHovered = false;
-    AxisConstraint mAxisConstraint = AxisConstraint::None;
-    ScaleHandle mScaleConstraint = ScaleHandle::None;
-    ShearHandle mShearConstraint = ShearHandle::None;
-    bool mAxisHandleActive = false;
-    bool mScaleHandleActive = false;
-    bool mShearHandleActive = false;
-    bool mGizmosSuppressed = false;
-    bool mShowRotateGizmo = true;
-    bool mShowPositionGizmo = true;
-    bool mShowScaleGizmo = false;
-    bool mShowShearGizmo = false;
-    bool mRotatingFromHandle = false;
+    Friction::Core::Gizmos mGizmos;
 
     bool mPreviewing = false;
     bool mRenderingPreview = false;

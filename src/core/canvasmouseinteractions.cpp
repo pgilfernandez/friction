@@ -58,6 +58,8 @@
 #include <QInputDialog>
 #include <QApplication>
 
+using namespace Friction::Core;
+
 void Canvas::handleMovePathMousePressEvent(const eMouseEvent& e) {
     mPressedBox = mCurrentContainer->getBoxAt(e.fPos);
     if(e.shiftMod()) return;
@@ -316,7 +318,7 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
 }
 
 void Canvas::cancelCurrentTransform() {
-    mRotatingFromHandle = false;
+    mGizmos.fState.mRotatingFromHandle = false;
     if(mCurrentMode == CanvasMode::pointTransform) {
         if(mCurrentNormalSegment.isValid()) {
             mCurrentNormalSegment.cancelPassThroughTransform();
@@ -336,32 +338,32 @@ void Canvas::cancelCurrentTransform() {
         //mCanvasWindow->setCanvasMode(MOVE_PATH);
     }
     mValueInput.clearAndDisableInput();
-    mAxisHandleActive = false;
-    mScaleHandleActive = false;
-    mShearHandleActive = false;
+    mGizmos.fState.mAxisHandleActive = false;
+    mGizmos.fState.mScaleHandleActive = false;
+    mGizmos.fState.mShearHandleActive = false;
     setGizmosSuppressed(false);
     mTransMode = TransformMode::none;
-    if (mAxisConstraint != AxisConstraint::None) {
-        mAxisConstraint = AxisConstraint::None;
+    if (mGizmos.fState.mAxisConstraint != Gizmos::AxisConstraint::None) {
+        mGizmos.fState.mAxisConstraint = Gizmos::AxisConstraint::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
-        setAxisGizmoHover(AxisConstraint::X, false);
-        setAxisGizmoHover(AxisConstraint::Y, false);
+        setAxisGizmoHover(Gizmos::AxisConstraint::X, false);
+        setAxisGizmoHover(Gizmos::AxisConstraint::Y, false);
     }
-    if (mScaleConstraint != ScaleHandle::None) {
-        mScaleConstraint = ScaleHandle::None;
+    if (mGizmos.fState.mScaleConstraint != Gizmos::ScaleHandle::None) {
+        mGizmos.fState.mScaleConstraint = Gizmos::ScaleHandle::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
-        setScaleGizmoHover(ScaleHandle::X, false);
-        setScaleGizmoHover(ScaleHandle::Y, false);
-        setScaleGizmoHover(ScaleHandle::Uniform, false);
+        setScaleGizmoHover(Gizmos::ScaleHandle::X, false);
+        setScaleGizmoHover(Gizmos::ScaleHandle::Y, false);
+        setScaleGizmoHover(Gizmos::ScaleHandle::Uniform, false);
     }
-    if (mShearConstraint != ShearHandle::None) {
-        mShearConstraint = ShearHandle::None;
+    if (mGizmos.fState.mShearConstraint != Gizmos::ShearHandle::None) {
+        mGizmos.fState.mShearConstraint = Gizmos::ShearHandle::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
-        setShearGizmoHover(ShearHandle::X, false);
-        setShearGizmoHover(ShearHandle::Y, false);
+        setShearGizmoHover(Gizmos::ShearHandle::X, false);
+        setShearGizmoHover(Gizmos::ShearHandle::Y, false);
     }
 }
 
@@ -622,32 +624,32 @@ void Canvas::applyPixelColor(const QColor &color,
 
 void Canvas::handleLeftMouseRelease(const eMouseEvent &e) {
     if(e.fMouseGrabbing) e.fReleaseMouse();
-    mRotatingFromHandle = false;
-    mAxisHandleActive = false;
-    mScaleHandleActive = false;
-    mShearHandleActive = false;
+    mGizmos.fState.mRotatingFromHandle = false;
+    mGizmos.fState.mAxisHandleActive = false;
+    mGizmos.fState.mScaleHandleActive = false;
+    mGizmos.fState.mShearHandleActive = false;
     setGizmosSuppressed(false);
-    if (mAxisConstraint != AxisConstraint::None) {
-        mAxisConstraint = AxisConstraint::None;
+    if (mGizmos.fState.mAxisConstraint != Gizmos::AxisConstraint::None) {
+        mGizmos.fState.mAxisConstraint = Gizmos::AxisConstraint::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
-        setAxisGizmoHover(AxisConstraint::X, false);
-        setAxisGizmoHover(AxisConstraint::Y, false);
+        setAxisGizmoHover(Gizmos::AxisConstraint::X, false);
+        setAxisGizmoHover(Gizmos::AxisConstraint::Y, false);
     }
-    if (mScaleConstraint != ScaleHandle::None) {
-        mScaleConstraint = ScaleHandle::None;
+    if (mGizmos.fState.mScaleConstraint != Gizmos::ScaleHandle::None) {
+        mGizmos.fState.mScaleConstraint = Gizmos::ScaleHandle::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
-        setScaleGizmoHover(ScaleHandle::X, false);
-        setScaleGizmoHover(ScaleHandle::Y, false);
-        setScaleGizmoHover(ScaleHandle::Uniform, false);
+        setScaleGizmoHover(Gizmos::ScaleHandle::X, false);
+        setScaleGizmoHover(Gizmos::ScaleHandle::Y, false);
+        setScaleGizmoHover(Gizmos::ScaleHandle::Uniform, false);
     }
-    if (mShearConstraint != ShearHandle::None) {
-        mShearConstraint = ShearHandle::None;
+    if (mGizmos.fState.mShearConstraint != Gizmos::ShearHandle::None) {
+        mGizmos.fState.mShearConstraint = Gizmos::ShearHandle::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
-        setShearGizmoHover(ShearHandle::X, false);
-        setShearGizmoHover(ShearHandle::Y, false);
+        setShearGizmoHover(Gizmos::ShearHandle::X, false);
+        setShearGizmoHover(Gizmos::ShearHandle::Y, false);
     }
     if(mCurrentNormalSegment.isValid()) {
         if(!mStartTransform) mCurrentNormalSegment.finishPassThroughTransform();

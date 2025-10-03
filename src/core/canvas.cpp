@@ -54,36 +54,7 @@
 #include "simpletask.h"
 #include "themesupport.h"
 
-namespace {
-constexpr qreal kRotateGizmoSweepDeg = 90.0; // default sweep of gizmo arc
-constexpr qreal kRotateGizmoBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
-constexpr qreal kRotateGizmoRadiusPx = 45.0; // gizmo radius in screen pixels
-constexpr qreal kRotateGizmoStrokePx = 4.0; // arc stroke thickness in screen pixels
-constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx + 2.0; // hit area thickness in screen pixels
-constexpr qreal kAxisGizmoWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
-constexpr qreal kAxisGizmoHeightPx = 60.0; // axis gizmo rectangle height in screen pixels
-constexpr qreal kAxisGizmoYOffsetPx = 40.0; // vertical distance of Y gizmo from pivot in pixels
-constexpr qreal kAxisGizmoUniformOffsetPx = 7.0; // XY offset from pivot for Uniform position gizmo in pixels
-constexpr qreal kAxisGizmoUniformWidthPx = 26.0; // XY square width for Uniform position gizmo in pixels
-constexpr qreal kAxisGizmoUniformChamferPx = 1.0; // XY square chamfer for Uniform position gizmo in pixels
-constexpr qreal kAxisGizmoXOffsetPx = 40.0; // horizontal distance of X gizmo from pivot in pixels
-constexpr qreal kScaleGizmoSizePx = 10.0; // scale gizmo square size in screen pixels
-constexpr qreal kScaleGizmoGapPx = 2.0; // gap between position gizmos and scale gizmos in screen pixels
-constexpr qreal kShearGizmoRadiusPx = 6.0; // shear gizmo circle radius in screen pixels
-constexpr qreal kShearGizmoGapPx = 2.0; // gap between scale and shear gizmos in screen pixels
-
-// Colors for gizmos, TODO: move to ThemeSupport
-const QColor kGizmoColorX = QColor(232, 32, 45);
-const QColor kGizmoColorY = QColor(134, 232, 32);
-const QColor kGizmoColorZ = QColor(32, 139, 232);
-const QColor kGizmoColorUniform = QColor(232, 215, 32);
-constexpr qreal kGizmoColorAlphaFillNormal = 100.0;
-constexpr qreal kGizmoColorAlphaFillHover = 200.0;
-constexpr qreal kGizmoColorAlphaStrokeNormal = 200.0;
-constexpr qreal kGizmoColorAlphaStrokeHover = 0.0;
-constexpr int kGizmoColorLightenNormal = 120;
-constexpr int kGizmoColorLightenHover = 100;
-} // namespace
+using namespace Friction::Core;
 
 Canvas::Canvas(Document &document,
                const int canvasWidth,
@@ -357,12 +328,12 @@ void Canvas::renderSk(SkCanvas* const canvas,
 
     updateRotateHandleGeometry(qInvZoom);
 
-    if (mRotateHandleVisible) {
-        if (mShowRotateGizmo) {
-            if (mRotateHandlePolygon.size() >= 3) {
-                QColor fillColor = kGizmoColorZ;
-                fillColor.setAlpha(mRotateHandleHovered ? static_cast<int>(kGizmoColorAlphaFillHover)
-                                                         : static_cast<int>(kGizmoColorAlphaFillNormal));
+    if (mGizmos.fState.mRotateHandleVisible) {
+        if (mGizmos.fState.mShowRotateGizmo) {
+            if (mGizmos.fState.mRotateHandlePolygon.size() >= 3) {
+                QColor fillColor = mGizmos.fTheme.kGizmoColorZ;
+                fillColor.setAlpha(mGizmos.fState.mRotateHandleHovered ? static_cast<int>(mGizmos.fTheme.kGizmoColorAlphaFillHover)
+                                                         : static_cast<int>(mGizmos.fTheme.kGizmoColorAlphaFillNormal));
 
                 SkPaint fillPaint;
                 fillPaint.setAntiAlias(true);
@@ -374,16 +345,16 @@ void Canvas::renderSk(SkCanvas* const canvas,
                 borderPaint.setStyle(SkPaint::kStroke_Style);
                 borderPaint.setStrokeJoin(SkPaint::kRound_Join);
                 borderPaint.setStrokeCap(SkPaint::kRound_Cap);
-                borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * qInvZoom * 0.2f));
-                const int strokeLighten = mRotateHandleHovered ? kGizmoColorLightenHover : kGizmoColorLightenNormal;
-                QColor strokeColor = kGizmoColorZ.lighter(strokeLighten);
-                strokeColor.setAlpha(mRotateHandleHovered ? static_cast<int>(kGizmoColorAlphaStrokeHover)
-                                                          : static_cast<int>(kGizmoColorAlphaStrokeNormal));
+                borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.kRotateGizmoStrokePx * qInvZoom * 0.2f));
+                const int strokeLighten = mGizmos.fState.mRotateHandleHovered ? mGizmos.fTheme.kGizmoColorLightenHover : mGizmos.fTheme.kGizmoColorLightenNormal;
+                QColor strokeColor = mGizmos.fTheme.kGizmoColorZ.lighter(strokeLighten);
+                strokeColor.setAlpha(mGizmos.fState.mRotateHandleHovered ? static_cast<int>(mGizmos.fTheme.kGizmoColorAlphaStrokeHover)
+                                                          : static_cast<int>(mGizmos.fTheme.kGizmoColorAlphaStrokeNormal));
                 borderPaint.setColor(toSkColor(strokeColor));
 
                 SkPath path;
                 bool first = true;
-                for (const QPointF &pt : mRotateHandlePolygon) {
+                for (const QPointF &pt : mGizmos.fState.mRotateHandlePolygon) {
                     const SkPoint skPt = SkPoint::Make(toSkScalar(pt.x()), toSkScalar(pt.y()));
                     if (first) {
                         path.moveTo(skPt);
@@ -399,16 +370,18 @@ void Canvas::renderSk(SkCanvas* const canvas,
             }
         }
 
-        auto drawAxisRect = [&](AxisConstraint handle, const AxisGizmoGeometry &geom, const QColor &baseColor) {
+        auto drawAxisRect = [&](Gizmos::AxisConstraint handle,
+                                const Gizmos::AxisGeometry &geom,
+                                const QColor &baseColor) {
             if (!geom.visible) { return; }
             bool hovered = false;
             switch (handle) {
-            case AxisConstraint::X: hovered = mAxisXHovered; break;
-            case AxisConstraint::Y: hovered = mAxisYHovered; break;
-            case AxisConstraint::Uniform: hovered = mAxisUniformHovered; break;
-            case AxisConstraint::None: default: hovered = false; break;
+            case Gizmos::AxisConstraint::X: hovered = mGizmos.fState.mAxisXHovered; break;
+            case Gizmos::AxisConstraint::Y: hovered = mGizmos.fState.mAxisYHovered; break;
+            case Gizmos::AxisConstraint::Uniform: hovered = mGizmos.fState.mAxisUniformHovered; break;
+            case Gizmos::AxisConstraint::None: default: hovered = false; break;
             }
-            const bool active = (mAxisConstraint == handle);
+            const bool active = (mGizmos.fState.mAxisConstraint == handle);
             QColor color = baseColor;
             if (active) {
                 color = color.lighter(135);
@@ -424,11 +397,11 @@ void Canvas::renderSk(SkCanvas* const canvas,
             SkPaint borderPaint;
             borderPaint.setAntiAlias(true);
             borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
+            borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.kRotateGizmoStrokePx * invZoom * 0.2f));
             
-            const int borderLighten = hovered ? kGizmoColorLightenHover : kGizmoColorLightenNormal;
+            const int borderLighten = hovered ? mGizmos.fTheme.kGizmoColorLightenHover : mGizmos.fTheme.kGizmoColorLightenNormal;
             QColor borderColor = color.lighter(borderLighten);
-            const qreal strokeAlphaAxis = hovered ? kGizmoColorAlphaStrokeHover : kGizmoColorAlphaStrokeNormal;
+            const qreal strokeAlphaAxis = hovered ? mGizmos.fTheme.kGizmoColorAlphaStrokeHover : mGizmos.fTheme.kGizmoColorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaAxis));
             borderPaint.setColor(toSkColor(borderColor));
 
@@ -467,16 +440,18 @@ void Canvas::renderSk(SkCanvas* const canvas,
             canvas->drawPath(path, fillPaint);
             canvas->drawPath(path, borderPaint);
         };
-        auto drawScaleSquare = [&](ScaleHandle handle, const ScaleGizmoGeometry &geom, const QColor &baseColor) {
+        auto drawScaleSquare = [&](Gizmos::ScaleHandle handle,
+                                   const Gizmos::ScaleGeometry &geom,
+                                   const QColor &baseColor) {
             if (!geom.visible) { return; }
             bool hovered = false;
             switch (handle) {
-            case ScaleHandle::X: hovered = mScaleXHovered; break;
-            case ScaleHandle::Y: hovered = mScaleYHovered; break;
-            case ScaleHandle::Uniform: hovered = mScaleUniformHovered; break;
-            case ScaleHandle::None: default: hovered = false; break;
+            case Gizmos::ScaleHandle::X: hovered = mGizmos.fState.mScaleXHovered; break;
+            case Gizmos::ScaleHandle::Y: hovered = mGizmos.fState.mScaleYHovered; break;
+            case Gizmos::ScaleHandle::Uniform: hovered = mGizmos.fState.mScaleUniformHovered; break;
+            case Gizmos::ScaleHandle::None: default: hovered = false; break;
             }
-            const bool active = (mScaleConstraint == handle);
+            const bool active = (mGizmos.fState.mScaleConstraint == handle);
             QColor color = baseColor;
             if (active) {
                 color = color.lighter(135);
@@ -492,10 +467,10 @@ void Canvas::renderSk(SkCanvas* const canvas,
             SkPaint borderPaint;
             borderPaint.setAntiAlias(true);
             borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            const int borderLighten = hovered ? kGizmoColorLightenHover : kGizmoColorLightenNormal;
+            borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.kRotateGizmoStrokePx * invZoom * 0.2f));
+            const int borderLighten = hovered ? mGizmos.fTheme.kGizmoColorLightenHover : mGizmos.fTheme.kGizmoColorLightenNormal;
             QColor borderColor = color.lighter(borderLighten);
-            const qreal strokeAlphaScale = hovered ? kGizmoColorAlphaStrokeHover : kGizmoColorAlphaStrokeNormal;
+            const qreal strokeAlphaScale = hovered ? mGizmos.fTheme.kGizmoColorAlphaStrokeHover : mGizmos.fTheme.kGizmoColorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaScale));
             borderPaint.setColor(toSkColor(borderColor));
 
@@ -524,10 +499,12 @@ void Canvas::renderSk(SkCanvas* const canvas,
             }
         };
 
-        auto drawShearCircle = [&](ShearHandle handle, const ShearGizmoGeometry &geom, const QColor &baseColor) {
+        auto drawShearCircle = [&](Gizmos::ShearHandle handle,
+                                   const Gizmos::ShearGeometry &geom,
+                                   const QColor &baseColor) {
             if (!geom.visible) { return; }
-            bool hovered = (handle == ShearHandle::X) ? mShearXHovered : mShearYHovered;
-            const bool active = (mShearConstraint == handle);
+            bool hovered = (handle == Gizmos::ShearHandle::X) ? mGizmos.fState.mShearXHovered : mGizmos.fState.mShearYHovered;
+            const bool active = (mGizmos.fState.mShearConstraint == handle);
             QColor color = baseColor;
             if (active) {
                 color = color.lighter(135);
@@ -543,10 +520,10 @@ void Canvas::renderSk(SkCanvas* const canvas,
             SkPaint borderPaint;
             borderPaint.setAntiAlias(true);
             borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(kRotateGizmoStrokePx * invZoom * 0.2f));
-            const int borderLighten = hovered ? kGizmoColorLightenHover : kGizmoColorLightenNormal;
+            borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.kRotateGizmoStrokePx * invZoom * 0.2f));
+            const int borderLighten = hovered ? mGizmos.fTheme.kGizmoColorLightenHover : mGizmos.fTheme.kGizmoColorLightenNormal;
             QColor borderColor = color.lighter(borderLighten);
-            const qreal strokeAlphaShear = hovered ? kGizmoColorAlphaStrokeHover : kGizmoColorAlphaStrokeNormal;
+            const qreal strokeAlphaShear = hovered ? mGizmos.fTheme.kGizmoColorAlphaStrokeHover : mGizmos.fTheme.kGizmoColorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaShear));
             borderPaint.setColor(toSkColor(borderColor));
 
@@ -575,38 +552,38 @@ void Canvas::renderSk(SkCanvas* const canvas,
             }
         };
 
-        drawAxisRect(AxisConstraint::Y,
-                        mAxisYGeom, 
-                        QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 
-                        mAxisYHovered ? kGizmoColorAlphaFillHover : kGizmoColorAlphaFillNormal));
-        drawAxisRect(AxisConstraint::X,
-                        mAxisXGeom, 
-                        QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 
-                        mAxisXHovered ? kGizmoColorAlphaFillHover : kGizmoColorAlphaFillNormal));
-        drawAxisRect(AxisConstraint::Uniform,
-                        mAxisUniformGeom, 
-                        QColor(kGizmoColorZ.red(), kGizmoColorZ.green(), kGizmoColorZ.blue(), 
-                        mAxisUniformHovered ? kGizmoColorAlphaFillHover : kGizmoColorAlphaFillNormal));
-        drawScaleSquare(ScaleHandle::Y,
-                        mScaleYGeom, 
-                        QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 
-                        mScaleYHovered ? kGizmoColorAlphaFillHover : kGizmoColorAlphaFillNormal));
-        drawScaleSquare(ScaleHandle::X,
-                        mScaleXGeom, 
-                        QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 
-                        mScaleXHovered ? kGizmoColorAlphaFillHover : kGizmoColorAlphaFillNormal));
-        drawScaleSquare(ScaleHandle::Uniform,
-                        mScaleUniformGeom, 
-                        QColor(kGizmoColorUniform.red(), kGizmoColorUniform.green(), kGizmoColorUniform.blue(), 
-                        mScaleUniformHovered ? kGizmoColorAlphaFillHover : kGizmoColorAlphaFillNormal));
-        drawShearCircle(ShearHandle::Y,
-                        mShearYGeom, 
-                        QColor(kGizmoColorY.red(), kGizmoColorY.green(), kGizmoColorY.blue(), 
-                        mShearYHovered ? kGizmoColorAlphaFillHover : kGizmoColorAlphaFillNormal));
-        drawShearCircle(ShearHandle::X,
-                        mShearXGeom, 
-                        QColor(kGizmoColorX.red(), kGizmoColorX.green(), kGizmoColorX.blue(), 
-                        mShearXHovered ? kGizmoColorAlphaFillHover : kGizmoColorAlphaFillNormal));
+        drawAxisRect(Gizmos::AxisConstraint::Y,
+                     mGizmos.fState.mAxisYGeom,
+                     QColor(mGizmos.fTheme.kGizmoColorY.red(), mGizmos.fTheme.kGizmoColorY.green(), mGizmos.fTheme.kGizmoColorY.blue(),
+                     mGizmos.fState.mAxisYHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+        drawAxisRect(Gizmos::AxisConstraint::X,
+                     mGizmos.fState.mAxisXGeom,
+                     QColor(mGizmos.fTheme.kGizmoColorX.red(), mGizmos.fTheme.kGizmoColorX.green(), mGizmos.fTheme.kGizmoColorX.blue(),
+                     mGizmos.fState.mAxisXHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+        drawAxisRect(Gizmos::AxisConstraint::Uniform,
+                     mGizmos.fState.mAxisUniformGeom,
+                     QColor(mGizmos.fTheme.kGizmoColorZ.red(), mGizmos.fTheme.kGizmoColorZ.green(), mGizmos.fTheme.kGizmoColorZ.blue(),
+                     mGizmos.fState.mAxisUniformHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+        drawScaleSquare(Gizmos::ScaleHandle::Y,
+                        mGizmos.fState.mScaleYGeom,
+                        QColor(mGizmos.fTheme.kGizmoColorY.red(), mGizmos.fTheme.kGizmoColorY.green(), mGizmos.fTheme.kGizmoColorY.blue(),
+                        mGizmos.fState.mScaleYHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+        drawScaleSquare(Gizmos::ScaleHandle::X,
+                        mGizmos.fState.mScaleXGeom,
+                        QColor(mGizmos.fTheme.kGizmoColorX.red(), mGizmos.fTheme.kGizmoColorX.green(), mGizmos.fTheme.kGizmoColorX.blue(),
+                        mGizmos.fState.mScaleXHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+        drawScaleSquare(Gizmos::ScaleHandle::Uniform,
+                        mGizmos.fState.mScaleUniformGeom,
+                        QColor(mGizmos.fTheme.kGizmoColorUniform.red(), mGizmos.fTheme.kGizmoColorUniform.green(), mGizmos.fTheme.kGizmoColorUniform.blue(),
+                        mGizmos.fState.mScaleUniformHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+        drawShearCircle(Gizmos::ShearHandle::Y,
+                        mGizmos.fState.mShearYGeom,
+                        QColor(mGizmos.fTheme.kGizmoColorY.red(), mGizmos.fTheme.kGizmoColorY.green(), mGizmos.fTheme.kGizmoColorY.blue(),
+                        mGizmos.fState.mShearYHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+        drawShearCircle(Gizmos::ShearHandle::X,
+                        mGizmos.fState.mShearXGeom,
+                        QColor(mGizmos.fTheme.kGizmoColorX.red(), mGizmos.fTheme.kGizmoColorX.green(), mGizmos.fTheme.kGizmoColorX.blue(),
+                        mGizmos.fState.mShearXHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
     }
 
     if(mCurrentMode == CanvasMode::boxTransform ||
@@ -1476,764 +1453,6 @@ void Canvas::setParentToLastSelected()
             mSelectedBoxes.at(i)->setParentTransform(trans);
         }
     }
-}
-
-bool Canvas::prepareRotation(const QPointF &startPos, bool fromHandle)
-{
-    if (mCurrentMode != CanvasMode::boxTransform &&
-        mCurrentMode != CanvasMode::pointTransform) { return false; }
-    if (mSelectedBoxes.isEmpty()) { return false; }
-    if (mCurrentMode == CanvasMode::pointTransform) {
-        if (mSelectedPoints_d.isEmpty()) { return false; }
-    }
-
-    mRotatingFromHandle = fromHandle;
-    mValueInput.clearAndDisableInput();
-    mValueInput.setupRotate();
-
-    if (fromHandle) {
-        setGizmosSuppressed(true);
-    }
-
-    mRotPivot->setMousePos(startPos);
-    mTransMode = TransformMode::rotate;
-    mRotHalfCycles = 0;
-    mLastDRot = 0;
-
-    mDoubleClick = false;
-    mStartTransform = true;
-    return true;
-}
-
-bool Canvas::startRotatingAction(const eKeyEvent &e)
-{
-    if (!prepareRotation(e.fPos)) { return false; }
-    e.fGrabMouse();
-    return true;
-}
-
-void Canvas::updateRotateHandleGeometry(qreal invScale)
-{
-    mRotateHandleVisible = false;
-    mRotateHandleRadius = 0;
-    mRotateHandlePolygon.clear();
-    mRotateHandleHitPolygon.clear();
-
-    auto resetAllGizmos = [&]() {
-        setAxisGizmoHover(AxisConstraint::X, false);
-        setAxisGizmoHover(AxisConstraint::Y, false);
-        setAxisGizmoHover(AxisConstraint::Uniform, false);
-        setScaleGizmoHover(ScaleHandle::X, false);
-        setScaleGizmoHover(ScaleHandle::Y, false);
-        setScaleGizmoHover(ScaleHandle::Uniform, false);
-        setShearGizmoHover(ShearHandle::X, false);
-        setShearGizmoHover(ShearHandle::Y, false);
-
-        mAxisXGeom = AxisGizmoGeometry();
-        mAxisYGeom = AxisGizmoGeometry();
-        mAxisUniformGeom = AxisGizmoGeometry();
-        mScaleXGeom = ScaleGizmoGeometry();
-        mScaleYGeom = ScaleGizmoGeometry();
-        mScaleUniformGeom = ScaleGizmoGeometry();
-        mShearXGeom = ShearGizmoGeometry();
-        mShearYGeom = ShearGizmoGeometry();
-
-        mAxisConstraint = AxisConstraint::None;
-        mScaleConstraint = ScaleHandle::None;
-        mShearConstraint = ShearHandle::None;
-        mAxisHandleActive = false;
-        mScaleHandleActive = false;
-        mShearHandleActive = false;
-        mValueInput.setForce1D(false);
-        mValueInput.setXYMode();
-        mRotateHandlePolygon.clear();
-        mRotateHandleHitPolygon.clear();
-    };
-
-    if (mGizmosSuppressed) {
-        return;
-    }
-
-    if (mCurrentMode != CanvasMode::boxTransform) {
-        setRotateHandleHover(false);
-        resetAllGizmos();
-        return;
-    }
-
-    if (mSelectedBoxes.isEmpty()) {
-        setRotateHandleHover(false);
-        resetAllGizmos();
-        return;
-    }
-
-    if (!mRotPivot) {
-        setRotateHandleHover(false);
-        resetAllGizmos();
-        return;
-    }
-
-    mRotateHandleAngleDeg = 0.0; // keep gizmo orientation screen-aligned
-
-    QPointF pivot;
-    if (pivotPosForGizmosValid) {
-        pivot = pivotPosForGizmos;
-    } else {
-        pivot = mRotPivot->getAbsolutePos();
-    }
-
-    const qreal axisWidthWorld = kAxisGizmoWidthPx * invScale;
-    const qreal axisHeightWorld = kAxisGizmoHeightPx * invScale;
-    const qreal axisGapYWorld = kAxisGizmoYOffsetPx * invScale;
-    const qreal axisGapXWorld = kAxisGizmoXOffsetPx * invScale;
-
-    // const qreal anchorOffset = axisWidthWorld * 0.5;
-    const qreal anchorOffset = 2.0 * invScale;
-    mRotateHandleAnchor = pivot + QPointF(anchorOffset, -anchorOffset);
-
-    const qreal baseRotateRadiusWorld = kRotateGizmoRadiusPx * invScale;
-    mRotateHandleRadius = baseRotateRadiusWorld;
-    mRotateHandleSweepDeg = kRotateGizmoSweepDeg; // default sweep angle
-    mRotateHandleStartOffsetDeg = kRotateGizmoBaseOffsetDeg; // default base angle offset
-
-    const qreal strokeWorld = kRotateGizmoStrokePx * invScale;
-    const qreal sweepDegAbs = std::abs(mRotateHandleSweepDeg);
-    auto normalizeAngle = [](qreal degrees) {
-        degrees = std::fmod(degrees, 360.0);
-        if (degrees < 0.0) { degrees += 360.0; }
-        return degrees;
-    };
-    const qreal startAngleSk = normalizeAngle(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg);
-    const qreal direction = (mRotateHandleSweepDeg >= 0.0) ? 1.0 : -1.0;
-    mRotateHandlePolygon.clear();
-    mRotateHandleHitPolygon.clear();
-
-    if (mShowRotateGizmo && sweepDegAbs > std::numeric_limits<qreal>::epsilon()) {
-        const int segments = std::max(8, static_cast<int>(std::ceil(sweepDegAbs / 6.0)));
-        auto angleToPoint = [&](qreal angleDeg, qreal radius) {
-            const qreal angleRad = qDegreesToRadians(angleDeg);
-            return QPointF(mRotateHandleAnchor.x() + radius * std::cos(angleRad),
-                           mRotateHandleAnchor.y() + radius * std::sin(angleRad));
-        };
-        auto buildArcPolygon = [&](qreal halfThickness, QVector<QPointF> &storage) {
-            storage.clear();
-            const qreal outerRadius = mRotateHandleRadius + halfThickness;
-            if (outerRadius <= 0.0) { return; }
-            const qreal innerRadius = std::max(mRotateHandleRadius - halfThickness, 0.0);
-            storage.reserve((segments + 1) * 2);
-            for (int i = 0; i <= segments; ++i) {
-                const qreal angle = normalizeAngle(startAngleSk + direction * (sweepDegAbs * i) / segments);
-                storage.append(angleToPoint(angle, outerRadius));
-            }
-            if (innerRadius > std::numeric_limits<qreal>::epsilon()) {
-                for (int i = 0; i <= segments; ++i) {
-                    const qreal angle = normalizeAngle(startAngleSk + direction * sweepDegAbs - direction * (sweepDegAbs * i) / segments);
-                    storage.append(angleToPoint(angle, innerRadius));
-                }
-            } else {
-                storage.append(mRotateHandleAnchor);
-            }
-        };
-
-        buildArcPolygon(strokeWorld * 0.5, mRotateHandlePolygon);
-        const qreal hitHalfThickness = (kRotateGizmoHitWidthPx * invScale) * 0.5;
-        buildArcPolygon(hitHalfThickness, mRotateHandleHitPolygon);
-    }
-
-    mAxisYGeom.center = pivot + QPointF(0.0, -axisGapYWorld);
-    mAxisYGeom.size = QSizeF(axisWidthWorld, axisHeightWorld);
-    mAxisYGeom.angleDeg = 0.0;
-    mAxisYGeom.visible = mShowPositionGizmo;
-    mAxisYGeom.usePolygon = true;
-    mAxisYGeom.polygonPoints = {
-        pivot + QPointF(0.0, - 10.0 * invScale),
-        pivot + QPointF(-2.0 * invScale, - 11.0 * invScale),
-        pivot + QPointF(-2.0 * invScale, - 55.0 * invScale),
-        pivot + QPointF(-6.0 * invScale, - 57.0 * invScale),
-        pivot + QPointF(0.0, - 70.0 * invScale),
-        pivot + QPointF(6.0 * invScale, - 57.0 * invScale),
-        pivot + QPointF(2.0 * invScale, - 55.0 * invScale),
-        pivot + QPointF(2.0 * invScale, - 11.0 * invScale)
-    };
-
-    mAxisXGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
-    mAxisXGeom.size = QSizeF(axisHeightWorld, axisWidthWorld);
-    mAxisXGeom.angleDeg = 0.0;
-    mAxisXGeom.visible = mShowPositionGizmo;
-    mAxisXGeom.usePolygon = true;
-    mAxisXGeom.polygonPoints = {
-        pivot + QPointF(10.0 * invScale, 0.0),
-        pivot + QPointF(11.0 * invScale, -2.0 * invScale),
-        pivot + QPointF(55.0 * invScale, -2.0 * invScale),
-        pivot + QPointF(57.0 * invScale, -6.0 * invScale),
-        pivot + QPointF(70.0 * invScale, 0.0),
-        pivot + QPointF(57.0 * invScale, 6.0 * invScale),
-        pivot + QPointF(55.0 * invScale, 2.0 * invScale),
-        pivot + QPointF(11.0 * invScale, 2.0 * invScale)
-    };
-
-    mAxisUniformGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
-    mAxisUniformGeom.size = QSizeF(axisHeightWorld, axisWidthWorld);
-    mAxisUniformGeom.visible = mShowPositionGizmo;
-    mAxisUniformGeom.usePolygon = true;
-    mAxisUniformGeom.polygonPoints = {
-        pivot + QPointF((kAxisGizmoUniformOffsetPx + kAxisGizmoUniformChamferPx) * invScale , - kAxisGizmoUniformOffsetPx * invScale),
-        pivot + QPointF(kAxisGizmoUniformOffsetPx * invScale, - (kAxisGizmoUniformOffsetPx + kAxisGizmoUniformChamferPx) * invScale),
-        pivot + QPointF(kAxisGizmoUniformOffsetPx * invScale, - (kAxisGizmoUniformWidthPx - kAxisGizmoUniformChamferPx) * invScale),
-        pivot + QPointF((kAxisGizmoUniformOffsetPx + kAxisGizmoUniformChamferPx) * invScale, - kAxisGizmoUniformWidthPx * invScale),
-        pivot + QPointF((kAxisGizmoUniformWidthPx - kAxisGizmoUniformChamferPx) * invScale, - kAxisGizmoUniformWidthPx * invScale),
-        pivot + QPointF(kAxisGizmoUniformWidthPx * invScale, - (kAxisGizmoUniformWidthPx - kAxisGizmoUniformChamferPx) * invScale),
-        pivot + QPointF(kAxisGizmoUniformWidthPx * invScale, - (kAxisGizmoUniformOffsetPx + kAxisGizmoUniformChamferPx) * invScale),
-        pivot + QPointF((kAxisGizmoUniformWidthPx - kAxisGizmoUniformChamferPx) * invScale, - kAxisGizmoUniformOffsetPx * invScale)
-    };
-
-    const qreal rotateOffsetWorld = mAxisYGeom.size.width() * 0.5;
-    mRotateHandleRadius = baseRotateRadiusWorld + rotateOffsetWorld;
-
-    const QPointF offset(0.0, -mRotateHandleRadius);
-    mRotateHandlePos = pivot + offset;
-
-    const qreal scaleSizeWorld = kScaleGizmoSizePx * invScale;
-    const qreal scaleHalf = scaleSizeWorld * 0.5;
-    const qreal scaleGapWorld = kScaleGizmoGapPx * invScale;
-    const qreal axisYTop = mAxisYGeom.center.y() - (mAxisYGeom.size.height() * 0.5);
-    const qreal axisXRight = mAxisXGeom.center.x() + (mAxisXGeom.size.width() * 0.5);
-    const qreal scaleCenterY = axisYTop - scaleGapWorld - scaleHalf;
-    const qreal scaleCenterX = axisXRight + scaleGapWorld + scaleHalf;
-
-    mScaleYGeom.center = QPointF(mAxisYGeom.center.x(), scaleCenterY);
-    mScaleYGeom.halfExtent = scaleHalf;
-    mScaleYGeom.visible = mShowScaleGizmo;
-    mScaleYGeom.usePolygon = false;
-    mScaleYGeom.polygonPoints.clear();
-
-    mScaleXGeom.center = QPointF(scaleCenterX, mAxisXGeom.center.y());
-    mScaleXGeom.halfExtent = scaleHalf;
-    mScaleXGeom.visible = mShowScaleGizmo;
-    mScaleXGeom.usePolygon = false;
-    mScaleXGeom.polygonPoints.clear();
-
-    mScaleUniformGeom.center = QPointF(scaleCenterX, scaleCenterY);
-    mScaleUniformGeom.halfExtent = scaleHalf;
-    mScaleUniformGeom.visible = mShowScaleGizmo;
-    mScaleUniformGeom.usePolygon = true;
-    mScaleUniformGeom.polygonPoints = {
-        QPointF(mScaleUniformGeom.center.x() - scaleHalf * 2, mScaleUniformGeom.center.y() - scaleHalf),
-        QPointF(mScaleUniformGeom.center.x() + scaleHalf, mScaleUniformGeom.center.y() - scaleHalf),
-        QPointF(mScaleUniformGeom.center.x() + scaleHalf, mScaleUniformGeom.center.y() + scaleHalf * 2),
-        QPointF(mScaleUniformGeom.center.x() - scaleHalf, mScaleUniformGeom.center.y() + scaleHalf * 2),
-        QPointF(mScaleUniformGeom.center.x() - scaleHalf, mScaleUniformGeom.center.y() + scaleHalf),
-        QPointF(mScaleUniformGeom.center.x() - scaleHalf * 2, mScaleUniformGeom.center.y() + scaleHalf)
-    };
-
-    const qreal shearRadiusWorld = kShearGizmoRadiusPx * invScale;
-
-    const QPointF scaleYCenter = mScaleYGeom.center;
-    const QPointF scaleXCenter = mScaleXGeom.center;
-    const QPointF scaleUniformCenter = mScaleUniformGeom.center;
-
-    mShearXGeom.center = QPointF((scaleYCenter.x() + scaleUniformCenter.x()) * 0.5,
-                                 scaleCenterY);
-    mShearXGeom.radius = shearRadiusWorld;
-    mShearXGeom.visible = mShowShearGizmo;
-    mShearXGeom.usePolygon = true;
-    {
-        const qreal halfWidth = shearRadiusWorld * 1.5;
-        const qreal topHeight = shearRadiusWorld * 0.8;
-        //const qreal bottomHeight = shearRadiusWorld * 0.6;
-        const QPointF c = mShearXGeom.center;
-        mShearXGeom.polygonPoints = {
-            QPointF(c.x() - scaleHalf * 0.5 - halfWidth * 1.5, c.y()),
-            QPointF(c.x() - scaleHalf * 0.5 - halfWidth, c.y() - topHeight),
-            QPointF(c.x() - scaleHalf * 0.5 + halfWidth, c.y() - topHeight),
-            QPointF(c.x() - scaleHalf * 0.5 + halfWidth * 1.5, c.y()),
-            QPointF(c.x() - scaleHalf * 0.5 + halfWidth, c.y() + topHeight),
-            QPointF(c.x() - scaleHalf * 0.5 - halfWidth, c.y() + topHeight)
-        };
-    }
-
-    mShearYGeom.center = QPointF(scaleCenterX,
-                                 (scaleXCenter.y() + scaleUniformCenter.y()) * 0.5);
-    mShearYGeom.radius = shearRadiusWorld;
-    mShearYGeom.visible = mShowShearGizmo;
-    mShearYGeom.usePolygon = true;
-    {
-        const qreal halfHeight = shearRadiusWorld * 1.5;
-        const qreal topWidth = shearRadiusWorld * 0.8;
-        //const qreal bottomWidth = shearRadiusWorld * 0.6;
-        const QPointF c = mShearYGeom.center;
-        mShearYGeom.polygonPoints = {
-            QPointF(c.x(), c.y() + scaleHalf * 0.5 - halfHeight * 1.5),
-            QPointF(c.x() + topWidth, c.y() + scaleHalf * 0.5 - halfHeight),
-            QPointF(c.x() + topWidth, c.y() + scaleHalf * 0.5 + halfHeight),
-            QPointF(c.x(), c.y() + scaleHalf * 0.5 + halfHeight * 1.5),
-            QPointF(c.x() - topWidth, c.y() + scaleHalf * 0.5 + halfHeight),
-            QPointF(c.x() - topWidth, c.y() + scaleHalf * 0.5 - halfHeight)
-        };
-    }
-
-    const bool anyGizmoVisible = (mShowRotateGizmo || mShowPositionGizmo ||
-                                  mShowScaleGizmo || mShowShearGizmo);
-    mRotateHandleVisible = anyGizmoVisible;
-}
-
-void Canvas::setRotateHandleHover(bool hovered)
-{
-    if (mRotateHandleHovered == hovered) { return; }
-    mRotateHandleHovered = hovered;
-    emit requestUpdate();
-}
-
-void Canvas::setGizmosSuppressed(bool suppressed)
-{
-    if (mGizmosSuppressed == suppressed) { return; }
-    mGizmosSuppressed = suppressed;
-    if (suppressed) {
-        mRotateHandleHovered = false;
-        mAxisXHovered = false;
-        mAxisYHovered = false;
-        mAxisUniformHovered = false;
-        mScaleXHovered = false;
-        mScaleYHovered = false;
-        mScaleUniformHovered = false;
-        mShearXHovered = false;
-        mShearYHovered = false;
-    }
-    emit requestUpdate();
-}
-
-void Canvas::setShowRotateGizmo(bool enabled)
-{
-    if (mShowRotateGizmo == enabled) { return; }
-    mShowRotateGizmo = enabled;
-    if (!enabled) {
-        setRotateHandleHover(false);
-        mRotatingFromHandle = false;
-        setGizmosSuppressed(false);
-    }
-    emit requestUpdate();
-}
-
-void Canvas::setShowPositionGizmo(bool enabled)
-{
-    if (mShowPositionGizmo == enabled) { return; }
-    mShowPositionGizmo = enabled;
-    if (!enabled) {
-        mAxisHandleActive = false;
-        mAxisConstraint = AxisConstraint::None;
-        setAxisGizmoHover(AxisConstraint::X, false);
-        setAxisGizmoHover(AxisConstraint::Y, false);
-        setAxisGizmoHover(AxisConstraint::Uniform, false);
-        setGizmosSuppressed(false);
-    }
-    emit requestUpdate();
-}
-
-void Canvas::setShowScaleGizmo(bool enabled)
-{
-    if (mShowScaleGizmo == enabled) { return; }
-    mShowScaleGizmo = enabled;
-    if (!enabled) {
-        mScaleHandleActive = false;
-        mScaleConstraint = ScaleHandle::None;
-        setScaleGizmoHover(ScaleHandle::X, false);
-        setScaleGizmoHover(ScaleHandle::Y, false);
-        setScaleGizmoHover(ScaleHandle::Uniform, false);
-        setGizmosSuppressed(false);
-    }
-    emit requestUpdate();
-}
-
-void Canvas::setShowShearGizmo(bool enabled)
-{
-    if (mShowShearGizmo == enabled) { return; }
-    mShowShearGizmo = enabled;
-    if (!enabled) {
-        mShearHandleActive = false;
-        mShearConstraint = ShearHandle::None;
-        setShearGizmoHover(ShearHandle::X, false);
-        setShearGizmoHover(ShearHandle::Y, false);
-        setGizmosSuppressed(false);
-    }
-    emit requestUpdate();
-}
-
-void Canvas::setAxisGizmoHover(AxisConstraint axis, bool hovered)
-{
-    bool *target = nullptr;
-    switch (axis) {
-    case AxisConstraint::X:
-        target = &mAxisXHovered;
-        break;
-    case AxisConstraint::Y:
-        target = &mAxisYHovered;
-        break;
-    case AxisConstraint::Uniform:
-        target = &mAxisUniformHovered;
-        break;
-    case AxisConstraint::None:
-    default:
-        return;
-    }
-
-    if (*target == hovered) { return; }
-    *target = hovered;
-    emit requestUpdate();
-}
-
-void Canvas::setScaleGizmoHover(ScaleHandle handle, bool hovered)
-{
-    bool *target = nullptr;
-    switch (handle) {
-    case ScaleHandle::X:
-        target = &mScaleXHovered;
-        break;
-    case ScaleHandle::Y:
-        target = &mScaleYHovered;
-        break;
-    case ScaleHandle::Uniform:
-        target = &mScaleUniformHovered;
-        break;
-    case ScaleHandle::None:
-    default:
-        return;
-    }
-
-    if (*target == hovered) { return; }
-    *target = hovered;
-    emit requestUpdate();
-}
-
-void Canvas::setShearGizmoHover(ShearHandle handle, bool hovered)
-{
-    bool *target = nullptr;
-    switch (handle) {
-    case ShearHandle::X:
-        target = &mShearXHovered;
-        break;
-    case ShearHandle::Y:
-        target = &mShearYHovered;
-        break;
-    case ShearHandle::None:
-    default:
-        return;
-    }
-
-    if (*target == hovered) { return; }
-    *target = hovered;
-    emit requestUpdate();
-}
-
-bool Canvas::pointOnScaleGizmo(ScaleHandle handle, const QPointF &pos, qreal invScale) const
-{
-    Q_UNUSED(invScale);
-    if (!mRotateHandleVisible) { return false; }
-
-    const ScaleGizmoGeometry *geom = nullptr;
-    switch (handle) {
-    case ScaleHandle::X:
-        geom = &mScaleXGeom;
-        break;
-    case ScaleHandle::Y:
-        geom = &mScaleYGeom;
-        break;
-    case ScaleHandle::Uniform:
-        geom = &mScaleUniformGeom;
-        break;
-    case ScaleHandle::None:
-    default:
-        return false;
-    }
-
-    if (!geom->visible || geom->halfExtent <= 0.0) { return false; }
-
-    if (geom->usePolygon && geom->polygonPoints.size() >= 3) {
-        QPolygonF poly(geom->polygonPoints);
-        return poly.containsPoint(pos, Qt::OddEvenFill);
-    }
-
-    const qreal half = geom->halfExtent;
-    return std::abs(pos.x() - geom->center.x()) <= half &&
-           std::abs(pos.y() - geom->center.y()) <= half;
-}
-
-bool Canvas::pointOnShearGizmo(ShearHandle handle, const QPointF &pos, qreal invScale) const
-{
-    Q_UNUSED(invScale);
-    if (!mRotateHandleVisible) { return false; }
-
-    const ShearGizmoGeometry *geom = nullptr;
-    switch (handle) {
-    case ShearHandle::X:
-        geom = &mShearXGeom;
-        break;
-    case ShearHandle::Y:
-        geom = &mShearYGeom;
-        break;
-    case ShearHandle::None:
-    default:
-        return false;
-    }
-
-    if (!geom->visible) { return false; }
-
-    if (geom->usePolygon && geom->polygonPoints.size() >= 3) {
-        QPolygonF poly(geom->polygonPoints);
-        return poly.containsPoint(pos, Qt::OddEvenFill);
-    }
-
-    if (geom->radius <= 0.0) { return false; }
-
-    const qreal distance = std::hypot(pos.x() - geom->center.x(),
-                                      pos.y() - geom->center.y());
-    return distance <= geom->radius;
-}
-
-bool Canvas::pointOnAxisGizmo(AxisConstraint axis, const QPointF &pos, qreal invScale) const
-{
-    Q_UNUSED(invScale);
-    if (!mRotateHandleVisible) { return false; }
-
-    const AxisGizmoGeometry* geomPtr;
-    switch (axis) {
-        case AxisConstraint::X:
-            geomPtr = &mAxisXGeom;
-            break;
-        case AxisConstraint::Y:
-            geomPtr = &mAxisYGeom;
-            break;
-        case AxisConstraint::Uniform:
-            geomPtr = &mAxisUniformGeom;
-            break;
-        default:
-            return false;
-    }
-    const AxisGizmoGeometry &geom = *geomPtr;
-
-    if (!geom.visible) { return false; }
-
-    if (geom.usePolygon && geom.polygonPoints.size() >= 3) {
-        QPolygonF poly(geom.polygonPoints);
-        return poly.containsPoint(pos, Qt::OddEvenFill);
-    }
-
-    const QPointF relative = pos - geom.center;
-    const qreal angleRadGeom = qDegreesToRadians(geom.angleDeg);
-    const qreal cosG = std::cos(angleRadGeom);
-    const qreal sinG = std::sin(angleRadGeom);
-    const qreal localX = relative.x() * cosG + relative.y() * sinG;
-    const qreal localY = -relative.x() * sinG + relative.y() * cosG;
-    const qreal halfW = geom.size.width() * 0.5;
-    const qreal halfH = geom.size.height() * 0.5;
-    return std::abs(localX) <= halfW && std::abs(localY) <= halfH;
-}
-
-bool Canvas::pointOnRotateGizmo(const QPointF &pos, qreal invScale) const
-{
-    if (!mRotateHandleVisible || !mShowRotateGizmo) { return false; }
-    if (mRotateHandleHitPolygon.size() >= 3) {
-        QPolygonF hitPoly(mRotateHandleHitPolygon);
-        if (hitPoly.containsPoint(pos, Qt::OddEvenFill)) {
-            return true;
-        }
-    }
-    const qreal halfThicknessWorld = (kRotateGizmoHitWidthPx * invScale) * 0.5;
-    const QPointF center = mRotateHandleAnchor;
-    const qreal radius = mRotateHandleRadius;
-    if (radius <= 0) { return false; }
-
-    const qreal dx = pos.x() - center.x();
-    const qreal dy = pos.y() - center.y();
-    const qreal distance = std::hypot(dx, dy);
-    if (distance < radius - halfThicknessWorld || distance > radius + halfThicknessWorld) {
-        return false;
-    }
-
-    const double angleCCW = qRadiansToDegrees(std::atan2(center.y() - pos.y(), pos.x() - center.x()));
-    const double skAngle = std::fmod(360.0 + (360.0 - angleCCW), 360.0);
-    const double arcStart = std::fmod(mRotateHandleStartOffsetDeg + mRotateHandleAngleDeg, 360.0);
-    const double normalizedStart = arcStart < 0 ? arcStart + 360.0 : arcStart;
-    const double delta = std::fmod((skAngle - normalizedStart + 360.0), 360.0);
-
-    double extraAngleDeg = 0.0;
-    if (radius > 0) {
-        const qreal halfStrokeWorld = (kRotateGizmoStrokePx * invScale) * 0.5;
-        extraAngleDeg = qRadiansToDegrees(halfStrokeWorld / radius);
-    }
-
-    if (delta <= mRotateHandleSweepDeg + extraAngleDeg) { return true; }
-    if (extraAngleDeg > 0.0 && delta >= 360.0 - extraAngleDeg) { return true; }
-    return false;
-}
-
-void Canvas::updateRotateHandleHover(const QPointF &pos, qreal invScale)
-{
-    updateRotateHandleGeometry(invScale);
-    setRotateHandleHover(pointOnRotateGizmo(pos, invScale));
-    setAxisGizmoHover(AxisConstraint::X, pointOnAxisGizmo(AxisConstraint::X, pos, invScale));
-    setAxisGizmoHover(AxisConstraint::Y, pointOnAxisGizmo(AxisConstraint::Y, pos, invScale));
-    setAxisGizmoHover(AxisConstraint::Uniform, pointOnAxisGizmo(AxisConstraint::Uniform, pos, invScale));
-    setScaleGizmoHover(ScaleHandle::X, pointOnScaleGizmo(ScaleHandle::X, pos, invScale));
-    setScaleGizmoHover(ScaleHandle::Y, pointOnScaleGizmo(ScaleHandle::Y, pos, invScale));
-    setScaleGizmoHover(ScaleHandle::Uniform, pointOnScaleGizmo(ScaleHandle::Uniform, pos, invScale));
-    setShearGizmoHover(ShearHandle::X, pointOnShearGizmo(ShearHandle::X, pos, invScale));
-    setShearGizmoHover(ShearHandle::Y, pointOnShearGizmo(ShearHandle::Y, pos, invScale));
-}
-
-bool Canvas::startScaleConstrainedMove(const eMouseEvent &e, ScaleHandle handle)
-{
-    if (mCurrentMode != CanvasMode::boxTransform &&
-        mCurrentMode != CanvasMode::pointTransform) { return false; }
-    if (mSelectedBoxes.isEmpty() && mSelectedPoints_d.isEmpty()) { return false; }
-
-    mValueInput.clearAndDisableInput();
-    mValueInput.setupScale();
-
-    if (handle == ScaleHandle::Uniform) {
-        mValueInput.setForce1D(false);
-        mValueInput.setXYMode();
-    } else {
-        mValueInput.setForce1D(true);
-        if (handle == ScaleHandle::X) {
-            mValueInput.setXOnlyMode();
-        } else {
-            mValueInput.setYOnlyMode();
-        }
-    }
-
-    mTransMode = TransformMode::scale;
-    mDoubleClick = false;
-    mStartTransform = true;
-
-    mScaleConstraint = handle;
-    mScaleHandleActive = true;
-    setScaleGizmoHover(handle, true);
-    mRotPivot->setMousePos(e.fPos);
-    setGizmosSuppressed(true);
-
-    e.fGrabMouse();
-    return true;
-}
-
-bool Canvas::startShearConstrainedMove(const eMouseEvent &e, ShearHandle handle)
-{
-    if (mCurrentMode != CanvasMode::boxTransform &&
-        mCurrentMode != CanvasMode::pointTransform) { return false; }
-    if (mSelectedBoxes.isEmpty() && mSelectedPoints_d.isEmpty()) { return false; }
-
-    mValueInput.clearAndDisableInput();
-    mValueInput.setupShear();
-    mValueInput.setForce1D(true);
-    if (handle == ShearHandle::X) {
-        mValueInput.setXOnlyMode();
-    } else {
-        mValueInput.setYOnlyMode();
-    }
-
-    mTransMode = TransformMode::shear;
-    mDoubleClick = false;
-    mStartTransform = true;
-
-    mShearConstraint = handle;
-    mShearHandleActive = true;
-    setShearGizmoHover(handle, true);
-    mRotPivot->setMousePos(e.fPos);
-    setGizmosSuppressed(true);
-
-    e.fGrabMouse();
-    return true;
-}
-
-bool Canvas::tryStartShearGizmo(const eMouseEvent &e, qreal invScale)
-{
-    updateRotateHandleGeometry(invScale);
-    if (!mRotateHandleVisible) { return false; }
-
-    if (pointOnShearGizmo(ShearHandle::Y, e.fPos, invScale)) {
-        return startShearConstrainedMove(e, ShearHandle::Y);
-    }
-    if (pointOnShearGizmo(ShearHandle::X, e.fPos, invScale)) {
-        return startShearConstrainedMove(e, ShearHandle::X);
-    }
-    return false;
-}
-
-bool Canvas::tryStartScaleGizmo(const eMouseEvent &e, qreal invScale)
-{
-    updateRotateHandleGeometry(invScale);
-    if (!mRotateHandleVisible) { return false; }
-
-    if (pointOnScaleGizmo(ScaleHandle::Y, e.fPos, invScale)) {
-        return startScaleConstrainedMove(e, ScaleHandle::Y);
-    }
-    if (pointOnScaleGizmo(ScaleHandle::X, e.fPos, invScale)) {
-        return startScaleConstrainedMove(e, ScaleHandle::X);
-    }
-    if (pointOnScaleGizmo(ScaleHandle::Uniform, e.fPos, invScale)) {
-        return startScaleConstrainedMove(e, ScaleHandle::Uniform);
-    }
-    return false;
-}
-
-bool Canvas::startAxisConstrainedMove(const eMouseEvent &e, AxisConstraint axis)
-{
-    if (mCurrentMode != CanvasMode::boxTransform &&
-        mCurrentMode != CanvasMode::pointTransform) { return false; }
-    if (mSelectedBoxes.isEmpty() && mSelectedPoints_d.isEmpty()) { return false; }
-
-    mValueInput.clearAndDisableInput();
-    mValueInput.setupMove();
-    mValueInput.setForce1D(true);
-    if (axis == AxisConstraint::X) {
-        mValueInput.setXOnlyMode();
-    } else {
-        if (axis == AxisConstraint::Y) {
-            mValueInput.setYOnlyMode();
-        } else {
-            mValueInput.setXYMode();
-        }
-    }
-
-    mTransMode = TransformMode::move;
-    mDoubleClick = false;
-    mStartTransform = true;
-    mAxisConstraint = axis;
-    mAxisHandleActive = true;
-    setAxisGizmoHover(axis, true);
-    setGizmosSuppressed(true);
-    e.fGrabMouse();
-    return true;
-}
-
-bool Canvas::tryStartAxisGizmo(const eMouseEvent &e, qreal invScale)
-{
-    updateRotateHandleGeometry(invScale);
-    if (!mRotateHandleVisible) { return false; }
-
-    if (pointOnAxisGizmo(AxisConstraint::Uniform, e.fPos, invScale)) {
-        return startAxisConstrainedMove(e, AxisConstraint::Uniform);
-    }
-    if (pointOnAxisGizmo(AxisConstraint::Y, e.fPos, invScale)) {
-        return startAxisConstrainedMove(e, AxisConstraint::Y);
-    }
-    if (pointOnAxisGizmo(AxisConstraint::X, e.fPos, invScale)) {
-        return startAxisConstrainedMove(e, AxisConstraint::X);
-    }
-    return false;
-}
-
-bool Canvas::tryStartRotateWithGizmo(const eMouseEvent &e, qreal invScale)
-{
-    updateRotateHandleGeometry(invScale);
-    const bool hovered = pointOnRotateGizmo(e.fPos, invScale);
-    setRotateHandleHover(hovered);
-    if (!hovered) { return false; }
-
-    if (!prepareRotation(e.fPos, true)) {
-        setRotateHandleHover(false);
-        return false;
-    }
-    e.fGrabMouse();
-    return true;
 }
 
 bool Canvas::startScalingAction(const eKeyEvent &e)
