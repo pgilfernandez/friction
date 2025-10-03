@@ -49,6 +49,7 @@
 extern "C" {
 #include <libavutil/log.h>
 #include <libavformat/avformat.h>
+#include <libavutil/avutil.h>
 }
 
 AppSupport::AppSupport(QObject *parent)
@@ -1002,9 +1003,15 @@ void AppSupport::checkPerms(const bool &isRenderer)
 void AppSupport::checkFFmpeg(const bool &isRenderer)
 {
     av_log_set_level(AV_LOG_ERROR);
+    const auto version = avutil_version();
+    const QString info = av_version_info();
+    qWarning() << "Using FFmpeg" << info << version;
 #ifndef QT_DEBUG
-    const QString warning = QObject::tr("Friction is built against an unsupported FFmpeg version. Use at own risk and don't report any issues upstream.");
-    if (avformat_version() >= 3812708) {
+    if (info.contains("friction")) { return; }
+    const QString warning = QObject::tr("Friction is using an unsupported FFmpeg version, "
+                                        "video and/or image export will not work properly. "
+                                        "Use at own risk and don't report any issues upstream.");
+    if (version < 3600000 || version >= 3700000) {
         if (isRenderer) { qWarning() << warning; }
         else {
             QMessageBox::critical(nullptr,
