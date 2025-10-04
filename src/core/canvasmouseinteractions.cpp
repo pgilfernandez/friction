@@ -824,7 +824,12 @@ void Canvas::shearSelected(const eMouseEvent& e) {
     if(mValueInput.inputEnabled()) {
         shearBy = mValueInput.getValue();
     } else {
-        const qreal axisDelta = mValueInput.xOnlyMode() ? distMoved.x() : distMoved.y();
+        qreal axisDelta;
+        if (mValueInput.xOnlyMode()) {
+            axisDelta = -distMoved.x();
+        } else {
+            axisDelta = distMoved.y();
+        }
         shearBy = axisDelta * 0.01;
     }
     qreal shearX = 0;
