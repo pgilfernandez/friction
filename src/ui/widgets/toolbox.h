@@ -84,16 +84,11 @@ namespace Friction
             QActionGroup *mGroupNodes;
             QActionGroup *mGroupDraw;
             QActionGroup *mGroupColorPicker;
-            QActionGroup *mGroupGizmos;
 
             QDoubleSlider *mDrawPathMaxError;
             QDoubleSlider *mDrawPathSmooth;
 
             QAction *mLocalPivot;
-            QAction *mShowPositionGizmo;
-            QAction *mShowRotationGizmo;
-            QAction *mShowScaleGizmo;
-            QAction *mShowShearGizmo;
 
             QToolButton *mColorPickerButton;
             QLabel *mColorPickerLabel;

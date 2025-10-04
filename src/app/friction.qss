@@ -206,7 +206,8 @@ QComboBox,
 QPushButton,
 QToolButton,
 QAction,
-#ToolBoxButton
+#ToolBoxButton,
+#ToolBoxGizmo
 {
     background-color: %1;
     border-radius: 2%;
@@ -236,7 +237,8 @@ QToolButton:hover,
 QPushButton:checked,
 QToolButton:checked,
 QAction:checked,
-#ToolBoxButton:hover
+#ToolBoxButton:hover,
+#ToolBoxGizmo:hover
 {
     background-color: %3;
     border-color: %4;
@@ -666,25 +668,15 @@ ExpressionEditor {
     background: %6;
 }
 
-#ToolBoxButton {
+#ToolBoxButton,
+#ToolBoxGizmo {
     margin-top: .05em;
     margin-bottom: .05em;
     margin-left: .1em;
     margin-right: .1em;
 }
 
-#ToolBoxButton:disabled {
+#ToolBoxButton:disabled,
+#ToolBoxGizmo:!checked {
     background: transparent;
-}
-
-Friction--Ui--ToolBar#ToolBoxMain::separator {
-    background-color: transparent;
-}
-
-Friction--Ui--ToolBar#ToolBoxMain::separator:vertical {
-    height: %10;
-}
-
-Friction--Ui--ToolBar#ToolBoxMain::separator:horizontal {
-    width: %10;
 }

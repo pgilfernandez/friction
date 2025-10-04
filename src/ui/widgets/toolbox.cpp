@@ -24,7 +24,6 @@
 #include "themesupport.h"
 
 #include <QToolButton>
-#include <QSignalBlocker>
 
 using namespace Friction::Ui;
 
@@ -44,10 +43,6 @@ ToolBox::ToolBox(Actions &actions,
     , mDrawPathMaxError(nullptr)
     , mDrawPathSmooth(nullptr)
     , mLocalPivot(nullptr)
-    , mShowPositionGizmo(nullptr)
-    , mShowRotationGizmo(nullptr)
-    , mShowScaleGizmo(nullptr)
-    , mShowShearGizmo(nullptr)
     , mColorPickerButton(nullptr)
     , mColorPickerLabel(nullptr)
 {
@@ -269,81 +264,6 @@ void ToolBox::setupMainActions()
     });
     mGroupMain->addAction(mLocalPivot);
 
-    // Gizmos visibility toggles
-    mGroupMain->addAction(mControls->addSeparator());
-
-    mShowPositionGizmo = new QAction(mDocument.showPositionGizmo() ?
-                                QIcon::fromTheme("gizmo_translate_on") :
-                                QIcon::fromTheme("gizmo_translate_off"),
-                                tr("Translate Gizmo"),
-                              mMain);
-    // TODO:
-    // mShowPositionGizmo->setShortcut(QKeySequence(AppSupport::getSettings("shortcuts",
-    //                                                               "positionGizmo",
-    //                                                               "P").toString()));
-    connect(mShowPositionGizmo, &QAction::triggered,
-            this, [this]() {
-        mDocument.setShowPositionGizmo(!mDocument.showPositionGizmo());
-        mShowPositionGizmo->setIcon(mDocument.showPositionGizmo() ?
-                         QIcon::fromTheme("gizmo_translate_on") :
-                         QIcon::fromTheme("gizmo_translate_off"));
-    });
-    mGroupMain->addAction(mShowPositionGizmo);
-
-    mShowRotationGizmo = new QAction(mDocument.showRotateGizmo() ?
-                                QIcon::fromTheme("gizmo_rotate_on") :
-                                QIcon::fromTheme("gizmo_rotate_off"),
-                                tr("Rotate Gizmo"),
-                              mMain);
-    // TODO:
-    // mShowRotationGizmo->setShortcut(QKeySequence(AppSupport::getSettings("shortcuts",
-    //                                                               "rotationGizmo",
-    //                                                               "P").toString()));
-    connect(mShowRotationGizmo, &QAction::triggered,
-            this, [this]() {
-        mDocument.setShowRotateGizmo(!mDocument.showRotateGizmo());
-        mShowRotationGizmo->setIcon(mDocument.showRotateGizmo() ?
-                         QIcon::fromTheme("gizmo_rotate_on") :
-                         QIcon::fromTheme("gizmo_rotate_off"));
-    });
-    mGroupMain->addAction(mShowRotationGizmo);
-
-    mShowScaleGizmo = new QAction(mDocument.showScaleGizmo() ?
-                                QIcon::fromTheme("gizmo_scale_on") :
-                                QIcon::fromTheme("gizmo_scale_off"),
-                                tr("Scale Gizmo"),
-                              mMain);
-    // TODO:
-    // mShowScaleGizmo->setShortcut(QKeySequence(AppSupport::getSettings("shortcuts",
-    //                                                               "scaleGizmo",
-    //                                                               "P").toString()));
-    connect(mShowScaleGizmo, &QAction::triggered,
-            this, [this]() {
-        mDocument.setShowScaleGizmo(!mDocument.showScaleGizmo());
-        mShowScaleGizmo->setIcon(mDocument.showScaleGizmo() ?
-                         QIcon::fromTheme("gizmo_scale_on") :
-                         QIcon::fromTheme("gizmo_scale_off"));
-    });
-    mGroupMain->addAction(mShowScaleGizmo);
-
-    mShowShearGizmo = new QAction(mDocument.showShearGizmo() ?
-                                QIcon::fromTheme("gizmo_shear_on") :
-                                QIcon::fromTheme("gizmo_shear_off"),
-                                tr("Shear Gizmo"),
-                              mMain);
-    // TODO:
-    // mShowShearGizmo->setShortcut(QKeySequence(AppSupport::getSettings("shortcuts",
-    //                                                               "shearGizmo",
-    //                                                               "P").toString()));
-    connect(mShowShearGizmo, &QAction::triggered,
-            this, [this]() {
-        mDocument.setShowShearGizmo(!mDocument.showShearGizmo());
-        mShowShearGizmo->setIcon(mDocument.showShearGizmo() ?
-                         QIcon::fromTheme("gizmo_shear_on") :
-                         QIcon::fromTheme("gizmo_shear_off"));
-    });
-    mGroupMain->addAction(mShowShearGizmo);
-
     mMain->addActions(mGroupMain->actions());
 }
 
@@ -387,6 +307,7 @@ void ToolBox::setupNodesAction(const QIcon &icon,
         }
     });
     mControls->addAction(mGroupNodes->addAction(act));
+    mGroupNodes->addAction(mControls->addSeparator());
     ThemeSupport::setToolbarButtonStyle("ToolBoxButton", mControls, act);
 }
 
@@ -548,11 +469,6 @@ void ToolBox::setCanvasMode(const CanvasMode &mode)
     mGroupDraw->setVisible(drawMode);
 
     mLocalPivot->setEnabled(boxMode || pointMode);
-    const bool gizmoToggleEnabled = boxMode || pointMode;
-    if (mShowPositionGizmo) { mShowPositionGizmo->setEnabled(gizmoToggleEnabled); }
-    if (mShowRotationGizmo) { mShowRotationGizmo->setEnabled(gizmoToggleEnabled); }
-    if (mShowScaleGizmo) { mShowScaleGizmo->setEnabled(gizmoToggleEnabled); }
-    if (mShowShearGizmo) { mShowShearGizmo->setEnabled(gizmoToggleEnabled); }
 
     if (mExtra) { mExtra->setCanvasMode(mode); }
 

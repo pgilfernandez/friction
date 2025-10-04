@@ -51,6 +51,10 @@ namespace Friction
             void resetWidgets();
             void setupWidgets();
             void setupTransform();
+            void setupTransformInteractPosition();
+            void setupTransformInteractRotate();
+            void setupTransformInteractScale();
+            void setupTransformInteractShear();
 
             ConnContextQPtr<Canvas> mCanvas;
             CanvasMode mCanvasMode;
@@ -75,6 +79,7 @@ namespace Friction
             QActionGroup *mTransformBottomRight;
             QActionGroup *mTransformPivot;
             QActionGroup *mTransformOpacity;
+            QActionGroup *mTransformInteract;
         };
     }
 }

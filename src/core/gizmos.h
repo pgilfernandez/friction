@@ -61,7 +61,8 @@ namespace Friction
                 Y
             };
 
-            struct AxisGeometry {
+            struct AxisGeometry
+            {
                 QPointF center;
                 QSizeF size;
                 qreal angleDeg = 0.0;
@@ -70,7 +71,8 @@ namespace Friction
                 QVector<QPointF> polygonPoints;
             };
 
-            struct ScaleGeometry {
+            struct ScaleGeometry
+            {
                 QPointF center;
                 qreal halfExtent = 0.0;
                 bool visible = false;
@@ -78,7 +80,8 @@ namespace Friction
                 QVector<QPointF> polygonPoints;
             };
 
-            struct ShearGeometry {
+            struct ShearGeometry
+            {
                 QPointF center;
                 qreal radius = 0.0;
                 bool visible = false;

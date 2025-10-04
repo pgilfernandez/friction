@@ -317,6 +317,7 @@ private:
     void setupMenuScene();
     void setupMenuEffects();
     void setupMenuExtras();
+    void setupMenuGizmos();
     void setupPropertiesActions();
 
     BoundingBox* getCurrentBox();

@@ -746,11 +746,15 @@ void BoundingBox::scale(const qreal scaleBy) {
     scale(scaleBy, scaleBy);
 }
 
-void BoundingBox::scale(const qreal scaleXBy, const qreal scaleYBy) {
+void BoundingBox::scale(const qreal scaleXBy,
+                        const qreal scaleYBy)
+{
     mTransformAnimator->scale(scaleXBy, scaleYBy);
 }
 
-void BoundingBox::shear(const qreal shearXBy, const qreal shearYBy) {
+void BoundingBox::shear(const qreal shearXBy,
+                        const qreal shearYBy)
+{
     if (auto boxTransform = getBoxTransformAnimator()) {
         if (auto shearAnimator = boxTransform->getShearAnimator()) {
             shearAnimator->incSavedValueToCurrentValue(shearXBy, shearYBy);
