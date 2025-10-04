@@ -708,7 +708,7 @@ void Canvas::scaleSelected(const eMouseEvent& e) {
     if(mValueInput.inputEnabled()) {
         scaleBy = mValueInput.getValue();
     } else {
-        scaleBy = 1 + distSign(distMoved)*0.003;
+        scaleBy = 1 + distSign({distMoved.x(), -distMoved.y()})*0.003;
     }
     qreal scaleX;
     qreal scaleY;
