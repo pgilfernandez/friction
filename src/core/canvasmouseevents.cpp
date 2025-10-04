@@ -115,10 +115,10 @@ void Canvas::mouseMoveEvent(const eMouseEvent &e)
         }
         if (mStartTransform &&
             leftPressed &&
-            !mGizmos.fState.mRotatingFromHandle &&
-            !mGizmos.fState.mAxisHandleActive &&
-            !mGizmos.fState.mScaleHandleActive &&
-            !mGizmos.fState.mShearHandleActive) {
+            !mGizmos.fState.rotatingFromHandle &&
+            !mGizmos.fState.axisHandleActive &&
+            !mGizmos.fState.scaleHandleActive &&
+            !mGizmos.fState.shearHandleActive) {
             if((mCurrentMode == CanvasMode::pointTransform &&
                 !mPressedPoint && !mCurrentNormalSegment.isValid()) ||
                (mCurrentMode == CanvasMode::boxTransform &&

@@ -45,6 +45,7 @@ namespace Friction
                 Y,
                 Uniform
             };
+
             enum class ScaleHandle
             {
                 None,
@@ -52,12 +53,14 @@ namespace Friction
                 Y,
                 Uniform
             };
+
             enum class ShearHandle
             {
                 None,
                 X,
                 Y
             };
+
             struct AxisGeometry {
                 QPointF center;
                 QSizeF size;
@@ -66,6 +69,7 @@ namespace Friction
                 bool usePolygon = false;
                 QVector<QPointF> polygonPoints;
             };
+
             struct ScaleGeometry {
                 QPointF center;
                 qreal halfExtent = 0.0;
@@ -73,6 +77,7 @@ namespace Friction
                 bool usePolygon = false;
                 QVector<QPointF> polygonPoints;
             };
+
             struct ShearGeometry {
                 QPointF center;
                 qreal radius = 0.0;
@@ -80,78 +85,84 @@ namespace Friction
                 bool usePolygon = false;
                 QVector<QPointF> polygonPoints;
             };
+
             struct Config
             {
-                qreal kRotateGizmoSweepDeg = 90.0; // default sweep of gizmo arc
-                qreal kRotateGizmoBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
-                qreal kRotateGizmoRadiusPx = 45.0; // gizmo radius in screen pixels
-                qreal kRotateGizmoStrokePx = 4.0; // arc stroke thickness in screen pixels
-                qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx + 2.0; // hit area thickness in screen pixels
-                qreal kAxisGizmoWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
-                qreal kAxisGizmoHeightPx = 60.0; // axis gizmo rectangle height in screen pixels
-                qreal kAxisGizmoYOffsetPx = 40.0; // vertical distance of Y gizmo from pivot in pixels
-                qreal kAxisGizmoUniformOffsetPx = 7.0; // XY offset from pivot for Uniform position gizmo in pixels
-                qreal kAxisGizmoUniformWidthPx = 26.0; // XY square width for Uniform position gizmo in pixels
-                qreal kAxisGizmoUniformChamferPx = 1.0; // XY square chamfer for Uniform position gizmo in pixels
-                qreal kAxisGizmoXOffsetPx = 40.0; // horizontal distance of X gizmo from pivot in pixels
-                qreal kScaleGizmoSizePx = 10.0; // scale gizmo square size in screen pixels
-                qreal kScaleGizmoGapPx = 2.0; // gap between position gizmos and scale gizmos in screen pixels
-                qreal kShearGizmoRadiusPx = 6.0; // shear gizmo circle radius in screen pixels
-                qreal kShearGizmoGapPx = 2.0; // gap between scale and shear gizmos in screen pixels
+                qreal rotateSweepDeg = 90.0; // default sweep of gizmo arc
+                qreal rotateBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
+                qreal rotateRadiusPx = 45.0; // gizmo radius in screen pixels
+                qreal rotateStrokePx = 4.0; // arc stroke thickness in screen pixels
+                qreal rotateHitWidthPx = rotateStrokePx + 2.0; // hit area thickness in screen pixels
+                qreal axisWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
+                qreal axisHeightPx = 60.0; // axis gizmo rectangle height in screen pixels
+                qreal axisYOffsetPx = 40.0; // vertical distance of Y gizmo from pivot in pixels
+                qreal axisUniformOffsetPx = 7.0; // XY offset from pivot for Uniform position gizmo in pixels
+                qreal axisUniformWidthPx = 26.0; // XY square width for Uniform position gizmo in pixels
+                qreal axisUniformChamferPx = 1.0; // XY square chamfer for Uniform position gizmo in pixels
+                qreal axisXOffsetPx = 40.0; // horizontal distance of X gizmo from pivot in pixels
+                qreal scaleSizePx = 10.0; // scale gizmo square size in screen pixels
+                qreal scaleGapPx = 2.0; // gap between position gizmos and scale gizmos in screen pixels
+                qreal shearRadiusPx = 6.0; // shear gizmo circle radius in screen pixels
+                // TODO? this is not used
+                qreal shearGapPx = 2.0; // gap between scale and shear gizmos in screen pixels
             };
+
             struct Theme
             {
-                QColor kGizmoColorX = QColor(232, 32, 45);
-                QColor kGizmoColorY = QColor(134, 232, 32);
-                QColor kGizmoColorZ = QColor(32, 139, 232);
-                QColor kGizmoColorUniform = QColor(232, 215, 32);
-                qreal kGizmoColorAlphaFillNormal = 100.0;
-                qreal kGizmoColorAlphaFillHover = 200.0;
-                qreal kGizmoColorAlphaStrokeNormal = 200.0;
-                qreal kGizmoColorAlphaStrokeHover = 0.0;
-                int kGizmoColorLightenNormal = 120;
-                int kGizmoColorLightenHover = 100;
+                // TODO: get colors from theme
+                // wait until we merge the 'theme-changes' branch
+                QColor colorX = QColor(232, 32, 45);
+                QColor colorY = QColor(134, 232, 32);
+                QColor colorZ = QColor(32, 139, 232);
+                QColor colorUniform = QColor(232, 215, 32);
+                qreal colorAlphaFillNormal = 100.0;
+                qreal colorAlphaFillHover = 200.0;
+                qreal colorAlphaStrokeNormal = 200.0;
+                qreal colorAlphaStrokeHover = 0.0;
+                int colorLightenNormal = 120;
+                int colorLightenHover = 100;
             };
+
             struct State
             {
-                bool mRotateHandleVisible = false;
-                QPointF mRotateHandlePos;
-                QPointF mRotateHandleAnchor;
-                qreal mRotateHandleRadius = 0;
-                qreal mRotateHandleAngleDeg = 0; // cached visual rotation of the gizmo
-                qreal mRotateHandleSweepDeg = 90.0; // cached arc span used for draw + hit-test
+                bool rotateHandleVisible = false;
+                QPointF rotateHandlePos;
+                QPointF rotateHandleAnchor;
+                qreal rotateHandleRadius = 0;
+                qreal rotateHandleAngleDeg = 0; // cached visual rotation of the gizmo
+                qreal rotateHandleSweepDeg = 90.0; // cached arc span used for draw + hit-test
                 qreal mRotateHandleStartOffsetDeg = 45.0; // cached base offset applied before box rotation
-                bool mRotateHandleHovered = false; // true when pointer hovers the gizmo
-                QVector<QPointF> mRotateHandlePolygon;
-                QVector<QPointF> mRotateHandleHitPolygon;
-                AxisGeometry mAxisXGeom;
-                AxisGeometry mAxisYGeom;
-                AxisGeometry mAxisUniformGeom;
-                ScaleGeometry mScaleXGeom;
-                ScaleGeometry mScaleYGeom;
-                ScaleGeometry mScaleUniformGeom;
-                ShearGeometry mShearXGeom;
-                ShearGeometry mShearYGeom;
-                bool mAxisXHovered = false;
-                bool mAxisYHovered = false;
-                bool mAxisUniformHovered = false;
-                bool mScaleXHovered = false;
-                bool mScaleYHovered = false;
-                bool mScaleUniformHovered = false;
-                bool mShearXHovered = false;
-                bool mShearYHovered = false;
-                AxisConstraint mAxisConstraint = AxisConstraint::None;
-                ScaleHandle mScaleConstraint = ScaleHandle::None;
-                ShearHandle mShearConstraint = ShearHandle::None;
-                bool mAxisHandleActive = false;
-                bool mScaleHandleActive = false;
-                bool mShearHandleActive = false;
-                bool mGizmosSuppressed = false;
-                bool mShowRotateGizmo = true;
-                bool mShowPositionGizmo = true;
-                bool mShowScaleGizmo = false;
-                bool mShowShearGizmo = false;
-                bool mRotatingFromHandle = false;
+                bool rotateHandleHovered = false; // true when pointer hovers the gizmo
+                QVector<QPointF> rotateHandlePolygon;
+                QVector<QPointF> rotateHandleHitPolygon;
+                AxisGeometry axisXGeom;
+                AxisGeometry axisYGeom;
+                AxisGeometry axisUniformGeom;
+                ScaleGeometry scaleXGeom;
+                ScaleGeometry scaleYGeom;
+                ScaleGeometry scaleUniformGeom;
+                ShearGeometry shearXGeom;
+                ShearGeometry shearYGeom;
+                bool axisXHovered = false;
+                bool axisYHovered = false;
+                bool axisUniformHovered = false;
+                bool scaleXHovered = false;
+                bool scaleYHovered = false;
+                bool scaleUniformHovered = false;
+                bool shearXHovered = false;
+                bool shearYHovered = false;
+                AxisConstraint axisConstraint = AxisConstraint::None;
+                ScaleHandle scaleConstraint = ScaleHandle::None;
+                ShearHandle shearConstraint = ShearHandle::None;
+                bool axisHandleActive = false;
+                bool scaleHandleActive = false;
+                bool shearHandleActive = false;
+                bool gizmosSuppressed = false;
+                bool showRotate = true;
+                bool showPosition = true;
+                bool showScale = false;
+                bool showShear = false;
+                bool rotatingFromHandle = false;
             };
 
             Config fConfig;

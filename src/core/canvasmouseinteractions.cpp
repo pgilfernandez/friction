@@ -318,7 +318,7 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
 }
 
 void Canvas::cancelCurrentTransform() {
-    mGizmos.fState.mRotatingFromHandle = false;
+    mGizmos.fState.rotatingFromHandle = false;
     if(mCurrentMode == CanvasMode::pointTransform) {
         if(mCurrentNormalSegment.isValid()) {
             mCurrentNormalSegment.cancelPassThroughTransform();
@@ -338,28 +338,28 @@ void Canvas::cancelCurrentTransform() {
         //mCanvasWindow->setCanvasMode(MOVE_PATH);
     }
     mValueInput.clearAndDisableInput();
-    mGizmos.fState.mAxisHandleActive = false;
-    mGizmos.fState.mScaleHandleActive = false;
-    mGizmos.fState.mShearHandleActive = false;
+    mGizmos.fState.axisHandleActive = false;
+    mGizmos.fState.scaleHandleActive = false;
+    mGizmos.fState.shearHandleActive = false;
     setGizmosSuppressed(false);
     mTransMode = TransformMode::none;
-    if (mGizmos.fState.mAxisConstraint != Gizmos::AxisConstraint::None) {
-        mGizmos.fState.mAxisConstraint = Gizmos::AxisConstraint::None;
+    if (mGizmos.fState.axisConstraint != Gizmos::AxisConstraint::None) {
+        mGizmos.fState.axisConstraint = Gizmos::AxisConstraint::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
         setAxisGizmoHover(Gizmos::AxisConstraint::X, false);
         setAxisGizmoHover(Gizmos::AxisConstraint::Y, false);
     }
-    if (mGizmos.fState.mScaleConstraint != Gizmos::ScaleHandle::None) {
-        mGizmos.fState.mScaleConstraint = Gizmos::ScaleHandle::None;
+    if (mGizmos.fState.scaleConstraint != Gizmos::ScaleHandle::None) {
+        mGizmos.fState.scaleConstraint = Gizmos::ScaleHandle::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
         setScaleGizmoHover(Gizmos::ScaleHandle::X, false);
         setScaleGizmoHover(Gizmos::ScaleHandle::Y, false);
         setScaleGizmoHover(Gizmos::ScaleHandle::Uniform, false);
     }
-    if (mGizmos.fState.mShearConstraint != Gizmos::ShearHandle::None) {
-        mGizmos.fState.mShearConstraint = Gizmos::ShearHandle::None;
+    if (mGizmos.fState.shearConstraint != Gizmos::ShearHandle::None) {
+        mGizmos.fState.shearConstraint = Gizmos::ShearHandle::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
         setShearGizmoHover(Gizmos::ShearHandle::X, false);
@@ -624,28 +624,28 @@ void Canvas::applyPixelColor(const QColor &color,
 
 void Canvas::handleLeftMouseRelease(const eMouseEvent &e) {
     if(e.fMouseGrabbing) e.fReleaseMouse();
-    mGizmos.fState.mRotatingFromHandle = false;
-    mGizmos.fState.mAxisHandleActive = false;
-    mGizmos.fState.mScaleHandleActive = false;
-    mGizmos.fState.mShearHandleActive = false;
+    mGizmos.fState.rotatingFromHandle = false;
+    mGizmos.fState.axisHandleActive = false;
+    mGizmos.fState.scaleHandleActive = false;
+    mGizmos.fState.shearHandleActive = false;
     setGizmosSuppressed(false);
-    if (mGizmos.fState.mAxisConstraint != Gizmos::AxisConstraint::None) {
-        mGizmos.fState.mAxisConstraint = Gizmos::AxisConstraint::None;
+    if (mGizmos.fState.axisConstraint != Gizmos::AxisConstraint::None) {
+        mGizmos.fState.axisConstraint = Gizmos::AxisConstraint::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
         setAxisGizmoHover(Gizmos::AxisConstraint::X, false);
         setAxisGizmoHover(Gizmos::AxisConstraint::Y, false);
     }
-    if (mGizmos.fState.mScaleConstraint != Gizmos::ScaleHandle::None) {
-        mGizmos.fState.mScaleConstraint = Gizmos::ScaleHandle::None;
+    if (mGizmos.fState.scaleConstraint != Gizmos::ScaleHandle::None) {
+        mGizmos.fState.scaleConstraint = Gizmos::ScaleHandle::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
         setScaleGizmoHover(Gizmos::ScaleHandle::X, false);
         setScaleGizmoHover(Gizmos::ScaleHandle::Y, false);
         setScaleGizmoHover(Gizmos::ScaleHandle::Uniform, false);
     }
-    if (mGizmos.fState.mShearConstraint != Gizmos::ShearHandle::None) {
-        mGizmos.fState.mShearConstraint = Gizmos::ShearHandle::None;
+    if (mGizmos.fState.shearConstraint != Gizmos::ShearHandle::None) {
+        mGizmos.fState.shearConstraint = Gizmos::ShearHandle::None;
         mValueInput.setForce1D(false);
         mValueInput.setXYMode();
         setShearGizmoHover(Gizmos::ShearHandle::X, false);

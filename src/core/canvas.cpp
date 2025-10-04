@@ -328,12 +328,12 @@ void Canvas::renderSk(SkCanvas* const canvas,
 
     updateRotateHandleGeometry(qInvZoom);
 
-    if (mGizmos.fState.mRotateHandleVisible) {
-        if (mGizmos.fState.mShowRotateGizmo) {
-            if (mGizmos.fState.mRotateHandlePolygon.size() >= 3) {
-                QColor fillColor = mGizmos.fTheme.kGizmoColorZ;
-                fillColor.setAlpha(mGizmos.fState.mRotateHandleHovered ? static_cast<int>(mGizmos.fTheme.kGizmoColorAlphaFillHover)
-                                                         : static_cast<int>(mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+    if (mGizmos.fState.rotateHandleVisible) {
+        if (mGizmos.fState.showRotate) {
+            if (mGizmos.fState.rotateHandlePolygon.size() >= 3) {
+                QColor fillColor = mGizmos.fTheme.colorZ;
+                fillColor.setAlpha(mGizmos.fState.rotateHandleHovered ? static_cast<int>(mGizmos.fTheme.colorAlphaFillHover)
+                                                         : static_cast<int>(mGizmos.fTheme.colorAlphaFillNormal));
 
                 SkPaint fillPaint;
                 fillPaint.setAntiAlias(true);
@@ -345,16 +345,16 @@ void Canvas::renderSk(SkCanvas* const canvas,
                 borderPaint.setStyle(SkPaint::kStroke_Style);
                 borderPaint.setStrokeJoin(SkPaint::kRound_Join);
                 borderPaint.setStrokeCap(SkPaint::kRound_Cap);
-                borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.kRotateGizmoStrokePx * qInvZoom * 0.2f));
-                const int strokeLighten = mGizmos.fState.mRotateHandleHovered ? mGizmos.fTheme.kGizmoColorLightenHover : mGizmos.fTheme.kGizmoColorLightenNormal;
-                QColor strokeColor = mGizmos.fTheme.kGizmoColorZ.lighter(strokeLighten);
-                strokeColor.setAlpha(mGizmos.fState.mRotateHandleHovered ? static_cast<int>(mGizmos.fTheme.kGizmoColorAlphaStrokeHover)
-                                                          : static_cast<int>(mGizmos.fTheme.kGizmoColorAlphaStrokeNormal));
+                borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.rotateStrokePx * qInvZoom * 0.2f));
+                const int strokeLighten = mGizmos.fState.rotateHandleHovered ? mGizmos.fTheme.colorLightenHover : mGizmos.fTheme.colorLightenNormal;
+                QColor strokeColor = mGizmos.fTheme.colorZ.lighter(strokeLighten);
+                strokeColor.setAlpha(mGizmos.fState.rotateHandleHovered ? static_cast<int>(mGizmos.fTheme.colorAlphaStrokeHover)
+                                                          : static_cast<int>(mGizmos.fTheme.colorAlphaStrokeNormal));
                 borderPaint.setColor(toSkColor(strokeColor));
 
                 SkPath path;
                 bool first = true;
-                for (const QPointF &pt : mGizmos.fState.mRotateHandlePolygon) {
+                for (const QPointF &pt : mGizmos.fState.rotateHandlePolygon) {
                     const SkPoint skPt = SkPoint::Make(toSkScalar(pt.x()), toSkScalar(pt.y()));
                     if (first) {
                         path.moveTo(skPt);
@@ -376,12 +376,12 @@ void Canvas::renderSk(SkCanvas* const canvas,
             if (!geom.visible) { return; }
             bool hovered = false;
             switch (handle) {
-            case Gizmos::AxisConstraint::X: hovered = mGizmos.fState.mAxisXHovered; break;
-            case Gizmos::AxisConstraint::Y: hovered = mGizmos.fState.mAxisYHovered; break;
-            case Gizmos::AxisConstraint::Uniform: hovered = mGizmos.fState.mAxisUniformHovered; break;
+            case Gizmos::AxisConstraint::X: hovered = mGizmos.fState.axisXHovered; break;
+            case Gizmos::AxisConstraint::Y: hovered = mGizmos.fState.axisYHovered; break;
+            case Gizmos::AxisConstraint::Uniform: hovered = mGizmos.fState.axisUniformHovered; break;
             case Gizmos::AxisConstraint::None: default: hovered = false; break;
             }
-            const bool active = (mGizmos.fState.mAxisConstraint == handle);
+            const bool active = (mGizmos.fState.axisConstraint == handle);
             QColor color = baseColor;
             if (active) {
                 color = color.lighter(135);
@@ -397,11 +397,11 @@ void Canvas::renderSk(SkCanvas* const canvas,
             SkPaint borderPaint;
             borderPaint.setAntiAlias(true);
             borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.kRotateGizmoStrokePx * invZoom * 0.2f));
+            borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.rotateStrokePx * invZoom * 0.2f));
             
-            const int borderLighten = hovered ? mGizmos.fTheme.kGizmoColorLightenHover : mGizmos.fTheme.kGizmoColorLightenNormal;
+            const int borderLighten = hovered ? mGizmos.fTheme.colorLightenHover : mGizmos.fTheme.colorLightenNormal;
             QColor borderColor = color.lighter(borderLighten);
-            const qreal strokeAlphaAxis = hovered ? mGizmos.fTheme.kGizmoColorAlphaStrokeHover : mGizmos.fTheme.kGizmoColorAlphaStrokeNormal;
+            const qreal strokeAlphaAxis = hovered ? mGizmos.fTheme.colorAlphaStrokeHover : mGizmos.fTheme.colorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaAxis));
             borderPaint.setColor(toSkColor(borderColor));
 
@@ -446,12 +446,12 @@ void Canvas::renderSk(SkCanvas* const canvas,
             if (!geom.visible) { return; }
             bool hovered = false;
             switch (handle) {
-            case Gizmos::ScaleHandle::X: hovered = mGizmos.fState.mScaleXHovered; break;
-            case Gizmos::ScaleHandle::Y: hovered = mGizmos.fState.mScaleYHovered; break;
-            case Gizmos::ScaleHandle::Uniform: hovered = mGizmos.fState.mScaleUniformHovered; break;
+            case Gizmos::ScaleHandle::X: hovered = mGizmos.fState.scaleXHovered; break;
+            case Gizmos::ScaleHandle::Y: hovered = mGizmos.fState.scaleYHovered; break;
+            case Gizmos::ScaleHandle::Uniform: hovered = mGizmos.fState.scaleUniformHovered; break;
             case Gizmos::ScaleHandle::None: default: hovered = false; break;
             }
-            const bool active = (mGizmos.fState.mScaleConstraint == handle);
+            const bool active = (mGizmos.fState.scaleConstraint == handle);
             QColor color = baseColor;
             if (active) {
                 color = color.lighter(135);
@@ -467,10 +467,10 @@ void Canvas::renderSk(SkCanvas* const canvas,
             SkPaint borderPaint;
             borderPaint.setAntiAlias(true);
             borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.kRotateGizmoStrokePx * invZoom * 0.2f));
-            const int borderLighten = hovered ? mGizmos.fTheme.kGizmoColorLightenHover : mGizmos.fTheme.kGizmoColorLightenNormal;
+            borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.rotateStrokePx * invZoom * 0.2f));
+            const int borderLighten = hovered ? mGizmos.fTheme.colorLightenHover : mGizmos.fTheme.colorLightenNormal;
             QColor borderColor = color.lighter(borderLighten);
-            const qreal strokeAlphaScale = hovered ? mGizmos.fTheme.kGizmoColorAlphaStrokeHover : mGizmos.fTheme.kGizmoColorAlphaStrokeNormal;
+            const qreal strokeAlphaScale = hovered ? mGizmos.fTheme.colorAlphaStrokeHover : mGizmos.fTheme.colorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaScale));
             borderPaint.setColor(toSkColor(borderColor));
 
@@ -503,8 +503,8 @@ void Canvas::renderSk(SkCanvas* const canvas,
                                    const Gizmos::ShearGeometry &geom,
                                    const QColor &baseColor) {
             if (!geom.visible) { return; }
-            bool hovered = (handle == Gizmos::ShearHandle::X) ? mGizmos.fState.mShearXHovered : mGizmos.fState.mShearYHovered;
-            const bool active = (mGizmos.fState.mShearConstraint == handle);
+            bool hovered = (handle == Gizmos::ShearHandle::X) ? mGizmos.fState.shearXHovered : mGizmos.fState.shearYHovered;
+            const bool active = (mGizmos.fState.shearConstraint == handle);
             QColor color = baseColor;
             if (active) {
                 color = color.lighter(135);
@@ -520,10 +520,10 @@ void Canvas::renderSk(SkCanvas* const canvas,
             SkPaint borderPaint;
             borderPaint.setAntiAlias(true);
             borderPaint.setStyle(SkPaint::kStroke_Style);
-            borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.kRotateGizmoStrokePx * invZoom * 0.2f));
-            const int borderLighten = hovered ? mGizmos.fTheme.kGizmoColorLightenHover : mGizmos.fTheme.kGizmoColorLightenNormal;
+            borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.rotateStrokePx * invZoom * 0.2f));
+            const int borderLighten = hovered ? mGizmos.fTheme.colorLightenHover : mGizmos.fTheme.colorLightenNormal;
             QColor borderColor = color.lighter(borderLighten);
-            const qreal strokeAlphaShear = hovered ? mGizmos.fTheme.kGizmoColorAlphaStrokeHover : mGizmos.fTheme.kGizmoColorAlphaStrokeNormal;
+            const qreal strokeAlphaShear = hovered ? mGizmos.fTheme.colorAlphaStrokeHover : mGizmos.fTheme.colorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaShear));
             borderPaint.setColor(toSkColor(borderColor));
 
@@ -553,37 +553,37 @@ void Canvas::renderSk(SkCanvas* const canvas,
         };
 
         drawAxisRect(Gizmos::AxisConstraint::Y,
-                     mGizmos.fState.mAxisYGeom,
-                     QColor(mGizmos.fTheme.kGizmoColorY.red(), mGizmos.fTheme.kGizmoColorY.green(), mGizmos.fTheme.kGizmoColorY.blue(),
-                     mGizmos.fState.mAxisYHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+                     mGizmos.fState.axisYGeom,
+                     QColor(mGizmos.fTheme.colorY.red(), mGizmos.fTheme.colorY.green(), mGizmos.fTheme.colorY.blue(),
+                     mGizmos.fState.axisYHovered ? mGizmos.fTheme.colorAlphaFillHover : mGizmos.fTheme.colorAlphaFillNormal));
         drawAxisRect(Gizmos::AxisConstraint::X,
-                     mGizmos.fState.mAxisXGeom,
-                     QColor(mGizmos.fTheme.kGizmoColorX.red(), mGizmos.fTheme.kGizmoColorX.green(), mGizmos.fTheme.kGizmoColorX.blue(),
-                     mGizmos.fState.mAxisXHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+                     mGizmos.fState.axisXGeom,
+                     QColor(mGizmos.fTheme.colorX.red(), mGizmos.fTheme.colorX.green(), mGizmos.fTheme.colorX.blue(),
+                     mGizmos.fState.axisXHovered ? mGizmos.fTheme.colorAlphaFillHover : mGizmos.fTheme.colorAlphaFillNormal));
         drawAxisRect(Gizmos::AxisConstraint::Uniform,
-                     mGizmos.fState.mAxisUniformGeom,
-                     QColor(mGizmos.fTheme.kGizmoColorZ.red(), mGizmos.fTheme.kGizmoColorZ.green(), mGizmos.fTheme.kGizmoColorZ.blue(),
-                     mGizmos.fState.mAxisUniformHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+                     mGizmos.fState.axisUniformGeom,
+                     QColor(mGizmos.fTheme.colorZ.red(), mGizmos.fTheme.colorZ.green(), mGizmos.fTheme.colorZ.blue(),
+                     mGizmos.fState.axisUniformHovered ? mGizmos.fTheme.colorAlphaFillHover : mGizmos.fTheme.colorAlphaFillNormal));
         drawScaleSquare(Gizmos::ScaleHandle::Y,
-                        mGizmos.fState.mScaleYGeom,
-                        QColor(mGizmos.fTheme.kGizmoColorY.red(), mGizmos.fTheme.kGizmoColorY.green(), mGizmos.fTheme.kGizmoColorY.blue(),
-                        mGizmos.fState.mScaleYHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+                        mGizmos.fState.scaleYGeom,
+                        QColor(mGizmos.fTheme.colorY.red(), mGizmos.fTheme.colorY.green(), mGizmos.fTheme.colorY.blue(),
+                        mGizmos.fState.scaleYHovered ? mGizmos.fTheme.colorAlphaFillHover : mGizmos.fTheme.colorAlphaFillNormal));
         drawScaleSquare(Gizmos::ScaleHandle::X,
-                        mGizmos.fState.mScaleXGeom,
-                        QColor(mGizmos.fTheme.kGizmoColorX.red(), mGizmos.fTheme.kGizmoColorX.green(), mGizmos.fTheme.kGizmoColorX.blue(),
-                        mGizmos.fState.mScaleXHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+                        mGizmos.fState.scaleXGeom,
+                        QColor(mGizmos.fTheme.colorX.red(), mGizmos.fTheme.colorX.green(), mGizmos.fTheme.colorX.blue(),
+                        mGizmos.fState.scaleXHovered ? mGizmos.fTheme.colorAlphaFillHover : mGizmos.fTheme.colorAlphaFillNormal));
         drawScaleSquare(Gizmos::ScaleHandle::Uniform,
-                        mGizmos.fState.mScaleUniformGeom,
-                        QColor(mGizmos.fTheme.kGizmoColorUniform.red(), mGizmos.fTheme.kGizmoColorUniform.green(), mGizmos.fTheme.kGizmoColorUniform.blue(),
-                        mGizmos.fState.mScaleUniformHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+                        mGizmos.fState.scaleUniformGeom,
+                        QColor(mGizmos.fTheme.colorUniform.red(), mGizmos.fTheme.colorUniform.green(), mGizmos.fTheme.colorUniform.blue(),
+                        mGizmos.fState.scaleUniformHovered ? mGizmos.fTheme.colorAlphaFillHover : mGizmos.fTheme.colorAlphaFillNormal));
         drawShearCircle(Gizmos::ShearHandle::Y,
-                        mGizmos.fState.mShearYGeom,
-                        QColor(mGizmos.fTheme.kGizmoColorY.red(), mGizmos.fTheme.kGizmoColorY.green(), mGizmos.fTheme.kGizmoColorY.blue(),
-                        mGizmos.fState.mShearYHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+                        mGizmos.fState.shearYGeom,
+                        QColor(mGizmos.fTheme.colorY.red(), mGizmos.fTheme.colorY.green(), mGizmos.fTheme.colorY.blue(),
+                        mGizmos.fState.shearYHovered ? mGizmos.fTheme.colorAlphaFillHover : mGizmos.fTheme.colorAlphaFillNormal));
         drawShearCircle(Gizmos::ShearHandle::X,
-                        mGizmos.fState.mShearXGeom,
-                        QColor(mGizmos.fTheme.kGizmoColorX.red(), mGizmos.fTheme.kGizmoColorX.green(), mGizmos.fTheme.kGizmoColorX.blue(),
-                        mGizmos.fState.mShearXHovered ? mGizmos.fTheme.kGizmoColorAlphaFillHover : mGizmos.fTheme.kGizmoColorAlphaFillNormal));
+                        mGizmos.fState.shearXGeom,
+                        QColor(mGizmos.fTheme.colorX.red(), mGizmos.fTheme.colorX.green(), mGizmos.fTheme.colorX.blue(),
+                        mGizmos.fState.shearXHovered ? mGizmos.fTheme.colorAlphaFillHover : mGizmos.fTheme.colorAlphaFillNormal));
     }
 
     if(mCurrentMode == CanvasMode::boxTransform ||
