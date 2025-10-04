@@ -58,18 +58,18 @@ namespace {
 constexpr qreal kRotateGizmoSweepDeg = 90.0; // default sweep of gizmo arc
 constexpr qreal kRotateGizmoBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
 constexpr qreal kRotateGizmoRadiusPx = 45.0; // gizmo radius in screen pixels
-constexpr qreal kRotateGizmoStrokePx = 4.0; // arc stroke thickness in screen pixels
-constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx + 2.0; // hit area thickness in screen pixels
+constexpr qreal kRotateGizmoStrokePx = 3.0; // arc stroke thickness in screen pixels
+constexpr qreal kRotateGizmoHitWidthPx = kRotateGizmoStrokePx + 1.0; // hit area thickness in screen pixels
 constexpr qreal kAxisGizmoWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
 constexpr qreal kAxisGizmoHeightPx = 60.0; // axis gizmo rectangle height in screen pixels
 constexpr qreal kAxisGizmoYOffsetPx = 40.0; // vertical distance of Y gizmo from pivot in pixels
 constexpr qreal kAxisGizmoUniformOffsetPx = 7.0; // XY offset from pivot for Uniform position gizmo in pixels
-constexpr qreal kAxisGizmoUniformWidthPx = 26.0; // XY square width for Uniform position gizmo in pixels
+constexpr qreal kAxisGizmoUniformWidthPx = 24.0; // XY square width for Uniform position gizmo in pixels
 constexpr qreal kAxisGizmoUniformChamferPx = 1.0; // XY square chamfer for Uniform position gizmo in pixels
 constexpr qreal kAxisGizmoXOffsetPx = 40.0; // horizontal distance of X gizmo from pivot in pixels
-constexpr qreal kScaleGizmoSizePx = 10.0; // scale gizmo square size in screen pixels
+constexpr qreal kScaleGizmoSizePx = 8.0; // scale gizmo square size in screen pixels
 constexpr qreal kScaleGizmoGapPx = 2.0; // gap between position gizmos and scale gizmos in screen pixels
-constexpr qreal kShearGizmoRadiusPx = 6.0; // shear gizmo circle radius in screen pixels
+constexpr qreal kShearGizmoRadiusPx = 4.0; // shear gizmo circle radius in screen pixels
 constexpr qreal kShearGizmoGapPx = 2.0; // gap between scale and shear gizmos in screen pixels
 
 // Colors for gizmos, TODO: move to ThemeSupport
@@ -1646,13 +1646,13 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mAxisYGeom.usePolygon = true;
     mAxisYGeom.polygonPoints = {
         pivot + QPointF(0.0, - 10.0 * invScale),
-        pivot + QPointF(-2.0 * invScale, - 11.0 * invScale),
-        pivot + QPointF(-2.0 * invScale, - 55.0 * invScale),
-        pivot + QPointF(-6.0 * invScale, - 57.0 * invScale),
+        pivot + QPointF(-1.5 * invScale, - 11.0 * invScale),
+        pivot + QPointF(-1.5 * invScale, - 56.0 * invScale),
+        pivot + QPointF(-5.0 * invScale, - 57.0 * invScale),
         pivot + QPointF(0.0, - 70.0 * invScale),
-        pivot + QPointF(6.0 * invScale, - 57.0 * invScale),
-        pivot + QPointF(2.0 * invScale, - 55.0 * invScale),
-        pivot + QPointF(2.0 * invScale, - 11.0 * invScale)
+        pivot + QPointF(5.0 * invScale, - 57.0 * invScale),
+        pivot + QPointF(1.5 * invScale, - 56.0 * invScale),
+        pivot + QPointF(1.5 * invScale, - 11.0 * invScale)
     };
 
     mAxisXGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
@@ -1662,13 +1662,13 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mAxisXGeom.usePolygon = true;
     mAxisXGeom.polygonPoints = {
         pivot + QPointF(10.0 * invScale, 0.0),
-        pivot + QPointF(11.0 * invScale, -2.0 * invScale),
-        pivot + QPointF(55.0 * invScale, -2.0 * invScale),
-        pivot + QPointF(57.0 * invScale, -6.0 * invScale),
+        pivot + QPointF(11.0 * invScale, -1.5 * invScale),
+        pivot + QPointF(56.0 * invScale, -1.5 * invScale),
+        pivot + QPointF(57.0 * invScale, -5.0 * invScale),
         pivot + QPointF(70.0 * invScale, 0.0),
-        pivot + QPointF(57.0 * invScale, 6.0 * invScale),
-        pivot + QPointF(55.0 * invScale, 2.0 * invScale),
-        pivot + QPointF(11.0 * invScale, 2.0 * invScale)
+        pivot + QPointF(57.0 * invScale, 5.0 * invScale),
+        pivot + QPointF(56.0 * invScale, 1.5 * invScale),
+        pivot + QPointF(11.0 * invScale, 1.5 * invScale)
     };
 
     mAxisUniformGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
