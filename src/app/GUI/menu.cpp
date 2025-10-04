@@ -639,7 +639,12 @@ void MainWindow::setupMenuBar()
     mDynamicQuality->setCheckable(true);
     mDynamicQuality->setChecked(eFilterSettings::sSmartDisplat());
 
-    setupMenuGizmos();
+    const auto menuGizmo = mViewMenu->addMenu(QIcon::fromTheme("gizmos"),
+                                              tr("Transform Interacts"));
+    setupMenuGizmo(menuGizmo, Core::Gizmos::Interact::Position);
+    setupMenuGizmo(menuGizmo, Core::Gizmos::Interact::Rotate);
+    setupMenuGizmo(menuGizmo, Core::Gizmos::Interact::Scale);
+    setupMenuGizmo(menuGizmo, Core::Gizmos::Interact::Shear);
 
     mClipViewToCanvas = mViewMenu->addAction(
         tr("Clip to Scene", "MenuBar_View"));

@@ -199,11 +199,7 @@ private:
 signals:
     void canvasModeSet(CanvasMode);
 
-    void showRotateGizmoChanged(bool);
-    void showPositionGizmoChanged(bool);
-    void showScaleGizmoChanged(bool);
-    void showShearGizmoChanged(bool);
-    void gizmoVisibilityChanged(const Friction::Core::Gizmos::TransformInteract &ti,
+    void gizmoVisibilityChanged(const Friction::Core::Gizmos::Interact &ti,
                                 const bool &visible);
 
     void sceneCreated(Canvas*);

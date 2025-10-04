@@ -52,7 +52,7 @@ namespace Friction
             void resetWidgets();
             void setupWidgets();
             void setupTransform();
-            void setupTransformInteract(const Core::Gizmos::TransformInteract &ti);
+            void setupTransformInteract(const Core::Gizmos::Interact &ti);
 
             ConnContextQPtr<Canvas> mCanvas;
             CanvasMode mCanvasMode;

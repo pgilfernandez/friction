@@ -128,8 +128,8 @@ void Document::setShowRotateGizmo(bool show)
         if (scene) { scene->setShowRotateGizmo(show); }
     }
     AppSupport::setSettings("gizmos", "Rotate", show);
-    emit showRotateGizmoChanged(show);
-    emit gizmoVisibilityChanged(Gizmos::TransformInteract::InteractRotate, show);
+
+    emit gizmoVisibilityChanged(Gizmos::Interact::Rotate, show);
 }
 
 void Document::setShowPositionGizmo(bool show)
@@ -140,8 +140,8 @@ void Document::setShowPositionGizmo(bool show)
         if (scene) { scene->setShowPositionGizmo(show); }
     }
     AppSupport::setSettings("gizmos", "Position", show);
-    emit showPositionGizmoChanged(show);
-    emit gizmoVisibilityChanged(Gizmos::TransformInteract::InteractPosition, show);
+
+    emit gizmoVisibilityChanged(Gizmos::Interact::Position, show);
 }
 
 void Document::setShowScaleGizmo(bool show)
@@ -152,8 +152,8 @@ void Document::setShowScaleGizmo(bool show)
         if (scene) { scene->setShowScaleGizmo(show); }
     }
     AppSupport::setSettings("gizmos", "Scale", show);
-    emit showScaleGizmoChanged(show);
-    emit gizmoVisibilityChanged(Gizmos::TransformInteract::InteractScale, show);
+
+    emit gizmoVisibilityChanged(Gizmos::Interact::Scale, show);
 }
 
 void Document::setShowShearGizmo(bool show)
@@ -164,8 +164,8 @@ void Document::setShowShearGizmo(bool show)
         if (scene) { scene->setShowShearGizmo(show); }
     }
     AppSupport::setSettings("gizmos", "Shear", show);
-    emit showShearGizmoChanged(show);
-    emit gizmoVisibilityChanged(Gizmos::TransformInteract::InteractShear, show);
+
+    emit gizmoVisibilityChanged(Gizmos::Interact::Shear, show);
 }
 
 Canvas *Document::createNewScene(const bool emitCreated) {

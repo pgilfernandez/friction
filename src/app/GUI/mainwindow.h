@@ -50,6 +50,7 @@
 #include "ekeyfilter.h"
 #include "window.h"
 #include "GUI/RenderWidgets/renderwidget.h"
+#include "gizmos.h"
 
 #include "widgets/fontswidget.h"
 #include "widgets/toolbar.h"
@@ -264,10 +265,6 @@ private:
     QAction *mClipViewToCanvas;
     QAction *mRasterEffectsVisible;
     QAction *mPathEffectsVisible;
-    QAction *mShowRotateGizmoAct;
-    QAction *mShowPositionGizmoAct;
-    QAction *mShowScaleGizmoAct;
-    QAction *mShowShearGizmoAct;
 
     QAction *mAddToQueAct;
     QAction *mViewFullScreenAct;
@@ -285,7 +282,6 @@ private:
     QMenu *mEffectsMenu;
     QMenu *mSceneMenu;
     QMenu *mViewMenu;
-    QMenu *mGizmosMenu;
     QMenu *mPanelsMenu;
     QMenu *mRenderMenu;
 
@@ -317,7 +313,8 @@ private:
     void setupMenuScene();
     void setupMenuEffects();
     void setupMenuExtras();
-    void setupMenuGizmos();
+    void setupMenuGizmo(QMenu *menu,
+                        const Friction::Core::Gizmos::Interact &ti);
     void setupPropertiesActions();
 
     BoundingBox* getCurrentBox();

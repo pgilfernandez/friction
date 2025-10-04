@@ -647,62 +647,48 @@ void MainWindow::setupMenuExtras()
     }
 }
 
-void MainWindow::setupMenuGizmos()
+void MainWindow::setupMenuGizmo(QMenu *menu,
+                                const Core::Gizmos::Interact &ti)
 {
-    mGizmosMenu = mViewMenu->addMenu(QIcon::fromTheme("gizmos"),
-                                     tr("Transform Interacts", "MenuBar_View"));
+    if (!menu) { return; }
 
-    mShowPositionGizmoAct = mGizmosMenu->addAction(tr("Translate", "MenuBar_View_Gizmos"));
-    mShowPositionGizmoAct->setCheckable(true);
-    mShowPositionGizmoAct->setChecked(mDocument.showPositionGizmo());
-    connect(mShowPositionGizmoAct, &QAction::toggled,
+    bool visible = false;
+    QString title;
+
+    switch (ti) {
+    case Core::Gizmos::Interact::Position:
+        visible = mDocument.showPositionGizmo();
+        title = tr("Position");
+        break;
+    case Core::Gizmos::Interact::Rotate:
+        visible = mDocument.showRotateGizmo();
+        title = tr("Rotate");
+        break;
+    case Core::Gizmos::Interact::Scale:
+        visible = mDocument.showScaleGizmo();
+        title = tr("Scale");
+        break;
+    case Core::Gizmos::Interact::Shear:
+        visible = mDocument.showShearGizmo();
+        title = tr("Shear");
+        break;
+    default: return;
+    }
+
+    const auto act = menu->addAction(title);
+    act->setCheckable(true);
+    act->setChecked(visible);
+
+    connect(act, &QAction::toggled,
             &mActions, &Actions::setPositionGizmoVisible);
-    connect(&mDocument, &Document::showPositionGizmoChanged,
-            this, [this](bool enabled) {
-                if (!mShowPositionGizmoAct) { return; }
-                QSignalBlocker blocker(mShowPositionGizmoAct);
-                mShowPositionGizmoAct->setChecked(enabled);
-            });
-    cmdAddAction(mShowPositionGizmoAct);
-
-    mShowRotateGizmoAct = mGizmosMenu->addAction(tr("Rotation", "MenuBar_View_Gizmos"));
-    mShowRotateGizmoAct->setCheckable(true);
-    mShowRotateGizmoAct->setChecked(mDocument.showRotateGizmo());
-    connect(mShowRotateGizmoAct, &QAction::toggled,
-            &mActions, &Actions::setRotateGizmoVisible);
-    connect(&mDocument, &Document::showRotateGizmoChanged,
-            this, [this](bool enabled) {
-                if (!mShowRotateGizmoAct) { return; }
-                QSignalBlocker blocker(mShowRotateGizmoAct);
-                mShowRotateGizmoAct->setChecked(enabled);
-            });
-    cmdAddAction(mShowRotateGizmoAct);
-
-    mShowScaleGizmoAct = mGizmosMenu->addAction(tr("Scale", "MenuBar_View_Gizmos"));
-    mShowScaleGizmoAct->setCheckable(true);
-    mShowScaleGizmoAct->setChecked(mDocument.showScaleGizmo());
-    connect(mShowScaleGizmoAct, &QAction::toggled,
-            &mActions, &Actions::setScaleGizmoVisible);
-    connect(&mDocument, &Document::showScaleGizmoChanged,
-            this, [this](bool enabled) {
-                if (!mShowScaleGizmoAct) { return; }
-                QSignalBlocker blocker(mShowScaleGizmoAct);
-                mShowScaleGizmoAct->setChecked(enabled);
-            });
-    cmdAddAction(mShowScaleGizmoAct);
-
-    mShowShearGizmoAct = mGizmosMenu->addAction(tr("Shear", "MenuBar_View_Gizmos"));
-    mShowShearGizmoAct->setCheckable(true);
-    mShowShearGizmoAct->setChecked(mDocument.showShearGizmo());
-    connect(mShowShearGizmoAct, &QAction::toggled,
-            &mActions, &Actions::setShearGizmoVisible);
-    connect(&mDocument, &Document::showShearGizmoChanged,
-            this, [this](bool enabled) {
-                if (!mShowShearGizmoAct) { return; }
-                QSignalBlocker blocker(mShowShearGizmoAct);
-                mShowShearGizmoAct->setChecked(enabled);
-            });
-    cmdAddAction(mShowShearGizmoAct);
+    connect(&mDocument, &Document::gizmoVisibilityChanged,
+            this, [ti, act](Core::Gizmos::Interact i,
+                            bool enabled) {
+        if (ti != i) { return; }
+        act->blockSignals(true);
+        act->setChecked(enabled);
+        act->blockSignals(false);
+    });
 }
 
 void MainWindow::setupPropertiesActions()

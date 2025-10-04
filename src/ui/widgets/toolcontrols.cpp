@@ -280,10 +280,10 @@ void ToolControls::setupTransform()
     mTransformInteract->addAction(addSpacer(true, true));
     mTransformInteract->addAction(addAction(QIcon::fromTheme("gizmos"),
                                             tr("Transform Interacts")));
-    setupTransformInteract(Core::Gizmos::TransformInteract::InteractPosition);
-    setupTransformInteract(Core::Gizmos::TransformInteract::InteractRotate);
-    setupTransformInteract(Core::Gizmos::TransformInteract::InteractScale);
-    setupTransformInteract(Core::Gizmos::TransformInteract::InteractShear);
+    setupTransformInteract(Core::Gizmos::Interact::Position);
+    setupTransformInteract(Core::Gizmos::Interact::Rotate);
+    setupTransformInteract(Core::Gizmos::Interact::Scale);
+    setupTransformInteract(Core::Gizmos::Interact::Shear);
 
     resetWidgets();
 
@@ -313,7 +313,7 @@ void ToolControls::setupTransform()
     mTransformOX->setDisplayedValue(100);
 }
 
-void ToolControls::setupTransformInteract(const Core::Gizmos::TransformInteract &ti)
+void ToolControls::setupTransformInteract(const Core::Gizmos::Interact &ti)
 {
     mTransformInteract->addAction(addSeparator());
 
@@ -326,28 +326,28 @@ void ToolControls::setupTransformInteract(const Core::Gizmos::TransformInteract 
     QString textOff;
 
     switch(ti) {
-    case Core::Gizmos::TransformInteract::InteractPosition:
+    case Core::Gizmos::Interact::Position:
         visible = mDocument->showPositionGizmo();
         iconOn = QIcon::fromTheme("gizmo_translate_on");
         iconOff = QIcon::fromTheme("gizmo_translate_off");
         textOn = tr("Hide Position Interact");
         textOff = tr("Show Position Interact");
         break;
-    case Core::Gizmos::TransformInteract::InteractRotate:
+    case Core::Gizmos::Interact::Rotate:
         visible = mDocument->showRotateGizmo();
         iconOn = QIcon::fromTheme("gizmo_rotate_on");
         iconOff = QIcon::fromTheme("gizmo_rotate_off");
         textOn = tr("Hide Rotate Interact");
         textOff = tr("Show Rotate Interact");
         break;
-    case Core::Gizmos::TransformInteract::InteractScale:
+    case Core::Gizmos::Interact::Scale:
         visible = mDocument->showScaleGizmo();
         iconOn = QIcon::fromTheme("gizmo_scale_on");
         iconOff = QIcon::fromTheme("gizmo_scale_off");
         textOn = tr("Hide Scale Interact");
         textOff = tr("Show Scale Interact");
         break;
-    case Core::Gizmos::TransformInteract::InteractShear:
+    case Core::Gizmos::Interact::Shear:
         visible = mDocument->showShearGizmo();
         iconOn = QIcon::fromTheme("gizmo_shear_on");
         iconOff = QIcon::fromTheme("gizmo_shear_off");
@@ -367,16 +367,16 @@ void ToolControls::setupTransformInteract(const Core::Gizmos::TransformInteract 
     connect(interact, &QAction::triggered,
             this, [mDocument, ti]() {
         switch(ti) {
-        case Core::Gizmos::TransformInteract::InteractPosition:
+        case Core::Gizmos::Interact::Position:
             mDocument->setShowPositionGizmo(!mDocument->showPositionGizmo());
             break;
-        case Core::Gizmos::TransformInteract::InteractRotate:
+        case Core::Gizmos::Interact::Rotate:
             mDocument->setShowRotateGizmo(!mDocument->showRotateGizmo());
             break;
-        case Core::Gizmos::TransformInteract::InteractScale:
+        case Core::Gizmos::Interact::Scale:
             mDocument->setShowScaleGizmo(!mDocument->showScaleGizmo());
             break;
-        case Core::Gizmos::TransformInteract::InteractShear:
+        case Core::Gizmos::Interact::Shear:
             mDocument->setShowShearGizmo(!mDocument->showShearGizmo());
             break;
         default:;
@@ -389,7 +389,7 @@ void ToolControls::setupTransformInteract(const Core::Gizmos::TransformInteract 
                    iconOff,
                    textOn,
                    textOff,
-                   ti](Core::Gizmos::TransformInteract i,
+                   ti](Core::Gizmos::Interact i,
                        bool visible) {
         if (ti != i) { return; }
         interact->blockSignals(true);
