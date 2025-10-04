@@ -56,6 +56,7 @@ namespace Friction
                 NodeMerge,
                 NodeNew,
                 NodeRemove,
+                NodeRemoveApprox,
                 NodeSymmetric,
                 NodeSmooth,
                 NodeCorner,

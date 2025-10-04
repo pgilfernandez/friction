@@ -293,6 +293,9 @@ void ToolBox::setupNodesAction(const QIcon &icon,
                 (*mActions.deleteAction)();
             }
             break;
+        case NodeRemoveApprox:
+            mActions.removePointsApprox();
+            break;
         case NodeSymmetric:
             mActions.makePointCtrlsSymmetric();
             break;
@@ -331,6 +334,8 @@ void ToolBox::setupNodesActions()
                      tr("New Node"), NodeNew);
     setupNodesAction(QIcon::fromTheme("nodeRemove"),
                      tr("Remove Node"), NodeRemove);
+    setupNodesAction(QIcon::fromTheme("nodeRemoveApprox"),
+                     tr("Remove Node Approx."), NodeRemoveApprox);
     setupNodesAction(QIcon::fromTheme("nodeSymmetric"),
                      tr("Symmetric Nodes"), NodeSymmetric);
     setupNodesAction(QIcon::fromTheme("nodeSmooth"),
