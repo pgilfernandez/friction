@@ -31,6 +31,8 @@
 
 Document* Document::sInstance = nullptr;
 
+using namespace Friction::Core;
+
 Document::Document(TaskScheduler& taskScheduler) {
     Q_ASSERT(!sInstance);
     sInstance = this;
@@ -127,6 +129,7 @@ void Document::setShowRotateGizmo(bool show)
     }
     AppSupport::setSettings("gizmos", "Rotate", show);
     emit showRotateGizmoChanged(show);
+    emit gizmoVisibilityChanged(Gizmos::TransformInteract::InteractRotate, show);
 }
 
 void Document::setShowPositionGizmo(bool show)
@@ -138,6 +141,7 @@ void Document::setShowPositionGizmo(bool show)
     }
     AppSupport::setSettings("gizmos", "Position", show);
     emit showPositionGizmoChanged(show);
+    emit gizmoVisibilityChanged(Gizmos::TransformInteract::InteractPosition, show);
 }
 
 void Document::setShowScaleGizmo(bool show)
@@ -149,6 +153,7 @@ void Document::setShowScaleGizmo(bool show)
     }
     AppSupport::setSettings("gizmos", "Scale", show);
     emit showScaleGizmoChanged(show);
+    emit gizmoVisibilityChanged(Gizmos::TransformInteract::InteractScale, show);
 }
 
 void Document::setShowShearGizmo(bool show)
@@ -160,6 +165,7 @@ void Document::setShowShearGizmo(bool show)
     }
     AppSupport::setSettings("gizmos", "Shear", show);
     emit showShearGizmoChanged(show);
+    emit gizmoVisibilityChanged(Gizmos::TransformInteract::InteractShear, show);
 }
 
 Canvas *Document::createNewScene(const bool emitCreated) {

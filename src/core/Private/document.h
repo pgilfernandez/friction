@@ -44,6 +44,7 @@
 #include "Boxes/videobox.h"
 #include "ReadWrite/ereadstream.h"
 #include "ReadWrite/ewritestream.h"
+#include "gizmos.h"
 
 class SceneBoundGradient;
 class FileDataCacheHandler;
@@ -202,6 +203,8 @@ signals:
     void showPositionGizmoChanged(bool);
     void showScaleGizmoChanged(bool);
     void showShearGizmoChanged(bool);
+    void gizmoVisibilityChanged(const Friction::Core::Gizmos::TransformInteract &ti,
+                                const bool &visible);
 
     void sceneCreated(Canvas*);
     void sceneRemoved(Canvas*);

@@ -38,6 +38,13 @@ namespace Friction
         class CORE_EXPORT Gizmos : public QObject
         {
         public:
+            enum class TransformInteract
+            {
+                InteractPosition,
+                InteractRotate,
+                InteractScale,
+                InteractShear
+            };
             enum class AxisConstraint
             {
                 None,
