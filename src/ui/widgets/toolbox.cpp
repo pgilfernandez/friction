@@ -288,6 +288,11 @@ void ToolBox::setupNodesAction(const QIcon &icon,
         case NodeNew:
             mActions.subdivideSegments();
             break;
+        case NodeRemove:
+            if (mActions.deleteAction) {
+                (*mActions.deleteAction)();
+            }
+            break;
         case NodeSymmetric:
             mActions.makePointCtrlsSymmetric();
             break;
@@ -324,6 +329,8 @@ void ToolBox::setupNodesActions()
                      tr("Merge Nodes"), NodeMerge);
     setupNodesAction(QIcon::fromTheme("nodeNew"),
                      tr("New Node"), NodeNew);
+    setupNodesAction(QIcon::fromTheme("nodeRemove"),
+                     tr("Remove Node"), NodeRemove);
     setupNodesAction(QIcon::fromTheme("nodeSymmetric"),
                      tr("Symmetric Nodes"), NodeSymmetric);
     setupNodesAction(QIcon::fromTheme("nodeSmooth"),
