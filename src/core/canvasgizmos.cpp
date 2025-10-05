@@ -204,24 +204,44 @@ void Canvas::setRotateHandleHover(bool hovered)
     emit requestUpdate();
 }
 
+bool Canvas::shouldShowXLineGizmo() const
+{
+    if (mTransMode == TransformMode::move && mValueInput.xOnlyMode()) {
+        return true;
+    }
+    return mGizmos.fState.gizmosSuppressed &&
+           mGizmos.fState.axisHandleActive &&
+           mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::X;
+}
+
+bool Canvas::shouldShowYLineGizmo() const
+{
+    if (mTransMode == TransformMode::move && mValueInput.yOnlyMode()) {
+        return true;
+    }
+    return mGizmos.fState.gizmosSuppressed &&
+           mGizmos.fState.axisHandleActive &&
+           mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::Y;
+}
+
 void Canvas::setGizmosSuppressed(bool suppressed)
 {
-    const bool showXLine = suppressed &&
-                           mGizmos.fState.axisHandleActive &&
-                           mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::X;
-    const bool showYLine = suppressed &&
-                           mGizmos.fState.axisHandleActive &&
-                           mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::Y;
-
-    const bool suppressedChanged = (mGizmos.fState.gizmosSuppressed != suppressed);
-    const bool xLineChanged = (mGizmos.fState.xLineGeom.visible != showXLine);
-    const bool yLineChanged = (mGizmos.fState.yLineGeom.visible != showYLine);
-
-    if (!suppressedChanged && !xLineChanged && !yLineChanged) { return; }
+    if (mGizmos.fState.gizmosSuppressed == suppressed) {
+        const bool desiredX = shouldShowXLineGizmo();
+        const bool desiredY = shouldShowYLineGizmo();
+        if (mGizmos.fState.xLineGeom.visible == desiredX &&
+            mGizmos.fState.yLineGeom.visible == desiredY) {
+            return;
+        }
+        mGizmos.fState.xLineGeom.visible = desiredX;
+        mGizmos.fState.yLineGeom.visible = desiredY;
+        emit requestUpdate();
+        return;
+    }
 
     mGizmos.fState.gizmosSuppressed = suppressed;
-    mGizmos.fState.xLineGeom.visible = showXLine;
-    mGizmos.fState.yLineGeom.visible = showYLine;
+    mGizmos.fState.xLineGeom.visible = shouldShowXLineGizmo();
+    mGizmos.fState.yLineGeom.visible = shouldShowYLineGizmo();
 
     if (suppressed) {
         mGizmos.fState.rotateHandleHovered = false;
@@ -423,18 +443,12 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mGizmos.fState.xLineGeom.start = pivot;
     mGizmos.fState.xLineGeom.end = pivot + QPointF(xLineLengthWorld, 0.0);
     mGizmos.fState.xLineGeom.strokeWidth = xLineStrokeWorld;
-    mGizmos.fState.xLineGeom.visible =
-        mGizmos.fState.gizmosSuppressed &&
-        mGizmos.fState.axisHandleActive &&
-        mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::X;
+    mGizmos.fState.xLineGeom.visible = shouldShowXLineGizmo();
 
     mGizmos.fState.yLineGeom.start = pivot;
     mGizmos.fState.yLineGeom.end = pivot + QPointF(0.0, yLineLengthWorld);
     mGizmos.fState.yLineGeom.strokeWidth = yLineStrokeWorld;
-    mGizmos.fState.yLineGeom.visible =
-        mGizmos.fState.gizmosSuppressed &&
-        mGizmos.fState.axisHandleActive &&
-        mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::Y;
+    mGizmos.fState.yLineGeom.visible = shouldShowYLineGizmo();
 
     const qreal rotateOffsetWorld = mGizmos.fState.axisYGeom.size.width() * 0.5;
     mGizmos.fState.rotateHandleRadius = baseRotateRadiusWorld + rotateOffsetWorld;

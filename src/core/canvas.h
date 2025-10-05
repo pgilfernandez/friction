@@ -805,6 +805,9 @@ private:
     void setAxisGizmoHover(Friction::Core::Gizmos::AxisConstraint axis,
                            bool hovered);
 
+    bool shouldShowXLineGizmo() const;
+    bool shouldShowYLineGizmo() const;
+
     void drawPathClear();
     void drawPathFinish(const qreal invScale);
 
