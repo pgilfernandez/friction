@@ -24,6 +24,7 @@
 
 #include "MovablePoints/pathpivot.h"
 #include "eevent.h"
+#include "Private/document.h"
 
 using namespace Friction::Core;
 
@@ -522,7 +523,7 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mGizmos.fState.rotateHandleAngleDeg = 0.0; // keep gizmo orientation screen-aligned
 
     QPointF pivot;
-    if (pivotPosForGizmosValid) { pivot = pivotPosForGizmos; }
+    if (mDocument.fPivotPosForGizmosValid) { pivot = mDocument.fPivotPosForGizmos; }
     else { pivot = mRotPivot->getAbsolutePos(); }
 
     const qreal axisWidthWorld = mGizmos.fConfig.axisWidthPx * invScale;

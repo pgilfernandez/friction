@@ -177,7 +177,4 @@ private:
     BasicTransformAnimator * mTrans_cv = nullptr;
 };
 
-extern QPointF pivotPosForGizmos;
-extern bool pivotPosForGizmosValid;
-
 #endif // MOVABLEPOINT_H

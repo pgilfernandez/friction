@@ -28,6 +28,7 @@
 #include "pointhelpers.h"
 #include "Animators/transformanimator.h"
 #include "themesupport.h"
+#include "Private/document.h"
 
 MovablePoint::MovablePoint(const MovablePointType type) : mType(type) {}
 
@@ -79,17 +80,16 @@ QPointF MovablePoint::getAbsolutePos() const {
     return mapRelativeToAbsolute(getRelativePos());
 }
 
-QPointF pivotPosForGizmos = QPointF(0,0);
-bool pivotPosForGizmosValid = false;
-
 void MovablePoint::drawOnAbsPosSk(SkCanvas * const canvas,
-        const SkPoint &absPos,
-        const float invScale,
-        const SkColor &fillColor,
-        const bool keyOnCurrent) {
+                                  const SkPoint &absPos,
+                                  const float invScale,
+                                  const SkColor &fillColor,
+                                  const bool keyOnCurrent)
+{
     // Update global pivot used for gizmos with this point's absolute position
-    pivotPosForGizmos = getAbsolutePos();
-    pivotPosForGizmosValid = true;
+    const auto doc = Document::sInstance;
+    doc->fPivotPosForGizmos = getAbsolutePos();
+    doc->fPivotPosForGizmosValid = true;
 
     const float scaledRadius = static_cast<float>(mRadius)*invScale;
 

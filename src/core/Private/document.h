@@ -110,6 +110,10 @@ public:
     ConnContextPtr<Canvas> fActiveScene;
     qptr<BoundingBox> fCurrentBox;
 
+    // gizmo pivot state
+    QPointF fPivotPosForGizmos = QPointF(0,0);
+    bool fPivotPosForGizmosValid = false;
+
     void updateScenes();
     void actionFinished();
 

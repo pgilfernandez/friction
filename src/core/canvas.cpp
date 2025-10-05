@@ -939,10 +939,10 @@ void Canvas::updatePivot()
 {
     if (mCurrentMode == CanvasMode::pointTransform) {
         mRotPivot->setAbsolutePos(getSelectedPointsAbsPivotPos());
-        pivotPosForGizmosValid = false;
+        mDocument.fPivotPosForGizmosValid = false;
     } else if (mCurrentMode == CanvasMode::boxTransform) {
         mRotPivot->setAbsolutePos(getSelectedBoxesAbsPivotPos());
-        pivotPosForGizmosValid = false;
+        mDocument.fPivotPosForGizmosValid = false;
     }
 }
 
