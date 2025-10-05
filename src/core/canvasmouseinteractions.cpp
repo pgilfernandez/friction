@@ -341,6 +341,7 @@ void Canvas::cancelCurrentTransform()
     }
     mValueInput.clearAndDisableInput();
     mTransMode = TransformMode::none;
+    cancelCurrentTransformGimzos();
 }
 
 void Canvas::handleMovePointMouseRelease(const eMouseEvent &e) {
