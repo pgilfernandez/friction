@@ -96,6 +96,14 @@ namespace Friction
                 QVector<QPointF> polygonPoints;
             };
 
+            struct LineGeometry
+            {
+                QPointF start;
+                QPointF end;
+                qreal strokeWidth = 0.0;
+                bool visible = false;
+            };
+
             struct Config
             {
                 qreal rotateSweepDeg = 90.0; // default sweep of gizmo arc
@@ -115,6 +123,10 @@ namespace Friction
                 qreal shearRadiusPx = 6.0; // shear gizmo circle radius in screen pixels
                 // TODO? this is not used
                 qreal shearGapPx = 2.0; // gap between scale and shear gizmos in screen pixels
+                qreal xLineLengthPx = 100.0; // length of the XLine gizmo in screen pixels
+                qreal xLineStrokePx = 2.0; // stroke thickness for the XLine gizmo in screen pixels
+                qreal yLineLengthPx = 100.0; // length of the YLine gizmo in screen pixels
+                qreal yLineStrokePx = 2.0; // stroke thickness for the YLine gizmo in screen pixels
             };
 
             struct Theme
@@ -153,6 +165,8 @@ namespace Friction
                 ScaleGeometry scaleUniformGeom;
                 ShearGeometry shearXGeom;
                 ShearGeometry shearYGeom;
+                LineGeometry xLineGeom;
+                LineGeometry yLineGeom;
                 bool axisXHovered = false;
                 bool axisYHovered = false;
                 bool axisUniformHovered = false;

@@ -328,6 +328,106 @@ void Canvas::renderSk(SkCanvas* const canvas,
 
     updateRotateHandleGeometry(qInvZoom);
 
+    auto drawXLine = [&](const Gizmos::LineGeometry &geom) {
+        if (!geom.visible) { return; }
+
+        const bool active = (mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::X);
+        const bool hovered = mGizmos.fState.axisXHovered;
+
+        QColor color = mGizmos.fTheme.colorX;
+        if (active) {
+            color = color.lighter(135);
+        } else if (hovered) {
+            color = color.lighter(120);
+        }
+
+        const qreal strokeAlpha = (active || hovered)
+                                  ? mGizmos.fTheme.colorAlphaFillHover
+                                  : mGizmos.fTheme.colorAlphaFillNormal;
+        color.setAlpha(static_cast<int>(strokeAlpha));
+
+        if (geom.strokeWidth <= 0.0) { return; }
+
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setStyle(SkPaint::kStroke_Style);
+        paint.setStrokeCap(SkPaint::kRound_Cap);
+        paint.setStrokeWidth(toSkScalar(geom.strokeWidth));
+        paint.setColor(toSkColor(color));
+
+        SkIRect deviceClip;
+        QPointF startPoint = geom.start;
+        QPointF endPoint = geom.end;
+
+        if (canvas->getDeviceClipBounds(&deviceClip)) {
+            SkRect deviceRect = SkRect::Make(deviceClip);
+            SkMatrix invMatrix;
+            if (canvas->getTotalMatrix().invert(&invMatrix)) {
+                SkRect worldRect = invMatrix.mapRect(deviceRect);
+                startPoint.setX(worldRect.left());
+                startPoint.setY(geom.start.y());
+                endPoint.setX(worldRect.right());
+                endPoint.setY(geom.start.y());
+            }
+        }
+
+        canvas->drawLine(toSkScalar(startPoint.x()),
+                         toSkScalar(startPoint.y()),
+                         toSkScalar(endPoint.x()),
+                         toSkScalar(endPoint.y()),
+                         paint);
+    };
+
+    auto drawYLine = [&](const Gizmos::LineGeometry &geom) {
+        if (!geom.visible) { return; }
+
+        const bool active = (mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::Y);
+        const bool hovered = mGizmos.fState.axisYHovered;
+
+        QColor color = mGizmos.fTheme.colorY;
+        if (active) {
+            color = color.lighter(135);
+        } else if (hovered) {
+            color = color.lighter(120);
+        }
+
+        const qreal strokeAlpha = (active || hovered)
+                                  ? mGizmos.fTheme.colorAlphaFillHover
+                                  : mGizmos.fTheme.colorAlphaFillNormal;
+        color.setAlpha(static_cast<int>(strokeAlpha));
+
+        if (geom.strokeWidth <= 0.0) { return; }
+
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setStyle(SkPaint::kStroke_Style);
+        paint.setStrokeCap(SkPaint::kRound_Cap);
+        paint.setStrokeWidth(toSkScalar(geom.strokeWidth));
+        paint.setColor(toSkColor(color));
+
+        SkIRect deviceClip;
+        QPointF startPoint = geom.start;
+        QPointF endPoint = geom.end;
+
+        if (canvas->getDeviceClipBounds(&deviceClip)) {
+            SkRect deviceRect = SkRect::Make(deviceClip);
+            SkMatrix invMatrix;
+            if (canvas->getTotalMatrix().invert(&invMatrix)) {
+                SkRect worldRect = invMatrix.mapRect(deviceRect);
+                startPoint.setY(worldRect.top());
+                endPoint.setY(worldRect.bottom());
+                startPoint.setX(geom.start.x());
+                endPoint.setX(geom.start.x());
+            }
+        }
+
+        canvas->drawLine(toSkScalar(startPoint.x()),
+                         toSkScalar(startPoint.y()),
+                         toSkScalar(endPoint.x()),
+                         toSkScalar(endPoint.y()),
+                         paint);
+    };
+
     if (mGizmos.fState.rotateHandleVisible) {
         if (mGizmos.fState.showRotate) {
             if (mGizmos.fState.rotateHandlePolygon.size() >= 3) {
@@ -585,6 +685,9 @@ void Canvas::renderSk(SkCanvas* const canvas,
                         QColor(mGizmos.fTheme.colorX.red(), mGizmos.fTheme.colorX.green(), mGizmos.fTheme.colorX.blue(),
                         mGizmos.fState.shearXHovered ? mGizmos.fTheme.colorAlphaFillHover : mGizmos.fTheme.colorAlphaFillNormal));
     }
+
+    drawXLine(mGizmos.fState.xLineGeom);
+    drawYLine(mGizmos.fState.yLineGeom);
 
     if(mCurrentMode == CanvasMode::boxTransform ||
        mCurrentMode == CanvasMode::pointTransform) {

@@ -206,8 +206,23 @@ void Canvas::setRotateHandleHover(bool hovered)
 
 void Canvas::setGizmosSuppressed(bool suppressed)
 {
-    if (mGizmos.fState.gizmosSuppressed == suppressed) { return; }
+    const bool showXLine = suppressed &&
+                           mGizmos.fState.axisHandleActive &&
+                           mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::X;
+    const bool showYLine = suppressed &&
+                           mGizmos.fState.axisHandleActive &&
+                           mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::Y;
+
+    const bool suppressedChanged = (mGizmos.fState.gizmosSuppressed != suppressed);
+    const bool xLineChanged = (mGizmos.fState.xLineGeom.visible != showXLine);
+    const bool yLineChanged = (mGizmos.fState.yLineGeom.visible != showYLine);
+
+    if (!suppressedChanged && !xLineChanged && !yLineChanged) { return; }
+
     mGizmos.fState.gizmosSuppressed = suppressed;
+    mGizmos.fState.xLineGeom.visible = showXLine;
+    mGizmos.fState.yLineGeom.visible = showYLine;
+
     if (suppressed) {
         mGizmos.fState.rotateHandleHovered = false;
         mGizmos.fState.axisXHovered = false;
@@ -219,6 +234,7 @@ void Canvas::setGizmosSuppressed(bool suppressed)
         mGizmos.fState.shearXHovered = false;
         mGizmos.fState.shearYHovered = false;
     }
+
     emit requestUpdate();
 }
 
@@ -254,6 +270,8 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         mGizmos.fState.scaleUniformGeom = Gizmos::ScaleGeometry();
         mGizmos.fState.shearXGeom = Gizmos::ShearGeometry();
         mGizmos.fState.shearYGeom = Gizmos::ShearGeometry();
+        mGizmos.fState.xLineGeom = Gizmos::LineGeometry();
+        mGizmos.fState.yLineGeom = Gizmos::LineGeometry();
 
         mGizmos.fState.axisConstraint = Gizmos::AxisConstraint::None;
         mGizmos.fState.scaleConstraint = Gizmos::ScaleHandle::None;
@@ -297,6 +315,10 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     const qreal axisHeightWorld = mGizmos.fConfig.axisHeightPx * invScale;
     const qreal axisGapYWorld = mGizmos.fConfig.axisYOffsetPx * invScale;
     const qreal axisGapXWorld = mGizmos.fConfig.axisXOffsetPx * invScale;
+    const qreal xLineLengthWorld = mGizmos.fConfig.xLineLengthPx * invScale;
+    const qreal xLineStrokeWorld = mGizmos.fConfig.xLineStrokePx * invScale;
+    const qreal yLineLengthWorld = mGizmos.fConfig.yLineLengthPx * invScale;
+    const qreal yLineStrokeWorld = mGizmos.fConfig.yLineStrokePx * invScale;
 
     // const qreal anchorOffset = axisWidthWorld * 0.5;
     const qreal anchorOffset = 2.0 * invScale;
@@ -397,6 +419,22 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         pivot + QPointF(mGizmos.fConfig.axisUniformWidthPx * invScale, - (mGizmos.fConfig.axisUniformOffsetPx + mGizmos.fConfig.axisUniformChamferPx) * invScale),
         pivot + QPointF((mGizmos.fConfig.axisUniformWidthPx - mGizmos.fConfig.axisUniformChamferPx) * invScale, - mGizmos.fConfig.axisUniformOffsetPx * invScale)
     };
+
+    mGizmos.fState.xLineGeom.start = pivot;
+    mGizmos.fState.xLineGeom.end = pivot + QPointF(xLineLengthWorld, 0.0);
+    mGizmos.fState.xLineGeom.strokeWidth = xLineStrokeWorld;
+    mGizmos.fState.xLineGeom.visible =
+        mGizmos.fState.gizmosSuppressed &&
+        mGizmos.fState.axisHandleActive &&
+        mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::X;
+
+    mGizmos.fState.yLineGeom.start = pivot;
+    mGizmos.fState.yLineGeom.end = pivot + QPointF(0.0, yLineLengthWorld);
+    mGizmos.fState.yLineGeom.strokeWidth = yLineStrokeWorld;
+    mGizmos.fState.yLineGeom.visible =
+        mGizmos.fState.gizmosSuppressed &&
+        mGizmos.fState.axisHandleActive &&
+        mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::Y;
 
     const qreal rotateOffsetWorld = mGizmos.fState.axisYGeom.size.width() * 0.5;
     mGizmos.fState.rotateHandleRadius = baseRotateRadiusWorld + rotateOffsetWorld;
