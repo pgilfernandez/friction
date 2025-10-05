@@ -807,6 +807,7 @@ private:
 
     bool shouldShowXLineGizmo() const;
     bool shouldShowYLineGizmo() const;
+    bool updateLineGizmoVisibility();
 
     void drawPathClear();
     void drawPathFinish(const qreal invScale);

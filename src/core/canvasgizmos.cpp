@@ -206,7 +206,7 @@ void Canvas::setRotateHandleHover(bool hovered)
 
 bool Canvas::shouldShowXLineGizmo() const
 {
-    if (mTransMode == TransformMode::move && mValueInput.xOnlyMode()) {
+    if (mValueInput.xOnlyMode()) {
         return true;
     }
     return mGizmos.fState.gizmosSuppressed &&
@@ -216,7 +216,7 @@ bool Canvas::shouldShowXLineGizmo() const
 
 bool Canvas::shouldShowYLineGizmo() const
 {
-    if (mTransMode == TransformMode::move && mValueInput.yOnlyMode()) {
+    if (mValueInput.yOnlyMode()) {
         return true;
     }
     return mGizmos.fState.gizmosSuppressed &&
@@ -224,24 +224,34 @@ bool Canvas::shouldShowYLineGizmo() const
            mGizmos.fState.axisConstraint == Gizmos::AxisConstraint::Y;
 }
 
+bool Canvas::updateLineGizmoVisibility()
+{
+    const bool desiredX = shouldShowXLineGizmo();
+    const bool desiredY = shouldShowYLineGizmo();
+
+    bool changed = false;
+    if (mGizmos.fState.xLineGeom.visible != desiredX) {
+        mGizmos.fState.xLineGeom.visible = desiredX;
+        changed = true;
+    }
+    if (mGizmos.fState.yLineGeom.visible != desiredY) {
+        mGizmos.fState.yLineGeom.visible = desiredY;
+        changed = true;
+    }
+    return changed;
+}
+
 void Canvas::setGizmosSuppressed(bool suppressed)
 {
     if (mGizmos.fState.gizmosSuppressed == suppressed) {
-        const bool desiredX = shouldShowXLineGizmo();
-        const bool desiredY = shouldShowYLineGizmo();
-        if (mGizmos.fState.xLineGeom.visible == desiredX &&
-            mGizmos.fState.yLineGeom.visible == desiredY) {
-            return;
+        if (updateLineGizmoVisibility()) {
+            emit requestUpdate();
         }
-        mGizmos.fState.xLineGeom.visible = desiredX;
-        mGizmos.fState.yLineGeom.visible = desiredY;
-        emit requestUpdate();
         return;
     }
 
     mGizmos.fState.gizmosSuppressed = suppressed;
-    mGizmos.fState.xLineGeom.visible = shouldShowXLineGizmo();
-    mGizmos.fState.yLineGeom.visible = shouldShowYLineGizmo();
+    updateLineGizmoVisibility();
 
     if (suppressed) {
         mGizmos.fState.rotateHandleHovered = false;
@@ -443,12 +453,12 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mGizmos.fState.xLineGeom.start = pivot;
     mGizmos.fState.xLineGeom.end = pivot + QPointF(xLineLengthWorld, 0.0);
     mGizmos.fState.xLineGeom.strokeWidth = xLineStrokeWorld;
-    mGizmos.fState.xLineGeom.visible = shouldShowXLineGizmo();
 
     mGizmos.fState.yLineGeom.start = pivot;
     mGizmos.fState.yLineGeom.end = pivot + QPointF(0.0, yLineLengthWorld);
     mGizmos.fState.yLineGeom.strokeWidth = yLineStrokeWorld;
-    mGizmos.fState.yLineGeom.visible = shouldShowYLineGizmo();
+
+    updateLineGizmoVisibility();
 
     const qreal rotateOffsetWorld = mGizmos.fState.axisYGeom.size.width() * 0.5;
     mGizmos.fState.rotateHandleRadius = baseRotateRadiusWorld + rotateOffsetWorld;
