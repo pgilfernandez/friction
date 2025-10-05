@@ -354,7 +354,8 @@ public:
     void scaleRelativeToSavedPivot(const qreal scaleXBy,
                                    const qreal scaleYBy);
     void startPivotTransform();
-    void shearRelativeToSavedPivot(const qreal shearXBy, const qreal shearYBy);
+    void shearRelativeToSavedPivot(const qreal shearXBy,
+                                   const qreal shearYBy);
     void finishPivotTransform();
     void resetScale();
     void resetTranslation();

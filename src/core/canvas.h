@@ -328,6 +328,9 @@ public:
                   const QRect &drawRect,
                   const QMatrix &viewTrans,
                   const bool mouseGrabbing);
+    void renderGizmos(SkCanvas* const canvas,
+                      const qreal qInvZoom,
+                      const float invZoom);
 
     void setCanvasSize(const int width,
                        const int height);
@@ -680,7 +683,6 @@ public:
     bool startScalingAction(const eKeyEvent &e);
     bool startMovingAction(const eKeyEvent &e);
 
-
     void deselectAllBoxesAction();
     void selectAllBoxesAction();
     void selectAllPointsAction();
@@ -766,6 +768,7 @@ private:
 
     bool prepareRotation(const QPointF &startPos,
                          bool fromHandle = false);
+
     void updateRotateHandleHover(const QPointF &pos,
                                  qreal invScale);
     bool pointOnRotateGizmo(const QPointF &pos,
@@ -919,6 +922,7 @@ protected:
     void handleMovePathMouseMove(const eMouseEvent &e);
 
     void handleLeftMouseRelease(const eMouseEvent &e);
+    void handleLeftMouseGizmos();
 
     void handleAddSmartPointMousePress(const eMouseEvent &e);
     void handleAddSmartPointMouseMove(const eMouseEvent &e);
@@ -927,6 +931,7 @@ protected:
     void updateTransformation(const eKeyEvent &e);
     QPointF getMoveByValueForEvent(const eMouseEvent &e);
     void cancelCurrentTransform();
+    void cancelCurrentTransformGimzos();
 };
 
 #endif // CANVAS_H

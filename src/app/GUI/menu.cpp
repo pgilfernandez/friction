@@ -32,7 +32,6 @@
 #include <QDesktopServices>
 #include <QClipboard>
 #include <QStatusBar>
-#include <QSignalBlocker>
 
 using namespace Friction;
 

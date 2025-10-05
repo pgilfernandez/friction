@@ -791,7 +791,8 @@ void BoundingBox::scaleRelativeToSavedPivot(const qreal scaleBy) {
     scaleRelativeToSavedPivot(scaleBy, scaleBy);
 }
 
-void BoundingBox::shearRelativeToSavedPivot(const qreal shearXBy, const qreal shearYBy) {
+void BoundingBox::shearRelativeToSavedPivot(const qreal shearXBy,
+                                            const qreal shearYBy) {
     if (auto boxTransform = getBoxTransformAnimator()) {
         boxTransform->shearRelativeToSavedValue(shearXBy, shearYBy, mSavedTransformPivot);
     }

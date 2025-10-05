@@ -317,8 +317,10 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
     }
 }
 
-void Canvas::cancelCurrentTransform() {
+void Canvas::cancelCurrentTransform()
+{
     mGizmos.fState.rotatingFromHandle = false;
+
     if(mCurrentMode == CanvasMode::pointTransform) {
         if(mCurrentNormalSegment.isValid()) {
             mCurrentNormalSegment.cancelPassThroughTransform();
@@ -338,33 +340,7 @@ void Canvas::cancelCurrentTransform() {
         //mCanvasWindow->setCanvasMode(MOVE_PATH);
     }
     mValueInput.clearAndDisableInput();
-    mGizmos.fState.axisHandleActive = false;
-    mGizmos.fState.scaleHandleActive = false;
-    mGizmos.fState.shearHandleActive = false;
-    setGizmosSuppressed(false);
     mTransMode = TransformMode::none;
-    if (mGizmos.fState.axisConstraint != Gizmos::AxisConstraint::None) {
-        mGizmos.fState.axisConstraint = Gizmos::AxisConstraint::None;
-        mValueInput.setForce1D(false);
-        mValueInput.setXYMode();
-        setAxisGizmoHover(Gizmos::AxisConstraint::X, false);
-        setAxisGizmoHover(Gizmos::AxisConstraint::Y, false);
-    }
-    if (mGizmos.fState.scaleConstraint != Gizmos::ScaleHandle::None) {
-        mGizmos.fState.scaleConstraint = Gizmos::ScaleHandle::None;
-        mValueInput.setForce1D(false);
-        mValueInput.setXYMode();
-        setScaleGizmoHover(Gizmos::ScaleHandle::X, false);
-        setScaleGizmoHover(Gizmos::ScaleHandle::Y, false);
-        setScaleGizmoHover(Gizmos::ScaleHandle::Uniform, false);
-    }
-    if (mGizmos.fState.shearConstraint != Gizmos::ShearHandle::None) {
-        mGizmos.fState.shearConstraint = Gizmos::ShearHandle::None;
-        mValueInput.setForce1D(false);
-        mValueInput.setXYMode();
-        setShearGizmoHover(Gizmos::ShearHandle::X, false);
-        setShearGizmoHover(Gizmos::ShearHandle::Y, false);
-    }
 }
 
 void Canvas::handleMovePointMouseRelease(const eMouseEvent &e) {
@@ -622,35 +598,12 @@ void Canvas::applyPixelColor(const QColor &color,
     }
 }
 
-void Canvas::handleLeftMouseRelease(const eMouseEvent &e) {
-    if(e.fMouseGrabbing) e.fReleaseMouse();
-    mGizmos.fState.rotatingFromHandle = false;
-    mGizmos.fState.axisHandleActive = false;
-    mGizmos.fState.scaleHandleActive = false;
-    mGizmos.fState.shearHandleActive = false;
-    setGizmosSuppressed(false);
-    if (mGizmos.fState.axisConstraint != Gizmos::AxisConstraint::None) {
-        mGizmos.fState.axisConstraint = Gizmos::AxisConstraint::None;
-        mValueInput.setForce1D(false);
-        mValueInput.setXYMode();
-        setAxisGizmoHover(Gizmos::AxisConstraint::X, false);
-        setAxisGizmoHover(Gizmos::AxisConstraint::Y, false);
-    }
-    if (mGizmos.fState.scaleConstraint != Gizmos::ScaleHandle::None) {
-        mGizmos.fState.scaleConstraint = Gizmos::ScaleHandle::None;
-        mValueInput.setForce1D(false);
-        mValueInput.setXYMode();
-        setScaleGizmoHover(Gizmos::ScaleHandle::X, false);
-        setScaleGizmoHover(Gizmos::ScaleHandle::Y, false);
-        setScaleGizmoHover(Gizmos::ScaleHandle::Uniform, false);
-    }
-    if (mGizmos.fState.shearConstraint != Gizmos::ShearHandle::None) {
-        mGizmos.fState.shearConstraint = Gizmos::ShearHandle::None;
-        mValueInput.setForce1D(false);
-        mValueInput.setXYMode();
-        setShearGizmoHover(Gizmos::ShearHandle::X, false);
-        setShearGizmoHover(Gizmos::ShearHandle::Y, false);
-    }
+void Canvas::handleLeftMouseRelease(const eMouseEvent &e)
+{
+    if (e.fMouseGrabbing) { e.fReleaseMouse(); }
+
+    handleLeftMouseGizmos();
+
     if(mCurrentNormalSegment.isValid()) {
         if(!mStartTransform) mCurrentNormalSegment.finishPassThroughTransform();
         mHoveredNormalSegment = mCurrentNormalSegment;
@@ -816,12 +769,13 @@ void Canvas::scaleSelected(const eMouseEvent& e) {
     mRotPivot->setMousePos(e.fPos);
 }
 
-void Canvas::shearSelected(const eMouseEvent& e) {
+void Canvas::shearSelected(const eMouseEvent& e)
+{
     const QPointF absPos = mRotPivot->getAbsolutePos();
     const QPointF distMoved = e.fPos - e.fLastPressPos;
 
     qreal shearBy;
-    if(mValueInput.inputEnabled()) {
+    if (mValueInput.inputEnabled()) {
         shearBy = mValueInput.getValue();
     } else {
         qreal axisDelta;
@@ -834,22 +788,22 @@ void Canvas::shearSelected(const eMouseEvent& e) {
     }
     qreal shearX = 0;
     qreal shearY = 0;
-    if(mValueInput.xOnlyMode()) {
+    if (mValueInput.xOnlyMode()) {
         shearX = shearBy;
-    } else if(mValueInput.yOnlyMode()) {
+    } else if (mValueInput.yOnlyMode()) {
         shearY = shearBy;
     } else {
         shearX = shearBy;
         shearY = shearBy;
     }
 
-    if(mCurrentMode == CanvasMode::boxTransform) {
+    if (mCurrentMode == CanvasMode::boxTransform) {
         shearSelectedBy(shearX, shearY, absPos, mStartTransform);
     } else {
         shearSelectedPointsBy(shearX, shearY, absPos, mStartTransform);
     }
 
-    if(!mValueInput.inputEnabled()) {
+    if (!mValueInput.inputEnabled()) {
         mValueInput.setDisplayedValue({shearX, shearY});
     }
     mRotPivot->setMousePos(e.fPos);
@@ -884,6 +838,32 @@ void Canvas::rotateSelected(const eMouseEvent& e) {
     if(!mValueInput.inputEnabled())
         mValueInput.setDisplayedValue(rot);
     mRotPivot->setMousePos(e.fPos);
+}
+
+bool Canvas::prepareRotation(const QPointF &startPos,
+                             bool fromHandle)
+{
+    if (mCurrentMode != CanvasMode::boxTransform &&
+        mCurrentMode != CanvasMode::pointTransform) { return false; }
+    if (mSelectedBoxes.isEmpty()) { return false; }
+    if (mCurrentMode == CanvasMode::pointTransform) {
+        if (mSelectedPoints_d.isEmpty()) { return false; }
+    }
+
+    mGizmos.fState.rotatingFromHandle = fromHandle;
+    mValueInput.clearAndDisableInput();
+    mValueInput.setupRotate();
+
+    if (fromHandle) { setGizmosSuppressed(true); }
+
+    mRotPivot->setMousePos(startPos);
+    mTransMode = TransformMode::rotate;
+    mRotHalfCycles = 0;
+    mLastDRot = 0;
+
+    mDoubleClick = false;
+    mStartTransform = true;
+    return true;
 }
 
 void Canvas::handleMovePathMouseMove(const eMouseEvent& e) {
