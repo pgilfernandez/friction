@@ -42,15 +42,10 @@ void Canvas::renderGizmos(SkCanvas * const canvas,
 
         const bool active = (mGizmos.fState.axisConstraint == axis);
         QColor color = baseColor;
-        if (active) {
-            color = color.lighter(135);
-        } else if (hovered) {
-            color = color.lighter(120);
-        }
 
         const qreal strokeAlpha = (active || hovered)
-                                  ? mGizmos.fTheme.colorAlphaFillHover
-                                  : mGizmos.fTheme.colorAlphaFillNormal;
+                                  ? mGizmos.fTheme.colorAlphaFillHover/2
+                                  : mGizmos.fTheme.colorAlphaFillNormal/2;
         color.setAlpha(static_cast<int>(strokeAlpha));
 
         SkPaint linePaint;
@@ -285,7 +280,7 @@ void Canvas::renderGizmos(SkCanvas * const canvas,
             borderPaint.setStyle(SkPaint::kStroke_Style);
             borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.rotateStrokePx * invZoom * 0.2f));
             const int borderLighten = hovered ? mGizmos.fTheme.colorLightenHover : mGizmos.fTheme.colorLightenNormal;
-            QColor borderColor = color.lighter(borderLighten);
+            QColor borderColor = color.darker(borderLighten);
             const qreal strokeAlphaShear = hovered ? mGizmos.fTheme.colorAlphaStrokeHover : mGizmos.fTheme.colorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaShear));
             borderPaint.setColor(toSkColor(borderColor));
