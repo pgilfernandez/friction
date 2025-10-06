@@ -137,12 +137,12 @@ namespace Friction
                 QColor colorY = QColor(134, 232, 32);
                 QColor colorZ = QColor(32, 139, 232);
                 QColor colorUniform = QColor(232, 215, 32);
-                qreal colorAlphaFillNormal = 100.0;
-                qreal colorAlphaFillHover = 200.0;
-                qreal colorAlphaStrokeNormal = 200.0;
-                qreal colorAlphaStrokeHover = 0.0;
-                int colorLightenNormal = 120;
-                int colorLightenHover = 100;
+                qreal colorAlphaFillNormal = 210.0;
+                qreal colorAlphaFillHover = 255.0;
+                qreal colorAlphaStrokeNormal = 0.0;
+                qreal colorAlphaStrokeHover = 210.0;
+                int colorLightenNormal = 100;
+                int colorLightenHover = 150;
             };
 
             struct State
