@@ -224,6 +224,7 @@ public:
     void setSelectedFontSize(const qreal size);
     void setSelectedFontText(const QString &text);
     void removeSelectedPointsAndClearList();
+    void removeSelectedPointsApprox();
     void removeSelectedBoxesAndClearList();
 
     BoundingBox* getCurrentBox() const { return mCurrentBox; }

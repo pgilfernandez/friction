@@ -264,6 +264,40 @@ void Canvas::removeSelectedPointsAndClearList()
     schedulePivotUpdate();
 }
 
+void Canvas::removeSelectedPointsApprox()
+{
+    if (mPressedPoint && mPressedPoint->isCtrlPoint()) {
+        mPressedPoint->finishTransform();
+        removePointFromSelection(mPressedPoint);
+        if (auto *smartPoint = dynamic_cast<SmartNodePoint*>(mPressedPoint.data())) {
+            smartPoint->actionRemove(true);
+        } else {
+            mPressedPoint->remove();
+        }
+        schedulePivotUpdate();
+        return;
+    }
+
+    const auto selected = mSelectedPoints_d;
+    if (selected.count() < 1) {
+        removeSelectedBoxesAndClearList();
+        return;
+    }
+
+    for (const auto& point : selected) {
+        point->setSelected(false);
+        if (auto *smartPoint = dynamic_cast<SmartNodePoint*>(point)) {
+            smartPoint->actionRemove(true);
+        } else {
+            point->remove();
+        }
+    }
+    mSelectedPoints_d.clear();
+    emit pointSelectionChanged();
+    schedulePivotUpdate();
+}
+
+
 void Canvas::clearPointsSelection() {
     for(const auto& point : mSelectedPoints_d) {
         if(point) point->setSelected(false);
