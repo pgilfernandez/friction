@@ -771,6 +771,10 @@ private:
     void setRotateHandleHover(bool hovered);
     void setGizmosSuppressed(bool suppressed);
 
+    bool shouldShowXLineGizmo() const;
+    bool shouldShowYLineGizmo() const;
+    bool updateLineGizmoVisibility();
+
     void updateRotateHandleGeometry(qreal invScale);
 
     bool tryStartRotateWithGizmo(const eMouseEvent &e,

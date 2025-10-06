@@ -1015,11 +1015,15 @@ bool Canvas::handleTransormationInputKeyEvent(const eKeyEvent &e)
     } else if (e.fKey == Qt::Key_X) {
         if (e.fAutorepeat) { return false; }
         mValueInput.switchXOnlyMode();
+        const bool linesChanged = updateLineGizmoVisibility();
         updateTransformation(e);
+        if (linesChanged) { emit requestUpdate(); }
     } else if (e.fKey == Qt::Key_Y) {
         if (e.fAutorepeat) { return false; }
         mValueInput.switchYOnlyMode();
+        const bool linesChanged = updateLineGizmoVisibility();
         updateTransformation(e);
+        if (linesChanged) { emit requestUpdate(); }
     } else { return false; }
     return true;
 }
