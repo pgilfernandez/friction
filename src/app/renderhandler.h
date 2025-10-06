@@ -76,6 +76,7 @@ signals:
 private:
     void setFrameAction(const int frame);
     void setCurrentScene(Canvas * const scene);
+    void applyGizmoSuppression(const PreviewState state);
 
     void finishEncoding();
     void playPreviewAfterAllTasksCompleted();

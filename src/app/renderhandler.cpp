@@ -130,8 +130,17 @@ void RenderHandler::setFrameAction(const int frame) {
 }
 
 void RenderHandler::setCurrentScene(Canvas * const scene) {
+    if (mCurrentScene && mCurrentScene != scene) {
+        mCurrentScene->setGizmosHiddenForPlayback(false);
+    }
     mCurrentScene = scene;
     mCurrentSoundComposition = scene ? scene->getSoundComposition() : nullptr;
+    applyGizmoSuppression(mPreviewState);
+}
+
+void RenderHandler::applyGizmoSuppression(const PreviewState state) {
+    if (!mCurrentScene) { return; }
+    mCurrentScene->setGizmosHiddenForPlayback(state == PreviewState::playing);
 }
 
 void RenderHandler::nextCurrentRenderFrame() {
@@ -163,6 +172,7 @@ void RenderHandler::setPreviewState(const PreviewState state)
         setPreviewing(false);
     }
     mPreviewState = state;
+    applyGizmoSuppression(mPreviewState);
 }
 
 void RenderHandler::renderPreview() {

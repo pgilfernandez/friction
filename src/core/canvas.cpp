@@ -756,6 +756,11 @@ QSize Canvas::getCanvasSize() {
 
 void Canvas::setPreviewing(const bool bT) {
     mPreviewing = bT;
+    setGizmosHiddenForPlayback(bT);
+}
+
+void Canvas::setGizmosHiddenForPlayback(const bool hidden) {
+    setGizmosSuppressed(hidden);
 }
 
 void Canvas::setRenderingPreview(const bool bT) {

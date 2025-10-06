@@ -450,6 +450,7 @@ void TimelineDockWidget::previewFinished()
     disconnect(mPlayButton, nullptr, this, nullptr);
     connect(mPlayButton, &QAction::triggered,
             this, &TimelineDockWidget::renderPreview);
+    setGizmosHidden(false);
 }
 
 void TimelineDockWidget::previewBeingPlayed()
@@ -465,6 +466,7 @@ void TimelineDockWidget::previewBeingPlayed()
     disconnect(mPlayButton, nullptr, this, nullptr);
     connect(mPlayButton, &QAction::triggered,
             this, &TimelineDockWidget::pausePreview);
+    setGizmosHidden(true);
 }
 
 void TimelineDockWidget::previewBeingRendered()
@@ -495,6 +497,7 @@ void TimelineDockWidget::previewPaused()
     disconnect(mPlayButton, nullptr, this, nullptr);
     connect(mPlayButton, &QAction::triggered,
             this, &TimelineDockWidget::resumePreview);
+    setGizmosHidden(false);
 }
 
 bool TimelineDockWidget::setPreviewFromStart(PreviewState state)
@@ -606,6 +609,14 @@ void TimelineDockWidget::interruptPreview()
     if (eSettings::instance().fPreviewCache) {
         RenderHandler::sInstance->interruptPreview();
     } else { setStepPreviewStop(); }
+}
+
+
+void TimelineDockWidget::setGizmosHidden(const bool hidden)
+{
+    if (const auto scene = *mDocument.fActiveScene) {
+        scene->setGizmosHiddenForPlayback(hidden);
+    }
 }
 
 void TimelineDockWidget::updateSettingsForCurrentCanvas(Canvas* const canvas)

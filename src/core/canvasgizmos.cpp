@@ -33,6 +33,12 @@ void Canvas::renderGizmos(SkCanvas * const canvas,
                           const float invZoom)
 {
     updateRotateHandleGeometry(qInvZoom);
+
+    const bool suppressedWithoutActiveHandle = mGizmos.fState.gizmosSuppressed &&
+            !mGizmos.fState.axisHandleActive &&
+            !mGizmos.fState.scaleHandleActive &&
+            !mGizmos.fState.shearHandleActive;
+    if (suppressedWithoutActiveHandle) { return; }
     auto drawAxisLine = [&](const Gizmos::LineGeometry &geom,
                              const QColor &baseColor,
                              Gizmos::AxisConstraint axis,

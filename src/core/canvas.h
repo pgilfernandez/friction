@@ -291,6 +291,7 @@ public:
     qsptr<BoundingBox> createLink(const bool inner);
 
     void setPreviewing(const bool bT);
+    void setGizmosHiddenForPlayback(bool hidden);
     void setOutputRendering(const bool bT);
 
     bool SWT_shouldBeVisible(const SWT_RulesCollection &rules,
