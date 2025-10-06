@@ -293,80 +293,75 @@ void Canvas::renderGizmos(SkCanvas * const canvas,
     }
 }
 
-bool Canvas::showRotateGizmo() const
+void Canvas::setGizmoVisibility(const Gizmos::Interact &ti,
+                                const bool visibility)
 {
-    return mGizmos.fState.showRotate;
-}
-
-void Canvas::setShowRotateGizmo(bool enabled)
-{
-    if (mGizmos.fState.showRotate == enabled) { return; }
-    mGizmos.fState.showRotate = enabled;
-    if (!enabled) {
-        setRotateHandleHover(false);
-        mGizmos.fState.rotatingFromHandle = false;
-        setGizmosSuppressed(false);
+    switch (ti) {
+    case Gizmos::Interact::Position:
+        if (mGizmos.fState.showPosition == visibility) { return; }
+        mGizmos.fState.showPosition = visibility;
+        if (!visibility) {
+            mGizmos.fState.axisHandleActive = false;
+            mGizmos.fState.axisConstraint = Gizmos::AxisConstraint::None;
+            setAxisGizmoHover(Gizmos::AxisConstraint::X, false);
+            setAxisGizmoHover(Gizmos::AxisConstraint::Y, false);
+            setAxisGizmoHover(Gizmos::AxisConstraint::Uniform, false);
+        }
+        break;
+    case Gizmos::Interact::Rotate:
+        if (mGizmos.fState.showRotate == visibility) { return; }
+        mGizmos.fState.showRotate = visibility;
+        if (!visibility) {
+            setRotateHandleHover(false);
+            mGizmos.fState.rotatingFromHandle = false;
+        }
+        break;
+    case Gizmos::Interact::Scale:
+        if (mGizmos.fState.showScale == visibility) { return; }
+        mGizmos.fState.showScale = visibility;
+        if (!visibility) {
+            mGizmos.fState.scaleHandleActive = false;
+            mGizmos.fState.scaleConstraint = Gizmos::ScaleHandle::None;
+            setScaleGizmoHover(Gizmos::ScaleHandle::X, false);
+            setScaleGizmoHover(Gizmos::ScaleHandle::Y, false);
+            setScaleGizmoHover(Gizmos::ScaleHandle::Uniform, false);
+        }
+        break;
+    case Gizmos::Interact::Shear:
+        if (mGizmos.fState.showShear == visibility) { return; }
+        mGizmos.fState.showShear = visibility;
+        if (!visibility) {
+            mGizmos.fState.shearHandleActive = false;
+            mGizmos.fState.shearConstraint = Gizmos::ShearHandle::None;
+            setShearGizmoHover(Gizmos::ShearHandle::X, false);
+            setShearGizmoHover(Gizmos::ShearHandle::Y, false);
+        }
+        break;
+    default: return;
     }
+
+    if (!visibility) { setGizmosSuppressed(false); }
     emit requestUpdate();
 }
 
-bool Canvas::showPositionGizmo() const
+bool Canvas::getGizmoVisibility(const Gizmos::Interact &ti)
 {
-    return mGizmos.fState.showPosition;
-}
-
-void Canvas::setShowPositionGizmo(bool enabled)
-{
-    if (mGizmos.fState.showPosition == enabled) { return; }
-    mGizmos.fState.showPosition = enabled;
-    if (!enabled) {
-        mGizmos.fState.axisHandleActive = false;
-        mGizmos.fState.axisConstraint = Gizmos::AxisConstraint::None;
-        setAxisGizmoHover(Gizmos::AxisConstraint::X, false);
-        setAxisGizmoHover(Gizmos::AxisConstraint::Y, false);
-        setAxisGizmoHover(Gizmos::AxisConstraint::Uniform, false);
-        setGizmosSuppressed(false);
+    switch (ti) {
+    case Gizmos::Interact::Position:
+        return mGizmos.fState.showPosition;
+        break;
+    case Gizmos::Interact::Rotate:
+        return mGizmos.fState.showRotate;
+        break;
+    case Gizmos::Interact::Scale:
+        return mGizmos.fState.showScale;
+        break;
+    case Gizmos::Interact::Shear:
+        return mGizmos.fState.showShear;
+        break;
+    default:;
     }
-    emit requestUpdate();
-}
-
-bool Canvas::showScaleGizmo() const
-{
-    return mGizmos.fState.showScale;
-}
-
-void Canvas::setShowScaleGizmo(bool enabled)
-{
-    if (mGizmos.fState.showScale == enabled) { return; }
-    mGizmos.fState.showScale = enabled;
-    if (!enabled) {
-        mGizmos.fState.scaleHandleActive = false;
-        mGizmos.fState.scaleConstraint = Gizmos::ScaleHandle::None;
-        setScaleGizmoHover(Gizmos::ScaleHandle::X, false);
-        setScaleGizmoHover(Gizmos::ScaleHandle::Y, false);
-        setScaleGizmoHover(Gizmos::ScaleHandle::Uniform, false);
-        setGizmosSuppressed(false);
-    }
-    emit requestUpdate();
-}
-
-bool Canvas::showShearGizmo() const
-{
-    return mGizmos.fState.showShear;
-}
-
-void Canvas::setShowShearGizmo(bool enabled)
-{
-    if (mGizmos.fState.showShear == enabled) { return; }
-    mGizmos.fState.showShear = enabled;
-    if (!enabled) {
-        mGizmos.fState.shearHandleActive = false;
-        mGizmos.fState.shearConstraint = Gizmos::ShearHandle::None;
-        setShearGizmoHover(Gizmos::ShearHandle::X, false);
-        setShearGizmoHover(Gizmos::ShearHandle::Y, false);
-        setGizmosSuppressed(false);
-    }
-    emit requestUpdate();
+    return false;
 }
 
 void Canvas::updateRotateHandleHover(const QPointF &pos,

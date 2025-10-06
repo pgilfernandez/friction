@@ -27,19 +27,15 @@
 #include "FileCacheHandlers/filecachehandler.h"
 #include "canvas.h"
 #include "simpletask.h"
-#include "appsupport.h"
 
 Document* Document::sInstance = nullptr;
 
 using namespace Friction::Core;
 
-Document::Document(TaskScheduler& taskScheduler) {
+Document::Document(TaskScheduler& taskScheduler)
+{
     Q_ASSERT(!sInstance);
     sInstance = this;
-    fShowRotateGizmo = AppSupport::getSettings("gizmos", "Rotate", true).toBool();
-    fShowPositionGizmo = AppSupport::getSettings("gizmos", "Position", true).toBool();
-    fShowScaleGizmo = AppSupport::getSettings("gizmos", "Scale", false).toBool();
-    fShowShearGizmo = AppSupport::getSettings("gizmos", "Shear", false).toBool();
     connect(&taskScheduler, &TaskScheduler::finishedAllQuedTasks,
             this, &Document::updateScenes);
 }
@@ -120,62 +116,78 @@ void Document::setCanvasMode(const CanvasMode mode) {
     actionFinished();
 }
 
-void Document::setShowRotateGizmo(bool show)
+void Document::setGizmoVisibility(const Gizmos::Interact &ti,
+                                  const bool visibility)
 {
-    if (fShowRotateGizmo == show) { return; }
-    fShowRotateGizmo = show;
-    for (const auto &scene : fScenes) {
-        if (scene) { scene->setShowRotateGizmo(show); }
-    }
-    AppSupport::setSettings("gizmos", "Rotate", show);
+    QString key;
 
-    emit gizmoVisibilityChanged(Gizmos::Interact::Rotate, show);
+    switch (ti) {
+    case Gizmos::Interact::Position:
+        if (fGizmoPositionVisibility == visibility) { return; }
+        key = "Position";
+        fGizmoPositionVisibility = visibility;
+        break;
+    case Gizmos::Interact::Rotate:
+        if (fGizmoRotateVisibility == visibility) { return; }
+        key = "Rotate";
+        fGizmoRotateVisibility = visibility;
+        break;
+    case Gizmos::Interact::Scale:
+        if (fGizmoScaleVisibility == visibility) { return; }
+        key = "Scale";
+        fGizmoScaleVisibility = visibility;
+        break;
+    case Gizmos::Interact::Shear:
+        if (fGizmoShearVisibility == visibility) { return; }
+        key = "Shear";
+        fGizmoShearVisibility = visibility;
+        break;
+    default: return;
+    }
+
+    for (const auto &scene : fScenes) {
+        if (scene) { scene->setGizmoVisibility(ti, visibility); }
+    }
+
+    AppSupport::setSettings("gizmos", key, visibility);
+    emit gizmoVisibilityChanged(ti, visibility);
 }
 
-void Document::setShowPositionGizmo(bool show)
+bool Document::getGizmoVisibility(const Gizmos::Interact &ti)
 {
-    if (fShowPositionGizmo == show) { return; }
-    fShowPositionGizmo = show;
-    for (const auto &scene : fScenes) {
-        if (scene) { scene->setShowPositionGizmo(show); }
+    switch (ti) {
+    case Gizmos::Interact::Position:
+        return fGizmoPositionVisibility;
+        break;
+    case Gizmos::Interact::Rotate:
+        return fGizmoRotateVisibility;
+        break;
+    case Gizmos::Interact::Scale:
+        return fGizmoScaleVisibility;
+        break;
+    case Gizmos::Interact::Shear:
+        return fGizmoShearVisibility;
+        break;
+    default:;
     }
-    AppSupport::setSettings("gizmos", "Position", show);
-
-    emit gizmoVisibilityChanged(Gizmos::Interact::Position, show);
+    return false;
 }
 
-void Document::setShowScaleGizmo(bool show)
+Canvas *Document::createNewScene(const bool emitCreated)
 {
-    if (fShowScaleGizmo == show) { return; }
-    fShowScaleGizmo = show;
-    for (const auto &scene : fScenes) {
-        if (scene) { scene->setShowScaleGizmo(show); }
-    }
-    AppSupport::setSettings("gizmos", "Scale", show);
-
-    emit gizmoVisibilityChanged(Gizmos::Interact::Scale, show);
-}
-
-void Document::setShowShearGizmo(bool show)
-{
-    if (fShowShearGizmo == show) { return; }
-    fShowShearGizmo = show;
-    for (const auto &scene : fScenes) {
-        if (scene) { scene->setShowShearGizmo(show); }
-    }
-    AppSupport::setSettings("gizmos", "Shear", show);
-
-    emit gizmoVisibilityChanged(Gizmos::Interact::Shear, show);
-}
-
-Canvas *Document::createNewScene(const bool emitCreated) {
     const auto newScene = enve::make_shared<Canvas>(*this);
     fScenes.append(newScene);
     SWT_addChild(newScene.get());
-    newScene->setShowRotateGizmo(fShowRotateGizmo);
-    newScene->setShowPositionGizmo(fShowPositionGizmo);
-    newScene->setShowScaleGizmo(fShowScaleGizmo);
-    newScene->setShowShearGizmo(fShowShearGizmo);
+
+    newScene->setGizmoVisibility(Gizmos::Interact::Position,
+                                 fGizmoPositionVisibility);
+    newScene->setGizmoVisibility(Gizmos::Interact::Rotate,
+                                 fGizmoRotateVisibility);
+    newScene->setGizmoVisibility(Gizmos::Interact::Scale,
+                                 fGizmoScaleVisibility);
+    newScene->setGizmoVisibility(Gizmos::Interact::Shear,
+                                 fGizmoShearVisibility);
+
     if (emitCreated) {
         emit sceneCreated(newScene.get());
     }

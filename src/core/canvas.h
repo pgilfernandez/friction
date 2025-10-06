@@ -437,14 +437,9 @@ public:
         mPathEffectsVisible = bT;
     }
 
-    bool showRotateGizmo() const;
-    void setShowRotateGizmo(bool enabled);
-    bool showPositionGizmo() const;
-    void setShowPositionGizmo(bool enabled);
-    bool showScaleGizmo() const;
-    void setShowScaleGizmo(bool enabled);
-    bool showShearGizmo() const;
-    void setShowShearGizmo(bool enabled);
+    void setGizmoVisibility(const Friction::Core::Gizmos::Interact &ti,
+                            const bool visibility);
+    bool getGizmoVisibility(const Friction::Core::Gizmos::Interact &ti);
 
     void setEasingAction(const QString &easing)
     {

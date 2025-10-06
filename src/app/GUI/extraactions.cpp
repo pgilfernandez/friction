@@ -652,24 +652,20 @@ void MainWindow::setupMenuGizmo(QMenu *menu,
 {
     if (!menu) { return; }
 
-    bool visible = false;
+    const bool visible = mDocument.getGizmoVisibility(ti);
     QString title;
 
     switch (ti) {
     case Core::Gizmos::Interact::Position:
-        visible = mDocument.showPositionGizmo();
         title = tr("Position");
         break;
     case Core::Gizmos::Interact::Rotate:
-        visible = mDocument.showRotateGizmo();
         title = tr("Rotate");
         break;
     case Core::Gizmos::Interact::Scale:
-        visible = mDocument.showScaleGizmo();
         title = tr("Scale");
         break;
     case Core::Gizmos::Interact::Shear:
-        visible = mDocument.showShearGizmo();
         title = tr("Shear");
         break;
     default: return;
@@ -680,7 +676,9 @@ void MainWindow::setupMenuGizmo(QMenu *menu,
     act->setChecked(visible);
 
     connect(act, &QAction::toggled,
-            &mActions, &Actions::setPositionGizmoVisible);
+            this, [this, ti]() {
+        mDocument.setGizmoVisibility(ti, !mDocument.getGizmoVisibility(ti));
+    });
     connect(&mDocument, &Document::gizmoVisibilityChanged,
             this, [ti, act](Core::Gizmos::Interact i,
                             bool enabled) {

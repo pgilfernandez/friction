@@ -319,7 +319,7 @@ void ToolControls::setupTransformInteract(const Core::Gizmos::Interact &ti)
 
     const auto mDocument = Document::sInstance;
 
-    bool visible = false;
+    const bool visible = mDocument->getGizmoVisibility(ti);
     QIcon iconOn;
     QIcon iconOff;
     QString textOn;
@@ -327,28 +327,24 @@ void ToolControls::setupTransformInteract(const Core::Gizmos::Interact &ti)
 
     switch(ti) {
     case Core::Gizmos::Interact::Position:
-        visible = mDocument->showPositionGizmo();
         iconOn = QIcon::fromTheme("gizmo_translate_on");
         iconOff = QIcon::fromTheme("gizmo_translate_off");
         textOn = tr("Hide Position Interact");
         textOff = tr("Show Position Interact");
         break;
     case Core::Gizmos::Interact::Rotate:
-        visible = mDocument->showRotateGizmo();
         iconOn = QIcon::fromTheme("gizmo_rotate_on");
         iconOff = QIcon::fromTheme("gizmo_rotate_off");
         textOn = tr("Hide Rotate Interact");
         textOff = tr("Show Rotate Interact");
         break;
     case Core::Gizmos::Interact::Scale:
-        visible = mDocument->showScaleGizmo();
         iconOn = QIcon::fromTheme("gizmo_scale_on");
         iconOff = QIcon::fromTheme("gizmo_scale_off");
         textOn = tr("Hide Scale Interact");
         textOff = tr("Show Scale Interact");
         break;
     case Core::Gizmos::Interact::Shear:
-        visible = mDocument->showShearGizmo();
         iconOn = QIcon::fromTheme("gizmo_shear_on");
         iconOff = QIcon::fromTheme("gizmo_shear_off");
         textOn = tr("Hide Shear Interact");
@@ -366,21 +362,7 @@ void ToolControls::setupTransformInteract(const Core::Gizmos::Interact &ti)
 
     connect(interact, &QAction::triggered,
             this, [mDocument, ti]() {
-        switch(ti) {
-        case Core::Gizmos::Interact::Position:
-            mDocument->setShowPositionGizmo(!mDocument->showPositionGizmo());
-            break;
-        case Core::Gizmos::Interact::Rotate:
-            mDocument->setShowRotateGizmo(!mDocument->showRotateGizmo());
-            break;
-        case Core::Gizmos::Interact::Scale:
-            mDocument->setShowScaleGizmo(!mDocument->showScaleGizmo());
-            break;
-        case Core::Gizmos::Interact::Shear:
-            mDocument->setShowShearGizmo(!mDocument->showShearGizmo());
-            break;
-        default:;
-        }
+        mDocument->setGizmoVisibility(ti, !mDocument->getGizmoVisibility(ti));
     });
 
     connect(mDocument, &Document::gizmoVisibilityChanged,

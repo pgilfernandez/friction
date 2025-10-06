@@ -45,6 +45,7 @@
 #include "ReadWrite/ereadstream.h"
 #include "ReadWrite/ewritestream.h"
 #include "gizmos.h"
+#include "appsupport.h"
 
 class SceneBoundGradient;
 class FileDataCacheHandler;
@@ -74,11 +75,14 @@ public:
     QString fEvFile;
 
     NodeVisiblity fNodeVisibility = NodeVisiblity::dissolvedAndNormal;
+
     bool fLocalPivot = true;
-    bool fShowRotateGizmo = true;
-    bool fShowPositionGizmo = true;
-    bool fShowScaleGizmo = true;
-    bool fShowShearGizmo = true;
+
+    bool fGizmoPositionVisibility = AppSupport::getSettings("gizmos", "Position", true).toBool();
+    bool fGizmoRotateVisibility = AppSupport::getSettings("gizmos", "Rotate", true).toBool();
+    bool fGizmoScaleVisibility = AppSupport::getSettings("gizmos", "Scale", false).toBool();
+    bool fGizmoShearVisibility = AppSupport::getSettings("gizmos", "Shear", false).toBool();
+
     CanvasMode fCanvasMode;
 
     // bookmarked
@@ -128,14 +132,10 @@ public:
     QString projectDirectory() const;
 
     void setCanvasMode(const CanvasMode mode);
-    bool showRotateGizmo() const { return fShowRotateGizmo; }
-    void setShowRotateGizmo(bool show);
-    bool showPositionGizmo() const { return fShowPositionGizmo; }
-    void setShowPositionGizmo(bool show);
-    bool showScaleGizmo() const { return fShowScaleGizmo; }
-    void setShowScaleGizmo(bool show);
-    bool showShearGizmo() const { return fShowShearGizmo; }
-    void setShowShearGizmo(bool show);
+
+    void setGizmoVisibility(const Friction::Core::Gizmos::Interact &ti,
+                            const bool visibility);
+    bool getGizmoVisibility(const Friction::Core::Gizmos::Interact &ti);
 
     Canvas * createNewScene(const bool emitCreated = true);
     bool removeScene(const qsptr<Canvas>& scene);

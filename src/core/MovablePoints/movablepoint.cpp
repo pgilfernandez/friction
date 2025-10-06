@@ -172,7 +172,9 @@ void MovablePoint::rotateRelativeToSavedPivot(const qreal rot) {
     moveToRel(mat.map(mSavedRelPos));
 }
 
-void MovablePoint::scaleRelativeToSavedPivot(const qreal sx, const qreal sy) {
+void MovablePoint::scaleRelativeToSavedPivot(const qreal sx,
+                                             const qreal sy)
+{
     QMatrix mat;
     mat.translate(mPivot.x(), mPivot.y());
     mat.scale(sx, sy);
@@ -180,7 +182,9 @@ void MovablePoint::scaleRelativeToSavedPivot(const qreal sx, const qreal sy) {
     moveToRel(mat.map(mSavedRelPos));
 }
 
-void MovablePoint::shearRelativeToSavedPivot(const qreal shearX, const qreal shearY) {
+void MovablePoint::shearRelativeToSavedPivot(const qreal shearX,
+                                             const qreal shearY)
+{
     QMatrix mat;
     mat.translate(mPivot.x(), mPivot.y());
     mat.shear(shearX, shearY);
