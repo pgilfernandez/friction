@@ -305,6 +305,7 @@ private:
 
     void setupMainWidgets();
     void setupStackWidgets();
+    void setupMemoryWidgets();
     void setupPropertiesWidgets();
     void setupLayout();
     void setupToolBar();
@@ -370,6 +371,8 @@ private:
 
     QAction *mToolBarMainAct;
     QAction *mToolBarColorAct;
+
+    intMB mMemoryUsed;
 
 protected:
     void keyPressEvent(QKeyEvent *event);
