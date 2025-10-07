@@ -710,6 +710,8 @@ public:
         mSceneFramesHandler.clearUseRange();
     }
 
+    void setGizmosSuppressed(bool suppressed);
+
     //! Used for clip to canvas, when frames are not really changed.
     void sceneFramesUpToDate() const
     {
@@ -770,8 +772,6 @@ private:
     bool pointOnRotateGizmo(const QPointF &pos,
                             qreal invScale) const;
     void setRotateHandleHover(bool hovered);
-    void setGizmosSuppressed(bool suppressed);
-
     bool shouldShowXLineGizmo() const;
     bool shouldShowYLineGizmo() const;
     bool updateLineGizmoVisibility();
