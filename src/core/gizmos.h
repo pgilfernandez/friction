@@ -110,7 +110,7 @@ namespace Friction
                 qreal rotateBaseOffsetDeg = 270.0; // default angular offset for gizmo arc
                 qreal rotateRadiusPx = 45.0; // gizmo radius in screen pixels
                 qreal rotateStrokePx = 4.0; // arc stroke thickness in screen pixels
-                qreal rotateHitWidthPx = rotateStrokePx + 2.0; // hit area thickness in screen pixels
+                qreal rotateHitWidthPx = rotateStrokePx + 1.0; // hit area thickness in screen pixels
                 qreal axisWidthPx = 5.0; // axis gizmo rectangle width in screen pixels
                 qreal axisHeightPx = 60.0; // axis gizmo rectangle height in screen pixels
                 qreal axisYOffsetPx = 40.0; // vertical distance of Y gizmo from pivot in pixels
