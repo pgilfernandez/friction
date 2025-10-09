@@ -700,13 +700,13 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mGizmos.fState.axisYGeom.usePolygon = true;
     mGizmos.fState.axisYGeom.polygonPoints = {
         pivot + QPointF(0.0, - 10.0 * invScale),
-        pivot + QPointF(-1.5 * invScale, - 11.0 * invScale),
-        pivot + QPointF(-1.5 * invScale, - 55.0 * invScale),
-        pivot + QPointF(-5.0 * invScale, - 56.0 * invScale),
+        pivot + QPointF(-2.0 * invScale, - 11.0 * invScale),
+        pivot + QPointF(-2.0 * invScale, - 55.0 * invScale),
+        pivot + QPointF(-6.0 * invScale, - 56.5 * invScale),
         pivot + QPointF(0.0, - 70.0 * invScale),
-        pivot + QPointF(5.0 * invScale, - 56.0 * invScale),
-        pivot + QPointF(1.5 * invScale, - 55.0 * invScale),
-        pivot + QPointF(1.5 * invScale, - 11.0 * invScale)
+        pivot + QPointF(6.0 * invScale, - 56.5 * invScale),
+        pivot + QPointF(2.0 * invScale, - 55.0 * invScale),
+        pivot + QPointF(2.0 * invScale, - 11.0 * invScale)
     };
 
     mGizmos.fState.axisXGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
@@ -716,13 +716,13 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
     mGizmos.fState.axisXGeom.usePolygon = true;
     mGizmos.fState.axisXGeom.polygonPoints = {
         pivot + QPointF(10.0 * invScale, 0.0),
-        pivot + QPointF(11.0 * invScale, -1.5 * invScale),
-        pivot + QPointF(55.0 * invScale, -1.5 * invScale),
-        pivot + QPointF(56.0 * invScale, -5.0 * invScale),
+        pivot + QPointF(11.0 * invScale, -2.0 * invScale),
+        pivot + QPointF(55.0 * invScale, -2.0 * invScale),
+        pivot + QPointF(56.5 * invScale, -6.0 * invScale),
         pivot + QPointF(70.0 * invScale, 0.0),
-        pivot + QPointF(56.0 * invScale, 5.0 * invScale),
-        pivot + QPointF(55.0 * invScale, 1.5 * invScale),
-        pivot + QPointF(11.0 * invScale, 1.5 * invScale)
+        pivot + QPointF(56.5 * invScale, 6.0 * invScale),
+        pivot + QPointF(55.0 * invScale, 2.0 * invScale),
+        pivot + QPointF(11.0 * invScale, 2.0 * invScale)
     };
 
     mGizmos.fState.axisUniformGeom.center = pivot + QPointF(axisGapXWorld, 0.0);
