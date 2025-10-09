@@ -42,15 +42,10 @@ void Canvas::renderGizmos(SkCanvas * const canvas,
 
         const bool active = (mGizmos.fState.axisConstraint == axis);
         QColor color = baseColor;
-        if (active) {
-            color = color.lighter(135);
-        } else if (hovered) {
-            color = color.lighter(120);
-        }
 
         const qreal strokeAlpha = (active || hovered)
-                                  ? mGizmos.fTheme.colorAlphaFillHover
-                                  : mGizmos.fTheme.colorAlphaFillNormal;
+                                  ? mGizmos.fTheme.colorAlphaFillHover/2
+                                  : mGizmos.fTheme.colorAlphaFillNormal/2;
         color.setAlpha(static_cast<int>(strokeAlpha));
 
         SkPaint linePaint;
@@ -110,7 +105,7 @@ void Canvas::renderGizmos(SkCanvas * const canvas,
                 borderPaint.setStrokeCap(SkPaint::kRound_Cap);
                 borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.rotateStrokePx * qInvZoom * 0.2f));
                 const int strokeLighten = mGizmos.fState.rotateHandleHovered ? mGizmos.fTheme.colorLightenHover : mGizmos.fTheme.colorLightenNormal;
-                QColor strokeColor = mGizmos.fTheme.colorZ.lighter(strokeLighten);
+                QColor strokeColor = mGizmos.fTheme.colorZ.darker(strokeLighten);
                 strokeColor.setAlpha(mGizmos.fState.rotateHandleHovered ? static_cast<int>(mGizmos.fTheme.colorAlphaStrokeHover)
                                                                         : static_cast<int>(mGizmos.fTheme.colorAlphaStrokeNormal));
                 borderPaint.setColor(toSkColor(strokeColor));
@@ -163,7 +158,7 @@ void Canvas::renderGizmos(SkCanvas * const canvas,
             borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.rotateStrokePx * invZoom * 0.2f));
 
             const int borderLighten = hovered ? mGizmos.fTheme.colorLightenHover : mGizmos.fTheme.colorLightenNormal;
-            QColor borderColor = color.lighter(borderLighten);
+            QColor borderColor = color.darker(borderLighten);
             const qreal strokeAlphaAxis = hovered ? mGizmos.fTheme.colorAlphaStrokeHover : mGizmos.fTheme.colorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaAxis));
             borderPaint.setColor(toSkColor(borderColor));
@@ -232,7 +227,7 @@ void Canvas::renderGizmos(SkCanvas * const canvas,
             borderPaint.setStyle(SkPaint::kStroke_Style);
             borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.rotateStrokePx * invZoom * 0.2f));
             const int borderLighten = hovered ? mGizmos.fTheme.colorLightenHover : mGizmos.fTheme.colorLightenNormal;
-            QColor borderColor = color.lighter(borderLighten);
+            QColor borderColor = color.darker(borderLighten);
             const qreal strokeAlphaScale = hovered ? mGizmos.fTheme.colorAlphaStrokeHover : mGizmos.fTheme.colorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaScale));
             borderPaint.setColor(toSkColor(borderColor));
@@ -285,7 +280,7 @@ void Canvas::renderGizmos(SkCanvas * const canvas,
             borderPaint.setStyle(SkPaint::kStroke_Style);
             borderPaint.setStrokeWidth(toSkScalar(mGizmos.fConfig.rotateStrokePx * invZoom * 0.2f));
             const int borderLighten = hovered ? mGizmos.fTheme.colorLightenHover : mGizmos.fTheme.colorLightenNormal;
-            QColor borderColor = color.lighter(borderLighten);
+            QColor borderColor = color.darker(borderLighten);
             const qreal strokeAlphaShear = hovered ? mGizmos.fTheme.colorAlphaStrokeHover : mGizmos.fTheme.colorAlphaStrokeNormal;
             borderColor.setAlpha(static_cast<int>(strokeAlphaShear));
             borderPaint.setColor(toSkColor(borderColor));
@@ -707,9 +702,9 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         pivot + QPointF(0.0, - 10.0 * invScale),
         pivot + QPointF(-2.0 * invScale, - 11.0 * invScale),
         pivot + QPointF(-2.0 * invScale, - 55.0 * invScale),
-        pivot + QPointF(-6.0 * invScale, - 57.0 * invScale),
+        pivot + QPointF(-6.0 * invScale, - 56.5 * invScale),
         pivot + QPointF(0.0, - 70.0 * invScale),
-        pivot + QPointF(6.0 * invScale, - 57.0 * invScale),
+        pivot + QPointF(6.0 * invScale, - 56.5 * invScale),
         pivot + QPointF(2.0 * invScale, - 55.0 * invScale),
         pivot + QPointF(2.0 * invScale, - 11.0 * invScale)
     };
@@ -723,9 +718,9 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         pivot + QPointF(10.0 * invScale, 0.0),
         pivot + QPointF(11.0 * invScale, -2.0 * invScale),
         pivot + QPointF(55.0 * invScale, -2.0 * invScale),
-        pivot + QPointF(57.0 * invScale, -6.0 * invScale),
+        pivot + QPointF(56.5 * invScale, -6.0 * invScale),
         pivot + QPointF(70.0 * invScale, 0.0),
-        pivot + QPointF(57.0 * invScale, 6.0 * invScale),
+        pivot + QPointF(56.5 * invScale, 6.0 * invScale),
         pivot + QPointF(55.0 * invScale, 2.0 * invScale),
         pivot + QPointF(11.0 * invScale, 2.0 * invScale)
     };
