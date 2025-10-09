@@ -707,9 +707,9 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         pivot + QPointF(0.0, - 10.0 * invScale),
         pivot + QPointF(-2.0 * invScale, - 11.0 * invScale),
         pivot + QPointF(-2.0 * invScale, - 55.0 * invScale),
-        pivot + QPointF(-6.0 * invScale, - 57.0 * invScale),
+        pivot + QPointF(-6.0 * invScale, - 56.5 * invScale),
         pivot + QPointF(0.0, - 70.0 * invScale),
-        pivot + QPointF(6.0 * invScale, - 57.0 * invScale),
+        pivot + QPointF(6.0 * invScale, - 56.5 * invScale),
         pivot + QPointF(2.0 * invScale, - 55.0 * invScale),
         pivot + QPointF(2.0 * invScale, - 11.0 * invScale)
     };
@@ -723,9 +723,9 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         pivot + QPointF(10.0 * invScale, 0.0),
         pivot + QPointF(11.0 * invScale, -2.0 * invScale),
         pivot + QPointF(55.0 * invScale, -2.0 * invScale),
-        pivot + QPointF(57.0 * invScale, -6.0 * invScale),
+        pivot + QPointF(56.5 * invScale, -6.0 * invScale),
         pivot + QPointF(70.0 * invScale, 0.0),
-        pivot + QPointF(57.0 * invScale, 6.0 * invScale),
+        pivot + QPointF(56.5 * invScale, 6.0 * invScale),
         pivot + QPointF(55.0 * invScale, 2.0 * invScale),
         pivot + QPointF(11.0 * invScale, 2.0 * invScale)
     };
