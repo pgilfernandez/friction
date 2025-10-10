@@ -65,7 +65,9 @@ MemoryChecker::MemoryChecker(QObject * const parent) : QObject(parent) {
 
 char MemoryChecker::sLine[256];
 
-void MemoryChecker::sGetFreeKB(intKB& procFreeKB, intKB& sysFreeKB)
+void MemoryChecker::sGetFreeKB(intKB& procFreeKB,
+                               intKB& sysFreeKB,
+                               intKB& usedKB)
 {
     const auto usageCap = eSettings::sInstance->fRamMBCap;
 
@@ -147,6 +149,7 @@ void MemoryChecker::sGetFreeKB(intKB& procFreeKB, intKB& sysFreeKB)
     }
 
     sysFreeKB = intKB(longB(freeInternal)) + freeExternal;
+    usedKB = enveUsedKB;
     //qDebug() << "Free" << intMB(sysFreeKB).fValue << "Used" << intMB(enveUsedKB).fValue;
 
 #if defined(Q_OS_LINUX)
@@ -160,7 +163,8 @@ void MemoryChecker::sGetFreeKB(intKB& procFreeKB, intKB& sysFreeKB)
 void MemoryChecker::checkMemory() {
     intKB procFreeKB;
     intKB sysFreeKB;
-    sGetFreeKB(procFreeKB, sysFreeKB);
+    intKB usedKB;
+    sGetFreeKB(procFreeKB, sysFreeKB, usedKB);
 
     if(sysFreeKB < mLowFreeKB) {
         const intKB toFree = mLowFreeKB - sysFreeKB;
@@ -182,5 +186,5 @@ void MemoryChecker::checkMemory() {
         mLastMemoryState = NORMAL_MEMORY_STATE;
     }
 
-    emit memoryCheckedKB(sysFreeKB, HardwareInfo::sRamKB());
+    emit memoryCheckedKB(sysFreeKB, HardwareInfo::sRamKB(), usedKB);
 }
