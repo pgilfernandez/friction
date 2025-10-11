@@ -389,6 +389,33 @@ void Canvas::scaleSelectedPointsBy(const qreal scaleXBy,
     }
 }
 
+void Canvas::shearSelectedPointsBy(const qreal shearXBy,
+                                   const qreal shearYBy,
+                                   const QPointF &absOrigin,
+                                   const bool startTrans)
+{
+    if (mSelectedPoints_d.isEmpty()) { return; }
+    if (startTrans) {
+        if (mDocument.fLocalPivot) {
+            for (const auto& point : mSelectedPoints_d) {
+                point->startTransform();
+                point->saveTransformPivotAbsPos(point->getAbsolutePos());
+                point->shearRelativeToSavedPivot(shearXBy, shearYBy);
+            }
+        } else {
+            for (const auto& point : mSelectedPoints_d) {
+                point->startTransform();
+                point->saveTransformPivotAbsPos(absOrigin);
+                point->shearRelativeToSavedPivot(shearXBy, shearYBy);
+            }
+        }
+    } else {
+        for (const auto& point : mSelectedPoints_d) {
+            point->shearRelativeToSavedPivot(shearXBy, shearYBy);
+        }
+    }
+}
+
 void Canvas::clearPointsSelectionOrDeselect() {
     if(mSelectedPoints_d.isEmpty() ) {
         deselectAllBoxes();

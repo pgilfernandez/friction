@@ -50,6 +50,7 @@
 #include "ekeyfilter.h"
 #include "window.h"
 #include "GUI/RenderWidgets/renderwidget.h"
+#include "gizmos.h"
 
 #include "widgets/fontswidget.h"
 #include "widgets/toolbar.h"
@@ -313,6 +314,8 @@ private:
     void setupMenuScene();
     void setupMenuEffects();
     void setupMenuExtras();
+    void setupMenuGizmo(QMenu *menu,
+                        const Friction::Core::Gizmos::Interact &ti);
     void setupPropertiesActions();
 
     BoundingBox* getCurrentBox();
