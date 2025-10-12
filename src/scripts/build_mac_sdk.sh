@@ -21,6 +21,8 @@ set -e -x
 
 # keep in sync with other SDK's
 
+SKIA_V=1744b17ab9749359c4004a7cd8744c9e31ec6bf8
+
 PYTHON_V=3.11.11
 NINJA_V=1.11.1
 CMAKE_V=3.26.3
@@ -79,11 +81,15 @@ SHARED_CONFIGURE="${COMMON_CONFIGURE} --enable-shared --disable-static"
 STATIC_CONFIGURE="${COMMON_CONFIGURE} --disable-shared --enable-static"
 DEFAULT_CONFIGURE="${SHARED_CONFIGURE}"
 
-if [ ! -d "${SDK}" ]; then
+if [ ! -d "${SDK}/lib" ]; then
     mkdir -p "${SDK}/lib"
-    mkdir -p "${SDK}/bin"
-    mkdir -p "${SDK}/src"
     (cd "${SDK}"; ln -sf lib lib64)
+fi
+if [ ! -d "${SDK}/bin" ]; then
+    mkdir -p "${SDK}/bin"
+fi
+if [ ! -d "${SDK}/src" ]; then
+    mkdir -p "${SDK}/src"
 fi
 
 # python
@@ -159,6 +165,20 @@ if [ ! -f "${SDK}/bin/yasm" ]; then
     make -j${MKJOBS}
     make install
 fi # yasm
+
+# skia
+if [ ! -f "${SDK}/lib/libskia-friction.dylib" ]; then
+    cd ${SRC}
+    rm -rf skia || true
+    git clone https://github.com/friction2d/skia
+    cd skia
+    git checkout ${SKIA_V}
+    git submodule update -i --recursive
+    mkdir build && cd build
+    cmake -G Ninja -DSKIA_USE_SYSTEM_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang ..
+    cmake --build .
+    cp -a libskia-friction.dylib ${SDK}/lib/
+fi # skia
 
 # qt5
 if [ ! -f "${QMAKE_BIN}" ]; then
@@ -317,7 +337,7 @@ if [ ! -f "${SDK}/lib/libvpx.a" ]; then
 fi # libvpx
 
 # libogg
-if [ ! -f "${SDK}/lib/libogg.dylib" ]; then
+if [ ! -f "${SDK}/lib/libogg.a" ]; then
     cd ${SRC}
     OGG_SRC=libogg-${OGG_V}
     rm -rf ${OGG_SRC} || true
