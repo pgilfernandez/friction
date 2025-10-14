@@ -27,6 +27,7 @@
 #include "Boxes/circle.h"
 #include "Boxes/rectangle.h"
 
+using namespace Friction;
 using namespace Friction::Ui;
 
 ToolControls::ToolControls(QWidget *parent)
