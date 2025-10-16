@@ -51,6 +51,7 @@
 #include "window.h"
 #include "GUI/RenderWidgets/renderwidget.h"
 #include "gizmos.h"
+#include "gridcontroller.h"
 
 #include "widgets/fontswidget.h"
 #include "widgets/toolbar.h"
@@ -198,6 +199,9 @@ private:
 
     void openWelcomeDialog();
     void closeWelcomeDialog();
+    void openGridSettingsDialog();
+    void onGridSettingsChanged(const Friction::Core::GridSettings& settings);
+    void onGridSnapEnabledChanged(bool enabled);
 
     eKeyFilter* mNumericFilter = eKeyFilter::sCreateNumberFilter(this);
     eKeyFilter* mLineFilter = eKeyFilter::sCreateLineFilter(this);
@@ -255,6 +259,8 @@ private:
     QAction *mZoomInAction;
     QAction *mZoomOutAction;
     QAction *mFitViewAction;
+    QAction *mSnapToGridAct;
+    QAction *mGridSettingsAct;
 
     QAction *mNoneQuality;
     QAction *mLowQuality;

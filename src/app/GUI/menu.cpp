@@ -335,6 +335,22 @@ void MainWindow::setupMenuBar()
 
     mViewMenu = mMenuBar->addMenu(tr("View", "MenuBar"));
 
+    mSnapToGridAct = mViewMenu->addAction(tr("Snap to Grid"));
+    mSnapToGridAct->setCheckable(true);
+    mSnapToGridAct->setChecked(mDocument.gridController().settings.enabled);
+    connect(mSnapToGridAct, &QAction::toggled, this, [this](bool checked) {
+        mDocument.setGridSnapEnabled(checked);
+    });
+    cmdAddAction(mSnapToGridAct);
+
+    mGridSettingsAct = mViewMenu->addAction(tr("Grid Settings..."));
+    connect(mGridSettingsAct, &QAction::triggered, this, &MainWindow::openGridSettingsDialog);
+    cmdAddAction(mGridSettingsAct);
+
+    mViewMenu->addSeparator();
+    onGridSettingsChanged(mDocument.gridController().settings);
+
+
     mObjectMenu = mMenuBar->addMenu(tr("Object", "MenuBar"));
 
     mObjectMenu->addSeparator();

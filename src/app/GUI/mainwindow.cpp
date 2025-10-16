@@ -41,6 +41,7 @@
 #include <iostream>
 #include <QClipboard>
 #include <QMimeData>
+#include <QSignalBlocker>
 
 #include "GUI/edialogs.h"
 #include "dialogs/applyexpressiondialog.h"
@@ -76,6 +77,7 @@
 #include "widgets/assetswidget.h"
 #include "dialogs/adjustscenedialog.h"
 #include "dialogs/commandpalette.h"
+#include "dialogs/gridsettingsdialog.h"
 
 using namespace Friction;
 
@@ -117,6 +119,8 @@ MainWindow::MainWindow(Document& document,
     , mInvertSelAct(nullptr)
     , mClearSelAct(nullptr)
     , mAddKeyAct(nullptr)
+    , mSnapToGridAct(nullptr)
+    , mGridSettingsAct(nullptr)
     , mAddToQueAct(nullptr)
     , mViewFullScreenAct(nullptr)
     , mFontWidget(nullptr)
@@ -159,6 +163,11 @@ MainWindow::MainWindow(Document& document,
 {
     Q_ASSERT(!sInstance);
     sInstance = this;
+
+    connect(&mDocument, &Document::gridSettingsChanged,
+            this, &MainWindow::onGridSettingsChanged);
+    connect(&mDocument, &Document::gridSnapEnabledChanged,
+            this, &MainWindow::onGridSnapEnabledChanged);
 
     setWindowIcon(QIcon::fromTheme(AppSupport::getAppID()));
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -206,6 +215,32 @@ BoundingBox *MainWindow::getCurrentBox()
     if (!box) { return nullptr; }
 
     return box;
+}
+
+void MainWindow::openGridSettingsDialog()
+{
+    GridSettingsDialog dialog(this);
+    dialog.setWindowTitle(tr("Grid Settings"));
+    dialog.setSettings(mDocument.gridController().settings);
+    if (dialog.exec() == QDialog::Accepted) {
+        auto settings = dialog.settings();
+        settings.enabled = mDocument.gridController().settings.enabled;
+        mDocument.setGridSettings(settings);
+    }
+}
+
+void MainWindow::onGridSettingsChanged(const Friction::Core::GridSettings& settings)
+{
+    onGridSnapEnabledChanged(settings.enabled);
+}
+
+void MainWindow::onGridSnapEnabledChanged(bool enabled)
+{
+    if (!mSnapToGridAct) { return; }
+    QSignalBlocker blocker(mSnapToGridAct);
+    if (mSnapToGridAct->isChecked() != enabled) {
+        mSnapToGridAct->setChecked(enabled);
+    }
 }
 
 void MainWindow::checkAutoSaveTimer()

@@ -32,7 +32,13 @@
 #include "Paint/brushescontext.h"
 #include "simpletask.h"
 #include "canvas.h"
+#include "gridcontroller.h"
+#include "smartPointers/ememory.h"
 #include "appsupport.h"
+#include <QtGlobal>
+#include <QColor>
+
+using Friction::Core::GridSettings;
 
 void Document::writeBookmarked(eWriteStream &dst) const {
     dst << fColors.count();
@@ -46,7 +52,26 @@ void Document::writeBookmarked(eWriteStream &dst) const {
     }
 }
 
+void Document::writeGridSettings(eWriteStream &dst) const
+{
+    const auto& s = mGridController.settings;
+    dst << s.sizeX;
+    dst << s.sizeY;
+    dst << s.originX;
+    dst << s.originY;
+    dst << s.snapThresholdPx;
+    dst << s.enabled;
+    dst << s.show;
+    dst << s.majorEvery;
+    const QColor color = s.colorAnimator ? s.colorAnimator->getColor() : QColor(255, 255, 255, 96);
+    dst << color;
+}
+
+
 void Document::writeScenes(eWriteStream& dst) const {
+    writeGridSettings(dst);
+    dst.writeCheckpoint();
+
     writeBookmarked(dst);
     dst.writeCheckpoint();
 
@@ -72,6 +97,31 @@ void Document::readBookmarked(eReadStream &src) {
     }
 }
 
+void Document::readGridSettings(eReadStream &src)
+{
+    GridSettings settings = mGridController.settings;
+    src >> settings.sizeX;
+    src >> settings.sizeY;
+    src >> settings.originX;
+    src >> settings.originY;
+    src >> settings.snapThresholdPx;
+    bool enabled = mGridController.settings.enabled;
+    bool show = mGridController.settings.show;
+    src >> enabled;
+    src >> show;
+    src >> settings.majorEvery;
+    QColor color;
+    src >> color;
+    settings.enabled = enabled;
+    settings.show = show;
+    if (!settings.colorAnimator) {
+        settings.colorAnimator = enve::make_shared<ColorAnimator>();
+    }
+    settings.colorAnimator->setColor(color);
+    applyGridSettings(settings, false, true);
+}
+
+
 void Document::readGradients(eReadStream& src) {
     int nGrads; src >> nGrads;
     for(int i = 0; i < nGrads; i++) {
@@ -80,6 +130,10 @@ void Document::readGradients(eReadStream& src) {
 }
 
 void Document::readScenes(eReadStream& src) {
+    if (src.evFileVersion() >= EvFormat::gridSettings) {
+        readGridSettings(src);
+        src.readCheckpoint("Error reading grid settings");
+    }
     if(src.evFileVersion() > 1) {
         readBookmarked(src);
         src.readCheckpoint("Error reading bookmarks");
@@ -106,6 +160,31 @@ void Document::readScenes(eReadStream& src) {
     SimpleTask::sProcessAll();
 }
 
+void Document::readGridSettings(const QDomElement& element)
+{
+    if (element.isNull()) { return; }
+    GridSettings settings = mGridController.settings;
+    bool ok = false;
+    settings.sizeX = element.attribute("sizeX", QString::number(settings.sizeX)).toDouble(&ok);
+    settings.sizeY = element.attribute("sizeY", QString::number(settings.sizeY)).toDouble(&ok);
+    settings.originX = element.attribute("originX", QString::number(settings.originX)).toDouble(&ok);
+    settings.originY = element.attribute("originY", QString::number(settings.originY)).toDouble(&ok);
+    settings.snapThresholdPx = element.attribute("snapThresholdPx", QString::number(settings.snapThresholdPx)).toInt();
+    settings.enabled = element.attribute("enabled", settings.enabled ? "true" : "false") == "true";
+    settings.show = element.attribute("show", settings.show ? "true" : "false") == "true";
+    settings.majorEvery = element.attribute("majorEvery", QString::number(settings.majorEvery)).toInt();
+    const QString colorStr = element.attribute("color");
+    if (!colorStr.isEmpty()) {
+        const QColor parsed(colorStr);
+        if (parsed.isValid()) {
+            if (!settings.colorAnimator) { settings.colorAnimator = enve::make_shared<ColorAnimator>(); }
+            settings.colorAnimator->setColor(parsed);
+        }
+    }
+    applyGridSettings(settings, false, true);
+}
+
+
 void Document::writeDoxumentXEV(QDomDocument& doc) const {
     auto document = doc.createElement("Document");
     document.setAttribute("format-version", XevFormat::version);
@@ -124,6 +203,20 @@ void Document::writeDoxumentXEV(QDomDocument& doc) const {
         bBrushes.appendChild(brush);
     }
     document.appendChild(bBrushes);
+
+    auto gridSettings = doc.createElement("GridSettings");
+    const auto& grid = mGridController.settings;
+    gridSettings.setAttribute("sizeX", QString::number(grid.sizeX));
+    gridSettings.setAttribute("sizeY", QString::number(grid.sizeY));
+    gridSettings.setAttribute("originX", QString::number(grid.originX));
+    gridSettings.setAttribute("originY", QString::number(grid.originY));
+    gridSettings.setAttribute("snapThresholdPx", QString::number(grid.snapThresholdPx));
+    gridSettings.setAttribute("enabled", grid.enabled ? "true" : "false");
+    gridSettings.setAttribute("show", grid.show ? "true" : "false");
+    gridSettings.setAttribute("majorEvery", QString::number(grid.majorEvery));
+    const QColor gridColor = grid.colorAnimator ? grid.colorAnimator->getColor() : QColor(255, 255, 255, 96);
+    gridSettings.setAttribute("color", gridColor.name(QColor::HexArgb));
+    document.appendChild(gridSettings);
 
     auto scenes = doc.createElement("Scenes");
     for(const auto &s : fScenes) {
@@ -182,6 +275,11 @@ void Document::readDocumentXEV(const QDomDocument& doc,
     const QString versionStr = document.attribute("format-version", "");
     if(versionStr.isEmpty()) RuntimeThrow("No format version specified");
 //    const int version = XmlExportHelpers::stringToInt(versionStr);
+
+    const auto gridElement = document.firstChildElement("GridSettings");
+    if (!gridElement.isNull()) {
+        readGridSettings(gridElement);
+    }
 
     auto bColors = document.firstChildElement("ColorBookmarks");
     const auto colors = bColors.elementsByTagName("Color");

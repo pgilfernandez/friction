@@ -46,6 +46,7 @@
 #include <QTabletEvent>
 #include <QSizeF>
 #include <QVector>
+#include <QTransform>
 
 #include "gizmos.h"
 
@@ -187,6 +188,7 @@ public:
                          const bool startTrans);
 
     qreal getResolution() const;
+    void setWorldToScreen(const QTransform& transform, qreal devicePixelRatio);
     void setResolution(const qreal percent);
 
     void applyCurrentTransformToSelected();
@@ -824,6 +826,12 @@ private:
 
 protected:
     Document& mDocument;
+    QTransform mWorldToScreen;
+    QTransform mScreenToWorld;
+    bool mHasWorldToScreen = false;
+    qreal mDevicePixelRatio = 1.0;
+    QPointF mGridMoveStartPivot;
+
     bool mDrawnSinceQue = true;
 
     qsptr<UndoRedoStack> mUndoRedoStack;

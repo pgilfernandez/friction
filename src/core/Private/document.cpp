@@ -28,6 +28,11 @@
 #include "canvas.h"
 #include "simpletask.h"
 
+#include <QVariant>
+#include <QColor>
+
+#include <cmath>
+
 Document* Document::sInstance = nullptr;
 
 using namespace Friction::Core;
@@ -36,6 +41,7 @@ Document::Document(TaskScheduler& taskScheduler)
 {
     Q_ASSERT(!sInstance);
     sInstance = this;
+    loadGridSettingsFromSettings();
     connect(&taskScheduler, &TaskScheduler::finishedAllQuedTasks,
             this, &Document::updateScenes);
 }
@@ -63,6 +69,143 @@ void Document::actionFinished() {
 void Document::replaceClipboard(const stdsptr<Clipboard> &container) {
     fClipboardContainer = container;
 }
+
+GridController& Document::gridController()
+{
+    return mGridController;
+}
+
+const GridController& Document::gridController() const
+{
+    return mGridController;
+}
+
+template<typename T>
+static bool gridNearlyEqual(const T lhs, const T rhs)
+{
+    constexpr double eps = 1e-6;
+    return std::abs(static_cast<double>(lhs) - static_cast<double>(rhs)) <= eps;
+}
+
+static GridSettings sanitizedGridSettings(GridSettings settings)
+{
+    if (settings.sizeX <= 0.0) { settings.sizeX = 1.0; }
+    if (settings.sizeY <= 0.0) { settings.sizeY = 1.0; }
+    if (settings.majorEvery < 1) { settings.majorEvery = 1; }
+    if (settings.snapThresholdPx < 0) { settings.snapThresholdPx = 0; }
+    if (!settings.colorAnimator) { settings.colorAnimator = enve::make_shared<ColorAnimator>(); }
+    QColor color = settings.colorAnimator->getColor();
+    if (!color.isValid()) { color = QColor(255, 255, 255, 96); }
+    int alpha = color.alpha();
+    if (alpha < 0) { alpha = 0; }
+    if (alpha > 255) { alpha = 255; }
+    color.setAlpha(alpha);
+    settings.colorAnimator->setColor(color);
+    return settings;
+}
+
+void Document::setGridSnapEnabled(const bool enabled)
+{
+    auto updated = mGridController.settings;
+    if (updated.enabled == enabled) { return; }
+    updated.enabled = enabled;
+    applyGridSettings(updated, false, false);
+}
+
+void Document::setGridVisible(const bool visible)
+{
+    auto updated = mGridController.settings;
+    if (updated.show == visible) { return; }
+    updated.show = visible;
+    applyGridSettings(updated, false, false);
+}
+
+void Document::setGridSettings(const GridSettings& settings)
+{
+    auto updated = settings;
+    updated.enabled = mGridController.settings.enabled;
+    applyGridSettings(updated, false, false);
+}
+
+void Document::loadGridSettingsFromSettings()
+{
+    GridSettings defaults;
+    GridSettings loaded = defaults;
+    loaded.sizeX = AppSupport::getSettings("grid", "sizeX", defaults.sizeX).toDouble();
+    loaded.sizeY = AppSupport::getSettings("grid", "sizeY", defaults.sizeY).toDouble();
+    loaded.originX = AppSupport::getSettings("grid", "originX", defaults.originX).toDouble();
+    loaded.originY = AppSupport::getSettings("grid", "originY", defaults.originY).toDouble();
+    loaded.snapThresholdPx = AppSupport::getSettings("grid", "snapThresholdPx", defaults.snapThresholdPx).toInt();
+    loaded.enabled = AppSupport::getSettings("grid", "enabled", defaults.enabled).toBool();
+    loaded.show = AppSupport::getSettings("grid", "show", defaults.show).toBool();
+    loaded.majorEvery = AppSupport::getSettings("grid", "majorEvery", defaults.majorEvery).toInt();
+    const QVariant colorVariant = AppSupport::getSettings("grid", "color", defaults.colorAnimator->getColor());
+    QColor storedColor;
+    if (colorVariant.canConvert<QColor>()) {
+        storedColor = colorVariant.value<QColor>();
+    } else {
+        storedColor = QColor(colorVariant.toString());
+    }
+    if (!storedColor.isValid()) { storedColor = QColor(255, 255, 255, 96); }
+    if (!loaded.colorAnimator) { loaded.colorAnimator = enve::make_shared<ColorAnimator>(); }
+    loaded.colorAnimator->setColor(storedColor);
+    applyGridSettings(loaded, true, true);
+}
+
+void Document::saveGridSettingsToSettings() const
+{
+    const auto& s = mGridController.settings;
+    AppSupport::setSettings("grid", "sizeX", s.sizeX);
+    AppSupport::setSettings("grid", "sizeY", s.sizeY);
+    AppSupport::setSettings("grid", "originX", s.originX);
+    AppSupport::setSettings("grid", "originY", s.originY);
+    AppSupport::setSettings("grid", "snapThresholdPx", s.snapThresholdPx);
+    AppSupport::setSettings("grid", "enabled", s.enabled);
+    AppSupport::setSettings("grid", "show", s.show);
+    AppSupport::setSettings("grid", "majorEvery", s.majorEvery);
+    const QColor color = s.colorAnimator ? s.colorAnimator->getColor() : QColor(255, 255, 255, 96);
+    AppSupport::setSettings("grid", "color", color);
+}
+
+void Document::applyGridSettings(const GridSettings& settings,
+                                 const bool silent,
+                                 const bool skipSave)
+{
+    const GridSettings sanitized = sanitizedGridSettings(settings);
+    const auto previous = mGridController.settings;
+    if (previous == sanitized) {
+        if (!skipSave) { saveGridSettingsToSettings(); }
+        return;
+    }
+
+    const bool snapChanged = previous.enabled != sanitized.enabled;
+    const bool showChanged = previous.show != sanitized.show;
+    const bool metricsChanged =
+            gridNearlyEqual(previous.sizeX, sanitized.sizeX) == false ||
+            gridNearlyEqual(previous.sizeY, sanitized.sizeY) == false ||
+            gridNearlyEqual(previous.originX, sanitized.originX) == false ||
+            gridNearlyEqual(previous.originY, sanitized.originY) == false ||
+            previous.majorEvery != sanitized.majorEvery;
+    const QColor previousColor = previous.colorAnimator ? previous.colorAnimator->getColor() : QColor();
+    const QColor sanitizedColor = sanitized.colorAnimator ? sanitized.colorAnimator->getColor() : QColor();
+    const bool colorChanged = previousColor != sanitizedColor;
+
+    mGridController.settings = sanitized;
+
+    if (!skipSave) { saveGridSettingsToSettings(); }
+
+    if (silent) { return; }
+
+    emit gridSettingsChanged(mGridController.settings);
+    if (snapChanged) {
+        emit gridSnapEnabledChanged(mGridController.settings.enabled);
+    }
+
+    if (showChanged || (mGridController.settings.show && (metricsChanged || colorChanged))) {
+        updateScenes();
+    }
+}
+
 
 Clipboard *Document::getClipboard(const ClipboardType type) const {
     if(!fClipboardContainer) return nullptr;

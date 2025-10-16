@@ -101,6 +101,16 @@ Canvas::Canvas(Document &document,
     //setCanvasMode(MOVE_PATH);
 }
 
+void Canvas::setWorldToScreen(const QTransform& transform, qreal devicePixelRatio)
+{
+    mWorldToScreen = transform;
+    mDevicePixelRatio = devicePixelRatio > 0.0 ? devicePixelRatio : 1.0;
+    bool invertible = false;
+    mScreenToWorld = transform.inverted(&invertible);
+    mHasWorldToScreen = invertible;
+}
+
+
 Canvas::~Canvas()
 {
     clearPointsSelection();
@@ -254,6 +264,25 @@ void Canvas::renderSk(SkCanvas* const canvas,
     const float intervals[2] = {eSizesUI::widget*0.25f*invZoom,
                                 eSizesUI::widget*0.25f*invZoom};
     const auto dashPathEffect = SkDashPathEffect::Make(intervals, 2, 0);
+    QTransform worldToScreenTransform = mWorldToScreen;
+    QTransform screenToWorldTransform = mScreenToWorld;
+    bool haveWorldTransform = mHasWorldToScreen;
+    if (!haveWorldTransform) {
+        bool invertible = false;
+        worldToScreenTransform = QTransform(viewTrans.m11(), viewTrans.m12(), 0.0,
+                                            viewTrans.m21(), viewTrans.m22(), 0.0,
+                                            viewTrans.dx(), viewTrans.dy(), 1.0);
+        screenToWorldTransform = worldToScreenTransform.inverted(&invertible);
+        haveWorldTransform = invertible;
+    }
+    const QRectF worldViewport = haveWorldTransform
+        ? screenToWorldTransform.mapRect(QRectF(drawRect))
+        : QRectF(QPointF(0.0, 0.0), QSizeF(drawRect.width(), drawRect.height()));
+    QRectF gridViewport = worldViewport.normalized();
+    const qreal gridPixelRatio = haveWorldTransform ? mDevicePixelRatio : pixelRatio;
+    const bool gridVisible = mDocument.gridController().settings.show &&
+                             (!haveWorldTransform || !gridViewport.isEmpty());
+    const bool drawCanvas = mSceneFrame && mSceneFrame->fBoxState == mStateId;
 
     canvas->concat(skViewTrans);
     if(isPreviewingOrRendering()) {
@@ -272,7 +301,6 @@ void Canvas::renderSk(SkCanvas* const canvas,
     canvas->save();
     if(mClipToCanvasSize) {
         canvas->clear(SK_ColorBLACK);
-        canvas->clipRect(canvasRect);
     } else {
         canvas->clear(ThemeSupport::getThemeBaseSkColor());
         paint.setColor(SK_ColorGRAY);
@@ -280,20 +308,29 @@ void Canvas::renderSk(SkCanvas* const canvas,
         paint.setPathEffect(dashPathEffect);
         canvas->drawRect(toSkRect(getCurrentBounds()), paint);
     }
-    const bool drawCanvas = mSceneFrame && mSceneFrame->fBoxState == mStateId;
+    if(!mClipToCanvasSize || !drawCanvas) {
+        if(bgColor.alpha() == 255 &&
+           skViewTrans.mapRect(canvasRect).contains(toSkRect(drawRect))) {
+            canvas->clear(toSkColor(bgColor));
+        } else {
+            SkPaint bgPaint;
+            bgPaint.setStyle(SkPaint::kFill_Style);
+            bgPaint.setColor(toSkColor(bgColor));
+            canvas->drawRect(canvasRect, bgPaint);
+        }
+    }
+    if (gridVisible) {
+        mDocument.gridController().drawGrid(canvas, gridViewport, worldToScreenTransform, gridPixelRatio);
+    }
+    canvas->save();
+    if(mClipToCanvasSize) {
+        canvas->clipRect(canvasRect);
+    }
     if(bgColor.alpha() != 255)
         drawTransparencyMesh(canvas, canvasRect);
 
     if(!mClipToCanvasSize || !drawCanvas) {
         canvas->saveLayer(nullptr, nullptr);
-        if(bgColor.alpha() == 255 &&
-           skViewTrans.mapRect(canvasRect).contains(toSkRect(drawRect))) {
-            canvas->clear(toSkColor(bgColor));
-        } else {
-            paint.setStyle(SkPaint::kFill_Style);
-            paint.setColor(toSkColor(bgColor));
-            canvas->drawRect(canvasRect, paint);
-        }
         drawContained(canvas, filter);
         canvas->restore();
     } else if(drawCanvas) {
@@ -303,7 +340,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
         mSceneFrame->drawImage(canvas, filter);
         canvas->restore();
     }
-
+    canvas->restore();
     canvas->restore();
 
     if (!enve_cast<Canvas*>(mCurrentContainer)) {

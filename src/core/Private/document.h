@@ -46,6 +46,7 @@
 #include "ReadWrite/ewritestream.h"
 #include "gizmos.h"
 #include "appsupport.h"
+#include "gridcontroller.h"
 
 class SceneBoundGradient;
 class FileDataCacheHandler;
@@ -69,6 +70,13 @@ public:
     Document(TaskScheduler& taskScheduler);
 
     static Document* sInstance;
+
+    Friction::Core::GridController& gridController();
+    const Friction::Core::GridController& gridController() const;
+
+    void setGridSnapEnabled(bool enabled);
+    void setGridVisible(bool visible);
+    void setGridSettings(const Friction::Core::GridSettings& settings);
 
     stdsptr<Clipboard> fClipboardContainer;
 
@@ -108,6 +116,8 @@ public:
     SimpleBrushWrapper* fBrush = nullptr;
     bool fOnionVisible = false;
     PaintMode fPaintMode = PaintMode::normal;
+
+    Friction::Core::GridController mGridController;
 
     QList<qsptr<Canvas>> fScenes;
     std::map<Canvas*, int> fVisibleScenes;
@@ -198,9 +208,19 @@ private:
 
     void writeBookmarked(eWriteStream &dst) const;
     void readBookmarked(eReadStream &src);
+    void writeGridSettings(eWriteStream &dst) const;
+    void readGridSettings(eReadStream &src);
+    void readGridSettings(const QDomElement& element);
+    void loadGridSettingsFromSettings();
+    void saveGridSettingsToSettings() const;
+    void applyGridSettings(const Friction::Core::GridSettings& settings,
+                           bool silent,
+                           bool skipSave);
 
     void readGradients(eReadStream& src);
 signals:
+    void gridSettingsChanged(const Friction::Core::GridSettings& settings);
+    void gridSnapEnabledChanged(bool enabled);
     void canvasModeSet(CanvasMode);
 
     void gizmoVisibilityChanged(const Friction::Core::Gizmos::Interact &ti,

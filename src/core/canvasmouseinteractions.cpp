@@ -883,7 +883,25 @@ void Canvas::handleMovePathMouseMove(const eMouseEvent& e) {
             mPressedBox = nullptr;
         }
 
-        const auto moveBy = getMoveByValueForEvent(e);
+        if (mStartTransform && !mSelectedBoxes.isEmpty()) {
+            mGridMoveStartPivot = getSelectedBoxesAbsPivotPos();
+        }
+
+        auto moveBy = getMoveByValueForEvent(e);
+        const bool bypassSnap = e.fModifiers & Qt::AltModifier;
+        const bool forceSnap = e.fModifiers & Qt::ControlModifier;
+        if (!mSelectedBoxes.isEmpty() && mHasWorldToScreen &&
+            (mDocument.gridController().settings.enabled || forceSnap)) {
+            const QPointF targetPivot = mGridMoveStartPivot + moveBy;
+            const auto snapped = mDocument.gridController().maybeSnapPivot(targetPivot,
+                                                                           mWorldToScreen,
+                                                                           forceSnap,
+                                                                           bypassSnap);
+            if (snapped != targetPivot) {
+                moveBy = snapped - mGridMoveStartPivot;
+            }
+        }
+
         moveSelectedBoxesByAbs(moveBy, mStartTransform);
     }
 }
