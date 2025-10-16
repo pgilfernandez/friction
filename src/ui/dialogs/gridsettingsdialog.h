@@ -25,7 +25,6 @@
 #define GRIDSETTINGSDIALOG_H
 
 #include <QDialog>
-#include <QColor>
 #include "Animators/coloranimator.h"
 #include "smartPointers/ememory.h"
 
@@ -34,7 +33,7 @@ class QDoubleSpinBox;
 class QSpinBox;
 class QCheckBox;
 class QDialogButtonBox;
-class QPushButton;
+class ColorAnimatorButton;
 
 namespace Friction {
 namespace Core {
@@ -54,11 +53,9 @@ public:
 
 private slots:
     void restoreDefaults();
-    void chooseColor();
 
 private:
     void setupUi();
-    void refreshColorButton();
 
     QDoubleSpinBox* mSizeX;
     QDoubleSpinBox* mSizeY;
@@ -68,11 +65,9 @@ private:
     QSpinBox* mMajorEvery;
     QCheckBox* mShowGrid;
     QDialogButtonBox* mButtonBox;
-    QPushButton* mColorButton;
-    QSpinBox* mAlphaSpin;
+    ColorAnimatorButton* mColorButton;
     qsptr<ColorAnimator> mColorAnimator;
     bool mSnapEnabled = true;
-    QColor mCurrentColor;
 };
 
 #endif // GRIDSETTINGSDIALOG_H

@@ -22,8 +22,9 @@
 */
 
 #include "gridsettingsdialog.h"
+
 #include "gridcontroller.h"
-#include "gridcontroller.h"
+#include "GUI/coloranimatorbutton.h"
 
 #include <QFormLayout>
 #include <QVBoxLayout>
@@ -31,9 +32,8 @@
 #include <QDoubleSpinBox>
 #include <QSpinBox>
 #include <QCheckBox>
+#include <QColor>
 #include <QPushButton>
-#include <QColorDialog>
-#include <QHBoxLayout>
 
 using Friction::Core::GridSettings;
 
@@ -56,12 +56,10 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mShowGrid(nullptr)
     , mButtonBox(nullptr)
     , mColorButton(nullptr)
-    , mAlphaSpin(nullptr)
     , mColorAnimator(enve::make_shared<ColorAnimator>())
     , mSnapEnabled(true)
-    , mCurrentColor(QColor(255, 255, 255, 96))
 {
-    mColorAnimator->setColor(mCurrentColor);
+    mColorAnimator->setColor(QColor(255, 255, 255, 96));
     setupUi();
 }
 
@@ -107,18 +105,8 @@ void GridSettingsDialog::setupUi()
     mMajorEvery->setSingleStep(1);
     form->addRow(tr("Major Line Every"), mMajorEvery);
 
-    auto* colorLayout = new QHBoxLayout();
-    mColorButton = new QPushButton(tr("Select Color"), this);
-    mColorButton->setToolTip(tr("Pick grid line color"));
-    colorLayout->addWidget(mColorButton);
-    mAlphaSpin = new QSpinBox(this);
-    mAlphaSpin->setRange(0, 255);
-    mAlphaSpin->setSingleStep(1);
-    mAlphaSpin->setToolTip(tr("Opacity (0-255)"));
-    mAlphaSpin->setValue(mCurrentColor.alpha());
-    colorLayout->addWidget(mAlphaSpin);
-    colorLayout->addStretch();
-    form->addRow(tr("Grid Color"), colorLayout);
+    mColorButton = new ColorAnimatorButton(mColorAnimator.get(), this);
+    form->addRow(tr("Grid Color"), mColorButton);
 
     mShowGrid = new QCheckBox(tr("Show grid"), this);
     form->addRow(QString(), mShowGrid);
@@ -128,14 +116,10 @@ void GridSettingsDialog::setupUi()
     mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     auto* restoreButton = mButtonBox->addButton(tr("Restore Defaults"), QDialogButtonBox::ResetRole);
     connect(restoreButton, &QPushButton::clicked, this, &GridSettingsDialog::restoreDefaults);
-    connect(mColorButton, &QPushButton::clicked, this, &GridSettingsDialog::chooseColor);
-    mAlphaSpin->setValue(mCurrentColor.alpha());
-    connect(mAlphaSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int){ refreshColorButton(); });
     connect(mButtonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(mButtonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     layout->addWidget(mButtonBox);
-    refreshColorButton();
 }
 
 void GridSettingsDialog::setSettings(const GridSettings& settings)
@@ -149,17 +133,16 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mMajorEvery->setValue(settings.majorEvery);
     mShowGrid->setChecked(settings.show);
 
-    mColorAnimator = enve::make_shared<ColorAnimator>();
-    if (settings.colorAnimator) {
-        mColorAnimator->setColor(settings.colorAnimator->getColor());
-    } else {
-        mColorAnimator->setColor(QColor(255, 255, 255, 96));
+    if (!mColorAnimator) {
+        mColorAnimator = enve::make_shared<ColorAnimator>();
+        if (mColorButton) {
+            mColorButton->setColorTarget(mColorAnimator.get());
+        }
     }
-    mCurrentColor = mColorAnimator->getColor();
-    if (mAlphaSpin) {
-        mAlphaSpin->setValue(mCurrentColor.alpha());
-    }
-    refreshColorButton();
+    const QColor appliedColor = settings.colorAnimator
+        ? settings.colorAnimator->getColor()
+        : QColor(255, 255, 255, 96);
+    mColorAnimator->setColor(appliedColor);
 }
 
 GridSettings GridSettingsDialog::settings() const
@@ -174,10 +157,9 @@ GridSettings GridSettingsDialog::settings() const
     result.majorEvery = mMajorEvery->value();
     result.show = mShowGrid->isChecked();
 
-    QColor finalColor = mCurrentColor;
-    if (mAlphaSpin) {
-        finalColor.setAlpha(mAlphaSpin->value());
-    }
+    const QColor finalColor = mColorAnimator
+        ? mColorAnimator->getColor()
+        : QColor(255, 255, 255, 96);
     result.colorAnimator = enve::make_shared<ColorAnimator>();
     result.colorAnimator->setColor(finalColor);
     return result;
@@ -186,36 +168,4 @@ GridSettings GridSettingsDialog::settings() const
 void GridSettingsDialog::restoreDefaults()
 {
     setSettings(GridSettings{});
-}
-
-void GridSettingsDialog::chooseColor()
-{
-    const QColor chosen = QColorDialog::getColor(mCurrentColor, this, tr("Select Grid Color"), QColorDialog::ShowAlphaChannel);
-    if (!chosen.isValid()) { return; }
-    mCurrentColor = chosen;
-    if (mAlphaSpin) {
-        mAlphaSpin->setValue(chosen.alpha());
-    }
-    if (mColorAnimator) {
-        mColorAnimator->setColor(mCurrentColor);
-    }
-    refreshColorButton();
-}
-
-void GridSettingsDialog::refreshColorButton()
-{
-    if (!mColorButton) { return; }
-    QColor display = mCurrentColor;
-    if (mAlphaSpin) {
-        display.setAlpha(mAlphaSpin->value());
-    }
-    const QColor textColor = display.lightness() > 128 ? Qt::black : Qt::white;
-    const QString stylesheet = QStringLiteral("color: %1; background-color: %2; border: 1px solid gray;")
-                                   .arg(textColor.name(), display.name(QColor::HexArgb));
-    mColorButton->setStyleSheet(stylesheet);
-    mColorButton->setText(display.name(QColor::HexArgb));
-    mCurrentColor = display;
-    if (mColorAnimator) {
-        mColorAnimator->setColor(display);
-    }
 }
