@@ -152,6 +152,10 @@ public:
     bool fTimelineHighlightRow = true;
     QColor fTimelineHighlightRowColor = ThemeSupport::getThemeHighlightColor(15);
 
+    // Grid default colors
+    QColor fGridColor = QColor(255, 255, 255, 96);
+    QColor fGridMajorColor = QColor(255, 255, 255, 160);
+
     QColor fObjectKeyframeColor;
     QColor fPropertyGroupKeyframeColor;
     QColor fPropertyKeyframeColor;

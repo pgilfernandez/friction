@@ -25,11 +25,13 @@
 
 #include "gridcontroller.h"
 #include "GUI/coloranimatorbutton.h"
+#include "Private/esettings.h"
 
 #include <QFormLayout>
 #include <QVBoxLayout>
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
+#include <QCheckBox>
 #include <QSpinBox>
 #include <QColor>
 #include <QPushButton>
@@ -53,14 +55,22 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mSnapThreshold(nullptr)
     , mMajorEvery(nullptr)
     , mButtonBox(nullptr)
+    , mSaveAsDefault(nullptr)
     , mColorButton(nullptr)
     , mMajorColorButton(nullptr)
     , mColorAnimator(enve::make_shared<ColorAnimator>())
     , mMajorColorAnimator(enve::make_shared<ColorAnimator>())
     , mSnapEnabled(true)
 {
-    mColorAnimator->setColor(QColor(255, 255, 255, 96));
-    mMajorColorAnimator->setColor(QColor(255, 255, 255, 160));
+    const QColor defaultMinor(255, 255, 255, 96);
+    const QColor defaultMajor(255, 255, 255, 160);
+    if (auto* settings = eSettings::sInstance) {
+        mColorAnimator->setColor(settings->fGridColor);
+        mMajorColorAnimator->setColor(settings->fGridMajorColor);
+    } else {
+        mColorAnimator->setColor(defaultMinor);
+        mMajorColorAnimator->setColor(defaultMajor);
+    }
     setupUi();
 }
 
@@ -112,6 +122,9 @@ void GridSettingsDialog::setupUi()
     mMajorColorButton = new ColorAnimatorButton(mMajorColorAnimator.get(), this);
     form->addRow(tr("Major Line Color"), mMajorColorButton);
 
+    mSaveAsDefault = new QCheckBox(tr("Save as default"), this);
+    form->addRow(QString(), mSaveAsDefault);
+
     layout->addLayout(form);
 
     mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -133,6 +146,9 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mSnapThreshold->setValue(settings.snapThresholdPx);
     mMajorEvery->setValue(settings.majorEvery);
     mStoredShow = settings.show;
+    if (mSaveAsDefault) {
+        mSaveAsDefault->setChecked(false);
+    }
 
     const auto ensureAnimator = [](qsptr<ColorAnimator>& animator,
                                    ColorAnimatorButton* button)
@@ -190,4 +206,9 @@ void GridSettingsDialog::restoreDefaults()
     auto defaults = GridSettings{};
     defaults.show = mStoredShow;
     setSettings(defaults);
+}
+
+bool GridSettingsDialog::saveAsDefault() const
+{
+    return mSaveAsDefault && mSaveAsDefault->isChecked();
 }

@@ -268,6 +268,15 @@ eSettings::eSettings(const int cpuThreads,
                      fTimelineHighlightRowColor,
                      "timelineHighlightRowColor",
                      QColor(255, 0, 0, 15));*/
+    // Grid default colors, TODO: move them to ThemeSupport
+    gSettings << std::make_shared<eColorSetting>(
+                     fGridColor,
+                     "gridColor",
+                     QColor(255, 255, 255, 96));
+    gSettings << std::make_shared<eColorSetting>(
+                     fGridMajorColor,
+                     "gridMajorColor",
+                     QColor(255, 255, 255, 160));
 
     gSettings << std::make_shared<eColorSetting>(
                      fObjectKeyframeColor,

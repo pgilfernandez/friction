@@ -77,6 +77,7 @@ public:
     void setGridSnapEnabled(bool enabled);
     void setGridVisible(bool visible);
     void setGridSettings(const Friction::Core::GridSettings& settings);
+    void saveGridSettingsAsDefault(const Friction::Core::GridSettings& settings);
 
     stdsptr<Clipboard> fClipboardContainer;
 
@@ -212,7 +213,7 @@ private:
     void readGridSettings(eReadStream &src);
     void readGridSettings(const QDomElement& element);
     void loadGridSettingsFromSettings();
-    void saveGridSettingsToSettings() const;
+    void saveGridSettingsToSettings(const Friction::Core::GridSettings& settings) const;
     void applyGridSettings(const Friction::Core::GridSettings& settings,
                            bool silent,
                            bool skipSave);

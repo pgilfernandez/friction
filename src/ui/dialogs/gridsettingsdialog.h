@@ -32,6 +32,7 @@
 class QDoubleSpinBox;
 class QSpinBox;
 class QDialogButtonBox;
+class QCheckBox;
 class ColorAnimatorButton;
 
 namespace Friction {
@@ -49,6 +50,7 @@ public:
 
     void setSettings(const Friction::Core::GridSettings& settings);
     Friction::Core::GridSettings settings() const;
+    bool saveAsDefault() const;
 
 private slots:
     void restoreDefaults();
@@ -63,6 +65,7 @@ private:
     QSpinBox* mSnapThreshold;
     QSpinBox* mMajorEvery;
     QDialogButtonBox* mButtonBox;
+    QCheckBox* mSaveAsDefault;
     ColorAnimatorButton* mColorButton;
     ColorAnimatorButton* mMajorColorButton;
     qsptr<ColorAnimator> mColorAnimator;

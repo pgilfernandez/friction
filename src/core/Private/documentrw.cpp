@@ -64,7 +64,9 @@ void Document::writeGridSettings(eWriteStream &dst) const
     dst << s.show;
     dst << s.majorEvery;
     const QColor color = s.colorAnimator ? s.colorAnimator->getColor() : QColor(255, 255, 255, 96);
+    const QColor majorColor = s.majorColorAnimator ? s.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
     dst << color;
+    dst << majorColor;
 }
 
 
@@ -112,12 +114,20 @@ void Document::readGridSettings(eReadStream &src)
     src >> settings.majorEvery;
     QColor color;
     src >> color;
+    QColor majorColor = color;
+    if (src.evFileVersion() >= EvFormat::gridSettingsMajorColor) {
+        src >> majorColor;
+    }
     settings.enabled = enabled;
     settings.show = show;
     if (!settings.colorAnimator) {
         settings.colorAnimator = enve::make_shared<ColorAnimator>();
     }
     settings.colorAnimator->setColor(color);
+    if (!settings.majorColorAnimator) {
+        settings.majorColorAnimator = enve::make_shared<ColorAnimator>();
+    }
+    settings.majorColorAnimator->setColor(majorColor);
     applyGridSettings(settings, false, true);
 }
 
@@ -181,6 +191,14 @@ void Document::readGridSettings(const QDomElement& element)
             settings.colorAnimator->setColor(parsed);
         }
     }
+    const QString majorColorStr = element.attribute("majorColor");
+    if (!majorColorStr.isEmpty()) {
+        const QColor parsed(majorColorStr);
+        if (parsed.isValid()) {
+            if (!settings.majorColorAnimator) { settings.majorColorAnimator = enve::make_shared<ColorAnimator>(); }
+            settings.majorColorAnimator->setColor(parsed);
+        }
+    }
     applyGridSettings(settings, false, true);
 }
 
@@ -215,7 +233,9 @@ void Document::writeDoxumentXEV(QDomDocument& doc) const {
     gridSettings.setAttribute("show", grid.show ? "true" : "false");
     gridSettings.setAttribute("majorEvery", QString::number(grid.majorEvery));
     const QColor gridColor = grid.colorAnimator ? grid.colorAnimator->getColor() : QColor(255, 255, 255, 96);
+    const QColor gridMajorColor = grid.majorColorAnimator ? grid.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
     gridSettings.setAttribute("color", gridColor.name(QColor::HexArgb));
+    gridSettings.setAttribute("majorColor", gridMajorColor.name(QColor::HexArgb));
     document.appendChild(gridSettings);
 
     auto scenes = doc.createElement("Scenes");

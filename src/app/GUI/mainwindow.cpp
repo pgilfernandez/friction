@@ -226,6 +226,9 @@ void MainWindow::openGridSettingsDialog()
         auto settings = dialog.settings();
         settings.enabled = mDocument.gridController().settings.enabled;
         mDocument.setGridSettings(settings);
+        if (dialog.saveAsDefault()) {
+            mDocument.saveGridSettingsAsDefault(mDocument.gridController().settings);
+        }
     }
 }
 

@@ -93,14 +93,23 @@ static GridSettings sanitizedGridSettings(GridSettings settings)
     if (settings.sizeY <= 0.0) { settings.sizeY = 1.0; }
     if (settings.majorEvery < 1) { settings.majorEvery = 1; }
     if (settings.snapThresholdPx < 0) { settings.snapThresholdPx = 0; }
-    if (!settings.colorAnimator) { settings.colorAnimator = enve::make_shared<ColorAnimator>(); }
-    QColor color = settings.colorAnimator->getColor();
-    if (!color.isValid()) { color = QColor(255, 255, 255, 96); }
-    int alpha = color.alpha();
-    if (alpha < 0) { alpha = 0; }
-    if (alpha > 255) { alpha = 255; }
-    color.setAlpha(alpha);
-    settings.colorAnimator->setColor(color);
+    auto ensureAnimatorColor = [](qsptr<ColorAnimator>& animator,
+                                  const QColor& fallback)
+    {
+        if (!animator) { animator = enve::make_shared<ColorAnimator>(); }
+        QColor color = animator->getColor();
+        if (!color.isValid()) { color = fallback; }
+        int alpha = color.alpha();
+        if (alpha < 0) { alpha = 0; }
+        if (alpha > 255) { alpha = 255; }
+        color.setAlpha(alpha);
+        animator->setColor(color);
+        return color;
+    };
+    const QColor minorFallback(255, 255, 255, 96);
+    const QColor majorFallback(255, 255, 255, 160);
+    ensureAnimatorColor(settings.colorAnimator, minorFallback);
+    ensureAnimatorColor(settings.majorColorAnimator, majorFallback);
     return settings;
 }
 
@@ -139,32 +148,61 @@ void Document::loadGridSettingsFromSettings()
     loaded.enabled = AppSupport::getSettings("grid", "enabled", defaults.enabled).toBool();
     loaded.show = AppSupport::getSettings("grid", "show", defaults.show).toBool();
     loaded.majorEvery = AppSupport::getSettings("grid", "majorEvery", defaults.majorEvery).toInt();
-    const QVariant colorVariant = AppSupport::getSettings("grid", "color", defaults.colorAnimator->getColor());
-    QColor storedColor;
-    if (colorVariant.canConvert<QColor>()) {
-        storedColor = colorVariant.value<QColor>();
-    } else {
-        storedColor = QColor(colorVariant.toString());
+    auto readColor = [](const QVariant& variant,
+                        const QColor& fallback)
+    {
+        QColor value;
+        if (variant.canConvert<QColor>()) {
+            value = variant.value<QColor>();
+        } else {
+            value = QColor(variant.toString());
+        }
+        if (!value.isValid()) { value = fallback; }
+        return value;
+    };
+    QColor storedMinor = readColor(
+        AppSupport::getSettings("grid", "color", defaults.colorAnimator->getColor()),
+        QColor(255, 255, 255, 96));
+    QColor storedMajor = readColor(
+        AppSupport::getSettings("grid", "majorColor", defaults.majorColorAnimator->getColor()),
+        QColor(255, 255, 255, 160));
+    if (auto* settingsMgr = eSettings::sInstance) {
+        storedMinor = settingsMgr->fGridColor;
+        storedMajor = settingsMgr->fGridMajorColor;
     }
-    if (!storedColor.isValid()) { storedColor = QColor(255, 255, 255, 96); }
     if (!loaded.colorAnimator) { loaded.colorAnimator = enve::make_shared<ColorAnimator>(); }
-    loaded.colorAnimator->setColor(storedColor);
+    loaded.colorAnimator->setColor(storedMinor);
+    if (!loaded.majorColorAnimator) { loaded.majorColorAnimator = enve::make_shared<ColorAnimator>(); }
+    loaded.majorColorAnimator->setColor(storedMajor);
     applyGridSettings(loaded, true, true);
 }
 
-void Document::saveGridSettingsToSettings() const
+void Document::saveGridSettingsToSettings(const GridSettings& settings) const
 {
-    const auto& s = mGridController.settings;
-    AppSupport::setSettings("grid", "sizeX", s.sizeX);
-    AppSupport::setSettings("grid", "sizeY", s.sizeY);
-    AppSupport::setSettings("grid", "originX", s.originX);
-    AppSupport::setSettings("grid", "originY", s.originY);
-    AppSupport::setSettings("grid", "snapThresholdPx", s.snapThresholdPx);
-    AppSupport::setSettings("grid", "enabled", s.enabled);
-    AppSupport::setSettings("grid", "show", s.show);
-    AppSupport::setSettings("grid", "majorEvery", s.majorEvery);
-    const QColor color = s.colorAnimator ? s.colorAnimator->getColor() : QColor(255, 255, 255, 96);
+    AppSupport::setSettings("grid", "sizeX", settings.sizeX);
+    AppSupport::setSettings("grid", "sizeY", settings.sizeY);
+    AppSupport::setSettings("grid", "originX", settings.originX);
+    AppSupport::setSettings("grid", "originY", settings.originY);
+    AppSupport::setSettings("grid", "snapThresholdPx", settings.snapThresholdPx);
+    AppSupport::setSettings("grid", "enabled", settings.enabled);
+    AppSupport::setSettings("grid", "show", settings.show);
+    AppSupport::setSettings("grid", "majorEvery", settings.majorEvery);
+    const QColor color = settings.colorAnimator ? settings.colorAnimator->getColor() : QColor(255, 255, 255, 96);
+    const QColor majorColor = settings.majorColorAnimator ? settings.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
     AppSupport::setSettings("grid", "color", color);
+    AppSupport::setSettings("grid", "majorColor", majorColor);
+}
+
+void Document::saveGridSettingsAsDefault(const GridSettings& settings)
+{
+    const GridSettings sanitized = sanitizedGridSettings(settings);
+    if (auto* settingsMgr = eSettings::sInstance) {
+        settingsMgr->fGridColor = sanitized.colorAnimator ? sanitized.colorAnimator->getColor() : QColor(255, 255, 255, 96);
+        settingsMgr->fGridMajorColor = sanitized.majorColorAnimator ? sanitized.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
+        settingsMgr->saveKeyToFile("gridColor");
+        settingsMgr->saveKeyToFile("gridMajorColor");
+    }
+    saveGridSettingsToSettings(sanitized);
 }
 
 void Document::applyGridSettings(const GridSettings& settings,
@@ -173,10 +211,7 @@ void Document::applyGridSettings(const GridSettings& settings,
 {
     const GridSettings sanitized = sanitizedGridSettings(settings);
     const auto previous = mGridController.settings;
-    if (previous == sanitized) {
-        if (!skipSave) { saveGridSettingsToSettings(); }
-        return;
-    }
+    if (previous == sanitized) { return; }
 
     const bool snapChanged = previous.enabled != sanitized.enabled;
     const bool showChanged = previous.show != sanitized.show;
@@ -188,11 +223,12 @@ void Document::applyGridSettings(const GridSettings& settings,
             previous.majorEvery != sanitized.majorEvery;
     const QColor previousColor = previous.colorAnimator ? previous.colorAnimator->getColor() : QColor();
     const QColor sanitizedColor = sanitized.colorAnimator ? sanitized.colorAnimator->getColor() : QColor();
-    const bool colorChanged = previousColor != sanitizedColor;
+    const QColor previousMajorColor = previous.majorColorAnimator ? previous.majorColorAnimator->getColor() : QColor();
+    const QColor sanitizedMajorColor = sanitized.majorColorAnimator ? sanitized.majorColorAnimator->getColor() : QColor();
+    const bool colorChanged = previousColor != sanitizedColor ||
+                              previousMajorColor != sanitizedMajorColor;
 
     mGridController.settings = sanitized;
-
-    if (!skipSave) { saveGridSettingsToSettings(); }
 
     if (silent) { return; }
 
