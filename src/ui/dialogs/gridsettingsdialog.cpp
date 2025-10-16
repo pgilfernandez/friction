@@ -55,6 +55,7 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mMajorEvery(nullptr)
     , mButtonBox(nullptr)
     , mSaveAsDefault(nullptr)
+    , mDrawOnTop(nullptr)
     , mColorButton(nullptr)
     , mMajorColorButton(nullptr)
     , mColorAnimator(enve::make_shared<ColorAnimator>())
@@ -121,6 +122,10 @@ void GridSettingsDialog::setupUi()
     mMajorColorButton = new ColorAnimatorButton(mMajorColorAnimator.get(), this);
     form->addRow(tr("Major Line Color"), mMajorColorButton);
 
+    mDrawOnTop = new QCheckBox(tr("Always draw grid above geometry"), this);
+    mDrawOnTop->setChecked(true);
+    form->addRow(mDrawOnTop);
+
     layout->addLayout(form);
 
     auto* buttonLayout = new QHBoxLayout();
@@ -149,6 +154,9 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mStoredShow = settings.show;
     if (mSaveAsDefault) {
         mSaveAsDefault->setChecked(false);
+    }
+    if (mDrawOnTop) {
+        mDrawOnTop->setChecked(settings.drawOnTop);
     }
 
     const auto ensureAnimator = [](qsptr<ColorAnimator>& animator,
@@ -187,6 +195,7 @@ GridSettings GridSettingsDialog::settings() const
     result.snapThresholdPx = mSnapThreshold->value();
     result.majorEvery = mMajorEvery->value();
     result.show = mStoredShow;
+    result.drawOnTop = mDrawOnTop && mDrawOnTop->isChecked();
 
     const QColor finalColor = mColorAnimator
         ? mColorAnimator->getColor()

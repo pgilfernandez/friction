@@ -280,8 +280,10 @@ void Canvas::renderSk(SkCanvas* const canvas,
         : QRectF(QPointF(0.0, 0.0), QSizeF(drawRect.width(), drawRect.height()));
     QRectF gridViewport = worldViewport.normalized();
     const qreal gridPixelRatio = haveWorldTransform ? mDevicePixelRatio : pixelRatio;
-    const bool gridVisible = mDocument.gridController().settings.show &&
-                             (!haveWorldTransform || !gridViewport.isEmpty());
+    const auto& gridSettings = mDocument.gridController().settings;
+    const bool gridVisible = gridSettings.show &&
+                              (!haveWorldTransform || !gridViewport.isEmpty());
+    const bool gridOnTop = gridSettings.drawOnTop;
     const bool drawCanvas = mSceneFrame && mSceneFrame->fBoxState == mStateId;
 
     canvas->concat(skViewTrans);
@@ -319,7 +321,7 @@ void Canvas::renderSk(SkCanvas* const canvas,
             canvas->drawRect(canvasRect, bgPaint);
         }
     }
-    if (gridVisible) {
+    if (gridVisible && !gridOnTop) {
         mDocument.gridController().drawGrid(canvas, gridViewport, worldToScreenTransform, gridPixelRatio);
     }
     canvas->save();
@@ -342,6 +344,10 @@ void Canvas::renderSk(SkCanvas* const canvas,
     }
     canvas->restore();
     canvas->restore();
+
+    if (gridVisible && gridOnTop) {
+        mDocument.gridController().drawGrid(canvas, gridViewport, worldToScreenTransform, gridPixelRatio);
+    }
 
     if (!enve_cast<Canvas*>(mCurrentContainer)) {
         mCurrentContainer->drawBoundingRect(canvas, invZoom);

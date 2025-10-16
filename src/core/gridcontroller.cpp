@@ -132,6 +132,7 @@ bool GridSettings::operator==(const GridSettings& other) const
            snapThresholdPx == other.snapThresholdPx &&
            enabled == other.enabled &&
            show == other.show &&
+           drawOnTop == other.drawOnTop &&
            majorEvery == other.majorEvery &&
            thisColor == otherColor &&
            thisMajorColor == otherMajorColor;

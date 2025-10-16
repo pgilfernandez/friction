@@ -277,6 +277,10 @@ eSettings::eSettings(const int cpuThreads,
                      fGridMajorColor,
                      "gridMajorColor",
                      QColor(255, 255, 255, 160));
+    gSettings << std::make_shared<eBoolSetting>(
+                     fGridDrawOnTop,
+                     "gridDrawOnTop",
+                     true);
 
     gSettings << std::make_shared<eColorSetting>(
                      fObjectKeyframeColor,

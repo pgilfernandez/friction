@@ -58,6 +58,7 @@ struct CORE_EXPORT GridSettings {
     int snapThresholdPx = 8;
     bool enabled = true;
     bool show = true;
+    bool drawOnTop = true;
     int majorEvery = 5;
     qsptr<ColorAnimator> colorAnimator;
     qsptr<ColorAnimator> majorColorAnimator;

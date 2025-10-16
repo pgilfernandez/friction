@@ -63,6 +63,7 @@ private:
     QSpinBox* mMajorEvery;
     QDialogButtonBox* mButtonBox;
     QCheckBox* mSaveAsDefault;
+    QCheckBox* mDrawOnTop;
     ColorAnimatorButton* mColorButton;
     ColorAnimatorButton* mMajorColorButton;
     qsptr<ColorAnimator> mColorAnimator;

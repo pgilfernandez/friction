@@ -155,6 +155,7 @@ public:
     // Grid default colors
     QColor fGridColor = QColor(255, 255, 255, 96);
     QColor fGridMajorColor = QColor(255, 255, 255, 160);
+    bool fGridDrawOnTop = true;
 
     QColor fObjectKeyframeColor;
     QColor fPropertyGroupKeyframeColor;
