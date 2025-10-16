@@ -61,16 +61,25 @@ GridSettings sanitizeSettings(const GridSettings& in)
     if (copy.sizeY <= 0.0) { copy.sizeY = 1.0; }
     if (copy.majorEvery < 1) { copy.majorEvery = 1; }
     if (copy.snapThresholdPx < 0) { copy.snapThresholdPx = 0; }
-    if (!copy.colorAnimator) {
-        copy.colorAnimator = enve::make_shared<ColorAnimator>();
-    }
-    QColor color = copy.colorAnimator->getColor();
-    if (!color.isValid()) {
-        color = QColor(255, 255, 255, 96);
-    }
-    const double alpha = clampToRange(static_cast<double>(color.alpha()), 0.0, 255.0);
-    color.setAlpha(static_cast<int>(alpha));
-    copy.colorAnimator->setColor(color);
+    auto ensureAnimatorColor = [](qsptr<ColorAnimator>& animator,
+                                  const QColor& fallback)
+    {
+        if (!animator) {
+            animator = enve::make_shared<ColorAnimator>();
+        }
+        QColor color = animator->getColor();
+        if (!color.isValid()) {
+            color = fallback;
+        }
+        const double alpha = clampToRange(static_cast<double>(color.alpha()), 0.0, 255.0);
+        color.setAlpha(static_cast<int>(alpha));
+        animator->setColor(color);
+        return color;
+    };
+    const QColor minorFallback(255, 255, 255, 96);
+    const QColor majorFallback(255, 255, 255, 160);
+    ensureAnimatorColor(copy.colorAnimator, minorFallback);
+    ensureAnimatorColor(copy.majorColorAnimator, majorFallback);
     return copy;
 }
 
@@ -114,6 +123,8 @@ bool GridSettings::operator==(const GridSettings& other) const
 {
     const QColor thisColor = colorAnimator ? colorAnimator->getColor() : QColor();
     const QColor otherColor = other.colorAnimator ? other.colorAnimator->getColor() : QColor();
+    const QColor thisMajorColor = majorColorAnimator ? majorColorAnimator->getColor() : QColor();
+    const QColor otherMajorColor = other.majorColorAnimator ? other.majorColorAnimator->getColor() : QColor();
     return nearlyEqual(sizeX, other.sizeX) &&
            nearlyEqual(sizeY, other.sizeY) &&
            nearlyEqual(originX, other.originX) &&
@@ -122,7 +133,8 @@ bool GridSettings::operator==(const GridSettings& other) const
            enabled == other.enabled &&
            show == other.show &&
            majorEvery == other.majorEvery &&
-           thisColor == otherColor;
+           thisColor == otherColor &&
+           thisMajorColor == otherMajorColor;
 }
 
 
@@ -136,10 +148,12 @@ void GridController::drawGrid(QPainter* painter,
     const GridSettings sanitizedSettings = sanitizeSettings(settings);
     if (!painter || !sanitizedSettings.show) { return; }
 
-    const QColor baseColor = sanitizedSettings.colorAnimator->getColor();
-    QColor majorBase = baseColor;
-    QColor minorBase = baseColor;
-    minorBase.setAlphaF(baseColor.alphaF() * 0.5);
+    const QColor minorBase = sanitizedSettings.colorAnimator
+        ? sanitizedSettings.colorAnimator->getColor()
+        : QColor(255, 255, 255, 96);
+    const QColor majorBase = sanitizedSettings.majorColorAnimator
+        ? sanitizedSettings.majorColorAnimator->getColor()
+        : minorBase;
 
     auto drawLine = [&](const QPointF& a,
                         const QPointF& b,
@@ -166,10 +180,12 @@ void GridController::drawGrid(SkCanvas* canvas,
     const GridSettings sanitizedSettings = sanitizeSettings(settings);
     if (!canvas || !sanitizedSettings.show) { return; }
 
-    const QColor baseColor = sanitizedSettings.colorAnimator->getColor();
-    QColor majorBase = baseColor;
-    QColor minorBase = baseColor;
-    minorBase.setAlphaF(baseColor.alphaF() * 0.5);
+    const QColor minorBase = sanitizedSettings.colorAnimator
+        ? sanitizedSettings.colorAnimator->getColor()
+        : QColor(255, 255, 255, 96);
+    const QColor majorBase = sanitizedSettings.majorColorAnimator
+        ? sanitizedSettings.majorColorAnimator->getColor()
+        : minorBase;
     const float strokeWidth = static_cast<float>(
         devicePixelRatio / effectiveScale(worldToScreen));
 

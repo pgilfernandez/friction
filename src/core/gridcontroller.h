@@ -45,8 +45,10 @@ namespace Core {
 struct CORE_EXPORT GridSettings {
     GridSettings()
         : colorAnimator(enve::make_shared<ColorAnimator>())
+        , majorColorAnimator(enve::make_shared<ColorAnimator>())
     {
         colorAnimator->setColor(QColor(255, 255, 255, 96));
+        majorColorAnimator->setColor(QColor(255, 255, 255, 160));
     }
 
     double sizeX = 50.0;
@@ -58,6 +60,7 @@ struct CORE_EXPORT GridSettings {
     bool show = true;
     int majorEvery = 5;
     qsptr<ColorAnimator> colorAnimator;
+    qsptr<ColorAnimator> majorColorAnimator;
 
     bool operator==(const GridSettings& other) const;
     bool operator!=(const GridSettings& other) const { return !(*this == other); }

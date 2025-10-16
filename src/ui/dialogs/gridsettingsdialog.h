@@ -66,7 +66,9 @@ private:
     QCheckBox* mShowGrid;
     QDialogButtonBox* mButtonBox;
     ColorAnimatorButton* mColorButton;
+    ColorAnimatorButton* mMajorColorButton;
     qsptr<ColorAnimator> mColorAnimator;
+    qsptr<ColorAnimator> mMajorColorAnimator;
     bool mSnapEnabled = true;
 };
 

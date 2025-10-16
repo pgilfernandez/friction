@@ -56,10 +56,13 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mShowGrid(nullptr)
     , mButtonBox(nullptr)
     , mColorButton(nullptr)
+    , mMajorColorButton(nullptr)
     , mColorAnimator(enve::make_shared<ColorAnimator>())
+    , mMajorColorAnimator(enve::make_shared<ColorAnimator>())
     , mSnapEnabled(true)
 {
     mColorAnimator->setColor(QColor(255, 255, 255, 96));
+    mMajorColorAnimator->setColor(QColor(255, 255, 255, 160));
     setupUi();
 }
 
@@ -108,6 +111,9 @@ void GridSettingsDialog::setupUi()
     mColorButton = new ColorAnimatorButton(mColorAnimator.get(), this);
     form->addRow(tr("Grid Color"), mColorButton);
 
+    mMajorColorButton = new ColorAnimatorButton(mMajorColorAnimator.get(), this);
+    form->addRow(tr("Major Line Color"), mMajorColorButton);
+
     mShowGrid = new QCheckBox(tr("Show grid"), this);
     form->addRow(QString(), mShowGrid);
 
@@ -133,16 +139,29 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mMajorEvery->setValue(settings.majorEvery);
     mShowGrid->setChecked(settings.show);
 
-    if (!mColorAnimator) {
-        mColorAnimator = enve::make_shared<ColorAnimator>();
-        if (mColorButton) {
-            mColorButton->setColorTarget(mColorAnimator.get());
+    const auto ensureAnimator = [](qsptr<ColorAnimator>& animator,
+                                   ColorAnimatorButton* button)
+    {
+        if (!animator) {
+            animator = enve::make_shared<ColorAnimator>();
+            if (button) {
+                button->setColorTarget(animator.get());
+            }
         }
-    }
+    };
+
+    ensureAnimator(mColorAnimator, mColorButton);
+    ensureAnimator(mMajorColorAnimator, mMajorColorButton);
+
     const QColor appliedColor = settings.colorAnimator
         ? settings.colorAnimator->getColor()
         : QColor(255, 255, 255, 96);
     mColorAnimator->setColor(appliedColor);
+
+    const QColor appliedMajorColor = settings.majorColorAnimator
+        ? settings.majorColorAnimator->getColor()
+        : QColor(255, 255, 255, 160);
+    mMajorColorAnimator->setColor(appliedMajorColor);
 }
 
 GridSettings GridSettingsDialog::settings() const
@@ -162,6 +181,12 @@ GridSettings GridSettingsDialog::settings() const
         : QColor(255, 255, 255, 96);
     result.colorAnimator = enve::make_shared<ColorAnimator>();
     result.colorAnimator->setColor(finalColor);
+
+    const QColor finalMajorColor = mMajorColorAnimator
+        ? mMajorColorAnimator->getColor()
+        : QColor(255, 255, 255, 160);
+    result.majorColorAnimator = enve::make_shared<ColorAnimator>();
+    result.majorColorAnimator->setColor(finalMajorColor);
     return result;
 }
 
