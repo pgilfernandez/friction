@@ -31,7 +31,6 @@
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
 #include <QSpinBox>
-#include <QCheckBox>
 #include <QColor>
 #include <QPushButton>
 
@@ -53,7 +52,6 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mOriginY(nullptr)
     , mSnapThreshold(nullptr)
     , mMajorEvery(nullptr)
-    , mShowGrid(nullptr)
     , mButtonBox(nullptr)
     , mColorButton(nullptr)
     , mMajorColorButton(nullptr)
@@ -114,9 +112,6 @@ void GridSettingsDialog::setupUi()
     mMajorColorButton = new ColorAnimatorButton(mMajorColorAnimator.get(), this);
     form->addRow(tr("Major Line Color"), mMajorColorButton);
 
-    mShowGrid = new QCheckBox(tr("Show grid"), this);
-    form->addRow(QString(), mShowGrid);
-
     layout->addLayout(form);
 
     mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -137,7 +132,7 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mOriginY->setValue(settings.originY);
     mSnapThreshold->setValue(settings.snapThresholdPx);
     mMajorEvery->setValue(settings.majorEvery);
-    mShowGrid->setChecked(settings.show);
+    mStoredShow = settings.show;
 
     const auto ensureAnimator = [](qsptr<ColorAnimator>& animator,
                                    ColorAnimatorButton* button)
@@ -174,7 +169,7 @@ GridSettings GridSettingsDialog::settings() const
     result.originY = mOriginY->value();
     result.snapThresholdPx = mSnapThreshold->value();
     result.majorEvery = mMajorEvery->value();
-    result.show = mShowGrid->isChecked();
+    result.show = mStoredShow;
 
     const QColor finalColor = mColorAnimator
         ? mColorAnimator->getColor()
@@ -192,5 +187,7 @@ GridSettings GridSettingsDialog::settings() const
 
 void GridSettingsDialog::restoreDefaults()
 {
-    setSettings(GridSettings{});
+    auto defaults = GridSettings{};
+    defaults.show = mStoredShow;
+    setSettings(defaults);
 }

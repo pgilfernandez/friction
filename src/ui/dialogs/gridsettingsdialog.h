@@ -31,7 +31,6 @@
 
 class QDoubleSpinBox;
 class QSpinBox;
-class QCheckBox;
 class QDialogButtonBox;
 class ColorAnimatorButton;
 
@@ -63,13 +62,13 @@ private:
     QDoubleSpinBox* mOriginY;
     QSpinBox* mSnapThreshold;
     QSpinBox* mMajorEvery;
-    QCheckBox* mShowGrid;
     QDialogButtonBox* mButtonBox;
     ColorAnimatorButton* mColorButton;
     ColorAnimatorButton* mMajorColorButton;
     qsptr<ColorAnimator> mColorAnimator;
     qsptr<ColorAnimator> mMajorColorAnimator;
     bool mSnapEnabled = true;
+    bool mStoredShow = true;
 };
 
 #endif // GRIDSETTINGSDIALOG_H

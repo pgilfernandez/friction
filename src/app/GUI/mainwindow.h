@@ -259,6 +259,7 @@ private:
     QAction *mZoomInAction;
     QAction *mZoomOutAction;
     QAction *mFitViewAction;
+    QAction *mShowGridAct;
     QAction *mSnapToGridAct;
     QAction *mGridSettingsAct;
 

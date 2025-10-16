@@ -335,6 +335,14 @@ void MainWindow::setupMenuBar()
 
     mViewMenu = mMenuBar->addMenu(tr("View", "MenuBar"));
 
+    mShowGridAct = mViewMenu->addAction(tr("Show Grid"));
+    mShowGridAct->setCheckable(true);
+    mShowGridAct->setChecked(mDocument.gridController().settings.show);
+    connect(mShowGridAct, &QAction::toggled, this, [this](bool checked) {
+        mDocument.setGridVisible(checked);
+    });
+    cmdAddAction(mShowGridAct);
+
     mSnapToGridAct = mViewMenu->addAction(tr("Snap to Grid"));
     mSnapToGridAct->setCheckable(true);
     mSnapToGridAct->setChecked(mDocument.gridController().settings.enabled);

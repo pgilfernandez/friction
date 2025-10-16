@@ -232,6 +232,12 @@ void MainWindow::openGridSettingsDialog()
 void MainWindow::onGridSettingsChanged(const Friction::Core::GridSettings& settings)
 {
     onGridSnapEnabledChanged(settings.enabled);
+    if (mShowGridAct) {
+        QSignalBlocker blocker(mShowGridAct);
+        if (mShowGridAct->isChecked() != settings.show) {
+            mShowGridAct->setChecked(settings.show);
+        }
+    }
 }
 
 void MainWindow::onGridSnapEnabledChanged(bool enabled)
