@@ -34,7 +34,6 @@
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QColor>
-#include <QPushButton>
 
 using Friction::Core::GridSettings;
 
@@ -122,18 +121,20 @@ void GridSettingsDialog::setupUi()
     mMajorColorButton = new ColorAnimatorButton(mMajorColorAnimator.get(), this);
     form->addRow(tr("Major Line Color"), mMajorColorButton);
 
-    mSaveAsDefault = new QCheckBox(tr("Save as default"), this);
-    form->addRow(QString(), mSaveAsDefault);
-
     layout->addLayout(form);
 
+    auto* buttonLayout = new QHBoxLayout();
+    mSaveAsDefault = new QCheckBox(tr("Save as default"), this);
+    buttonLayout->addWidget(mSaveAsDefault);
+
     mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    auto* restoreButton = mButtonBox->addButton(tr("Restore Defaults"), QDialogButtonBox::ResetRole);
-    connect(restoreButton, &QPushButton::clicked, this, &GridSettingsDialog::restoreDefaults);
     connect(mButtonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(mButtonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
-    layout->addWidget(mButtonBox);
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(mButtonBox);
+
+    layout->addLayout(buttonLayout);
 }
 
 void GridSettingsDialog::setSettings(const GridSettings& settings)
@@ -199,13 +200,6 @@ GridSettings GridSettingsDialog::settings() const
     result.majorColorAnimator = enve::make_shared<ColorAnimator>();
     result.majorColorAnimator->setColor(finalMajorColor);
     return result;
-}
-
-void GridSettingsDialog::restoreDefaults()
-{
-    auto defaults = GridSettings{};
-    defaults.show = mStoredShow;
-    setSettings(defaults);
 }
 
 bool GridSettingsDialog::saveAsDefault() const

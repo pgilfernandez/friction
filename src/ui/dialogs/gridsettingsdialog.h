@@ -52,9 +52,6 @@ public:
     Friction::Core::GridSettings settings() const;
     bool saveAsDefault() const;
 
-private slots:
-    void restoreDefaults();
-
 private:
     void setupUi();
 

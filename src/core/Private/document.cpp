@@ -556,6 +556,8 @@ void Document::clear() {
         removeBookmarkColor(color);
     }
     fColors.clear();
+
+    loadGridSettingsFromSettings();
 }
 
 void Document::SWT_setupAbstraction(SWT_Abstraction * const abstraction,
