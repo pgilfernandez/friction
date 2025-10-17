@@ -116,11 +116,6 @@ void Document::readGridSettings(eReadStream &src)
     if (fileVersion >= EvFormat::grids) {
         src >> settings.majorEveryX;
         src >> settings.majorEveryY;
-    } else {
-        int legacyMajor = settings.majorEveryX;
-        src >> legacyMajor;
-        settings.majorEveryX = legacyMajor;
-        settings.majorEveryY = legacyMajor;
     }
     QColor color;
     src >> color;
