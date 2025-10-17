@@ -112,7 +112,8 @@ void Document::readGridSettings(eReadStream &src)
     bool show = mGridController.settings.show;
     src >> enabled;
     src >> show;
-    if (src.evFileVersion() >= EvFormat::gridSettingsMajorAxes) {
+    const int fileVersion = src.evFileVersion();
+    if (fileVersion >= EvFormat::grids) {
         src >> settings.majorEveryX;
         src >> settings.majorEveryY;
     } else {
@@ -124,7 +125,7 @@ void Document::readGridSettings(eReadStream &src)
     QColor color;
     src >> color;
     QColor majorColor = color;
-    if (src.evFileVersion() >= EvFormat::gridSettingsMajorColor) {
+    if (fileVersion >= EvFormat::grids) {
         src >> majorColor;
     }
     settings.enabled = enabled;
@@ -149,7 +150,7 @@ void Document::readGradients(eReadStream& src) {
 }
 
 void Document::readScenes(eReadStream& src) {
-    if (src.evFileVersion() >= EvFormat::gridSettings) {
+    if (src.evFileVersion() >= EvFormat::grids) {
         readGridSettings(src);
         src.readCheckpoint("Error reading grid settings");
     }
