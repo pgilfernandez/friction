@@ -31,8 +31,8 @@
 
 class QDoubleSpinBox;
 class QSpinBox;
-class QDialogButtonBox;
 class QCheckBox;
+class QPushButton;
 class ColorAnimatorButton;
 
 namespace Friction {
@@ -61,15 +61,16 @@ private:
     QDoubleSpinBox* mOriginY;
     QSpinBox* mSnapThreshold;
     QSpinBox* mMajorEvery;
-    QDialogButtonBox* mButtonBox;
     QCheckBox* mSaveAsDefault;
-    QCheckBox* mDrawOnTop;
+    QPushButton* mOkButton;
+    QPushButton* mCancelButton;
     ColorAnimatorButton* mColorButton;
     ColorAnimatorButton* mMajorColorButton;
     qsptr<ColorAnimator> mColorAnimator;
     qsptr<ColorAnimator> mMajorColorAnimator;
     bool mSnapEnabled = true;
     bool mStoredShow = true;
+    bool mStoredDrawOnTop = true;
 };
 
 #endif // GRIDSETTINGSDIALOG_H

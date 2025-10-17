@@ -262,6 +262,7 @@ private:
     QAction *mShowGridAct;
     QAction *mSnapToGridAct;
     QAction *mGridSettingsAct;
+    QAction *mGridDrawOnTopAct;
 
     QAction *mNoneQuality;
     QAction *mLowQuality;
@@ -289,6 +290,7 @@ private:
     QMenu *mEffectsMenu;
     QMenu *mSceneMenu;
     QMenu *mViewMenu;
+    QMenu *mGridMenu;
     QMenu *mPanelsMenu;
     QMenu *mRenderMenu;
 

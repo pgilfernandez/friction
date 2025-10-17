@@ -335,30 +335,6 @@ void MainWindow::setupMenuBar()
 
     mViewMenu = mMenuBar->addMenu(tr("View", "MenuBar"));
 
-    mShowGridAct = mViewMenu->addAction(tr("Show Grid"));
-    mShowGridAct->setCheckable(true);
-    mShowGridAct->setChecked(mDocument.gridController().settings.show);
-    connect(mShowGridAct, &QAction::toggled, this, [this](bool checked) {
-        mDocument.setGridVisible(checked);
-    });
-    cmdAddAction(mShowGridAct);
-
-    mSnapToGridAct = mViewMenu->addAction(tr("Snap to Grid"));
-    mSnapToGridAct->setCheckable(true);
-    mSnapToGridAct->setChecked(mDocument.gridController().settings.enabled);
-    connect(mSnapToGridAct, &QAction::toggled, this, [this](bool checked) {
-        mDocument.setGridSnapEnabled(checked);
-    });
-    cmdAddAction(mSnapToGridAct);
-
-    mGridSettingsAct = mViewMenu->addAction(tr("Grid Settings..."));
-    connect(mGridSettingsAct, &QAction::triggered, this, &MainWindow::openGridSettingsDialog);
-    cmdAddAction(mGridSettingsAct);
-
-    mViewMenu->addSeparator();
-    onGridSettingsChanged(mDocument.gridController().settings);
-
-
     mObjectMenu = mMenuBar->addMenu(tr("Object", "MenuBar"));
 
     mObjectMenu->addSeparator();
@@ -589,6 +565,43 @@ void MainWindow::setupMenuBar()
                 cwTarget->resetTransformation();
             });
     cmdAddAction(mResetZoomAction);
+
+    // TODO: custom icon for Grid menu
+    mGridMenu = mViewMenu->addMenu(QIcon::fromTheme("rectCreate"), tr("Grid", "MenuBar_View"));
+
+    mShowGridAct = mGridMenu->addAction(tr("Show Grid"));
+    mShowGridAct->setCheckable(true);
+    mShowGridAct->setChecked(mDocument.gridController().settings.show);
+    connect(mShowGridAct, &QAction::toggled, this, [this](bool checked) {
+        mDocument.setGridVisible(checked);
+    });
+    cmdAddAction(mShowGridAct);
+
+    mSnapToGridAct = mGridMenu->addAction(tr("Snap to Grid"));
+    mSnapToGridAct->setCheckable(true);
+    mSnapToGridAct->setChecked(mDocument.gridController().settings.enabled);
+    connect(mSnapToGridAct, &QAction::toggled, this, [this](bool checked) {
+        mDocument.setGridSnapEnabled(checked);
+    });
+    cmdAddAction(mSnapToGridAct);
+
+    mGridDrawOnTopAct = mGridMenu->addAction(tr("Grid on top"));
+    mGridDrawOnTopAct->setCheckable(true);
+    connect(mGridDrawOnTopAct, &QAction::toggled, this, [this](bool checked) {
+        auto settings = mDocument.gridController().settings;
+        if (settings.drawOnTop == checked) { return; }
+        settings.drawOnTop = checked;
+        mDocument.setGridSettings(settings);
+    });
+    cmdAddAction(mGridDrawOnTopAct);
+
+    mGridMenu->addSeparator();
+
+    mGridSettingsAct = mGridMenu->addAction(tr("Grid Settings..."));
+    connect(mGridSettingsAct, &QAction::triggered, this, &MainWindow::openGridSettingsDialog);
+    cmdAddAction(mGridSettingsAct);
+
+    onGridSettingsChanged(mDocument.gridController().settings);
 
     const auto filteringMenu = mViewMenu->addMenu(QIcon::fromTheme("user-desktop"),
                                                   tr("Filtering", "MenuBar_View"));

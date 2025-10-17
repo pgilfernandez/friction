@@ -25,14 +25,16 @@
 
 #include "gridcontroller.h"
 #include "GUI/coloranimatorbutton.h"
+#include "GUI/global.h"
 #include "Private/esettings.h"
 
 #include <QFormLayout>
 #include <QVBoxLayout>
-#include <QDialogButtonBox>
+#include <QHBoxLayout>
 #include <QDoubleSpinBox>
 #include <QCheckBox>
 #include <QSpinBox>
+#include <QPushButton>
 #include <QColor>
 
 using Friction::Core::GridSettings;
@@ -53,9 +55,9 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mOriginY(nullptr)
     , mSnapThreshold(nullptr)
     , mMajorEvery(nullptr)
-    , mButtonBox(nullptr)
     , mSaveAsDefault(nullptr)
-    , mDrawOnTop(nullptr)
+    , mOkButton(nullptr)
+    , mCancelButton(nullptr)
     , mColorButton(nullptr)
     , mMajorColorButton(nullptr)
     , mColorAnimator(enve::make_shared<ColorAnimator>())
@@ -117,29 +119,41 @@ void GridSettingsDialog::setupUi()
     form->addRow(tr("Major Line Every"), mMajorEvery);
 
     mColorButton = new ColorAnimatorButton(mColorAnimator.get(), this);
-    form->addRow(tr("Grid Color"), mColorButton);
+    auto* minorColorContainer = new QWidget(this);
+    auto* minorColorLayout = new QHBoxLayout(minorColorContainer);
+    minorColorLayout->setContentsMargins(0, 0, 0, 0);
+    minorColorLayout->addStretch();
+    minorColorLayout->addWidget(mColorButton);
+    form->addRow(tr("Grid Color"), minorColorContainer);
 
     mMajorColorButton = new ColorAnimatorButton(mMajorColorAnimator.get(), this);
-    form->addRow(tr("Major Line Color"), mMajorColorButton);
-
-    mDrawOnTop = new QCheckBox(tr("Always draw grid above geometry"), this);
-    mDrawOnTop->setChecked(true);
-    form->addRow(mDrawOnTop);
+    auto* majorColorContainer = new QWidget(this);
+    auto* majorColorLayout = new QHBoxLayout(majorColorContainer);
+    majorColorLayout->setContentsMargins(0, 0, 0, 0);
+    majorColorLayout->addStretch();
+    majorColorLayout->addWidget(mMajorColorButton);
+    form->addRow(tr("Major Line Color"), majorColorContainer);
 
     layout->addLayout(form);
+    eSizesUI::widget.addSpacing(layout);
+
+    mSaveAsDefault = new QCheckBox(tr("Save as default"), this);
+    layout->addWidget(mSaveAsDefault);
+
+    mOkButton = new QPushButton(QIcon::fromTheme("dialog-ok"), tr("Ok"), this);
+    mCancelButton = new QPushButton(QIcon::fromTheme("dialog-cancel"), tr("Cancel"), this);
 
     auto* buttonLayout = new QHBoxLayout();
-    mSaveAsDefault = new QCheckBox(tr("Save as default"), this);
-    buttonLayout->addWidget(mSaveAsDefault);
-
-    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    connect(mButtonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
-    connect(mButtonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
-
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(mButtonBox);
-
     layout->addLayout(buttonLayout);
+
+    buttonLayout->addWidget(mOkButton);
+    buttonLayout->addWidget(mCancelButton);
+
+    connect(mOkButton, &QPushButton::released,
+            this, &GridSettingsDialog::accept);
+    connect(mCancelButton, &QPushButton::released,
+            this, &GridSettingsDialog::reject);
+    connect(this, &QDialog::rejected, this, &QDialog::close);
 }
 
 void GridSettingsDialog::setSettings(const GridSettings& settings)
@@ -152,11 +166,9 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mSnapThreshold->setValue(settings.snapThresholdPx);
     mMajorEvery->setValue(settings.majorEvery);
     mStoredShow = settings.show;
+    mStoredDrawOnTop = settings.drawOnTop;
     if (mSaveAsDefault) {
         mSaveAsDefault->setChecked(false);
-    }
-    if (mDrawOnTop) {
-        mDrawOnTop->setChecked(settings.drawOnTop);
     }
 
     const auto ensureAnimator = [](qsptr<ColorAnimator>& animator,
@@ -195,7 +207,7 @@ GridSettings GridSettingsDialog::settings() const
     result.snapThresholdPx = mSnapThreshold->value();
     result.majorEvery = mMajorEvery->value();
     result.show = mStoredShow;
-    result.drawOnTop = mDrawOnTop && mDrawOnTop->isChecked();
+    result.drawOnTop = mStoredDrawOnTop;
 
     const QColor finalColor = mColorAnimator
         ? mColorAnimator->getColor()

@@ -119,8 +119,10 @@ MainWindow::MainWindow(Document& document,
     , mInvertSelAct(nullptr)
     , mClearSelAct(nullptr)
     , mAddKeyAct(nullptr)
+    , mShowGridAct(nullptr)
     , mSnapToGridAct(nullptr)
     , mGridSettingsAct(nullptr)
+    , mGridDrawOnTopAct(nullptr)
     , mAddToQueAct(nullptr)
     , mViewFullScreenAct(nullptr)
     , mFontWidget(nullptr)
@@ -239,6 +241,12 @@ void MainWindow::onGridSettingsChanged(const Friction::Core::GridSettings& setti
         QSignalBlocker blocker(mShowGridAct);
         if (mShowGridAct->isChecked() != settings.show) {
             mShowGridAct->setChecked(settings.show);
+        }
+    }
+    if (mGridDrawOnTopAct) {
+        QSignalBlocker blocker(mGridDrawOnTopAct);
+        if (mGridDrawOnTopAct->isChecked() != settings.drawOnTop) {
+            mGridDrawOnTopAct->setChecked(settings.drawOnTop);
         }
     }
 }
