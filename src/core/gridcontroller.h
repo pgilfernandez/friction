@@ -59,7 +59,8 @@ struct CORE_EXPORT GridSettings {
     bool enabled = true;
     bool show = true;
     bool drawOnTop = true;
-    int majorEvery = 5;
+    int majorEveryX = 5;
+    int majorEveryY = 5;
     qsptr<ColorAnimator> colorAnimator;
     qsptr<ColorAnimator> majorColorAnimator;
 

@@ -62,7 +62,8 @@ void Document::writeGridSettings(eWriteStream &dst) const
     dst << s.snapThresholdPx;
     dst << s.enabled;
     dst << s.show;
-    dst << s.majorEvery;
+    dst << s.majorEveryX;
+    dst << s.majorEveryY;
     const QColor color = s.colorAnimator ? s.colorAnimator->getColor() : QColor(255, 255, 255, 96);
     const QColor majorColor = s.majorColorAnimator ? s.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
     dst << color;
@@ -111,7 +112,15 @@ void Document::readGridSettings(eReadStream &src)
     bool show = mGridController.settings.show;
     src >> enabled;
     src >> show;
-    src >> settings.majorEvery;
+    if (src.evFileVersion() >= EvFormat::gridSettingsMajorAxes) {
+        src >> settings.majorEveryX;
+        src >> settings.majorEveryY;
+    } else {
+        int legacyMajor = settings.majorEveryX;
+        src >> legacyMajor;
+        settings.majorEveryX = legacyMajor;
+        settings.majorEveryY = legacyMajor;
+    }
     QColor color;
     src >> color;
     QColor majorColor = color;
@@ -182,7 +191,33 @@ void Document::readGridSettings(const QDomElement& element)
     settings.snapThresholdPx = element.attribute("snapThresholdPx", QString::number(settings.snapThresholdPx)).toInt();
     settings.enabled = element.attribute("enabled", settings.enabled ? "true" : "false") == "true";
     settings.show = element.attribute("show", settings.show ? "true" : "false") == "true";
-    settings.majorEvery = element.attribute("majorEvery", QString::number(settings.majorEvery)).toInt();
+    auto parseMajorAttr = [](const QDomElement& elem,
+                             const QString& attribute,
+                             int currentValue,
+                             bool& applied)
+    {
+        applied = false;
+        if (!elem.hasAttribute(attribute)) { return currentValue; }
+        bool okValue = false;
+        const int parsed = elem.attribute(attribute).toInt(&okValue);
+        if (okValue && parsed > 0) {
+            applied = true;
+            return parsed;
+        }
+        return currentValue;
+    };
+    bool appliedMajorX = false;
+    bool appliedMajorY = false;
+    settings.majorEveryX = parseMajorAttr(element, "majorEveryX", settings.majorEveryX, appliedMajorX);
+    settings.majorEveryY = parseMajorAttr(element, "majorEveryY", settings.majorEveryY, appliedMajorY);
+    if ((!appliedMajorX || !appliedMajorY) && element.hasAttribute("majorEvery")) {
+        bool okLegacy = false;
+        const int legacy = element.attribute("majorEvery").toInt(&okLegacy);
+        if (okLegacy && legacy > 0) {
+            if (!appliedMajorX) { settings.majorEveryX = legacy; }
+            if (!appliedMajorY) { settings.majorEveryY = legacy; }
+        }
+    }
     const QString colorStr = element.attribute("color");
     if (!colorStr.isEmpty()) {
         const QColor parsed(colorStr);
@@ -231,7 +266,10 @@ void Document::writeDoxumentXEV(QDomDocument& doc) const {
     gridSettings.setAttribute("snapThresholdPx", QString::number(grid.snapThresholdPx));
     gridSettings.setAttribute("enabled", grid.enabled ? "true" : "false");
     gridSettings.setAttribute("show", grid.show ? "true" : "false");
-    gridSettings.setAttribute("majorEvery", QString::number(grid.majorEvery));
+    gridSettings.setAttribute("majorEveryX", QString::number(grid.majorEveryX));
+    gridSettings.setAttribute("majorEveryY", QString::number(grid.majorEveryY));
+    // Legacy attribute for older consumers expecting a unified value.
+    gridSettings.setAttribute("majorEvery", QString::number(grid.majorEveryX));
     const QColor gridColor = grid.colorAnimator ? grid.colorAnimator->getColor() : QColor(255, 255, 255, 96);
     const QColor gridMajorColor = grid.majorColorAnimator ? grid.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
     gridSettings.setAttribute("color", gridColor.name(QColor::HexArgb));

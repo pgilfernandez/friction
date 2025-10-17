@@ -60,7 +60,8 @@ private:
     QDoubleSpinBox* mOriginX;
     QDoubleSpinBox* mOriginY;
     QSpinBox* mSnapThreshold;
-    QSpinBox* mMajorEvery;
+    QSpinBox* mMajorEveryX;
+    QSpinBox* mMajorEveryY;
     QCheckBox* mSaveAsDefault;
     QPushButton* mOkButton;
     QPushButton* mCancelButton;

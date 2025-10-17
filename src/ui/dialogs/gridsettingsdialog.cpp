@@ -54,7 +54,8 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mOriginX(nullptr)
     , mOriginY(nullptr)
     , mSnapThreshold(nullptr)
-    , mMajorEvery(nullptr)
+    , mMajorEveryX(nullptr)
+    , mMajorEveryY(nullptr)
     , mSaveAsDefault(nullptr)
     , mOkButton(nullptr)
     , mCancelButton(nullptr)
@@ -113,10 +114,15 @@ void GridSettingsDialog::setupUi()
     mSnapThreshold->setSingleStep(1);
     form->addRow(tr("Snap radius"), mSnapThreshold);
 
-    mMajorEvery = new QSpinBox(this);
-    mMajorEvery->setRange(1, kMaxMajorEvery);
-    mMajorEvery->setSingleStep(1);
-    form->addRow(tr("Major line every"), mMajorEvery);
+    mMajorEveryX = new QSpinBox(this);
+    mMajorEveryX->setRange(1, kMaxMajorEvery);
+    mMajorEveryX->setSingleStep(1);
+    form->addRow(tr("Major line every X"), mMajorEveryX);
+
+    mMajorEveryY = new QSpinBox(this);
+    mMajorEveryY->setRange(1, kMaxMajorEvery);
+    mMajorEveryY->setSingleStep(1);
+    form->addRow(tr("Major line every Y"), mMajorEveryY);
 
     mColorButton = new ColorAnimatorButton(mColorAnimator.get(), this);
     auto* minorColorContainer = new QWidget(this);
@@ -164,7 +170,8 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mOriginX->setValue(settings.originX);
     mOriginY->setValue(settings.originY);
     mSnapThreshold->setValue(settings.snapThresholdPx);
-    mMajorEvery->setValue(settings.majorEvery);
+    mMajorEveryX->setValue(settings.majorEveryX);
+    mMajorEveryY->setValue(settings.majorEveryY);
     mStoredShow = settings.show;
     mStoredDrawOnTop = settings.drawOnTop;
     if (mSaveAsDefault) {
@@ -205,7 +212,8 @@ GridSettings GridSettingsDialog::settings() const
     result.originX = mOriginX->value();
     result.originY = mOriginY->value();
     result.snapThresholdPx = mSnapThreshold->value();
-    result.majorEvery = mMajorEvery->value();
+    result.majorEveryX = mMajorEveryX->value();
+    result.majorEveryY = mMajorEveryY->value();
     result.show = mStoredShow;
     result.drawOnTop = mStoredDrawOnTop;
 

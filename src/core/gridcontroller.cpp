@@ -59,7 +59,8 @@ GridSettings sanitizeSettings(const GridSettings& in)
     GridSettings copy = in;
     if (copy.sizeX <= 0.0) { copy.sizeX = 1.0; }
     if (copy.sizeY <= 0.0) { copy.sizeY = 1.0; }
-    if (copy.majorEvery < 1) { copy.majorEvery = 1; }
+    if (copy.majorEveryX < 1) { copy.majorEveryX = 1; }
+    if (copy.majorEveryY < 1) { copy.majorEveryY = 1; }
     if (copy.snapThresholdPx < 0) { copy.snapThresholdPx = 0; }
     auto ensureAnimatorColor = [](qsptr<ColorAnimator>& animator,
                                   const QColor& fallback)
@@ -133,7 +134,8 @@ bool GridSettings::operator==(const GridSettings& other) const
            enabled == other.enabled &&
            show == other.show &&
            drawOnTop == other.drawOnTop &&
-           majorEvery == other.majorEvery &&
+            majorEveryX == other.majorEveryX &&
+            majorEveryY == other.majorEveryY &&
            thisColor == otherColor &&
            thisMajorColor == otherMajorColor;
 }
@@ -265,12 +267,13 @@ void GridController::forEachGridLine(const QRectF& viewport,
     const double expandY = std::max(baseView.height(), sizeY);
     QRectF view = baseView.adjusted(-expandX, -expandY, expandX, expandY);
 
-    const int majorEvery = std::max(1, sanitizedSettings.majorEvery);
+    const int majorEveryX = std::max(1, sanitizedSettings.majorEveryX);
+    const int majorEveryY = std::max(1, sanitizedSettings.majorEveryY);
 
     const double spacingX = lineSpacingPx(worldToScreen, devicePixelRatio, {sizeX, 0.0});
     const double spacingY = lineSpacingPx(worldToScreen, devicePixelRatio, {0.0, sizeY});
-    const double majorSpacingX = spacingX * majorEvery;
-    const double majorSpacingY = spacingY * majorEvery;
+    const double majorSpacingX = spacingX * majorEveryX;
+    const double majorSpacingY = spacingY * majorEveryY;
 
     const double majorAlphaX = fadeFactor(majorSpacingX);
     const double majorAlphaY = fadeFactor(majorSpacingY);
@@ -299,7 +302,7 @@ void GridController::forEachGridLine(const QRectF& viewport,
     for (double x = xBegin; x <= xEnd; x += sizeX) {
         const long long index = static_cast<long long>(
             std::llround((x - originX) / sizeX));
-        const bool major = (index % majorEvery) == 0;
+        const bool major = (index % majorEveryX) == 0;
         const double alpha = major ? majorAlphaX : minorAlphaX;
         if (!major && alpha <= 0.0) { continue; }
         const QPointF top(x, view.top());
@@ -313,7 +316,7 @@ void GridController::forEachGridLine(const QRectF& viewport,
     for (double y = yBegin; y <= yEnd; y += sizeY) {
         const long long index = static_cast<long long>(
             std::llround((y - originY) / sizeY));
-        const bool major = (index % majorEvery) == 0;
+        const bool major = (index % majorEveryY) == 0;
         const double alpha = major ? majorAlphaY : minorAlphaY;
         if (!major && alpha <= 0.0) { continue; }
         const QPointF left(view.left(), y);

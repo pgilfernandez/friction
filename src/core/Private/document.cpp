@@ -91,7 +91,8 @@ static GridSettings sanitizedGridSettings(GridSettings settings)
 {
     if (settings.sizeX <= 0.0) { settings.sizeX = 1.0; }
     if (settings.sizeY <= 0.0) { settings.sizeY = 1.0; }
-    if (settings.majorEvery < 1) { settings.majorEvery = 1; }
+    if (settings.majorEveryX < 1) { settings.majorEveryX = 1; }
+    if (settings.majorEveryY < 1) { settings.majorEveryY = 1; }
     if (settings.snapThresholdPx < 0) { settings.snapThresholdPx = 0; }
     auto ensureAnimatorColor = [](qsptr<ColorAnimator>& animator,
                                   const QColor& fallback)
@@ -151,7 +152,35 @@ void Document::loadGridSettingsFromSettings()
     loaded.enabled = AppSupport::getSettings("grid", "enabled", defaults.enabled).toBool();
     loaded.show = AppSupport::getSettings("grid", "show", defaults.show).toBool();
     loaded.drawOnTop = AppSupport::getSettings("grid", "drawOnTop", defaults.drawOnTop).toBool();
-    loaded.majorEvery = AppSupport::getSettings("grid", "majorEvery", defaults.majorEvery).toInt();
+    auto readMajorEvery = [](const QString& key,
+                             int fallback,
+                             bool& found)
+    {
+        QVariant variant = AppSupport::getSettings("grid", key, QVariant());
+        if (variant.isValid()) {
+            found = true;
+            bool ok = false;
+            const int value = variant.toInt(&ok);
+            if (ok && value > 0) {
+                return value;
+            }
+        }
+        found = false;
+        return fallback;
+    };
+    bool hasMajorX = false;
+    bool hasMajorY = false;
+    loaded.majorEveryX = readMajorEvery("majorEveryX", defaults.majorEveryX, hasMajorX);
+    loaded.majorEveryY = readMajorEvery("majorEveryY", defaults.majorEveryY, hasMajorY);
+    const QVariant legacyMajorVariant = AppSupport::getSettings("grid", "majorEvery", QVariant());
+    if (legacyMajorVariant.isValid()) {
+        bool ok = false;
+        const int legacyMajor = legacyMajorVariant.toInt(&ok);
+        if (ok && legacyMajor > 0) {
+            if (!hasMajorX) { loaded.majorEveryX = legacyMajor; }
+            if (!hasMajorY) { loaded.majorEveryY = legacyMajor; }
+        }
+    }
     auto readColor = [](const QVariant& variant,
                         const QColor& fallback)
     {
@@ -191,7 +220,10 @@ void Document::saveGridSettingsToSettings(const GridSettings& settings) const
     AppSupport::setSettings("grid", "enabled", settings.enabled);
     AppSupport::setSettings("grid", "show", settings.show);
     AppSupport::setSettings("grid", "drawOnTop", settings.drawOnTop);
-    AppSupport::setSettings("grid", "majorEvery", settings.majorEvery);
+    AppSupport::setSettings("grid", "majorEveryX", settings.majorEveryX);
+    AppSupport::setSettings("grid", "majorEveryY", settings.majorEveryY);
+    // Maintain legacy key for older installations that still expect a single value.
+    AppSupport::setSettings("grid", "majorEvery", settings.majorEveryX);
     const QColor color = settings.colorAnimator ? settings.colorAnimator->getColor() : QColor(255, 255, 255, 96);
     const QColor majorColor = settings.majorColorAnimator ? settings.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
     AppSupport::setSettings("grid", "color", color);
@@ -227,7 +259,8 @@ void Document::applyGridSettings(const GridSettings& settings,
             gridNearlyEqual(previous.sizeY, sanitized.sizeY) == false ||
             gridNearlyEqual(previous.originX, sanitized.originX) == false ||
             gridNearlyEqual(previous.originY, sanitized.originY) == false ||
-            previous.majorEvery != sanitized.majorEvery;
+            previous.majorEveryX != sanitized.majorEveryX ||
+            previous.majorEveryY != sanitized.majorEveryY;
     const QColor previousColor = previous.colorAnimator ? previous.colorAnimator->getColor() : QColor();
     const QColor sanitizedColor = sanitized.colorAnimator ? sanitized.colorAnimator->getColor() : QColor();
     const QColor previousMajorColor = previous.majorColorAnimator ? previous.majorColorAnimator->getColor() : QColor();
