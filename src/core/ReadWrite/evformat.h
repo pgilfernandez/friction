@@ -46,8 +46,7 @@ namespace EvFormat {
         formatOptions2 = 31,
         subPathOffset = 32,
         avStretch = 33,
-        gridSettings = 34,
-        gridSettingsMajorColor = 35,
+        grids = 34,
 
         nextVersion
     };
