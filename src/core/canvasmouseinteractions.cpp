@@ -726,13 +726,49 @@ void Canvas::handleMovePointMouseMove(const eMouseEvent &e) {
             }
 
             if(!mPressedPoint->selectionEnabled()) {
-                if(mStartTransform) mPressedPoint->startTransform();
-                mPressedPoint->moveByAbs(getMoveByValueForEvent(e));
+                if(mStartTransform) {
+                    mPressedPoint->startTransform();
+                    mGridMoveStartPivot = mPressedPoint->getAbsolutePos();
+                }
+
+                QPointF moveBy = getMoveByValueForEvent(e);
+                const bool bypassSnap = e.fModifiers & Qt::AltModifier;
+                const bool forceSnap = e.fModifiers & Qt::ControlModifier;
+
+                if(mHasWorldToScreen &&
+                   (mDocument.gridController().settings.enabled || forceSnap)) {
+                    const QPointF targetPos = mGridMoveStartPivot + moveBy;
+                    const auto snapped = mDocument.gridController().maybeSnapPivot(
+                        targetPos, mWorldToScreen, forceSnap, bypassSnap);
+                    if(snapped != targetPos) {
+                        moveBy = snapped - mGridMoveStartPivot;
+                    }
+                }
+
+                mPressedPoint->moveByAbs(moveBy);
                 return;
             }
         }
-        moveSelectedPointsByAbs(getMoveByValueForEvent(e),
-                                mStartTransform);
+
+        if(mStartTransform && !mSelectedPoints_d.isEmpty()) {
+            mGridMoveStartPivot = getSelectedPointsAbsPivotPos();
+        }
+
+        QPointF moveBy = getMoveByValueForEvent(e);
+        const bool bypassSnap = e.fModifiers & Qt::AltModifier;
+        const bool forceSnap = e.fModifiers & Qt::ControlModifier;
+
+        if(!mSelectedPoints_d.isEmpty() && mHasWorldToScreen &&
+           (mDocument.gridController().settings.enabled || forceSnap)) {
+            const QPointF targetPivot = mGridMoveStartPivot + moveBy;
+            const auto snapped = mDocument.gridController().maybeSnapPivot(
+                targetPivot, mWorldToScreen, forceSnap, bypassSnap);
+            if(snapped != targetPivot) {
+                moveBy = snapped - mGridMoveStartPivot;
+            }
+        }
+
+        moveSelectedPointsByAbs(moveBy, mStartTransform);
     }
 }
 
