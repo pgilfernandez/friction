@@ -238,6 +238,10 @@ void Document::applyGridSettings(const GridSettings& settings,
 
     mGridController.settings = sanitized;
 
+    if (!skipSave) {
+        saveGridSettingsToSettings(mGridController.settings);
+    }
+
     if (silent) { return; }
 
     emit gridSettingsChanged(mGridController.settings);
