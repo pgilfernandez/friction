@@ -92,7 +92,7 @@ void ShaderEffectJS::updateValues()
 
 void ShaderEffectJS::clearSetters()
 {
-    mSetters.clear();
+    ThreadSafeQJSEngine::call(&mEngine, [&]{ mSetters.clear(); });
 }
 
 void ShaderEffectJS::addSetter(const QPointF &val)
