@@ -66,5 +66,6 @@ plutil -insert LSArchitecturePriority.0 -string arm64 ${PLIST}
 plutil -insert LSArchitecturePriority.1 -string x86_64 ${PLIST}
 
 mkdir dmg && mv Friction.app dmg/
-sleep 10
+
+sync
 hdiutil create -volname "Friction" -srcfolder dmg -ov -format ULMO Friction-${VERSION}.dmg
