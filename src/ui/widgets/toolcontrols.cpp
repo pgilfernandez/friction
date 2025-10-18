@@ -52,6 +52,9 @@ ToolControls::ToolControls(QWidget *parent)
     , mTransformBottomRight(nullptr)
     , mTransformPivot(nullptr)
     , mTransformOpacity(nullptr)
+    , mTransformInteractVisible(AppSupport::getSettings("gizmos",
+                                                        "ShowInToolbar",
+                                                        true).toBool())
 {
     setToolButtonStyle(Qt::ToolButtonIconOnly);
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -104,7 +107,22 @@ void ToolControls::setCanvasMode(const CanvasMode &mode)
     mTransformOpacity->setVisible(hasOpacity && isBoxMode);
     mTransformRadius->setVisible(hasRadius && showRadius);
     mTransformBottomRight->setVisible(hasRectangle && showRectangle);
-    mTransformInteract->setVisible(isBoxMode);
+    mTransformInteract->setVisible(isBoxMode && mTransformInteractVisible);
+}
+
+void ToolControls::setTransformInteractVisibility(bool visible)
+{
+    mTransformInteract->setVisible(visible &&
+                                   mCanvasMode == CanvasMode::boxTransform);
+    mTransformInteractVisible = visible;
+    AppSupport::setSettings("gizmos",
+                            "ShowInToolbar",
+                            visible);
+}
+
+bool ToolControls::getTransformInteractVisibility()
+{
+    return mTransformInteractVisible;
 }
 
 void ToolControls::setTransform(BoundingBox * const target)
@@ -362,19 +380,21 @@ void ToolControls::setupTransformInteract(const Core::Gizmos::Interact &ti)
     ThemeSupport::setToolbarButtonStyle("ToolBoxGizmo", this, interact);
 
     connect(interact, &QAction::triggered,
-            this, [mDocument, ti]() {
+            this, [this, mDocument, ti]() {
+        if (!mTransformInteractVisible) { return; }
         mDocument->setGizmoVisibility(ti, !mDocument->getGizmoVisibility(ti));
     });
 
     connect(mDocument, &Document::gizmoVisibilityChanged,
-            this, [interact,
+            this, [this,
+                   interact,
                    iconOn,
                    iconOff,
                    textOn,
                    textOff,
                    ti](Core::Gizmos::Interact i,
                        bool visible) {
-        if (ti != i) { return; }
+        if (ti != i || !mTransformInteractVisible) { return; }
         interact->blockSignals(true);
         interact->setChecked(visible);
         interact->blockSignals(false);

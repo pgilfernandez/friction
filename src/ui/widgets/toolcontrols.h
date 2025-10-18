@@ -47,6 +47,9 @@ namespace Friction
             void setCurrentBox(BoundingBox * const target);
             void setCanvasMode(const CanvasMode &mode);
 
+            void setTransformInteractVisibility(bool visible);
+            bool getTransformInteractVisibility();
+
         private:
             void setTransform(BoundingBox * const target);
             void resetWidgets();
@@ -78,6 +81,8 @@ namespace Friction
             QActionGroup *mTransformPivot;
             QActionGroup *mTransformOpacity;
             QActionGroup *mTransformInteract;
+
+            bool mTransformInteractVisible;
         };
     }
 }
