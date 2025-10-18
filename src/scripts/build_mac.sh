@@ -63,8 +63,8 @@ cmake -G Ninja \
 -DGIT_BRANCH=${BRANCH} \
 -DFRICTION_OFFICIAL_RELEASE=${REL} \
 -DCUSTOM_BUILD=${CUSTOM} \
--DBUILD_SKIA=ON \
--DSKIA_SYNC_EXTERNAL=ON \
+-DBUILD_SKIA=OFF \
+-DSKIA_LIB_PATH=${SDK}/lib \
 -DCMAKE_BUILD_TYPE=Release \
 -DQSCINTILLA_INCLUDE_DIRS=${SDK}/include \
 -DQSCINTILLA_LIBRARIES_DIRS=${SDK}/lib \
@@ -84,4 +84,5 @@ rm -f src/app/Friction.app/Contents/Frameworks/{libQt5MultimediaWidgets.5.dylib,
 rm -rf src/app/Friction.app/Contents/PlugIns/{bearer,iconengines,imageformats,mediaservice,printsupport,styles}
 
 mkdir dmg && mv src/app/Friction.app dmg/
+sleep 10
 hdiutil create -volname "Friction" -srcfolder dmg -ov -format ULMO Friction-${VERSION}-${CPU}.dmg
