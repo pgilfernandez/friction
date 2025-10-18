@@ -26,7 +26,8 @@ gcc -v
 SDK=${SDK:-"/opt/friction"}
 SRC=${SDK}/src
 DIST=${DIST:-"/mnt"}
-MKJOBS=${MKJOBS:-32}
+PATCHES=${DIST}/patches
+MKJOBS=${MKJOBS:-4}
 SRC_SUFFIX=tar.xz
 
 QT_V=5.15.17_20250607_0825fcb1
@@ -233,7 +234,8 @@ if [ ! -f "${QMAKE_BIN}" ]; then
     rm -rf ${QT_SRC} || true
     tar xf ${DIST}/qt/${QT_SRC}.${SRC_SUFFIX}
     cd ${QT_SRC}
-    (cd qtbase ; xzcat ${DIST}/qt/qtbase-use-wayland-on-gnome.patch.xz | patch -p1)
+    patch -p1 < ${PATCHES}/qtbase-use-wayland-on-gnome.patch
+    patch -p0 < ${PATCHES}/qtbase-qversion.diff
     ./configure \
     -prefix ${SDK} \
     -c++std c++14 \

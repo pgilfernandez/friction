@@ -21,6 +21,8 @@ set -e -x
 
 # keep in sync with other SDK's
 
+SKIA_V=1744b17ab9749359c4004a7cd8744c9e31ec6bf8
+
 PYTHON_V=3.11.11
 NINJA_V=1.11.1
 CMAKE_V=3.26.3
@@ -56,6 +58,7 @@ CWD=`pwd`
 SDK=${SDK:-"${CWD}/sdk/${CPU}"}
 SRC=${SDK}/src
 DIST=${DIST:-"${CWD}/distfiles"}
+PATCHES=${DIST}/patches
 MKJOBS=${MKJOBS:-10}
 SRC_SUFFIX=tar.xz
 
@@ -79,11 +82,15 @@ SHARED_CONFIGURE="${COMMON_CONFIGURE} --enable-shared --disable-static"
 STATIC_CONFIGURE="${COMMON_CONFIGURE} --disable-shared --enable-static"
 DEFAULT_CONFIGURE="${SHARED_CONFIGURE}"
 
-if [ ! -d "${SDK}" ]; then
+if [ ! -d "${SDK}/lib" ]; then
     mkdir -p "${SDK}/lib"
-    mkdir -p "${SDK}/bin"
-    mkdir -p "${SDK}/src"
     (cd "${SDK}"; ln -sf lib lib64)
+fi
+if [ ! -d "${SDK}/bin" ]; then
+    mkdir -p "${SDK}/bin"
+fi
+if [ ! -d "${SDK}/src" ]; then
+    mkdir -p "${SDK}/src"
 fi
 
 # python
@@ -117,7 +124,7 @@ if [ ! -f "${CMAKE_BIN}" ]; then
     rm -rf ${CMAKE_SRC} || true
     tar xf ${DIST}/ffmpeg/${CMAKE_SRC}.tar.gz
     cd ${CMAKE_SRC}
-    patch -p0 < ${DIST}/patches/cmake-zlib-macos154.diff
+    patch -p0 < ${PATCHES}/cmake-zlib-macos154.diff
     ./configure ${COMMON_CONFIGURE} --no-system-libs --parallel=${MKJOBS} -- -DCMAKE_USE_OPENSSL=OFF
     make -j${MKJOBS}
     make install
@@ -160,6 +167,20 @@ if [ ! -f "${SDK}/bin/yasm" ]; then
     make install
 fi # yasm
 
+# skia
+if [ ! -f "${SDK}/lib/libskia-friction.dylib" ]; then
+    cd ${SRC}
+    rm -rf skia || true
+    git clone https://github.com/friction2d/skia
+    cd skia
+    git checkout ${SKIA_V}
+    git submodule update -i --recursive
+    mkdir build && cd build
+    cmake -G Ninja -DSKIA_USE_SYSTEM_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang ..
+    cmake --build .
+    cp -a libskia-friction.dylib ${SDK}/lib/
+fi # skia
+
 # qt5
 if [ ! -f "${QMAKE_BIN}" ]; then
     cd ${SRC}
@@ -168,8 +189,8 @@ if [ ! -f "${QMAKE_BIN}" ]; then
         tar xf ${DIST}/qt/${QT_SRC}.${SRC_SUFFIX}
     fi
     cd ${QT_SRC}
-    patch -p0 < ${DIST}/patches/qtbase-macos-versions.diff
-    patch -p0 < ${DIST}/patches/qversion.diff
+    patch -p0 < ${PATCHES}/qtbase-macos-versions.diff
+    patch -p0 < ${PATCHES}/qtbase-qversion.diff
     CXXFLAGS="${DEFAULT_CPPFLAGS}" CFLAGS="${DEFAULT_CFLAGS}" \
     ./configure \
     -prefix ${SDK} \
@@ -275,7 +296,7 @@ if [ ! -f "${SDK}/lib/libmp3lame.dylib" ]; then
     rm -rf ${LAME_SRC} || true
     tar xf ${DIST}/ffmpeg/${LAME_SRC}.tar.gz
     cd ${LAME_SRC}
-    patch -p0 < ${DIST}/patches/lame-avoid_undefined_symbols_error.diff
+    patch -p0 < ${PATCHES}/lame-avoid_undefined_symbols_error.diff
     CFLAGS="${DEFAULT_CFLAGS}" \
     CXXFLAGS="${DEFAULT_CPPFLAGS}" \
     LDFLAGS="${DEFAULT_LDFLAGS}" \
@@ -291,8 +312,8 @@ if [ ! -f "${SDK}/lib/libvpx.a" ]; then
     rm -rf ${VPX_SRC} || true
     tar xf ${DIST}/ffmpeg/libvpx-${VPX_V}.tar.gz
     cd ${VPX_SRC}
-    patch -p0 < ${DIST}/patches/vpx-Makefile.diff
-    patch -p0 < ${DIST}/patches/vpx-configure.diff
+    patch -p0 < ${PATCHES}/vpx-Makefile.diff
+    patch -p0 < ${PATCHES}/vpx-configure.diff
     CFLAGS="${DEFAULT_CFLAGS}" \
     CXXFLAGS="${DEFAULT_CPPFLAGS}" \
     LDFLAGS="${DEFAULT_LDFLAGS}" \
@@ -317,7 +338,7 @@ if [ ! -f "${SDK}/lib/libvpx.a" ]; then
 fi # libvpx
 
 # libogg
-if [ ! -f "${SDK}/lib/libogg.dylib" ]; then
+if [ ! -f "${SDK}/lib/libogg.a" ]; then
     cd ${SRC}
     OGG_SRC=libogg-${OGG_V}
     rm -rf ${OGG_SRC} || true
@@ -338,7 +359,7 @@ if [ ! -f "${SDK}/lib/libvorbis.dylib" ]; then
     rm -rf ${VORBIS_SRC} || true
     tar xf ${DIST}/ffmpeg/${VORBIS_SRC}.tar.gz
     cd ${VORBIS_SRC}
-    patch -p0 < ${DIST}/patches/vorbis-configure.diff
+    patch -p0 < ${PATCHES}/vorbis-configure.diff
     CFLAGS="${DEFAULT_CFLAGS}" \
     CXXFLAGS="${DEFAULT_CPPFLAGS}" \
     LDFLAGS="${DEFAULT_LDFLAGS}" \
@@ -461,7 +482,7 @@ if [ ! -f "${SDK}/lib/pkgconfig/libavcodec.pc" ]; then
     rm -rf ${FFMPEG_SRC} || true
     tar xf ${DIST}/ffmpeg/${FFMPEG_SRC}.tar.xz
     cd ${FFMPEG_SRC}
-    patch -p0 < ${DIST}/patches/ffmpeg-tiff-assocalpha.diff
+    patch -p0 < ${PATCHES}/ffmpeg-tiff-assocalpha.diff
     export MACOSX_DEPLOYMENT_TARGET=${OSX}
     CFLAGS="${DEFAULT_CFLAGS}" \
     CXXFLAGS="${DEFAULT_CPPFLAGS}" \
