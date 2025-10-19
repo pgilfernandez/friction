@@ -63,8 +63,8 @@ cmake -G Ninja \
 -DGIT_BRANCH=${BRANCH} \
 -DFRICTION_OFFICIAL_RELEASE=${REL} \
 -DCUSTOM_BUILD=${CUSTOM} \
--DBUILD_SKIA=ON \
--DSKIA_SYNC_EXTERNAL=ON \
+-DBUILD_SKIA=OFF \
+-DSKIA_LIB_PATH=${SDK}/lib \
 -DCMAKE_BUILD_TYPE=Release \
 -DQSCINTILLA_INCLUDE_DIRS=${SDK}/include \
 -DQSCINTILLA_LIBRARIES_DIRS=${SDK}/lib \
@@ -83,5 +83,18 @@ macdeployqt src/app/Friction.app
 rm -f src/app/Friction.app/Contents/Frameworks/{libQt5MultimediaWidgets.5.dylib,libQt5Svg.5.dylib}
 rm -rf src/app/Friction.app/Contents/PlugIns/{bearer,iconengines,imageformats,mediaservice,printsupport,styles}
 
-mkdir dmg && mv src/app/Friction.app dmg/
-hdiutil create -volname "Friction" -srcfolder dmg -ov -format ULMO Friction-${VERSION}-${CPU}.dmg
+mkdir dmg
+mv src/app/Friction.app dmg/
+(cd dmg ; ln -sf /Applications Applications)
+
+# https://github.com/actions/runner-images/issues/7522
+max_tries=10
+i=0
+until hdiutil create -volname "Friction" -srcfolder dmg -ov -format ULMO Friction-${VERSION}-${CPU}.dmg
+do
+    if [ $i -eq $max_tries ]; then
+        echo 'Error: hdiutil did not succeed even after 10 tries.'
+        exit 1
+    fi
+    i=$((i+1))
+done
