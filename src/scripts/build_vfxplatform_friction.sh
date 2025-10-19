@@ -53,7 +53,7 @@ if [ ! -d "${BUILD}" ]; then
 fi
 
 CHECKOUT="main"
-if [ "${BRANCH}" != "" ]; then
+if [ "${BRANCH}" != "" ] && [ "${BRANCH}" != "NONE" ]; then
     CHECKOUT="${BRANCH}"
 elif [ "${COMMIT}" != "" ]; then
     CHECKOUT="${COMMIT}"
