@@ -61,6 +61,7 @@ public:
     void mergePointsSlot() const;
     void splitPointsSlot() const;
     void makeSelectedNodeFirstSlot() const;
+    void reverseNodesOrderSlot() const;
     void subdivideSegments() const;
     void removePointsApprox() const;
 

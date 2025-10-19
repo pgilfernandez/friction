@@ -528,6 +528,14 @@ void Actions::makeSelectedNodeFirstSlot() const
     afterAction();
 }
 
+void Actions::reverseNodesOrderSlot() const
+{
+    qDebug() << "reverseNodesOrderSlot";
+    if (!mActiveScene) { return; }
+    mActiveScene->reverseSelectedNodesOrder();
+    afterAction();
+}
+
 void Actions::subdivideSegments() const
 {
     qDebug() << "subdivideSegments";

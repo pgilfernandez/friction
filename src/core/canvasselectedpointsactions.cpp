@@ -219,6 +219,55 @@ void Canvas::makeSelectedNodeFirst()
     }
 }
 
+void Canvas::reverseSelectedNodesOrder()
+{
+    bool autoSelected = false;
+    auto nodes = getSortedSelectedNodes();
+    if (nodes.isEmpty()) {
+        selectAllPointsAction();
+        nodes = getSortedSelectedNodes();
+        autoSelected = true;
+    }
+    if (nodes.isEmpty()) { return; }
+
+    auto node = nodes.first();
+    if (!node) { return; }
+
+    auto animator = node->getTargetAnimator();
+    if (!animator) { return; }
+    auto handler = node->getHandler();
+    if (!handler) { return; }
+
+    auto firstPoint = handler->getPointWithId<SmartNodePoint>(0);
+    if (!firstPoint) { return; }
+    const auto path = firstPoint->getTargetPath();
+    if (!path) { return; }
+    const bool closed = path->isClosed();
+    const int nodeCount = path->getNodeCount();
+    if (nodeCount <= 1) { return; }
+
+    clearPointsSelection();
+
+    animator->actionReverseCurrent();
+    handler->updateAllPoints();
+
+    if (closed) {
+        SmartNodePoint* newPoint = handler->getPointWithId<SmartNodePoint>(nodeCount - 1);
+        if (newPoint) {
+            const int rotatedId = newPoint->getNodeId();
+            if (rotatedId > 0) {
+                animator->actionSetFirstNode(rotatedId);
+                handler->updateAllPoints();
+            }
+        }
+    }
+
+    auto firstNode = handler->getPointWithId<SmartNodePoint>(0);
+    if (!autoSelected && firstNode) {
+        addPointToSelection(firstNode);
+    }
+}
+
 void Canvas::setPointCtrlsMode(const CtrlsMode mode) {
     for(const auto& point : mSelectedPoints_d) {
         if(point->isSmartNodePoint()) {

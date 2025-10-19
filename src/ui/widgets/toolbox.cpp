@@ -291,6 +291,9 @@ void ToolBox::setupNodesAction(const QIcon &icon,
         case NodeFirst:
             mActions.makeSelectedNodeFirstSlot();
             break;
+        case NodeReverse:
+            mActions.reverseNodesOrderSlot();
+            break;
         case NodeNew:
             mActions.subdivideSegments();
             break;
@@ -341,6 +344,8 @@ void ToolBox::setupNodesActions()
                      tr("Split Nodes"), NodeSplit);
     setupNodesAction(QIcon::fromTheme("nodeFirst"),
                      tr("Set First Node"), NodeFirst);
+    setupNodesAction(QIcon::fromTheme("nodeReverse"),
+                     tr("Reverse Nodes Order"), NodeReverse);
     setupNodesAction(QIcon::fromTheme("nodeNew"),
                      tr("New Node"), NodeNew);
     setupNodesAction(QIcon::fromTheme("nodeRemove"),
