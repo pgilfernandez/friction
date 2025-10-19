@@ -12,7 +12,7 @@ jobs:
       run: |
         echo "HEAD_REPO_URL=${{ github.event.pull_request.head.repo.clone_url }}" >> $GITHUB_ENV
         echo "COMMIT=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
-        echo "BRANCH=" >> $GITHUB_ENV
+        echo "BRANCH=NONE" >> $GITHUB_ENV
     - name: Build
       run: ./src/scripts/build.sh
     - name: Artifact
