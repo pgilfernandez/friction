@@ -26,6 +26,7 @@ COMMIT=${COMMIT:-`git rev-parse --short=8 HEAD`}
 CUSTOM=${CUSTOM:-""}
 OSX=12.7
 CPU=`arch`
+CI=${CI:-1}
 
 if [ "${CPU}" = "i386" ]; then
     CPU=x86_64
@@ -85,5 +86,10 @@ rm -rf src/app/Friction.app/Contents/PlugIns/{bearer,iconengines,imageformats,me
 
 mkdir dmg && mv src/app/Friction.app dmg/
 
-sync
+if [ "${CI}" = 1 ]; then
+    sync
+    sleep 30
+    sync
+fi
+
 hdiutil create -volname "Friction" -srcfolder dmg -ov -format ULMO Friction-${VERSION}-${CPU}.dmg

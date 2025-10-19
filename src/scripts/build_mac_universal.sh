@@ -21,6 +21,7 @@ set -e -x
 
 CWD=`pwd`
 VERSION=${VERSION:-"dev"}
+CI=${CI:-1}
 
 ARM_BUILD=${CWD}/build-release-arm64
 INTEL_BUILD=${CWD}/build-release-x86_64
@@ -67,5 +68,10 @@ plutil -insert LSArchitecturePriority.1 -string x86_64 ${PLIST}
 
 mkdir dmg && mv Friction.app dmg/
 
-sync
+if [ "${CI}" = 1 ]; then
+    sync
+    sleep 30
+    sync
+fi
+
 hdiutil create -volname "Friction" -srcfolder dmg -ov -format ULMO Friction-${VERSION}.dmg
