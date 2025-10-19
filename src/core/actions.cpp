@@ -520,6 +520,14 @@ void Actions::splitPointsSlot() const
     afterAction();
 }
 
+void Actions::makeSelectedNodeFirstSlot() const
+{
+    qDebug() << "makeSelectedNodeFirstSlot";
+    if (!mActiveScene) { return; }
+    mActiveScene->makeSelectedNodeFirst();
+    afterAction();
+}
+
 void Actions::subdivideSegments() const
 {
     qDebug() << "subdivideSegments";
