@@ -288,6 +288,9 @@ void ToolBox::setupNodesAction(const QIcon &icon,
         case NodeSplit:
             mActions.splitPointsSlot();
             break;
+        case NodeFirst:
+            mActions.makeSelectedNodeFirstSlot();
+            break;
         case NodeNew:
             mActions.subdivideSegments();
             break;
@@ -336,6 +339,8 @@ void ToolBox::setupNodesActions()
                      tr("Merge Nodes"), NodeMerge);
     setupNodesAction(QIcon::fromTheme("nodeSplit"),
                      tr("Split Nodes"), NodeSplit);
+    setupNodesAction(QIcon::fromTheme("nodeFirst"),
+                     tr("Set First Node"), NodeFirst);
     setupNodesAction(QIcon::fromTheme("nodeNew"),
                      tr("New Node"), NodeNew);
     setupNodesAction(QIcon::fromTheme("nodeRemove"),

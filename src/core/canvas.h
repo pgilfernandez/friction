@@ -217,6 +217,7 @@ public:
     void disconnectPoints();
     bool connectPoints();
     void subdivideSegments();
+    void makeSelectedNodeFirst();
 
     void setSelectedTextAlignment(const Qt::Alignment alignment) const;
     void setSelectedTextVAlignment(const Qt::Alignment alignment) const;

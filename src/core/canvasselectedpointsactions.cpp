@@ -28,6 +28,7 @@
 #include "Animators/SmartPath/smartpathanimator.h"
 #include "MovablePoints/pathpointshandler.h"
 #include "Private/document.h"
+#include <QSet>
 
 QList<SmartNodePoint*> Canvas::getSortedSelectedNodes() {
     QList<SmartNodePoint*> nodes;
@@ -121,10 +122,12 @@ void Canvas::splitPoints()
     const auto nodes = getSortedSelectedNodes();
     if (nodes.isEmpty()) { return; }
 
+    QSet<SmartNodePoint*> selection;
     bool changed = false;
 
     for (const auto& node : nodes) {
         if (!node) { continue; }
+        selection.insert(node);
         if (!node->getTargetAnimator()) { continue; }
         if (!node->getTargetPath()) { continue; }
         if (!node->isNormal()) { continue; }
@@ -165,6 +168,8 @@ void Canvas::splitPoints()
         auto newNode = handler->getPointWithId<SmartNodePoint>(newId);
         if (!newNode) { continue; }
 
+        selection.insert(newNode);
+
         node->actionDisconnectFromNormalPoint(newNode);
         changed = true;
     }
@@ -172,6 +177,9 @@ void Canvas::splitPoints()
     if (!changed) { return; }
 
     clearPointsSelection();
+    for (const auto point : selection) {
+        addPointToSelection(point);
+    }
 }
 
 void Canvas::subdivideSegments()
@@ -184,6 +192,31 @@ void Canvas::subdivideSegments()
         NormalSegment(node, nextPoint).divideAtT(0.5);
     }
     clearPointsSelection();
+}
+
+void Canvas::makeSelectedNodeFirst()
+{
+    const auto nodes = getSortedSelectedNodes();
+    if (nodes.count() != 1) { return; }
+
+    auto node = nodes.first();
+    if (!node) { return; }
+    const int nodeId = node->getNodeId();
+    if (nodeId <= 0) { return; }
+
+    auto animator = node->getTargetAnimator();
+    if (!animator) { return; }
+    auto handler = node->getHandler();
+    if (!handler) { return; }
+
+    clearPointsSelection();
+
+    animator->actionSetFirstNode(nodeId);
+    handler->updateAllPoints();
+    auto firstNode = handler->getPointWithId<SmartNodePoint>(0);
+    if (firstNode) {
+        addPointToSelection(firstNode);
+    }
 }
 
 void Canvas::setPointCtrlsMode(const CtrlsMode mode) {

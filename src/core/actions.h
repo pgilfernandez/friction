@@ -60,6 +60,7 @@ public:
     void disconnectPointsSlot() const;
     void mergePointsSlot() const;
     void splitPointsSlot() const;
+    void makeSelectedNodeFirstSlot() const;
     void subdivideSegments() const;
     void removePointsApprox() const;
 
