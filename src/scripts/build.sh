@@ -25,6 +25,7 @@ MKJOBS=${MKJOBS:-2}
 COMMIT=`git rev-parse --short=8 HEAD`
 BRANCH=`git rev-parse --abbrev-ref HEAD`
 CUSTOM=${CUSTOM:-"CI"}
+HEAD_REPO_URL=${HEAD_REPO_URL:-""}
 
 REL=${REL:-0}
 APPIMG=20240401
@@ -50,4 +51,4 @@ fi
 
 cd ${CWD}
 
-LOCAL_BUILD=0 MKJOBS=${MKJOBS} REL=${REL} BRANCH=${BRANCH} COMMIT=${COMMIT} CUSTOM=${CUSTOM} ./src/scripts/run_docker.sh
+HEAD_REPO_URL=${HEAD_REPO_URL} LOCAL_BUILD=0 MKJOBS=${MKJOBS} REL=${REL} BRANCH=${BRANCH} COMMIT=${COMMIT} CUSTOM=${CUSTOM} ./src/scripts/run_docker.sh
