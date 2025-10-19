@@ -54,6 +54,7 @@ namespace Friction
                 NodeConnect,
                 NodeDisconnect,
                 NodeMerge,
+                NodeSplit,
                 NodeNew,
                 NodeRemove,
                 NodeRemoveApprox,

@@ -115,6 +115,65 @@ void Canvas::mergePoints()
     }
 }
 
+void Canvas::splitPoints()
+{
+    prp_pushUndoRedoName(tr("Split Nodes"));
+    const auto nodes = getSortedSelectedNodes();
+    if (nodes.isEmpty()) { return; }
+
+    bool changed = false;
+
+    for (const auto& node : nodes) {
+        if (!node) { continue; }
+        if (!node->getTargetAnimator()) { continue; }
+        if (!node->getTargetPath()) { continue; }
+        if (!node->isNormal()) { continue; }
+
+        auto handler = node->getHandler();
+        if (!handler) { continue; }
+
+        SmartNodePoint* neighbor = nullptr;
+        bool usePrev = false;
+        if (node->hasNextNormalPoint()) {
+            neighbor = handler->getNextNormalNode(node->getNodeId());
+        }
+        if (!neighbor || neighbor == node) {
+            neighbor = handler->getPrevNormalNode(node->getNodeId());
+            usePrev = true;
+        }
+        if (!neighbor || neighbor == node) { continue; }
+
+        const int nodeId = node->getNodeId();
+        const int neighborId = neighbor->getNodeId();
+        const NodePointValues values = node->getPointValues();
+        const qreal t = usePrev ? 1.0 : 0.0;
+
+        int newId = -1;
+        if (usePrev) {
+            newId = node->getTargetAnimator()->actionInsertNodeBetween(neighborId,
+                                                                       nodeId,
+                                                                       t,
+                                                                       values);
+        } else {
+            newId = node->getTargetAnimator()->actionInsertNodeBetween(nodeId,
+                                                                       neighborId,
+                                                                       t,
+                                                                       values);
+        }
+        if (newId < 0) { continue; }
+
+        auto newNode = handler->getPointWithId<SmartNodePoint>(newId);
+        if (!newNode) { continue; }
+
+        node->actionDisconnectFromNormalPoint(newNode);
+        changed = true;
+    }
+
+    if (!changed) { return; }
+
+    clearPointsSelection();
+}
+
 void Canvas::subdivideSegments()
 {
     prp_pushUndoRedoName(tr("Subdivide Segments"));

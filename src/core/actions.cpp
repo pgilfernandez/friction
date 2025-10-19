@@ -512,6 +512,14 @@ void Actions::mergePointsSlot() const
     afterAction();
 }
 
+void Actions::splitPointsSlot() const
+{
+    qDebug() << "splitPointsSlot";
+    if (!mActiveScene) { return; }
+    mActiveScene->splitPoints();
+    afterAction();
+}
+
 void Actions::subdivideSegments() const
 {
     qDebug() << "subdivideSegments";

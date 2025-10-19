@@ -213,6 +213,7 @@ public:
     void startSelectedPointsTransform();
 
     void mergePoints();
+    void splitPoints();
     void disconnectPoints();
     bool connectPoints();
     void subdivideSegments();
