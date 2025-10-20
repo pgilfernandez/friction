@@ -570,7 +570,8 @@ void FrameScrollBar::zoomViewedRange(const int &span,
 }
 
 #ifdef Q_OS_MAC
-void FrameScrollBar::callNativeGestures(QNativeGestureEvent *e)
+void FrameScrollBar::callNativeGestures(QNativeGestureEvent *e,
+                                        const qreal &frame)
 {
     if (!e || !mRange) { return; }
     bool triggered = false;
@@ -579,7 +580,8 @@ void FrameScrollBar::callNativeGestures(QNativeGestureEvent *e)
         int newFramesSpan = mViewedFramesSpan;
         if (e->value() < 0) { newFramesSpan *= 0.85; }
         else { newFramesSpan *= 1.15; }
-        setFramesSpan(newFramesSpan);
+        // setFramesSpan(newFramesSpan);
+        zoomViewedRange(newFramesSpan, frame);
         triggered = true;
     } else if (e->gestureType() == Qt::SmartZoomNativeGesture) {
         setFramesSpan(mFrameRange.EMAX);

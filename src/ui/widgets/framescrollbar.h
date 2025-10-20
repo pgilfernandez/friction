@@ -86,7 +86,8 @@ public:
                          const qreal &frame);
 
 #ifdef Q_OS_MAC
-    void callNativeGestures(QNativeGestureEvent *e);
+    void callNativeGestures(QNativeGestureEvent *e,
+                            const qreal &frame);
     void callPanEvent(QWheelEvent *e);
 #endif
 

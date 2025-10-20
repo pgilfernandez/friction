@@ -515,7 +515,12 @@ bool KeysView::event(QEvent *e)
         auto g = dynamic_cast<QNativeGestureEvent*>(e);
         if (g->gestureType() == Qt::ZoomNativeGesture ||
             g->gestureType() == Qt::SmartZoomNativeGesture) {
-            emit nativeEventSignal(g);
+            const QPoint globalMousePos = QCursor::pos();
+            const QPoint localMousePos = mapFromGlobal(globalMousePos);
+            const QPoint posU = localMousePos + QPoint(-eSizesUI::widget/2, 0);
+            const qreal currentHoverFrame = static_cast<qreal>(posU.x()) / mPixelsPerFrame + mMinViewedFrame;
+            // qDebug() << "currentHoverFrame" << currentHoverFrame;
+            emit nativeEventSignal(g, currentHoverFrame);
             return true;
         }
     }

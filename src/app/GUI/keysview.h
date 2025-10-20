@@ -151,7 +151,8 @@ signals:
     void statusMessage(const QString &message);
 
 #ifdef Q_OS_MAC
-    void nativeEventSignal(QNativeGestureEvent *e);
+    void nativeEventSignal(QNativeGestureEvent *e,
+                           const qreal &frame);
     void panEventSignal(QWheelEvent *e);
 #endif
 

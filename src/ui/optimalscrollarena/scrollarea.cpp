@@ -63,7 +63,7 @@ void ScrollArea::resizeEvent(QResizeEvent *e) {
 #ifdef Q_OS_MAC
 void ScrollArea::wheelEvent(QWheelEvent *event)
 {
-    callWheelEvent(event);
+    callWheelEvent(event, 0);
 }
 #endif
 
