@@ -28,7 +28,8 @@
 #include "Animators/SmartPath/smartpathanimator.h"
 #include "MovablePoints/pathpointshandler.h"
 #include "Private/document.h"
-#include <QSet>
+#include <QVector>
+#include <algorithm>
 
 QList<SmartNodePoint*> Canvas::getSortedSelectedNodes() {
     QList<SmartNodePoint*> nodes;
@@ -122,12 +123,27 @@ void Canvas::splitPoints()
     const auto nodes = getSortedSelectedNodes();
     if (nodes.isEmpty()) { return; }
 
-    QSet<SmartNodePoint*> selection;
+    QVector<stdptr<SmartNodePoint>> selection;
+    selection.reserve(nodes.count() * 2);
+    const auto rememberPoint = [&selection](SmartNodePoint* const candidate) {
+        if (!candidate) { return; }
+        stdptr<SmartNodePoint> ref(candidate);
+        SmartNodePoint* const raw = ref.get();
+        if (!raw) { return; }
+        const bool alreadyStored = std::any_of(selection.cbegin(),
+                                               selection.cend(),
+                                               [raw](const stdptr<SmartNodePoint>& stored) {
+            return stored.get() == raw;
+        });
+        if (!alreadyStored) {
+            selection.append(ref);
+        }
+    };
     bool changed = false;
 
     for (const auto& node : nodes) {
         if (!node) { continue; }
-        selection.insert(node);
+        rememberPoint(node);
         if (!node->getTargetAnimator()) { continue; }
         if (!node->getTargetPath()) { continue; }
         if (!node->isNormal()) { continue; }
@@ -168,7 +184,7 @@ void Canvas::splitPoints()
         auto newNode = handler->getPointWithId<SmartNodePoint>(newId);
         if (!newNode) { continue; }
 
-        selection.insert(newNode);
+        rememberPoint(newNode);
 
         node->actionDisconnectFromNormalPoint(newNode);
         changed = true;
@@ -177,8 +193,10 @@ void Canvas::splitPoints()
     if (!changed) { return; }
 
     clearPointsSelection();
-    for (const auto point : selection) {
-        addPointToSelection(point);
+    for (const auto& stored : selection) {
+        if (auto* const point = stored.get()) {
+            addPointToSelection(point);
+        }
     }
 }
 
