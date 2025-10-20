@@ -67,8 +67,10 @@ void ScrollArea::wheelEvent(QWheelEvent *event)
 }
 #endif
 
-void ScrollArea::callWheelEvent(QWheelEvent *event)
+void ScrollArea::callWheelEvent(QWheelEvent *event,
+                                const qreal &frame)
 {
+    Q_UNUSED(frame)
 #ifdef Q_OS_MAC
     if (event->angleDelta().y() == 0) { return; }
 #endif

@@ -80,7 +80,10 @@ public:
     void setDisplayedFrameRange(const FrameRange& range);
     void setViewedFrameRange(const FrameRange& range);
     void setCanvasFrameRange(const FrameRange& range);
-    void callWheelEvent(QWheelEvent *event);
+    void callWheelEvent(QWheelEvent *event,
+                        const qreal &frame);
+    void zoomViewedRange(const int &span,
+                         const qreal &frame);
 
 #ifdef Q_OS_MAC
     void callNativeGestures(QNativeGestureEvent *e);
