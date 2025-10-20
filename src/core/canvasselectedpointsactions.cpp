@@ -220,12 +220,22 @@ void Canvas::makeSelectedNodeFirst()
     auto node = nodes.first();
     if (!node) { return; }
     const int nodeId = node->getNodeId();
-    if (nodeId <= 0) { return; }
 
     auto animator = node->getTargetAnimator();
     if (!animator) { return; }
     auto handler = node->getHandler();
     if (!handler) { return; }
+
+    if (!animator->isClosed()) {
+        // Open paths cannot change the first node; flipping direction is only allowed from the last node.
+        const int lastNodeId = handler->count() - 1;
+        if (lastNodeId >= 0 && nodeId == lastNodeId) {
+            reverseSelectedNodesOrder();
+        }
+        return;
+    }
+
+    if (nodeId <= 0) { return; }
 
     clearPointsSelection();
 
