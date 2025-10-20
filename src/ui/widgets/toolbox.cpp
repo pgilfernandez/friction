@@ -334,6 +334,12 @@ void ToolBox::setupNodesActions()
     mControls->addAction(mGroupNodes->addAction(QIcon::fromTheme("pointTransform"),
                                                 tr("Nodes")));
 
+    setupNodesAction(QIcon::fromTheme("nodeNew"),
+                     tr("New Node"), NodeNew);
+    setupNodesAction(QIcon::fromTheme("nodeRemove"),
+                     tr("Remove Node"), NodeRemove);
+    setupNodesAction(QIcon::fromTheme("nodeRemoveApprox"),
+                     tr("Remove Node Approx."), NodeRemoveApprox);
     setupNodesAction(QIcon::fromTheme("nodeConnect"),
                      tr("Connect Nodes"), NodeConnect);
     setupNodesAction(QIcon::fromTheme("nodeDisconnect"),
@@ -346,12 +352,6 @@ void ToolBox::setupNodesActions()
                      tr("Set First Node"), NodeFirst);
     setupNodesAction(QIcon::fromTheme("nodeReverse"),
                      tr("Reverse Nodes Order"), NodeReverse);
-    setupNodesAction(QIcon::fromTheme("nodeNew"),
-                     tr("New Node"), NodeNew);
-    setupNodesAction(QIcon::fromTheme("nodeRemove"),
-                     tr("Remove Node"), NodeRemove);
-    setupNodesAction(QIcon::fromTheme("nodeRemoveApprox"),
-                     tr("Remove Node Approx."), NodeRemoveApprox);
     setupNodesAction(QIcon::fromTheme("nodeSymmetric"),
                      tr("Symmetric Nodes"), NodeSymmetric);
     setupNodesAction(QIcon::fromTheme("nodeSmooth"),
