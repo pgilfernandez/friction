@@ -132,11 +132,11 @@ SceneSettingsDialog::SceneSettingsDialog(const QString &name,
 
     mFrameRangeLabel = new QLabel(tr("Duration"), this);
     mMinFrameSpin = new QSpinBox(this);
-    mMinFrameSpin->setRange(0, INT_MAX);
+    mMinFrameSpin->setRange(-INT_MAX, INT_MAX);
     mMinFrameSpin->setValue(range.fMin);
 
     mMaxFrameSpin = new QSpinBox(this);
-    mMaxFrameSpin->setRange(0, INT_MAX);
+    mMaxFrameSpin->setRange(-INT_MAX, INT_MAX);
     mMaxFrameSpin->setValue(range.fMax);
 
     mTypeTime = new QComboBox(this);
