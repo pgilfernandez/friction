@@ -27,6 +27,7 @@
 #include "MovablePoints/smartnodepoint.h"
 #include "Boxes/smartvectorpath.h"
 #include "eevent.h"
+#include "Private/document.h"
 
 void Canvas::clearCurrentSmartEndPoint() {
     setCurrentSmartEndPoint(nullptr);
@@ -59,14 +60,18 @@ void Canvas::handleAddSmartPointMousePress(const eMouseEvent &e) {
         mCurrentContainer->addContained(newPath);
         clearBoxesSelection();
         addBoxToSelection(newPath.get());
-        const auto relPos = newPath->mapAbsPosToRel(e.fPos);
+        const bool forceSnap = mDocument.gridController().settings.enabled;
+        const QPointF snappedPos = snapEventPos(e, forceSnap);
+        const auto relPos = newPath->mapAbsPosToRel(snappedPos);
         newPath->getBoxTransformAnimator()->setPosition(relPos.x(), relPos.y());
         const auto newHandler = newPath->getPathAnimator();
         const auto node = newHandler->createNewSubPathAtRelPos({0, 0});
         setCurrentSmartEndPoint(node);
     } else {
         if(!nodePointUnderMouse) {
-            const auto newPoint = mLastEndPoint->actionAddPointAbsPos(e.fPos);
+            const bool forceSnap = mDocument.gridController().settings.enabled;
+            const QPointF snappedPos = snapEventPos(e, forceSnap);
+            const auto newPoint = mLastEndPoint->actionAddPointAbsPos(snappedPos);
             //newPoint->startTransform();
             setCurrentSmartEndPoint(newPoint);
         } else if(!mLastEndPoint) {

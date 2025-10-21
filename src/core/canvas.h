@@ -810,6 +810,12 @@ private:
     void setAxisGizmoHover(Friction::Core::Gizmos::AxisConstraint axis,
                            bool hovered);
 
+    QPointF snapPosToGrid(const QPointF& pos,
+                          Qt::KeyboardModifiers modifiers,
+                          bool forceSnap) const;
+    QPointF snapEventPos(const eMouseEvent& e,
+                         bool forceSnap) const;
+
     void drawPathClear();
     void drawPathFinish(const qreal invScale);
 
@@ -831,6 +837,8 @@ protected:
     bool mHasWorldToScreen = false;
     qreal mDevicePixelRatio = 1.0;
     QPointF mGridMoveStartPivot;
+    bool mHasCreationPressPos = false;
+    QPointF mCreationPressPos;
 
     bool mDrawnSinceQue = true;
 

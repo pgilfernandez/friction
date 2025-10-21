@@ -60,6 +60,36 @@
 
 using namespace Friction::Core;
 
+QPointF Canvas::snapPosToGrid(const QPointF& pos,
+                              Qt::KeyboardModifiers modifiers,
+                              bool forceSnap) const
+{
+    if (!mHasWorldToScreen) { return pos; }
+
+    const auto& gridController = mDocument.gridController();
+    const auto& settings = gridController.settings;
+
+    const bool bypassSnap = modifiers & Qt::AltModifier;
+    if (bypassSnap) { return pos; }
+
+    const bool gridEnabled = settings.enabled;
+    const bool shouldForce = (forceSnap && gridEnabled) ||
+                             (modifiers & Qt::ControlModifier);
+
+    if (!gridEnabled && !shouldForce) { return pos; }
+
+    return gridController.maybeSnapPivot(pos,
+                                         mWorldToScreen,
+                                         shouldForce,
+                                         false);
+}
+
+QPointF Canvas::snapEventPos(const eMouseEvent& e,
+                             bool forceSnap) const
+{
+    return snapPosToGrid(e.fPos, e.fModifiers, forceSnap);
+}
+
 void Canvas::handleMovePathMousePressEvent(const eMouseEvent& e) {
     mPressedBox = mCurrentContainer->getBoxAt(e.fPos);
     if(e.shiftMod()) return;
@@ -208,6 +238,7 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
     mDoubleClick = false;
     //mMovesToSkip = 2;
     mStartTransform = true;
+    mHasCreationPressPos = false;
 
     const qreal invScale = 1/e.fScale;
     const qreal invScaleUi = (qApp ? qApp->devicePixelRatio() : 1.0) * invScale;
@@ -274,11 +305,15 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
         const auto newPath = enve::make_shared<Circle>();
         newPath->planCenterPivotPosition();
         mCurrentContainer->addContained(newPath);
-        newPath->setAbsolutePos(e.fPos);
+        const bool gridSnapEnabled = mDocument.gridController().settings.enabled;
+        const QPointF snappedPos = snapEventPos(e, gridSnapEnabled);
+        newPath->setAbsolutePos(snappedPos);
         clearBoxesSelection();
         addBoxToSelection(newPath.get());
 
         mCurrentCircle = newPath.get();
+        mCreationPressPos = snappedPos;
+        mHasCreationPressPos = true;
 
     } else if(mCurrentMode == CanvasMode::nullCreate) {
         const auto newPath = enve::make_shared<NullObject>();
@@ -291,11 +326,15 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
         const auto newPath = enve::make_shared<RectangleBox>();
         newPath->planCenterPivotPosition();
         mCurrentContainer->addContained(newPath);
-        newPath->setAbsolutePos(e.fPos);
+        const bool gridSnapEnabled = mDocument.gridController().settings.enabled;
+        const QPointF snappedPos = snapEventPos(e, gridSnapEnabled);
+        newPath->setAbsolutePos(snappedPos);
         clearBoxesSelection();
         addBoxToSelection(newPath.get());
 
         mCurrentRectangle = newPath.get();
+        mCreationPressPos = snappedPos;
+        mHasCreationPressPos = true;
     } else if (mCurrentMode == CanvasMode::textCreate) {
         if (enve_cast<TextBox*>(mHoveredBox)) {
             setCurrentBox(mHoveredBox);
