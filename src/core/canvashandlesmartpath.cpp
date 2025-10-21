@@ -95,11 +95,13 @@ void Canvas::handleAddSmartPointMousePress(const eMouseEvent &e) {
 void Canvas::handleAddSmartPointMouseMove(const eMouseEvent &e) {
     if(!mLastEndPoint) return;
     if(mStartTransform) mLastEndPoint->startTransform();
+    const bool forceSnap = mDocument.gridController().settings.enabled;
+    const QPointF snappedPos = snapEventPos(e, forceSnap);
     if(mLastEndPoint->hasNextNormalPoint() &&
        mLastEndPoint->hasPrevNormalPoint()) {
         mLastEndPoint->setCtrlsMode(CtrlsMode::corner);
         mLastEndPoint->setC0Enabled(true);
-        mLastEndPoint->moveC0ToAbsPos(e.fPos);
+        mLastEndPoint->moveC0ToAbsPos(snappedPos);
     } else {
         if(!mLastEndPoint->hasNextNormalPoint() &&
            !mLastEndPoint->hasPrevNormalPoint()) {            
@@ -109,9 +111,9 @@ void Canvas::handleAddSmartPointMouseMove(const eMouseEvent &e) {
             mLastEndPoint->setCtrlsMode(CtrlsMode::symmetric);
         }
         if(mLastEndPoint->hasNextNormalPoint()) {
-            mLastEndPoint->moveC0ToAbsPos(e.fPos);
+            mLastEndPoint->moveC0ToAbsPos(snappedPos);
         } else {
-            mLastEndPoint->moveC2ToAbsPos(e.fPos);
+            mLastEndPoint->moveC2ToAbsPos(snappedPos);
         }
     }
 }
