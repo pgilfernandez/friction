@@ -21,7 +21,7 @@ set -e -x
 
 # keep in sync with other SDK's
 
-SKIA_V=1744b17ab9749359c4004a7cd8744c9e31ec6bf8
+SKIA_V=c30d2c4f604a9b65a98e847ba008ac6e1a936eda
 
 PYTHON_V=3.11.11
 NINJA_V=1.11.1
@@ -44,7 +44,7 @@ X264_V=20180806-2245
 X265_V=3.5
 AOM_V=3.6.1
 FFMPEG_V=4.2.11
-OSX=12.7
+OSX=11.0
 OSX_HOST=`sw_vers -productVersion`
 CPU=`arch`
 
@@ -168,7 +168,7 @@ if [ ! -f "${SDK}/bin/yasm" ]; then
 fi # yasm
 
 # skia
-if [ ! -f "${SDK}/lib/libskia-friction.dylib" ]; then
+if [ ! -f "${SDK}/lib/libskia.a" ]; then
     cd ${SRC}
     rm -rf skia || true
     git clone https://github.com/friction2d/skia
@@ -176,9 +176,9 @@ if [ ! -f "${SDK}/lib/libskia-friction.dylib" ]; then
     git checkout ${SKIA_V}
     git submodule update -i --recursive
     mkdir build && cd build
-    cmake -G Ninja -DSKIA_USE_SYSTEM_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang ..
+    cmake -G Ninja -DCMAKE_OSX_DEPLOYMENT_TARGET=${OSX} -DMAC_DEPLOY=ON -DSKIA_STATIC=ON -DSKIA_USE_SYSTEM_LIBS=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang ..
     cmake --build .
-    cp -a libskia-friction.dylib ${SDK}/lib/
+    cp -a libskia.a ${SDK}/lib/
 fi # skia
 
 # qt5
@@ -194,7 +194,7 @@ if [ ! -f "${QMAKE_BIN}" ]; then
     CXXFLAGS="${DEFAULT_CPPFLAGS}" CFLAGS="${DEFAULT_CFLAGS}" \
     ./configure \
     -prefix ${SDK} \
-    -c++std c++14 \
+    -c++std c++17 \
     -opengl desktop \
     -release \
     -shared \
