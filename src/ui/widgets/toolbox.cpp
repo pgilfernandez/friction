@@ -348,10 +348,10 @@ void ToolBox::setupNodesActions()
                      tr("Merge Nodes"), NodeMerge);
     setupNodesAction(QIcon::fromTheme("nodeSplit"),
                      tr("Split Nodes"), NodeSplit);
-    setupNodesAction(QIcon::fromTheme("nodeFirst"),
-                     tr("Set First Node"), NodeFirst);
     setupNodesAction(QIcon::fromTheme("nodeReverse"),
                      tr("Reverse Nodes Order"), NodeReverse);
+    setupNodesAction(QIcon::fromTheme("nodeFirst"),
+                     tr("Set First Node"), NodeFirst);
     setupNodesAction(QIcon::fromTheme("nodeSymmetric"),
                      tr("Symmetric Nodes"), NodeSymmetric);
     setupNodesAction(QIcon::fromTheme("nodeSmooth"),
