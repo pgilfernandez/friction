@@ -47,9 +47,11 @@ struct CORE_EXPORT GridSettings {
         : colorAnimator(enve::make_shared<ColorAnimator>())
         , majorColorAnimator(enve::make_shared<ColorAnimator>())
     {
-        colorAnimator->setColor(QColor(255, 255, 255, 96));
-        majorColorAnimator->setColor(QColor(255, 255, 255, 160));
+        colorAnimator->setColor(QColor(128, 127, 255, 75));
+        majorColorAnimator->setColor(QColor(255, 127, 234, 125));
     }
+
+    static const GridSettings& defaults();
 
     double sizeX = 50.0;
     double sizeY = 50.0;
@@ -67,6 +69,12 @@ struct CORE_EXPORT GridSettings {
     bool operator==(const GridSettings& other) const;
     bool operator!=(const GridSettings& other) const { return !(*this == other); }
 };
+
+inline const GridSettings& GridSettings::defaults()
+{
+    static const GridSettings defaultsInstance;
+    return defaultsInstance;
+}
 
 class CORE_EXPORT GridController {
 public:

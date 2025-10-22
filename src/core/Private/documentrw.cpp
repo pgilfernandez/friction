@@ -64,8 +64,8 @@ void Document::writeGridSettings(eWriteStream &dst) const
     dst << s.show;
     dst << s.majorEveryX;
     dst << s.majorEveryY;
-    const QColor color = s.colorAnimator ? s.colorAnimator->getColor() : QColor(255, 255, 255, 96);
-    const QColor majorColor = s.majorColorAnimator ? s.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
+    const QColor color = s.colorAnimator ? s.colorAnimator->getColor() : Friction::Core::GridSettings::defaults().colorAnimator->getColor();
+    const QColor majorColor = s.majorColorAnimator ? s.majorColorAnimator->getColor() : Friction::Core::GridSettings::defaults().majorColorAnimator->getColor();
     dst << color;
     dst << majorColor;
 }
@@ -266,8 +266,8 @@ void Document::writeDoxumentXEV(QDomDocument& doc) const {
     gridSettings.setAttribute("majorEveryY", QString::number(grid.majorEveryY));
     // Legacy attribute for older consumers expecting a unified value.
     gridSettings.setAttribute("majorEvery", QString::number(grid.majorEveryX));
-    const QColor gridColor = grid.colorAnimator ? grid.colorAnimator->getColor() : QColor(255, 255, 255, 96);
-    const QColor gridMajorColor = grid.majorColorAnimator ? grid.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
+    const QColor gridColor = grid.colorAnimator ? grid.colorAnimator->getColor() : Friction::Core::GridSettings::defaults().colorAnimator->getColor();
+    const QColor gridMajorColor = grid.majorColorAnimator ? grid.majorColorAnimator->getColor() : Friction::Core::GridSettings::defaults().majorColorAnimator->getColor();
     gridSettings.setAttribute("color", gridColor.name(QColor::HexArgb));
     gridSettings.setAttribute("majorColor", gridMajorColor.name(QColor::HexArgb));
     document.appendChild(gridSettings);

@@ -77,8 +77,9 @@ GridSettings sanitizeSettings(const GridSettings& in)
         animator->setColor(color);
         return color;
     };
-    const QColor minorFallback(255, 255, 255, 96);
-    const QColor majorFallback(255, 255, 255, 160);
+    const auto& defaults = GridSettings::defaults();
+    const QColor minorFallback = defaults.colorAnimator->getColor();
+    const QColor majorFallback = defaults.majorColorAnimator->getColor();
     ensureAnimatorColor(copy.colorAnimator, minorFallback);
     ensureAnimatorColor(copy.majorColorAnimator, majorFallback);
     return copy;
@@ -151,12 +152,13 @@ void GridController::drawGrid(QPainter* painter,
     const GridSettings sanitizedSettings = sanitizeSettings(settings);
     if (!painter || !sanitizedSettings.show) { return; }
 
+    const auto& defaults = GridSettings::defaults();
     const QColor minorBase = sanitizedSettings.colorAnimator
         ? sanitizedSettings.colorAnimator->getColor()
-        : QColor(255, 255, 255, 96);
+        : defaults.colorAnimator->getColor();
     const QColor majorBase = sanitizedSettings.majorColorAnimator
         ? sanitizedSettings.majorColorAnimator->getColor()
-        : minorBase;
+        : defaults.majorColorAnimator->getColor();
 
     auto drawLine = [&](const QPointF& a,
                         const QPointF& b,
@@ -183,12 +185,13 @@ void GridController::drawGrid(SkCanvas* canvas,
     const GridSettings sanitizedSettings = sanitizeSettings(settings);
     if (!canvas || !sanitizedSettings.show) { return; }
 
+    const auto& defaults = GridSettings::defaults();
     const QColor minorBase = sanitizedSettings.colorAnimator
         ? sanitizedSettings.colorAnimator->getColor()
-        : QColor(255, 255, 255, 96);
+        : defaults.colorAnimator->getColor();
     const QColor majorBase = sanitizedSettings.majorColorAnimator
         ? sanitizedSettings.majorColorAnimator->getColor()
-        : minorBase;
+        : defaults.majorColorAnimator->getColor();
     const float strokeWidth = static_cast<float>(
         devicePixelRatio / effectiveScale(worldToScreen));
 

@@ -25,6 +25,8 @@
 
 #include "esettings.h"
 
+#include "gridcontroller.h"
+
 #include "GUI/global.h"
 #include "exceptions.h"
 
@@ -272,11 +274,11 @@ eSettings::eSettings(const int cpuThreads,
     gSettings << std::make_shared<eColorSetting>(
                      fGridColor,
                      "gridColor",
-                     QColor(255, 255, 255, 96));
+                     Friction::Core::GridSettings::defaults().colorAnimator->getColor());
     gSettings << std::make_shared<eColorSetting>(
                      fGridMajorColor,
                      "gridMajorColor",
-                     QColor(255, 255, 255, 160));
+                     Friction::Core::GridSettings::defaults().majorColorAnimator->getColor());
     gSettings << std::make_shared<eBoolSetting>(
                      fGridDrawOnTop,
                      "gridDrawOnTop",

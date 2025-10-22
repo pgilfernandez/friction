@@ -65,8 +65,8 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mMajorColorAnimator(enve::make_shared<ColorAnimator>())
     , mSnapEnabled(true)
 {
-    const QColor defaultMinor(255, 255, 255, 96);
-    const QColor defaultMajor(255, 255, 255, 160);
+    const QColor defaultMinor = GridSettings::defaults().colorAnimator->getColor();
+    const QColor defaultMajor = GridSettings::defaults().majorColorAnimator->getColor();
     if (auto* settings = eSettings::sInstance) {
         mColorAnimator->setColor(settings->fGridColor);
         mMajorColorAnimator->setColor(settings->fGridMajorColor);
@@ -194,12 +194,12 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
 
     const QColor appliedColor = settings.colorAnimator
         ? settings.colorAnimator->getColor()
-        : QColor(255, 255, 255, 96);
+        : GridSettings::defaults().colorAnimator->getColor();
     mColorAnimator->setColor(appliedColor);
 
     const QColor appliedMajorColor = settings.majorColorAnimator
         ? settings.majorColorAnimator->getColor()
-        : QColor(255, 255, 255, 160);
+        : GridSettings::defaults().majorColorAnimator->getColor();
     mMajorColorAnimator->setColor(appliedMajorColor);
 }
 
@@ -219,13 +219,13 @@ GridSettings GridSettingsDialog::settings() const
 
     const QColor finalColor = mColorAnimator
         ? mColorAnimator->getColor()
-        : QColor(255, 255, 255, 96);
+        : GridSettings::defaults().colorAnimator->getColor();
     result.colorAnimator = enve::make_shared<ColorAnimator>();
     result.colorAnimator->setColor(finalColor);
 
     const QColor finalMajorColor = mMajorColorAnimator
         ? mMajorColorAnimator->getColor()
-        : QColor(255, 255, 255, 160);
+        : GridSettings::defaults().majorColorAnimator->getColor();
     result.majorColorAnimator = enve::make_shared<ColorAnimator>();
     result.majorColorAnimator->setColor(finalMajorColor);
     return result;

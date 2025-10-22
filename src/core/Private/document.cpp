@@ -107,8 +107,8 @@ static GridSettings sanitizedGridSettings(GridSettings settings)
         animator->setColor(color);
         return color;
     };
-    const QColor minorFallback(255, 255, 255, 96);
-    const QColor majorFallback(255, 255, 255, 160);
+    const QColor minorFallback = GridSettings::defaults().colorAnimator->getColor();
+    const QColor majorFallback = GridSettings::defaults().majorColorAnimator->getColor();
     ensureAnimatorColor(settings.colorAnimator, minorFallback);
     ensureAnimatorColor(settings.majorColorAnimator, majorFallback);
     return settings;
@@ -195,10 +195,10 @@ void Document::loadGridSettingsFromSettings()
     };
     QColor storedMinor = readColor(
         AppSupport::getSettings("grid", "color", defaults.colorAnimator->getColor()),
-        QColor(255, 255, 255, 96));
+        GridSettings::defaults().colorAnimator->getColor());
     QColor storedMajor = readColor(
         AppSupport::getSettings("grid", "majorColor", defaults.majorColorAnimator->getColor()),
-        QColor(255, 255, 255, 160));
+        GridSettings::defaults().majorColorAnimator->getColor());
     if (auto* settingsMgr = eSettings::sInstance) {
         storedMinor = settingsMgr->fGridColor;
         storedMajor = settingsMgr->fGridMajorColor;
@@ -224,8 +224,8 @@ void Document::saveGridSettingsToSettings(const GridSettings& settings) const
     AppSupport::setSettings("grid", "majorEveryY", settings.majorEveryY);
     // Maintain legacy key for older installations that still expect a single value.
     AppSupport::setSettings("grid", "majorEvery", settings.majorEveryX);
-    const QColor color = settings.colorAnimator ? settings.colorAnimator->getColor() : QColor(255, 255, 255, 96);
-    const QColor majorColor = settings.majorColorAnimator ? settings.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
+    const QColor color = settings.colorAnimator ? settings.colorAnimator->getColor() : GridSettings::defaults().colorAnimator->getColor();
+    const QColor majorColor = settings.majorColorAnimator ? settings.majorColorAnimator->getColor() : GridSettings::defaults().majorColorAnimator->getColor();
     AppSupport::setSettings("grid", "color", color);
     AppSupport::setSettings("grid", "majorColor", majorColor);
 }
@@ -234,8 +234,8 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
 {
     const GridSettings sanitized = sanitizedGridSettings(settings);
     if (auto* settingsMgr = eSettings::sInstance) {
-        settingsMgr->fGridColor = sanitized.colorAnimator ? sanitized.colorAnimator->getColor() : QColor(255, 255, 255, 96);
-        settingsMgr->fGridMajorColor = sanitized.majorColorAnimator ? sanitized.majorColorAnimator->getColor() : QColor(255, 255, 255, 160);
+        settingsMgr->fGridColor = sanitized.colorAnimator ? sanitized.colorAnimator->getColor() : GridSettings::defaults().colorAnimator->getColor();
+        settingsMgr->fGridMajorColor = sanitized.majorColorAnimator ? sanitized.majorColorAnimator->getColor() : GridSettings::defaults().majorColorAnimator->getColor();
         settingsMgr->fGridDrawOnTop = sanitized.drawOnTop;
         settingsMgr->saveKeyToFile("gridColor");
         settingsMgr->saveKeyToFile("gridMajorColor");
