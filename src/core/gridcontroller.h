@@ -55,7 +55,7 @@ struct CORE_EXPORT GridSettings {
 
     double sizeX = 40.0;
     double sizeY = 40.0;
-    double originX = 640.0;
+    double originX = 960.0;
     double originY = 540.0;
     int snapThresholdPx = 40;
     bool enabled = false;
