@@ -53,16 +53,17 @@ struct CORE_EXPORT GridSettings {
 
     static const GridSettings& defaults();
 
-    double sizeX = 50.0;
-    double sizeY = 50.0;
-    double originX = 0.0;
-    double originY = 0.0;
-    int snapThresholdPx = 8;
-    bool enabled = true;
-    bool show = true;
-    bool drawOnTop = true;
-    int majorEveryX = 5;
-    int majorEveryY = 5;
+    double sizeX = 40.0;
+    double sizeY = 40.0;
+    double originX = 640.0;
+    double originY = 540.0;
+    int snapThresholdPx = 40;
+    bool enabled = false;
+    bool show = false;
+    bool drawOnTop = false;
+    bool snapToCanvas = false;
+    int majorEveryX = 8;
+    int majorEveryY = 8;
     qsptr<ColorAnimator> colorAnimator;
     qsptr<ColorAnimator> majorColorAnimator;
 
