@@ -224,6 +224,14 @@ void MainWindow::openGridSettingsDialog()
     GridSettingsDialog dialog(this);
     dialog.setWindowTitle(tr("Grid Settings"));
     dialog.setSettings(mDocument.gridController().settings);
+    connect(&dialog, &GridSettingsDialog::applyRequested,
+            this, [this](Friction::Core::GridSettings settings, bool saveDefaults) {
+                settings.enabled = mDocument.gridController().settings.enabled;
+                mDocument.setGridSettings(settings);
+                if (saveDefaults) {
+                    mDocument.saveGridSettingsAsDefault(mDocument.gridController().settings);
+                }
+            });
     if (dialog.exec() == QDialog::Accepted) {
         auto settings = dialog.settings();
         settings.enabled = mDocument.gridController().settings.enabled;

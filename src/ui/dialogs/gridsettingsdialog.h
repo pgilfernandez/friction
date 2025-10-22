@@ -52,6 +52,9 @@ public:
     Friction::Core::GridSettings settings() const;
     bool saveAsDefault() const;
 
+signals:
+    void applyRequested(Friction::Core::GridSettings settings, bool saveAsDefault);
+
 private:
     void setupUi();
 
@@ -63,6 +66,7 @@ private:
     QSpinBox* mMajorEveryX;
     QSpinBox* mMajorEveryY;
     QCheckBox* mSaveAsDefault;
+    QPushButton* mApplyButton;
     QPushButton* mOkButton;
     QPushButton* mCancelButton;
     ColorAnimatorButton* mColorButton;
