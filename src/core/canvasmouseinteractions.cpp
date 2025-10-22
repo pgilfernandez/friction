@@ -73,15 +73,25 @@ QPointF Canvas::snapPosToGrid(const QPointF& pos,
     if (bypassSnap) { return pos; }
 
     const bool gridEnabled = settings.enabled;
-    const bool shouldForce = (forceSnap && gridEnabled) ||
+    const bool canvasSnapEnabled = settings.snapToCanvas;
+    const bool hasSnapSource = gridEnabled || canvasSnapEnabled;
+    const bool shouldForce = (forceSnap && hasSnapSource) ||
                              (modifiers & Qt::ControlModifier);
 
-    if (!gridEnabled && !shouldForce) { return pos; }
+    if (!hasSnapSource && !shouldForce) { return pos; }
+
+    QRectF canvasRect;
+    const QRectF* canvasRectPtr = nullptr;
+    if (canvasSnapEnabled) {
+        canvasRect = QRectF(QPointF(0.0, 0.0), QSizeF(mWidth, mHeight));
+        canvasRectPtr = &canvasRect;
+    }
 
     return gridController.maybeSnapPivot(pos,
                                          mWorldToScreen,
                                          shouldForce,
-                                         false);
+                                         false,
+                                         canvasRectPtr);
 }
 
 QPointF Canvas::snapEventPos(const eMouseEvent& e,
@@ -774,11 +784,19 @@ void Canvas::handleMovePointMouseMove(const eMouseEvent &e) {
                 const bool bypassSnap = e.fModifiers & Qt::AltModifier;
                 const bool forceSnap = e.fModifiers & Qt::ControlModifier;
 
+                const auto& gridSettings = mDocument.gridController().settings;
+                const bool snapSourcesAvailable = gridSettings.enabled || gridSettings.snapToCanvas;
                 if(mHasWorldToScreen &&
-                   (mDocument.gridController().settings.enabled || forceSnap)) {
+                   (snapSourcesAvailable || forceSnap)) {
                     const QPointF targetPos = mGridMoveStartPivot + moveBy;
+                    QRectF canvasRect;
+                    const QRectF* canvasPtr = nullptr;
+                    if (gridSettings.snapToCanvas) {
+                        canvasRect = QRectF(QPointF(0.0, 0.0), QSizeF(mWidth, mHeight));
+                        canvasPtr = &canvasRect;
+                    }
                     const auto snapped = mDocument.gridController().maybeSnapPivot(
-                        targetPos, mWorldToScreen, forceSnap, bypassSnap);
+                        targetPos, mWorldToScreen, forceSnap, bypassSnap, canvasPtr);
                     if(snapped != targetPos) {
                         moveBy = snapped - mGridMoveStartPivot;
                     }
@@ -797,11 +815,19 @@ void Canvas::handleMovePointMouseMove(const eMouseEvent &e) {
         const bool bypassSnap = e.fModifiers & Qt::AltModifier;
         const bool forceSnap = e.fModifiers & Qt::ControlModifier;
 
+        const auto& gridSettings = mDocument.gridController().settings;
+        const bool snapSourcesAvailable = gridSettings.enabled || gridSettings.snapToCanvas;
         if(!mSelectedPoints_d.isEmpty() && mHasWorldToScreen &&
-           (mDocument.gridController().settings.enabled || forceSnap)) {
+           (snapSourcesAvailable || forceSnap)) {
             const QPointF targetPivot = mGridMoveStartPivot + moveBy;
+            QRectF canvasRect;
+            const QRectF* canvasPtr = nullptr;
+            if (gridSettings.snapToCanvas) {
+                canvasRect = QRectF(QPointF(0.0, 0.0), QSizeF(mWidth, mHeight));
+                canvasPtr = &canvasRect;
+            }
             const auto snapped = mDocument.gridController().maybeSnapPivot(
-                targetPivot, mWorldToScreen, forceSnap, bypassSnap);
+                targetPivot, mWorldToScreen, forceSnap, bypassSnap, canvasPtr);
             if(snapped != targetPivot) {
                 moveBy = snapped - mGridMoveStartPivot;
             }
@@ -965,13 +991,22 @@ void Canvas::handleMovePathMouseMove(const eMouseEvent& e) {
         auto moveBy = getMoveByValueForEvent(e);
         const bool bypassSnap = e.fModifiers & Qt::AltModifier;
         const bool forceSnap = e.fModifiers & Qt::ControlModifier;
+        const auto& gridSettings = mDocument.gridController().settings;
+        const bool snapSourcesAvailable = gridSettings.enabled || gridSettings.snapToCanvas;
         if (!mSelectedBoxes.isEmpty() && mHasWorldToScreen &&
-            (mDocument.gridController().settings.enabled || forceSnap)) {
+            (snapSourcesAvailable || forceSnap)) {
             const QPointF targetPivot = mGridMoveStartPivot + moveBy;
+            QRectF canvasRect;
+            const QRectF* canvasPtr = nullptr;
+            if (gridSettings.snapToCanvas) {
+                canvasRect = QRectF(QPointF(0.0, 0.0), QSizeF(mWidth, mHeight));
+                canvasPtr = &canvasRect;
+            }
             const auto snapped = mDocument.gridController().maybeSnapPivot(targetPivot,
                                                                            mWorldToScreen,
                                                                            forceSnap,
-                                                                           bypassSnap);
+                                                                           bypassSnap,
+                                                                           canvasPtr);
             if (snapped != targetPivot) {
                 moveBy = snapped - mGridMoveStartPivot;
             }

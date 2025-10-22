@@ -157,6 +157,7 @@ public:
     QColor fGridColor = Friction::Core::GridSettings::defaults().colorAnimator->getColor();
     QColor fGridMajorColor = Friction::Core::GridSettings::defaults().majorColorAnimator->getColor();
     bool fGridDrawOnTop = true;
+    bool fGridSnapToCanvas = false;
 
     QColor fObjectKeyframeColor;
     QColor fPropertyGroupKeyframeColor;

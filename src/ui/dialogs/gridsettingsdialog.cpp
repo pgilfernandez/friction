@@ -66,6 +66,7 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mColorAnimator(enve::make_shared<ColorAnimator>())
     , mMajorColorAnimator(enve::make_shared<ColorAnimator>())
     , mSnapEnabled(true)
+    , mStoredSnapToCanvas(false)
 {
     const QColor defaultMinor = GridSettings::defaults().colorAnimator->getColor();
     const QColor defaultMajor = GridSettings::defaults().majorColorAnimator->getColor();
@@ -202,6 +203,7 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mOriginX->setValue(settings.originX);
     mOriginY->setValue(settings.originY);
     mSnapThreshold->setValue(settings.snapThresholdPx);
+    mStoredSnapToCanvas = settings.snapToCanvas;
     mMajorEveryX->setValue(settings.majorEveryX);
     mMajorEveryY->setValue(settings.majorEveryY);
     mStoredShow = settings.show;
@@ -244,6 +246,7 @@ GridSettings GridSettingsDialog::settings() const
     result.originX = mOriginX->value();
     result.originY = mOriginY->value();
     result.snapThresholdPx = mSnapThreshold->value();
+    result.snapToCanvas = mStoredSnapToCanvas;
     result.majorEveryX = mMajorEveryX->value();
     result.majorEveryY = mMajorEveryY->value();
     result.show = mStoredShow;

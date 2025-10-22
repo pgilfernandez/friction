@@ -567,15 +567,19 @@ void MainWindow::setupMenuBar()
     cmdAddAction(mResetZoomAction);
 
     // TODO: custom icon for Grid menu
-    mGridMenu = mViewMenu->addMenu(QIcon::fromTheme("rectCreate"), tr("Grid", "MenuBar_View"));
+    mGridMenu = mViewMenu->addMenu(QIcon::fromTheme("rectCreate"),
+                                  tr("Grid && Snapping", "MenuBar_View"));
 
-    mShowGridAct = mGridMenu->addAction(tr("Show Grid"));
-    mShowGridAct->setCheckable(true);
-    mShowGridAct->setChecked(mDocument.gridController().settings.show);
-    connect(mShowGridAct, &QAction::toggled, this, [this](bool checked) {
-        mDocument.setGridVisible(checked);
+    mSnapToCanvasAct = mGridMenu->addAction(tr("Snap to Canvas"));
+    mSnapToCanvasAct->setCheckable(true);
+    mSnapToCanvasAct->setChecked(mDocument.gridController().settings.snapToCanvas);
+    connect(mSnapToCanvasAct, &QAction::toggled, this, [this](bool checked) {
+        auto settings = mDocument.gridController().settings;
+        if (settings.snapToCanvas == checked) { return; }
+        settings.snapToCanvas = checked;
+        mDocument.setGridSettings(settings);
     });
-    cmdAddAction(mShowGridAct);
+    cmdAddAction(mSnapToCanvasAct);
 
     mSnapToGridAct = mGridMenu->addAction(tr("Snap to Grid"));
     mSnapToGridAct->setCheckable(true);
@@ -584,6 +588,16 @@ void MainWindow::setupMenuBar()
         mDocument.setGridSnapEnabled(checked);
     });
     cmdAddAction(mSnapToGridAct);
+
+    mGridMenu->addSeparator();
+
+    mShowGridAct = mGridMenu->addAction(tr("Show Grid"));
+    mShowGridAct->setCheckable(true);
+    mShowGridAct->setChecked(mDocument.gridController().settings.show);
+    connect(mShowGridAct, &QAction::toggled, this, [this](bool checked) {
+        mDocument.setGridVisible(checked);
+    });
+    cmdAddAction(mShowGridAct);
 
     mGridDrawOnTopAct = mGridMenu->addAction(tr("Grid on top"));
     mGridDrawOnTopAct->setCheckable(true);

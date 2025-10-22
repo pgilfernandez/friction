@@ -142,6 +142,7 @@ void Document::loadGridSettingsFromSettings()
     GridSettings defaults;
     if (auto* settingsMgr = eSettings::sInstance) {
         defaults.drawOnTop = settingsMgr->fGridDrawOnTop;
+        defaults.snapToCanvas = settingsMgr->fGridSnapToCanvas;
     }
     GridSettings loaded = defaults;
     loaded.sizeX = AppSupport::getSettings("grid", "sizeX", defaults.sizeX).toDouble();
@@ -152,6 +153,7 @@ void Document::loadGridSettingsFromSettings()
     loaded.enabled = AppSupport::getSettings("grid", "enabled", defaults.enabled).toBool();
     loaded.show = AppSupport::getSettings("grid", "show", defaults.show).toBool();
     loaded.drawOnTop = AppSupport::getSettings("grid", "drawOnTop", defaults.drawOnTop).toBool();
+    loaded.snapToCanvas = AppSupport::getSettings("grid", "snapToCanvas", defaults.snapToCanvas).toBool();
     auto readMajorEvery = [](const QString& key,
                              int fallback,
                              bool& found)
@@ -220,9 +222,9 @@ void Document::saveGridSettingsToSettings(const GridSettings& settings) const
     AppSupport::setSettings("grid", "enabled", settings.enabled);
     AppSupport::setSettings("grid", "show", settings.show);
     AppSupport::setSettings("grid", "drawOnTop", settings.drawOnTop);
+    AppSupport::setSettings("grid", "snapToCanvas", settings.snapToCanvas);
     AppSupport::setSettings("grid", "majorEveryX", settings.majorEveryX);
     AppSupport::setSettings("grid", "majorEveryY", settings.majorEveryY);
-    // Maintain legacy key for older installations that still expect a single value.
     AppSupport::setSettings("grid", "majorEvery", settings.majorEveryX);
     const QColor color = settings.colorAnimator ? settings.colorAnimator->getColor() : GridSettings::defaults().colorAnimator->getColor();
     const QColor majorColor = settings.majorColorAnimator ? settings.majorColorAnimator->getColor() : GridSettings::defaults().majorColorAnimator->getColor();
@@ -237,9 +239,11 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
         settingsMgr->fGridColor = sanitized.colorAnimator ? sanitized.colorAnimator->getColor() : GridSettings::defaults().colorAnimator->getColor();
         settingsMgr->fGridMajorColor = sanitized.majorColorAnimator ? sanitized.majorColorAnimator->getColor() : GridSettings::defaults().majorColorAnimator->getColor();
         settingsMgr->fGridDrawOnTop = sanitized.drawOnTop;
+        settingsMgr->fGridSnapToCanvas = sanitized.snapToCanvas;
         settingsMgr->saveKeyToFile("gridColor");
         settingsMgr->saveKeyToFile("gridMajorColor");
         settingsMgr->saveKeyToFile("gridDrawOnTop");
+        settingsMgr->saveKeyToFile("gridSnapToCanvas");
     }
     saveGridSettingsToSettings(sanitized);
 }

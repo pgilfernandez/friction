@@ -261,6 +261,7 @@ private:
     QAction *mFitViewAction;
     QAction *mShowGridAct;
     QAction *mSnapToGridAct;
+    QAction *mSnapToCanvasAct;
     QAction *mGridSettingsAct;
     QAction *mGridDrawOnTopAct;
 

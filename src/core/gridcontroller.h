@@ -93,7 +93,8 @@ public:
     QPointF maybeSnapPivot(const QPointF& pivotWorld,
                            const QTransform& worldToScreen,
                            bool forceSnap,
-                           bool bypassSnap) const;
+                           bool bypassSnap,
+                           const QRectF* canvasRectWorld = nullptr) const;
 
 private:
     enum class Orientation {

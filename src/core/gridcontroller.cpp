@@ -36,6 +36,8 @@
 #include <cmath>
 
 #include <algorithm>
+#include <limits>
+#include <vector>
 
 using namespace Friction::Core;
 
@@ -135,6 +137,7 @@ bool GridSettings::operator==(const GridSettings& other) const
            enabled == other.enabled &&
            show == other.show &&
            drawOnTop == other.drawOnTop &&
+           snapToCanvas == other.snapToCanvas &&
             majorEveryX == other.majorEveryX &&
             majorEveryY == other.majorEveryY &&
            thisColor == otherColor &&
@@ -221,32 +224,87 @@ void GridController::drawGrid(SkCanvas* canvas,
 QPointF GridController::maybeSnapPivot(const QPointF& pivotWorld,
                                        const QTransform& worldToScreen,
                                        const bool forceSnap,
-                                       const bool bypassSnap) const
+                                       const bool bypassSnap,
+                                       const QRectF* canvasRectWorld) const
 {
     const GridSettings sanitizedSettings = sanitizeSettings(settings);
 
-    if (!sanitizedSettings.enabled || bypassSnap) {
+    const bool snapSourcesEnabled = sanitizedSettings.enabled ||
+                                    (sanitizedSettings.snapToCanvas && canvasRectWorld);
+    if ((!snapSourcesEnabled && !forceSnap) || bypassSnap) {
         return pivotWorld;
     }
 
     const double sizeX = sanitizedSettings.sizeX;
     const double sizeY = sanitizedSettings.sizeY;
-    if (sizeX <= 0.0 || sizeY <= 0.0) { return pivotWorld; }
+    const bool hasGrid = sizeX > 0.0 && sizeY > 0.0;
 
-    const double gx = sanitizedSettings.originX +
-        std::round((pivotWorld.x() - sanitizedSettings.originX) / sizeX) * sizeX;
-    const double gy = sanitizedSettings.originY +
-        std::round((pivotWorld.y() - sanitizedSettings.originY) / sizeY) * sizeY;
-    const QPointF snapped(gx, gy);
+    const bool canUseCanvas = sanitizedSettings.snapToCanvas && canvasRectWorld;
+    QRectF normalizedCanvas;
+    if (canUseCanvas) {
+        normalizedCanvas = canvasRectWorld->normalized();
+    }
+    const bool hasCanvasTargets = canUseCanvas && !normalizedCanvas.isEmpty();
 
-    if (forceSnap) { return snapped; }
+    if (!hasGrid && !hasCanvasTargets) {
+        return pivotWorld;
+    }
+
+    std::vector<QPointF> candidates;
+    candidates.reserve(10);
+
+    if (hasGrid && (sanitizedSettings.enabled || forceSnap)) {
+        const double gx = sanitizedSettings.originX +
+            std::round((pivotWorld.x() - sanitizedSettings.originX) / sizeX) * sizeX;
+        const double gy = sanitizedSettings.originY +
+            std::round((pivotWorld.y() - sanitizedSettings.originY) / sizeY) * sizeY;
+        candidates.emplace_back(gx, gy);
+    }
+
+    if (hasCanvasTargets) {
+        const double left = normalizedCanvas.left();
+        const double right = normalizedCanvas.right();
+        const double top = normalizedCanvas.top();
+        const double bottom = normalizedCanvas.bottom();
+        const double midX = (left + right) * 0.5;
+        const double midY = (top + bottom) * 0.5;
+
+        candidates.emplace_back(left, top);
+        candidates.emplace_back(right, top);
+        candidates.emplace_back(left, bottom);
+        candidates.emplace_back(right, bottom);
+
+        candidates.emplace_back(midX, top);
+        candidates.emplace_back(midX, bottom);
+        candidates.emplace_back(left, midY);
+        candidates.emplace_back(right, midY);
+
+        candidates.emplace_back(midX, midY);
+    }
+
+    if (candidates.empty()) {
+        return pivotWorld;
+    }
 
     const QPointF screenPivot = worldToScreen.map(pivotWorld);
-    const QPointF screenSnap = worldToScreen.map(snapped);
-    const double dist = QLineF(screenPivot, screenSnap).length();
+    QPointF bestCandidate = pivotWorld;
+    double bestDistance = std::numeric_limits<double>::infinity();
 
-    if (dist <= sanitizedSettings.snapThresholdPx) {
-        return snapped;
+    for (const auto& candidate : candidates) {
+        const QPointF screenCandidate = worldToScreen.map(candidate);
+        const double candidateDistance = QLineF(screenPivot, screenCandidate).length();
+        if (candidateDistance < bestDistance) {
+            bestDistance = candidateDistance;
+            bestCandidate = candidate;
+        }
+    }
+
+    if (forceSnap) {
+        return bestCandidate;
+    }
+
+    if (bestDistance <= sanitizedSettings.snapThresholdPx) {
+        return bestCandidate;
     }
     return pivotWorld;
 }

@@ -251,6 +251,12 @@ void MainWindow::onGridSettingsChanged(const Friction::Core::GridSettings& setti
             mShowGridAct->setChecked(settings.show);
         }
     }
+    if (mSnapToCanvasAct) {
+        QSignalBlocker blocker(mSnapToCanvasAct);
+        if (mSnapToCanvasAct->isChecked() != settings.snapToCanvas) {
+            mSnapToCanvasAct->setChecked(settings.snapToCanvas);
+        }
+    }
     if (mGridDrawOnTopAct) {
         QSignalBlocker blocker(mGridDrawOnTopAct);
         if (mGridDrawOnTopAct->isChecked() != settings.drawOnTop) {
