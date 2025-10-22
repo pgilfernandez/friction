@@ -28,7 +28,7 @@
 #include "GUI/global.h"
 #include "Private/esettings.h"
 
-#include <QFormLayout>
+#include <QGridLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QDoubleSpinBox>
@@ -37,6 +37,7 @@
 #include <QPushButton>
 #include <QSizePolicy>
 #include <QColor>
+#include <QLabel>
 
 using Friction::Core::GridSettings;
 
@@ -85,8 +86,22 @@ void GridSettingsDialog::setupUi()
     setWindowTitle(tr("Grid Settings"));
     auto* layout = new QVBoxLayout(this);
 
-    auto* form = new QFormLayout();
-    form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+    auto* form = new QGridLayout();
+    form->setColumnStretch(1, 1);
+    form->setColumnStretch(2, 1);
+    form->setContentsMargins(0, 0, 0, 0);
+    form->setHorizontalSpacing(12);
+    form->setVerticalSpacing(8);
+
+    auto addLabel = [this, form](int row, const QString& text, QWidget* buddy) {
+        auto* label = new QLabel(text, this);
+        if (buddy) {
+            label->setBuddy(buddy);
+        }
+        form->addWidget(label, row, 0);
+    };
+
+    int formRow = 0;
 
     mOriginX = new QDoubleSpinBox(this);
     mOriginX->setDecimals(0);
@@ -98,14 +113,10 @@ void GridSettingsDialog::setupUi()
     mOriginY->setRange(-kOriginRange, kOriginRange);
     mOriginY->setSingleStep(1.0);
     mOriginY->setToolTip(tr("Vertical origin offset"));
-    auto* originContainer = new QWidget(this);
-    auto* originLayout = new QHBoxLayout(originContainer);
-    originLayout->setContentsMargins(0, 0, 0, 0);
-    originLayout->setSpacing(8);
-    originLayout->addWidget(mOriginX);
-    originLayout->addSpacing(12);
-    originLayout->addWidget(mOriginY);
-    form->addRow(tr("Origin"), originContainer);
+    addLabel(formRow, tr("Origin"), mOriginX);
+    form->addWidget(mOriginX, formRow, 1);
+    form->addWidget(mOriginY, formRow, 2);
+    ++formRow;
 
     mSizeX = new QDoubleSpinBox(this);
     mSizeX->setDecimals(0);
@@ -117,19 +128,17 @@ void GridSettingsDialog::setupUi()
     mSizeY->setRange(kMinSpacing, kMaxSpacing);
     mSizeY->setSingleStep(1.0);
     mSizeY->setToolTip(tr("Vertical grid spacing"));
-    auto* spacingContainer = new QWidget(this);
-    auto* spacingLayout = new QHBoxLayout(spacingContainer);
-    spacingLayout->setContentsMargins(0, 0, 0, 0);
-    spacingLayout->setSpacing(8);
-    spacingLayout->addWidget(mSizeX);
-    spacingLayout->addSpacing(12);
-    spacingLayout->addWidget(mSizeY);
-    form->addRow(tr("Spacing"), spacingContainer);
+    addLabel(formRow, tr("Spacing"), mSizeX);
+    form->addWidget(mSizeX, formRow, 1);
+    form->addWidget(mSizeY, formRow, 2);
+    ++formRow;
 
     mSnapThreshold = new QSpinBox(this);
     mSnapThreshold->setRange(0, kMaxSnapThreshold);
     mSnapThreshold->setSingleStep(1);
-    form->addRow(tr("Snap radius"), mSnapThreshold);
+    addLabel(formRow, tr("Snap radius"), mSnapThreshold);
+    form->addWidget(mSnapThreshold, formRow, 1, 1, 2);
+    ++formRow;
 
     mMajorEveryX = new QSpinBox(this);
     mMajorEveryX->setRange(1, kMaxMajorEvery);
@@ -139,36 +148,28 @@ void GridSettingsDialog::setupUi()
     mMajorEveryY->setRange(1, kMaxMajorEvery);
     mMajorEveryY->setSingleStep(1);
     mMajorEveryY->setToolTip(tr("Vertical major grid line interval"));
-    auto* majorEveryContainer = new QWidget(this);
-    auto* majorEveryLayout = new QHBoxLayout(majorEveryContainer);
-    majorEveryLayout->setContentsMargins(0, 0, 0, 0);
-    majorEveryLayout->setSpacing(8);
-    majorEveryLayout->addWidget(mMajorEveryX);
-    majorEveryLayout->addSpacing(12);
-    majorEveryLayout->addWidget(mMajorEveryY);
-    form->addRow(tr("Major line every"), majorEveryContainer);
+    addLabel(formRow, tr("Major line every"), mMajorEveryX);
+    form->addWidget(mMajorEveryX, formRow, 1);
+    form->addWidget(mMajorEveryY, formRow, 2);
+    ++formRow;
 
     mMajorColorButton = new ColorAnimatorButton(mMajorColorAnimator.get(), this);
-    auto* majorColorContainer = new QWidget(this);
-    auto* majorColorLayout = new QHBoxLayout(majorColorContainer);
-    majorColorLayout->setContentsMargins(0, 0, 0, 0);
-    majorColorLayout->addStretch();
-    majorColorLayout->addWidget(mMajorColorButton);
-    form->addRow(tr("Major line color"), majorColorContainer);
+    mMajorColorButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    addLabel(formRow, tr("Major line color"), mMajorColorButton);
+    form->addWidget(mMajorColorButton, formRow, 1, 1, 2);
+    ++formRow;
 
     mColorButton = new ColorAnimatorButton(mColorAnimator.get(), this);
-    auto* minorColorContainer = new QWidget(this);
-    auto* minorColorLayout = new QHBoxLayout(minorColorContainer);
-    minorColorLayout->setContentsMargins(0, 0, 0, 0);
-    minorColorLayout->addStretch();
-    minorColorLayout->addWidget(mColorButton);
-    form->addRow(tr("Minor line color"), minorColorContainer);
+    mColorButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    addLabel(formRow, tr("Minor line color"), mColorButton);
+    form->addWidget(mColorButton, formRow, 1, 1, 2);
+    ++formRow;
 
     mApplyButton = new QPushButton(QIcon::fromTheme("dialog-apply"), tr("Apply"), this);
     mApplyButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     mApplyButton->setAutoDefault(false);
     mApplyButton->setDefault(false);
-    form->addRow(mApplyButton);
+    form->addWidget(mApplyButton, formRow, 0, 1, 3);
 
     layout->addLayout(form);
     eSizesUI::widget.addSpacing(layout);
