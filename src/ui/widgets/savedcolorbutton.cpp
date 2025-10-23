@@ -62,21 +62,34 @@ void SavedColorButton::paintEvent(QPaintEvent *) {
     if(mColor.alpha() != 255) {
         p.drawTiledPixmap(rect(), *ALPHA_MESH_PIX);
     }
-    p.fillRect(rect(), mColor);
-    p.setPen(Qt::black);
-    p.drawRect(0, 0, width() - 1, height() - 1);
-    p.setPen(Qt::white);
-    p.drawRect(3, 3, width() - 7, height() - 7);
+    const QRectF rect(0.0, 0.0, width(), height());
+    const float borderWidth = 2.0;
+    const QRectF innerRect = rect.adjusted(borderWidth, borderWidth, -borderWidth, -borderWidth);
+
+    p.setPen(mColor);
+    p.setBrush(mColor);
+    p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
+
     if(mSelected) {
         if(mHovered) {
-            p.setPen(QPen(Qt::red, 1, Qt::DashLine));
-            p.drawRect(2, 2, width() - 5, height() - 5);
+            // TODO: not working as intended
+            p.setPen(mColor.darker(160));
+            p.setBrush(mColor.darker(160));
+            p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
+            p.setBrush(mColor.lighter(110));
+            p.drawRoundedRect(innerRect, borderWidth, borderWidth);
         }
-        p.setPen(QPen(Qt::red, 2));
-        p.drawRect(1, 1, width() - 2, height() - 2);
+        p.setPen(mColor.darker(150));
+        p.setBrush(mColor.darker(150));
+        p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
+        p.setBrush(mColor);
+        p.drawRoundedRect(innerRect, borderWidth, borderWidth);
     } else if(mHovered) {
-        p.setPen(QPen(Qt::red, 1, Qt::DashLine));
-        p.drawRect(0, 0, width() - 1, height() - 1);
+        p.setPen(mColor.darker(120));
+        p.setBrush(mColor.darker(120));
+        p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
+        p.setBrush(mColor);
+        p.drawRoundedRect(innerRect, borderWidth, borderWidth);
     }
     p.end();
 }
