@@ -72,21 +72,21 @@ void SavedColorButton::paintEvent(QPaintEvent *) {
 
     if(mSelected) {
         if(mHovered) {
-            // TODO: not working as intended
-            p.setPen(mColor.darker(160));
-            p.setBrush(mColor.darker(160));
+            p.setPen(mColor.darker(170));
+            p.setBrush(mColor.darker(170));
             p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
-            p.setBrush(mColor.lighter(110));
+            p.setBrush(mColor);
+            p.drawRoundedRect(innerRect, borderWidth, borderWidth);
+        } else {
+            p.setPen(mColor.darker(150));
+            p.setBrush(mColor.darker(150));
+            p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
+            p.setBrush(mColor);
             p.drawRoundedRect(innerRect, borderWidth, borderWidth);
         }
-        p.setPen(mColor.darker(150));
-        p.setBrush(mColor.darker(150));
-        p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
-        p.setBrush(mColor);
-        p.drawRoundedRect(innerRect, borderWidth, borderWidth);
     } else if(mHovered) {
-        p.setPen(mColor.darker(120));
-        p.setBrush(mColor.darker(120));
+        p.setPen(mColor.darker(130));
+        p.setBrush(mColor.darker(130));
         p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
         p.setBrush(mColor);
         p.drawRoundedRect(innerRect, borderWidth, borderWidth);
