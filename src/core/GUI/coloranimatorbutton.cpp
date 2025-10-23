@@ -27,11 +27,24 @@
 #include "Animators/coloranimator.h"
 #include "colorsetting.h"
 #include "GUI/ewidgets.h"
+#include "GUI/global.h"
+#include "themesupport.h"
+
 #include <QVBoxLayout>
 #include <QDialog>
+#include <QPainter>
+#include <QSizePolicy>
+#include <QStyleOptionFocusRect>
+#include <QStyle>
 
 ColorAnimatorButton::ColorAnimatorButton(QWidget * const parent) :
     BoxesListActionButton(parent) {
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    eSizesUI::widget.add(this, [this](const int size) {
+        setFixedHeight(size);
+        setMinimumWidth(size);
+        setMaximumWidth(QWIDGETSIZE_MAX);
+    });
     connect(this, &BoxesListActionButton::pressed,
             this, &ColorAnimatorButton::openColorSettingsDialog);
 }
@@ -64,14 +77,36 @@ void ColorAnimatorButton::setColorTarget(ColorAnimator * const target) {
     update();
 }
 
-void ColorAnimatorButton::paintEvent(QPaintEvent *) {
-    const QColor color = mColorTarget ?
-                mColorTarget->getColor() : mColor;
-    QPainter p(this);
-    if(mHover) p.setPen(Qt::red);
-    else p.setPen(Qt::white);
-    p.setBrush(color);
-    p.drawRect(0, 0, width() - 1, height() - 1);
+void ColorAnimatorButton::paintEvent(QPaintEvent *event) {
+    Q_UNUSED(event)
+
+    const QColor swatch = mColorTarget ? mColorTarget->getColor() : mColor;
+    const QRectF rect(0.5, 0.5, width() - 1.0, height() - 1.0);
+    const bool isDisabled = !isEnabled();
+
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    QColor fill = swatch;
+    if (isDisabled) {
+        fill.setAlphaF(fill.alphaF() * 0.35);
+    }
+    painter.setBrush(fill);
+
+    const bool showHover = mHover && !isDisabled;
+
+    QColor border = ThemeSupport::getThemeButtonBorderColor();
+    painter.setPen(QPen(border, 1.0));
+    painter.drawRoundedRect(rect, 2.0, 2.0);
+
+    QColor inner = fill;
+    if (inner.isValid() && showHover) {
+        inner = inner.lighter(110);
+        inner.setAlphaF(qMin(1.0, inner.alphaF() + 0.1));
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(inner);
+        painter.drawRoundedRect(rect.adjusted(2.0, 2.0, -2.0, -2.0), 1.5, 1.5);
+    }
 }
 
 void ColorAnimatorButton::openColorSettingsDialog() {
