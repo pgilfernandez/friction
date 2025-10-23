@@ -50,7 +50,7 @@ constexpr int kMaxMajorEvery = 100;
 }
 
 GridSettingsDialog::GridSettingsDialog(QWidget* parent)
-    : QDialog(parent)
+    : Friction::Ui::Dialog(parent)
     , mSizeX(nullptr)
     , mSizeY(nullptr)
     , mOriginX(nullptr)
@@ -69,6 +69,7 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mSnapEnabled(true)
     , mStoredSnapToCanvas(false)
 {
+    setModal(false);
     const QColor defaultMinor = GridSettings::defaults().colorAnimator->getColor();
     const QColor defaultMajor = GridSettings::defaults().majorColorAnimator->getColor();
     if (auto* settings = eSettings::sInstance) {

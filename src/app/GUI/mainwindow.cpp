@@ -221,10 +221,11 @@ BoundingBox *MainWindow::getCurrentBox()
 
 void MainWindow::openGridSettingsDialog()
 {
-    GridSettingsDialog dialog(this);
-    dialog.setWindowTitle(tr("Grid Settings"));
-    dialog.setSettings(mDocument.gridController().settings);
-    connect(&dialog, &GridSettingsDialog::applyRequested,
+    auto dialog = new GridSettingsDialog(this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowTitle(tr("Grid Settings"));
+    dialog->setSettings(mDocument.gridController().settings);
+    connect(dialog, &GridSettingsDialog::applyRequested,
             this, [this](Friction::Core::GridSettings settings, bool saveDefaults) {
                 settings.enabled = mDocument.gridController().settings.enabled;
                 mDocument.setGridSettings(settings);
@@ -232,14 +233,16 @@ void MainWindow::openGridSettingsDialog()
                     mDocument.saveGridSettingsAsDefault(mDocument.gridController().settings);
                 }
             });
-    if (dialog.exec() == QDialog::Accepted) {
-        auto settings = dialog.settings();
-        settings.enabled = mDocument.gridController().settings.enabled;
-        mDocument.setGridSettings(settings);
-        if (dialog.saveAsDefault()) {
-            mDocument.saveGridSettingsAsDefault(mDocument.gridController().settings);
-        }
-    }
+    connect(dialog, &QDialog::accepted,
+            this, [this, dialog]() {
+                auto settings = dialog->settings();
+                settings.enabled = mDocument.gridController().settings.enabled;
+                mDocument.setGridSettings(settings);
+                if (dialog->saveAsDefault()) {
+                    mDocument.saveGridSettingsAsDefault(mDocument.gridController().settings);
+                }
+            });
+    dialog->show();
 }
 
 void MainWindow::onGridSettingsChanged(const Friction::Core::GridSettings& settings)

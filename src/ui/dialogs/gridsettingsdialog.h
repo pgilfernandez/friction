@@ -24,7 +24,7 @@
 #ifndef GRIDSETTINGSDIALOG_H
 #define GRIDSETTINGSDIALOG_H
 
-#include <QDialog>
+#include "dialog.h"
 #include "Animators/coloranimator.h"
 #include "smartPointers/ememory.h"
 
@@ -41,7 +41,7 @@ struct GridSettings;
 }
 }
 
-class GridSettingsDialog : public QDialog
+class GridSettingsDialog : public Friction::Ui::Dialog
 {
     Q_OBJECT
 
