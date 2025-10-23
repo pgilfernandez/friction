@@ -66,10 +66,6 @@ void SavedColorButton::paintEvent(QPaintEvent *) {
     const float borderWidth = 2.0;
     const QRectF innerRect = rect.adjusted(borderWidth, borderWidth, -borderWidth, -borderWidth);
 
-    p.setPen(mColor);
-    p.setBrush(mColor);
-    p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
-
     if(mSelected) {
         if(mHovered) {
             p.setPen(mColor.darker(170));
@@ -90,6 +86,10 @@ void SavedColorButton::paintEvent(QPaintEvent *) {
         p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
         p.setBrush(mColor);
         p.drawRoundedRect(innerRect, borderWidth, borderWidth);
+    } else {
+        p.setPen(mColor);
+        p.setBrush(mColor);
+        p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
     }
     p.end();
 }

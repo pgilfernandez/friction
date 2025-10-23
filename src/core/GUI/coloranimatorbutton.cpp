@@ -27,24 +27,11 @@
 #include "Animators/coloranimator.h"
 #include "colorsetting.h"
 #include "GUI/ewidgets.h"
-#include "GUI/global.h"
-#include "themesupport.h"
-
 #include <QVBoxLayout>
 #include <QDialog>
-#include <QPainter>
-#include <QSizePolicy>
-#include <QStyleOptionFocusRect>
-#include <QStyle>
 
 ColorAnimatorButton::ColorAnimatorButton(QWidget * const parent) :
     BoxesListActionButton(parent) {
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    eSizesUI::widget.add(this, [this](const int size) {
-        setFixedHeight(size);
-        setMinimumWidth(size);
-        setMaximumWidth(QWIDGETSIZE_MAX);
-    });
     connect(this, &BoxesListActionButton::pressed,
             this, &ColorAnimatorButton::openColorSettingsDialog);
 }
@@ -77,35 +64,26 @@ void ColorAnimatorButton::setColorTarget(ColorAnimator * const target) {
     update();
 }
 
-void ColorAnimatorButton::paintEvent(QPaintEvent *event) {
-    Q_UNUSED(event)
+void ColorAnimatorButton::paintEvent(QPaintEvent *) {
+    const QColor color = mColorTarget ?
+                mColorTarget->getColor() : mColor;
+    QPainter p(this);
 
-    const QColor swatch = mColorTarget ? mColorTarget->getColor() : mColor;
-    const QRectF rect(0.5, 0.5, width() - 1.0, height() - 1.0);
-    const bool isDisabled = !isEnabled();
+    const QRectF rect(0.0, 0.0, width(), height());
+    const float borderWidth = 2.0;
+    const QRectF innerRect = rect.adjusted(borderWidth, borderWidth, -borderWidth, -borderWidth);
 
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
 
-    QColor fill = swatch;
-    if (isDisabled) {
-        fill.setAlphaF(fill.alphaF() * 0.35);
-    }
-    painter.setBrush(fill);
-
-    const bool showHover = mHover && !isDisabled;
-
-    QColor border = ThemeSupport::getThemeButtonBorderColor();
-    painter.setPen(QPen(border, 1.0));
-    painter.drawRoundedRect(rect, 2.0, 2.0);
-
-    QColor inner = fill;
-    if (inner.isValid() && showHover) {
-        inner = inner.lighter(110);
-        inner.setAlphaF(qMin(1.0, inner.alphaF() + 0.1));
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(inner);
-        painter.drawRoundedRect(rect.adjusted(2.0, 2.0, -2.0, -2.0), 1.5, 1.5);
+    if(mHover) {
+        p.setPen(mColor.darker(130));
+        p.setBrush(mColor.darker(130));
+        p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
+        p.setBrush(mColor);
+        p.drawRoundedRect(innerRect, borderWidth, borderWidth);
+    } else {
+        p.setPen(mColor);
+        p.setBrush(mColor);
+        p.drawRoundedRect(rect, borderWidth + 2, borderWidth + 2);
     }
 }
 
