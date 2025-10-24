@@ -145,11 +145,10 @@ void Canvas::mouseMoveEvent(const eMouseEvent &e)
         } else if(mCurrentMode == CanvasMode::pathCreate) {
             handleAddSmartPointMouseMove(e);
         } else if(mCurrentMode == CanvasMode::circleCreate) {
-            const bool forceSnap = mDocument.gridController().settings.enabled;
             const QPointF anchor = mHasCreationPressPos
                     ? mCreationPressPos
-                    : snapPosToGrid(e.fLastPressPos, e.fModifiers, forceSnap);
-            const QPointF current = snapEventPos(e, forceSnap);
+                    : snapPosToGrid(e.fLastPressPos, e.fModifiers, false);
+            const QPointF current = snapEventPos(e, false);
             const QPointF delta = current - anchor;
             if(e.shiftMod()) {
                 const qreal lenR = pointToLen(delta);
@@ -158,11 +157,10 @@ void Canvas::mouseMoveEvent(const eMouseEvent &e)
                 mCurrentCircle->moveRadiusesByAbs(delta);
             }
         } else if(mCurrentMode == CanvasMode::rectCreate) {
-            const bool forceSnap = mDocument.gridController().settings.enabled;
             const QPointF anchor = mHasCreationPressPos
                     ? mCreationPressPos
-                    : snapPosToGrid(e.fLastPressPos, e.fModifiers, forceSnap);
-            const QPointF current = snapEventPos(e, forceSnap);
+                    : snapPosToGrid(e.fLastPressPos, e.fModifiers, false);
+            const QPointF current = snapEventPos(e, false);
             const QPointF trans = current - anchor;
             if(e.shiftMod()) {
                 const qreal valF = qMax(trans.x(), trans.y());

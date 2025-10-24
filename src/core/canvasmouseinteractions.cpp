@@ -316,8 +316,7 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
         const auto newPath = enve::make_shared<Circle>();
         newPath->planCenterPivotPosition();
         mCurrentContainer->addContained(newPath);
-        const bool gridSnapEnabled = mDocument.gridController().settings.enabled;
-        const QPointF snappedPos = snapEventPos(e, gridSnapEnabled);
+        const QPointF snappedPos = snapEventPos(e, false);
         newPath->setAbsolutePos(snappedPos);
         clearBoxesSelection();
         addBoxToSelection(newPath.get());
@@ -337,8 +336,7 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
         const auto newPath = enve::make_shared<RectangleBox>();
         newPath->planCenterPivotPosition();
         mCurrentContainer->addContained(newPath);
-        const bool gridSnapEnabled = mDocument.gridController().settings.enabled;
-        const QPointF snappedPos = snapEventPos(e, gridSnapEnabled);
+        const QPointF snappedPos = snapEventPos(e, false);
         newPath->setAbsolutePos(snappedPos);
         clearBoxesSelection();
         addBoxToSelection(newPath.get());

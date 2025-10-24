@@ -60,8 +60,7 @@ void Canvas::handleAddSmartPointMousePress(const eMouseEvent &e) {
         mCurrentContainer->addContained(newPath);
         clearBoxesSelection();
         addBoxToSelection(newPath.get());
-        const bool forceSnap = mDocument.gridController().settings.enabled;
-        const QPointF snappedPos = snapEventPos(e, forceSnap);
+        const QPointF snappedPos = snapEventPos(e, false);
         const auto relPos = newPath->mapAbsPosToRel(snappedPos);
         newPath->getBoxTransformAnimator()->setPosition(relPos.x(), relPos.y());
         const auto newHandler = newPath->getPathAnimator();
@@ -69,8 +68,7 @@ void Canvas::handleAddSmartPointMousePress(const eMouseEvent &e) {
         setCurrentSmartEndPoint(node);
     } else {
         if(!nodePointUnderMouse) {
-            const bool forceSnap = mDocument.gridController().settings.enabled;
-            const QPointF snappedPos = snapEventPos(e, forceSnap);
+            const QPointF snappedPos = snapEventPos(e, false);
             const auto newPoint = mLastEndPoint->actionAddPointAbsPos(snappedPos);
             //newPoint->startTransform();
             setCurrentSmartEndPoint(newPoint);
@@ -95,8 +93,7 @@ void Canvas::handleAddSmartPointMousePress(const eMouseEvent &e) {
 void Canvas::handleAddSmartPointMouseMove(const eMouseEvent &e) {
     if(!mLastEndPoint) return;
     if(mStartTransform) mLastEndPoint->startTransform();
-    const bool forceSnap = mDocument.gridController().settings.enabled;
-    const QPointF snappedPos = snapEventPos(e, forceSnap);
+    const QPointF snappedPos = snapEventPos(e, false);
     if(mLastEndPoint->hasNextNormalPoint() &&
        mLastEndPoint->hasPrevNormalPoint()) {
         mLastEndPoint->setCtrlsMode(CtrlsMode::corner);
