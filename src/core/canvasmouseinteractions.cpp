@@ -30,6 +30,7 @@
 #include "Private/document.h"
 #include "GUI/dialogsinterface.h"
 
+#include "Boxes/boundingbox.h"
 #include "Boxes/circle.h"
 #include "Boxes/rectangle.h"
 #include "Boxes/imagebox.h"
@@ -986,6 +987,36 @@ void Canvas::handleMovePathMouseMove(const eMouseEvent& e) {
 
         if (mStartTransform && !mSelectedBoxes.isEmpty()) {
             mGridMoveStartPivot = getSelectedBoxesAbsPivotPos();
+
+            mGridSnapAnchorOffsets.clear();
+            mGridSnapAnchorOffsets.emplace_back(QPointF(0.0, 0.0));
+
+            QRectF combinedRect;
+            bool hasRect = false;
+            for (const auto& box : mSelectedBoxes) {
+                const QRectF rect = box->getAbsBoundingRect();
+                if (rect.width() < 0.0 || rect.height() < 0.0) {
+                    continue;
+                }
+                if (!hasRect) {
+                    combinedRect = rect;
+                    hasRect = true;
+                } else {
+                    combinedRect = combinedRect.united(rect);
+                }
+            }
+
+            if (hasRect) {
+                const QPointF topLeft = combinedRect.topLeft();
+                const QPointF topRight = combinedRect.topRight();
+                const QPointF bottomLeft = combinedRect.bottomLeft();
+                const QPointF bottomRight = combinedRect.bottomRight();
+
+                mGridSnapAnchorOffsets.emplace_back(topLeft - mGridMoveStartPivot);
+                mGridSnapAnchorOffsets.emplace_back(topRight - mGridMoveStartPivot);
+                mGridSnapAnchorOffsets.emplace_back(bottomLeft - mGridMoveStartPivot);
+                mGridSnapAnchorOffsets.emplace_back(bottomRight - mGridMoveStartPivot);
+            }
         }
 
         auto moveBy = getMoveByValueForEvent(e);
@@ -1006,7 +1037,8 @@ void Canvas::handleMovePathMouseMove(const eMouseEvent& e) {
                                                                            mWorldToScreen,
                                                                            forceSnap,
                                                                            bypassSnap,
-                                                                           canvasPtr);
+                                                                           canvasPtr,
+                                                                           &mGridSnapAnchorOffsets);
             if (snapped != targetPivot) {
                 moveBy = snapped - mGridMoveStartPivot;
             }

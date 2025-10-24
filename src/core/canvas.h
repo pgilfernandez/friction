@@ -47,6 +47,7 @@
 #include <QSizeF>
 #include <QVector>
 #include <QTransform>
+#include <vector>
 
 #include "gizmos.h"
 
@@ -837,6 +838,7 @@ protected:
     bool mHasWorldToScreen = false;
     qreal mDevicePixelRatio = 1.0;
     QPointF mGridMoveStartPivot;
+    std::vector<QPointF> mGridSnapAnchorOffsets;
     bool mHasCreationPressPos = false;
     QPointF mCreationPressPos;
 

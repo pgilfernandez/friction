@@ -225,7 +225,8 @@ QPointF GridController::maybeSnapPivot(const QPointF& pivotWorld,
                                        const QTransform& worldToScreen,
                                        const bool forceSnap,
                                        const bool bypassSnap,
-                                       const QRectF* canvasRectWorld) const
+                                       const QRectF* canvasRectWorld,
+                                       const std::vector<QPointF>* anchorOffsets) const
 {
     const GridSettings sanitizedSettings = sanitizeSettings(settings);
 
@@ -250,15 +251,55 @@ QPointF GridController::maybeSnapPivot(const QPointF& pivotWorld,
         return pivotWorld;
     }
 
-    std::vector<QPointF> candidates;
-    candidates.reserve(10);
+    std::vector<QPointF> fallbackOffsets;
+    if (!anchorOffsets || anchorOffsets->empty()) {
+        fallbackOffsets.emplace_back(QPointF(0.0, 0.0));
+    }
+    const std::vector<QPointF>& offsets = (anchorOffsets && !anchorOffsets->empty())
+        ? *anchorOffsets
+        : fallbackOffsets;
+
+    struct AnchorContext {
+        QPointF offset;
+        QPointF world;
+        QPointF screen;
+    };
+    std::vector<AnchorContext> anchors;
+    anchors.reserve(offsets.size());
+    for (const auto& offset : offsets) {
+        const QPointF worldPoint = pivotWorld + offset;
+        anchors.push_back({offset, worldPoint, worldToScreen.map(worldPoint)});
+    }
+
+    if (anchors.empty()) {
+        return pivotWorld;
+    }
+
+    QPointF bestPivot = pivotWorld;
+    double bestDistance = std::numeric_limits<double>::infinity();
+    bool foundCandidate = false;
+
+    auto considerCandidate = [&](const AnchorContext& anchor,
+                                 const QPointF& candidateAnchorWorld)
+    {
+        const QPointF candidatePivot = candidateAnchorWorld - anchor.offset;
+        const QPointF screenCandidate = worldToScreen.map(candidateAnchorWorld);
+        const double candidateDistance = QLineF(anchor.screen, screenCandidate).length();
+        if (candidateDistance < bestDistance) {
+            bestDistance = candidateDistance;
+            bestPivot = candidatePivot;
+            foundCandidate = true;
+        }
+    };
 
     if (hasGrid && (sanitizedSettings.enabled || forceSnap)) {
-        const double gx = sanitizedSettings.originX +
-            std::round((pivotWorld.x() - sanitizedSettings.originX) / sizeX) * sizeX;
-        const double gy = sanitizedSettings.originY +
-            std::round((pivotWorld.y() - sanitizedSettings.originY) / sizeY) * sizeY;
-        candidates.emplace_back(gx, gy);
+        for (const auto& anchor : anchors) {
+            const double gx = sanitizedSettings.originX +
+                std::round((anchor.world.x() - sanitizedSettings.originX) / sizeX) * sizeX;
+            const double gy = sanitizedSettings.originY +
+                std::round((anchor.world.y() - sanitizedSettings.originY) / sizeY) * sizeY;
+            considerCandidate(anchor, QPointF(gx, gy));
+        }
     }
 
     if (hasCanvasTargets) {
@@ -269,42 +310,35 @@ QPointF GridController::maybeSnapPivot(const QPointF& pivotWorld,
         const double midX = (left + right) * 0.5;
         const double midY = (top + bottom) * 0.5;
 
-        candidates.emplace_back(left, top);
-        candidates.emplace_back(right, top);
-        candidates.emplace_back(left, bottom);
-        candidates.emplace_back(right, bottom);
+        const QPointF canvasTargets[] = {
+            QPointF(left, top),
+            QPointF(right, top),
+            QPointF(left, bottom),
+            QPointF(right, bottom),
+            QPointF(midX, top),
+            QPointF(midX, bottom),
+            QPointF(left, midY),
+            QPointF(right, midY),
+            QPointF(midX, midY)
+        };
 
-        candidates.emplace_back(midX, top);
-        candidates.emplace_back(midX, bottom);
-        candidates.emplace_back(left, midY);
-        candidates.emplace_back(right, midY);
-
-        candidates.emplace_back(midX, midY);
-    }
-
-    if (candidates.empty()) {
-        return pivotWorld;
-    }
-
-    const QPointF screenPivot = worldToScreen.map(pivotWorld);
-    QPointF bestCandidate = pivotWorld;
-    double bestDistance = std::numeric_limits<double>::infinity();
-
-    for (const auto& candidate : candidates) {
-        const QPointF screenCandidate = worldToScreen.map(candidate);
-        const double candidateDistance = QLineF(screenPivot, screenCandidate).length();
-        if (candidateDistance < bestDistance) {
-            bestDistance = candidateDistance;
-            bestCandidate = candidate;
+        for (const auto& anchor : anchors) {
+            for (const auto& target : canvasTargets) {
+                considerCandidate(anchor, target);
+            }
         }
     }
 
+    if (!foundCandidate) {
+        return pivotWorld;
+    }
+
     if (forceSnap) {
-        return bestCandidate;
+        return bestPivot;
     }
 
     if (bestDistance <= sanitizedSettings.snapThresholdPx) {
-        return bestCandidate;
+        return bestPivot;
     }
     return pivotWorld;
 }

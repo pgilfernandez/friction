@@ -35,6 +35,7 @@
 #include <QColor>
 
 #include <cmath>
+#include <vector>
 
 class QPainter;
 class SkCanvas;
@@ -94,7 +95,8 @@ public:
                            const QTransform& worldToScreen,
                            bool forceSnap,
                            bool bypassSnap,
-                           const QRectF* canvasRectWorld = nullptr) const;
+                           const QRectF* canvasRectWorld = nullptr,
+                           const std::vector<QPointF>* anchorOffsets = nullptr) const;
 
 private:
     enum class Orientation {
