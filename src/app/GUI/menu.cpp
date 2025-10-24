@@ -567,7 +567,7 @@ void MainWindow::setupMenuBar()
     cmdAddAction(mResetZoomAction);
 
     // TODO: custom icon for Grid menu
-    mGridMenu = mViewMenu->addMenu(QIcon::fromTheme("rectCreate"),
+    mGridMenu = mViewMenu->addMenu(QIcon::fromTheme("grid"),
                                   tr("Grid && Snapping", "MenuBar_View"));
 
     mSnapToCanvasAct = mGridMenu->addAction(tr("Snap to Canvas"));
