@@ -65,6 +65,7 @@ struct CORE_EXPORT GridSettings {
     bool snapToCanvas = false;
     bool snapToBoxes = false;
     bool snapToNodes = false;
+    bool snapToPivots = false;
     bool snapAnchorPivot = true;
     bool snapAnchorBounds = true;
     bool snapAnchorNodes = false;
@@ -102,6 +103,7 @@ public:
                            bool bypassSnap,
                            const QRectF* canvasRectWorld = nullptr,
                            const std::vector<QPointF>* anchorOffsets = nullptr,
+                           const std::vector<QPointF>* pivotTargets = nullptr,
                            const std::vector<QPointF>* boxTargets = nullptr,
                            const std::vector<QPointF>* nodeTargets = nullptr) const;
 

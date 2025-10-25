@@ -71,15 +71,18 @@ bool pointIsFinite(const QPointF& point)
 }
 }
 
-void Canvas::collectSnapTargets(bool includeBoxes,
+void Canvas::collectSnapTargets(bool includePivots,
+                                bool includeBounds,
                                 bool includeNodes,
+                                std::vector<QPointF>& pivotTargets,
                                 std::vector<QPointF>& boxTargets,
                                 std::vector<QPointF>& nodeTargets) const
 {
+    pivotTargets.clear();
     boxTargets.clear();
     nodeTargets.clear();
 
-    if ((!includeBoxes && !includeNodes) || !mCurrentContainer) {
+    if ((!includePivots && !includeBounds && !includeNodes) || !mCurrentContainer) {
         return;
     }
 
@@ -99,8 +102,10 @@ void Canvas::collectSnapTargets(bool includeBoxes,
                 const bool visible = box->isVisible();
 
                 if (!selectedBranch && visible) {
-                    if (includeBoxes) {
-                        addIfValid(boxTargets, box->getPivotAbsPos());
+                    if (includePivots) {
+                        addIfValid(pivotTargets, box->getPivotAbsPos());
+                    }
+                    if (includeBounds) {
                         const QRectF rect = box->getAbsBoundingRect().normalized();
                         if (!rect.isNull() && rect.isValid()) {
                             addIfValid(boxTargets, rect.topLeft());
@@ -144,19 +149,23 @@ QPointF Canvas::snapPosToGrid(const QPointF& pos,
 
     const bool gridEnabled = settings.enabled;
     const bool canvasSnapEnabled = settings.snapToCanvas;
+    const bool pivotsSnapEnabled = settings.snapToPivots;
     const bool boxesSnapEnabled = settings.snapToBoxes;
     const bool nodesSnapEnabled = settings.snapToNodes;
 
+    std::vector<QPointF> pivotTargets;
     std::vector<QPointF> boxTargets;
     std::vector<QPointF> nodeTargets;
-    if (boxesSnapEnabled || nodesSnapEnabled) {
-        collectSnapTargets(boxesSnapEnabled, nodesSnapEnabled, boxTargets, nodeTargets);
+    if (pivotsSnapEnabled || boxesSnapEnabled || nodesSnapEnabled) {
+        collectSnapTargets(pivotsSnapEnabled, boxesSnapEnabled, nodesSnapEnabled,
+                           pivotTargets, boxTargets, nodeTargets);
     }
+    const bool hasPivotTargets = pivotsSnapEnabled && !pivotTargets.empty();
     const bool hasBoxTargets = boxesSnapEnabled && !boxTargets.empty();
     const bool hasNodeTargets = nodesSnapEnabled && !nodeTargets.empty();
 
     const bool hasSnapSource = gridEnabled || canvasSnapEnabled ||
-                               hasBoxTargets || hasNodeTargets;
+                               hasPivotTargets || hasBoxTargets || hasNodeTargets;
     const bool shouldForce = (forceSnap && hasSnapSource) ||
                              (modifiers & Qt::ControlModifier);
 
@@ -175,6 +184,7 @@ QPointF Canvas::snapPosToGrid(const QPointF& pos,
                                          false,
                                          canvasRectPtr,
                                          nullptr,
+                                         hasPivotTargets ? &pivotTargets : nullptr,
                                          hasBoxTargets ? &boxTargets : nullptr,
                                          hasNodeTargets ? &nodeTargets : nullptr);
 }
@@ -799,18 +809,22 @@ void Canvas::handleMovePointMouseMove(const eMouseEvent &e) {
         mCurrentNormalSegment.makePassThroughAbs(e.fPos, mCurrentNormalSegmentT);
     } else {
         const auto& gridSettings = mDocument.gridController().settings;
+        const bool pivotsSnapEnabled = gridSettings.snapToPivots;
         const bool boxesSnapEnabled = gridSettings.snapToBoxes;
         const bool nodesSnapEnabled = gridSettings.snapToNodes;
+        std::vector<QPointF> pivotTargets;
         std::vector<QPointF> boxTargets;
         std::vector<QPointF> nodeTargets;
-        if (boxesSnapEnabled || nodesSnapEnabled) {
-            collectSnapTargets(boxesSnapEnabled, nodesSnapEnabled, boxTargets, nodeTargets);
+        if (pivotsSnapEnabled || boxesSnapEnabled || nodesSnapEnabled) {
+            collectSnapTargets(pivotsSnapEnabled, boxesSnapEnabled, nodesSnapEnabled,
+                               pivotTargets, boxTargets, nodeTargets);
         }
+        const bool hasPivotTargets = pivotsSnapEnabled && !pivotTargets.empty();
         const bool hasBoxTargets = boxesSnapEnabled && !boxTargets.empty();
         const bool hasNodeTargets = nodesSnapEnabled && !nodeTargets.empty();
         const bool snapSourcesAvailable = gridSettings.enabled ||
                                           gridSettings.snapToCanvas ||
-                                          hasBoxTargets || hasNodeTargets;
+                                          hasPivotTargets || hasBoxTargets || hasNodeTargets;
 
         if(mPressedPoint) {
             addPointToSelection(mPressedPoint);
@@ -897,6 +911,7 @@ void Canvas::handleMovePointMouseMove(const eMouseEvent &e) {
                         bypassSnap,
                         canvasPtr,
                         nullptr,
+                        hasPivotTargets ? &pivotTargets : nullptr,
                         hasBoxTargets ? &boxTargets : nullptr,
                         hasNodeTargets ? &nodeTargets : nullptr);
                     if(snapped != targetPos) {
@@ -933,6 +948,7 @@ void Canvas::handleMovePointMouseMove(const eMouseEvent &e) {
                 bypassSnap,
                 canvasPtr,
                 nullptr,
+                hasPivotTargets ? &pivotTargets : nullptr,
                 hasBoxTargets ? &boxTargets : nullptr,
                 hasNodeTargets ? &nodeTargets : nullptr);
             if(snapped != targetPivot) {
@@ -1156,18 +1172,22 @@ void Canvas::handleMovePathMouseMove(const eMouseEvent& e) {
         const bool bypassSnap = e.fModifiers & Qt::AltModifier;
         const bool forceSnap = e.fModifiers & Qt::ControlModifier;
         const bool hasAnchorOffsets = !mGridSnapAnchorOffsets.empty();
+        const bool pivotsSnapEnabled = gridSettings.snapToPivots;
         const bool boxesSnapEnabled = gridSettings.snapToBoxes;
         const bool nodesSnapEnabled = gridSettings.snapToNodes;
+        std::vector<QPointF> pivotTargets;
         std::vector<QPointF> boxTargets;
         std::vector<QPointF> nodeTargets;
-        if (boxesSnapEnabled || nodesSnapEnabled) {
-            collectSnapTargets(boxesSnapEnabled, nodesSnapEnabled, boxTargets, nodeTargets);
+        if (pivotsSnapEnabled || boxesSnapEnabled || nodesSnapEnabled) {
+            collectSnapTargets(pivotsSnapEnabled, boxesSnapEnabled, nodesSnapEnabled,
+                               pivotTargets, boxTargets, nodeTargets);
         }
+        const bool hasPivotTargets = pivotsSnapEnabled && !pivotTargets.empty();
         const bool hasBoxTargets = boxesSnapEnabled && !boxTargets.empty();
         const bool hasNodeTargets = nodesSnapEnabled && !nodeTargets.empty();
         const bool snapSourcesAvailable = gridSettings.enabled ||
                                           gridSettings.snapToCanvas ||
-                                          hasBoxTargets || hasNodeTargets ||
+                                          hasPivotTargets || hasBoxTargets || hasNodeTargets ||
                                           hasAnchorOffsets;
         if (!mSelectedBoxes.isEmpty() && mHasWorldToScreen &&
             (snapSourcesAvailable || forceSnap)) {
@@ -1184,6 +1204,7 @@ void Canvas::handleMovePathMouseMove(const eMouseEvent& e) {
                                                                            bypassSnap,
                                                                            canvasPtr,
                                                                            &mGridSnapAnchorOffsets,
+                                                                           hasPivotTargets ? &pivotTargets : nullptr,
                                                                            hasBoxTargets ? &boxTargets : nullptr,
                                                                            hasNodeTargets ? &nodeTargets : nullptr);
             if (snapped != targetPivot) {

@@ -264,6 +264,7 @@ private:
     QAction *mSnapToCanvasAct;
     QAction *mSnapToBoxesAct;
     QAction *mSnapToNodesAct;
+    QAction *mSnapToPivotsAct;
     QAction *mSnapAnchorPivotAct;
     QAction *mSnapAnchorBoundsAct;
     QAction *mSnapAnchorNodesAct;

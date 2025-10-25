@@ -160,6 +160,7 @@ public:
     bool fGridSnapToCanvas = false;
     bool fGridSnapToBoxes = false;
     bool fGridSnapToNodes = false;
+    bool fGridSnapToPivots = false;
     bool fGridSnapAnchorPivot = true;
     bool fGridSnapAnchorBounds = true;
     bool fGridSnapAnchorNodes = false;

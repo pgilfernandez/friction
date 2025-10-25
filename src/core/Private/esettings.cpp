@@ -296,6 +296,10 @@ eSettings::eSettings(const int cpuThreads,
                      "gridSnapToNodes",
                      false);
     gSettings << std::make_shared<eBoolSetting>(
+                     fGridSnapToPivots,
+                     "gridSnapToPivots",
+                     false);
+    gSettings << std::make_shared<eBoolSetting>(
                      fGridSnapAnchorPivot,
                      "gridSnapAnchorPivot",
                      true);

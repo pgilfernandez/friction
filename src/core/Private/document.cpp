@@ -145,6 +145,7 @@ void Document::loadGridSettingsFromSettings()
         defaults.snapToCanvas = settingsMgr->fGridSnapToCanvas;
         defaults.snapToBoxes = settingsMgr->fGridSnapToBoxes;
         defaults.snapToNodes = settingsMgr->fGridSnapToNodes;
+        defaults.snapToPivots = settingsMgr->fGridSnapToPivots;
         defaults.snapAnchorPivot = settingsMgr->fGridSnapAnchorPivot;
         defaults.snapAnchorBounds = settingsMgr->fGridSnapAnchorBounds;
         defaults.snapAnchorNodes = settingsMgr->fGridSnapAnchorNodes;
@@ -161,6 +162,7 @@ void Document::loadGridSettingsFromSettings()
     loaded.snapToCanvas = AppSupport::getSettings("grid", "snapToCanvas", defaults.snapToCanvas).toBool();
     loaded.snapToBoxes = AppSupport::getSettings("grid", "snapToBoxes", defaults.snapToBoxes).toBool();
     loaded.snapToNodes = AppSupport::getSettings("grid", "snapToNodes", defaults.snapToNodes).toBool();
+    loaded.snapToPivots = AppSupport::getSettings("grid", "snapToPivots", defaults.snapToPivots).toBool();
     loaded.snapAnchorPivot = AppSupport::getSettings("grid", "snapAnchorPivot", defaults.snapAnchorPivot).toBool();
     loaded.snapAnchorBounds = AppSupport::getSettings("grid", "snapAnchorBounds", defaults.snapAnchorBounds).toBool();
     loaded.snapAnchorNodes = AppSupport::getSettings("grid", "snapAnchorNodes", defaults.snapAnchorNodes).toBool();
@@ -235,6 +237,7 @@ void Document::saveGridSettingsToSettings(const GridSettings& settings) const
     AppSupport::setSettings("grid", "snapToCanvas", settings.snapToCanvas);
     AppSupport::setSettings("grid", "snapToBoxes", settings.snapToBoxes);
     AppSupport::setSettings("grid", "snapToNodes", settings.snapToNodes);
+    AppSupport::setSettings("grid", "snapToPivots", settings.snapToPivots);
     AppSupport::setSettings("grid", "snapAnchorPivot", settings.snapAnchorPivot);
     AppSupport::setSettings("grid", "snapAnchorBounds", settings.snapAnchorBounds);
     AppSupport::setSettings("grid", "snapAnchorNodes", settings.snapAnchorNodes);
@@ -257,6 +260,7 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
         settingsMgr->fGridSnapToCanvas = sanitized.snapToCanvas;
         settingsMgr->fGridSnapToBoxes = sanitized.snapToBoxes;
         settingsMgr->fGridSnapToNodes = sanitized.snapToNodes;
+        settingsMgr->fGridSnapToPivots = sanitized.snapToPivots;
         settingsMgr->fGridSnapAnchorPivot = sanitized.snapAnchorPivot;
         settingsMgr->fGridSnapAnchorBounds = sanitized.snapAnchorBounds;
         settingsMgr->fGridSnapAnchorNodes = sanitized.snapAnchorNodes;
@@ -266,6 +270,7 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
         settingsMgr->saveKeyToFile("gridSnapToCanvas");
         settingsMgr->saveKeyToFile("gridSnapToBoxes");
         settingsMgr->saveKeyToFile("gridSnapToNodes");
+        settingsMgr->saveKeyToFile("gridSnapToPivots");
         settingsMgr->saveKeyToFile("gridSnapAnchorPivot");
         settingsMgr->saveKeyToFile("gridSnapAnchorBounds");
         settingsMgr->saveKeyToFile("gridSnapAnchorNodes");

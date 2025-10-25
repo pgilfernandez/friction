@@ -611,6 +611,17 @@ void MainWindow::setupMenuBar()
     });
     cmdAddAction(mSnapToNodesAct);
 
+    mSnapToPivotsAct = mGridMenu->addAction(tr("Snap to Pivots"));
+    mSnapToPivotsAct->setCheckable(true);
+    mSnapToPivotsAct->setChecked(mDocument.gridController().settings.snapToPivots);
+    connect(mSnapToPivotsAct, &QAction::toggled, this, [this](bool checked) {
+        auto settings = mDocument.gridController().settings;
+        if (settings.snapToPivots == checked) { return; }
+        settings.snapToPivots = checked;
+        mDocument.setGridSettings(settings);
+    });
+    cmdAddAction(mSnapToPivotsAct);
+
     mGridMenu->addSeparator();
 
     mSnapAnchorPivotAct = mGridMenu->addAction(tr("Pivot anchor"));

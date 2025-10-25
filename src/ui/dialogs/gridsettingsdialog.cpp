@@ -70,6 +70,7 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mStoredSnapToCanvas(false)
     , mStoredSnapToBoxes(false)
     , mStoredSnapToNodes(false)
+    , mStoredSnapToPivots(false)
     , mStoredSnapAnchorPivot(true)
     , mStoredSnapAnchorBounds(true)
     , mStoredSnapAnchorNodes(false)
@@ -213,6 +214,7 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mStoredSnapToCanvas = settings.snapToCanvas;
     mStoredSnapToBoxes = settings.snapToBoxes;
     mStoredSnapToNodes = settings.snapToNodes;
+    mStoredSnapToPivots = settings.snapToPivots;
     mStoredSnapAnchorPivot = settings.snapAnchorPivot;
     mStoredSnapAnchorBounds = settings.snapAnchorBounds;
     mStoredSnapAnchorNodes = settings.snapAnchorNodes;
@@ -261,6 +263,7 @@ GridSettings GridSettingsDialog::settings() const
     result.snapToCanvas = mStoredSnapToCanvas;
     result.snapToBoxes = mStoredSnapToBoxes;
     result.snapToNodes = mStoredSnapToNodes;
+    result.snapToPivots = mStoredSnapToPivots;
     result.snapAnchorPivot = mStoredSnapAnchorPivot;
     result.snapAnchorBounds = mStoredSnapAnchorBounds;
     result.snapAnchorNodes = mStoredSnapAnchorNodes;

@@ -140,6 +140,7 @@ bool GridSettings::operator==(const GridSettings& other) const
            snapToCanvas == other.snapToCanvas &&
            snapToBoxes == other.snapToBoxes &&
            snapToNodes == other.snapToNodes &&
+           snapToPivots == other.snapToPivots &&
            snapAnchorPivot == other.snapAnchorPivot &&
            snapAnchorBounds == other.snapAnchorBounds &&
            snapAnchorNodes == other.snapAnchorNodes &&
@@ -232,11 +233,14 @@ QPointF GridController::maybeSnapPivot(const QPointF& pivotWorld,
                                        const bool bypassSnap,
                                        const QRectF* canvasRectWorld,
                                        const std::vector<QPointF>* anchorOffsets,
+                                       const std::vector<QPointF>* pivotTargets,
                                        const std::vector<QPointF>* boxTargets,
                                        const std::vector<QPointF>* nodeTargets) const
 {
     const GridSettings sanitizedSettings = sanitizeSettings(settings);
 
+    const bool hasPivotTargets = sanitizedSettings.snapToPivots &&
+                                 pivotTargets && !pivotTargets->empty();
     const bool hasBoxTargets = sanitizedSettings.snapToBoxes &&
                                boxTargets && !boxTargets->empty();
     const bool hasNodeTargets = sanitizedSettings.snapToNodes &&
@@ -244,7 +248,7 @@ QPointF GridController::maybeSnapPivot(const QPointF& pivotWorld,
 
     const bool snapSourcesEnabled = sanitizedSettings.enabled ||
                                     (sanitizedSettings.snapToCanvas && canvasRectWorld) ||
-                                    hasBoxTargets || hasNodeTargets;
+                                    hasPivotTargets || hasBoxTargets || hasNodeTargets;
     if ((!snapSourcesEnabled && !forceSnap) || bypassSnap) {
         return pivotWorld;
     }
@@ -260,7 +264,7 @@ QPointF GridController::maybeSnapPivot(const QPointF& pivotWorld,
     }
     const bool hasCanvasTargets = canUseCanvas && !normalizedCanvas.isEmpty();
 
-    if (!hasGrid && !hasCanvasTargets && !hasBoxTargets && !hasNodeTargets) {
+    if (!hasGrid && !hasCanvasTargets && !hasPivotTargets && !hasBoxTargets && !hasNodeTargets) {
         return pivotWorld;
     }
 
@@ -340,6 +344,15 @@ QPointF GridController::maybeSnapPivot(const QPointF& pivotWorld,
 
         for (const auto& anchor : anchors) {
             for (const auto& target : canvasTargets) {
+                considerCandidate(anchor, target);
+            }
+        }
+    }
+
+
+    if (hasPivotTargets) {
+        for (const auto& anchor : anchors) {
+            for (const auto& target : *pivotTargets) {
                 considerCandidate(anchor, target);
             }
         }

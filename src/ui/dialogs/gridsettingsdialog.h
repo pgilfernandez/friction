@@ -80,6 +80,7 @@ private:
     bool mStoredSnapToCanvas = false;
     bool mStoredSnapToBoxes = false;
     bool mStoredSnapToNodes = false;
+    bool mStoredSnapToPivots = false;
     bool mStoredSnapAnchorPivot = true;
     bool mStoredSnapAnchorBounds = true;
     bool mStoredSnapAnchorNodes = false;

@@ -951,8 +951,10 @@ protected:
     void cancelCurrentTransform();
     void cancelCurrentTransformGimzos();
 
-    void collectSnapTargets(bool includeBoxes,
+    void collectSnapTargets(bool includePivots,
+                            bool includeBounds,
                             bool includeNodes,
+                            std::vector<QPointF>& pivotTargets,
                             std::vector<QPointF>& boxTargets,
                             std::vector<QPointF>& nodeTargets) const;
 };
