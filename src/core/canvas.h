@@ -950,6 +950,11 @@ protected:
     QPointF getMoveByValueForEvent(const eMouseEvent &e);
     void cancelCurrentTransform();
     void cancelCurrentTransformGimzos();
+
+    void collectSnapTargets(bool includeBoxes,
+                            bool includeNodes,
+                            std::vector<QPointF>& boxTargets,
+                            std::vector<QPointF>& nodeTargets) const;
 };
 
 #endif // CANVAS_H

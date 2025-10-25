@@ -143,6 +143,8 @@ void Document::loadGridSettingsFromSettings()
     if (auto* settingsMgr = eSettings::sInstance) {
         defaults.drawOnTop = settingsMgr->fGridDrawOnTop;
         defaults.snapToCanvas = settingsMgr->fGridSnapToCanvas;
+        defaults.snapToBoxes = settingsMgr->fGridSnapToBoxes;
+        defaults.snapToNodes = settingsMgr->fGridSnapToNodes;
     }
     GridSettings loaded = defaults;
     loaded.sizeX = AppSupport::getSettings("grid", "sizeX", defaults.sizeX).toDouble();
@@ -154,6 +156,8 @@ void Document::loadGridSettingsFromSettings()
     loaded.show = AppSupport::getSettings("grid", "show", defaults.show).toBool();
     loaded.drawOnTop = AppSupport::getSettings("grid", "drawOnTop", defaults.drawOnTop).toBool();
     loaded.snapToCanvas = AppSupport::getSettings("grid", "snapToCanvas", defaults.snapToCanvas).toBool();
+    loaded.snapToBoxes = AppSupport::getSettings("grid", "snapToBoxes", defaults.snapToBoxes).toBool();
+    loaded.snapToNodes = AppSupport::getSettings("grid", "snapToNodes", defaults.snapToNodes).toBool();
     auto readMajorEvery = [](const QString& key,
                              int fallback,
                              bool& found)
@@ -223,6 +227,8 @@ void Document::saveGridSettingsToSettings(const GridSettings& settings) const
     AppSupport::setSettings("grid", "show", settings.show);
     AppSupport::setSettings("grid", "drawOnTop", settings.drawOnTop);
     AppSupport::setSettings("grid", "snapToCanvas", settings.snapToCanvas);
+    AppSupport::setSettings("grid", "snapToBoxes", settings.snapToBoxes);
+    AppSupport::setSettings("grid", "snapToNodes", settings.snapToNodes);
     AppSupport::setSettings("grid", "majorEveryX", settings.majorEveryX);
     AppSupport::setSettings("grid", "majorEveryY", settings.majorEveryY);
     AppSupport::setSettings("grid", "majorEvery", settings.majorEveryX);
@@ -240,10 +246,14 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
         settingsMgr->fGridMajorColor = sanitized.majorColorAnimator ? sanitized.majorColorAnimator->getColor() : GridSettings::defaults().majorColorAnimator->getColor();
         settingsMgr->fGridDrawOnTop = sanitized.drawOnTop;
         settingsMgr->fGridSnapToCanvas = sanitized.snapToCanvas;
+        settingsMgr->fGridSnapToBoxes = sanitized.snapToBoxes;
+        settingsMgr->fGridSnapToNodes = sanitized.snapToNodes;
         settingsMgr->saveKeyToFile("gridColor");
         settingsMgr->saveKeyToFile("gridMajorColor");
         settingsMgr->saveKeyToFile("gridDrawOnTop");
         settingsMgr->saveKeyToFile("gridSnapToCanvas");
+        settingsMgr->saveKeyToFile("gridSnapToBoxes");
+        settingsMgr->saveKeyToFile("gridSnapToNodes");
     }
     saveGridSettingsToSettings(sanitized);
 }

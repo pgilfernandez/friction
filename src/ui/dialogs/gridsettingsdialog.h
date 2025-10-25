@@ -78,6 +78,8 @@ private:
     bool mStoredShow = true;
     bool mStoredDrawOnTop = true;
     bool mStoredSnapToCanvas = false;
+    bool mStoredSnapToBoxes = false;
+    bool mStoredSnapToNodes = false;
 };
 
 #endif // GRIDSETTINGSDIALOG_H

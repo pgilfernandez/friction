@@ -63,6 +63,8 @@ struct CORE_EXPORT GridSettings {
     bool show = false;
     bool drawOnTop = false;
     bool snapToCanvas = false;
+    bool snapToBoxes = false;
+    bool snapToNodes = false;
     int majorEveryX = 8;
     int majorEveryY = 8;
     qsptr<ColorAnimator> colorAnimator;
@@ -96,7 +98,9 @@ public:
                            bool forceSnap,
                            bool bypassSnap,
                            const QRectF* canvasRectWorld = nullptr,
-                           const std::vector<QPointF>* anchorOffsets = nullptr) const;
+                           const std::vector<QPointF>* anchorOffsets = nullptr,
+                           const std::vector<QPointF>* boxTargets = nullptr,
+                           const std::vector<QPointF>* nodeTargets = nullptr) const;
 
 private:
     enum class Orientation {

@@ -287,6 +287,14 @@ eSettings::eSettings(const int cpuThreads,
                      fGridSnapToCanvas,
                      "gridSnapToCanvas",
                      false);
+    gSettings << std::make_shared<eBoolSetting>(
+                     fGridSnapToBoxes,
+                     "gridSnapToBoxes",
+                     false);
+    gSettings << std::make_shared<eBoolSetting>(
+                     fGridSnapToNodes,
+                     "gridSnapToNodes",
+                     false);
 
     gSettings << std::make_shared<eColorSetting>(
                      fObjectKeyframeColor,

@@ -589,6 +589,28 @@ void MainWindow::setupMenuBar()
     });
     cmdAddAction(mSnapToGridAct);
 
+    mSnapToBoxesAct = mGridMenu->addAction(tr("Snap to Boxes"));
+    mSnapToBoxesAct->setCheckable(true);
+    mSnapToBoxesAct->setChecked(mDocument.gridController().settings.snapToBoxes);
+    connect(mSnapToBoxesAct, &QAction::toggled, this, [this](bool checked) {
+        auto settings = mDocument.gridController().settings;
+        if (settings.snapToBoxes == checked) { return; }
+        settings.snapToBoxes = checked;
+        mDocument.setGridSettings(settings);
+    });
+    cmdAddAction(mSnapToBoxesAct);
+
+    mSnapToNodesAct = mGridMenu->addAction(tr("Snap to Nodes"));
+    mSnapToNodesAct->setCheckable(true);
+    mSnapToNodesAct->setChecked(mDocument.gridController().settings.snapToNodes);
+    connect(mSnapToNodesAct, &QAction::toggled, this, [this](bool checked) {
+        auto settings = mDocument.gridController().settings;
+        if (settings.snapToNodes == checked) { return; }
+        settings.snapToNodes = checked;
+        mDocument.setGridSettings(settings);
+    });
+    cmdAddAction(mSnapToNodesAct);
+
     mGridMenu->addSeparator();
 
     mShowGridAct = mGridMenu->addAction(tr("Show Grid"));
