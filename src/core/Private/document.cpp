@@ -122,6 +122,23 @@ void Document::setGridSnapEnabled(const bool enabled)
     applyGridSettings(updated, false, false);
 }
 
+bool Document::isSnappingActive() const
+{
+    return mSnappingActive;
+}
+
+void Document::setSnappingActive(const bool active)
+{
+    if (mSnappingActive == active) { return; }
+    mSnappingActive = active;
+    AppSupport::setSettings("grid", "snappingActive", mSnappingActive);
+    if (auto* settingsMgr = eSettings::sInstance) {
+        settingsMgr->fGridSnappingActive = mSnappingActive;
+        settingsMgr->saveKeyToFile("gridSnappingActive");
+    }
+    emit snappingActiveChanged(mSnappingActive);
+}
+
 void Document::setGridVisible(const bool visible)
 {
     auto updated = mGridController.settings;
@@ -222,6 +239,14 @@ void Document::loadGridSettingsFromSettings()
     if (!loaded.majorColorAnimator) { loaded.majorColorAnimator = enve::make_shared<ColorAnimator>(); }
     loaded.majorColorAnimator->setColor(storedMajor);
     applyGridSettings(loaded, true, true);
+    bool defaultSnappingActive = false;
+    if (auto* settingsMgr = eSettings::sInstance) {
+        defaultSnappingActive = settingsMgr->fGridSnappingActive;
+    }
+    mSnappingActive = AppSupport::getSettings("grid", "snappingActive", defaultSnappingActive).toBool();
+    if (auto* settingsMgr = eSettings::sInstance) {
+        settingsMgr->fGridSnappingActive = mSnappingActive;
+    }
 }
 
 void Document::saveGridSettingsToSettings(const GridSettings& settings) const
@@ -244,6 +269,7 @@ void Document::saveGridSettingsToSettings(const GridSettings& settings) const
     AppSupport::setSettings("grid", "majorEveryX", settings.majorEveryX);
     AppSupport::setSettings("grid", "majorEveryY", settings.majorEveryY);
     AppSupport::setSettings("grid", "majorEvery", settings.majorEveryX);
+    AppSupport::setSettings("grid", "snappingActive", mSnappingActive);
     const QColor color = settings.colorAnimator ? settings.colorAnimator->getColor() : GridSettings::defaults().colorAnimator->getColor();
     const QColor majorColor = settings.majorColorAnimator ? settings.majorColorAnimator->getColor() : GridSettings::defaults().majorColorAnimator->getColor();
     AppSupport::setSettings("grid", "color", color);
@@ -264,6 +290,7 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
         settingsMgr->fGridSnapAnchorPivot = sanitized.snapAnchorPivot;
         settingsMgr->fGridSnapAnchorBounds = sanitized.snapAnchorBounds;
         settingsMgr->fGridSnapAnchorNodes = sanitized.snapAnchorNodes;
+        settingsMgr->fGridSnappingActive = mSnappingActive;
         settingsMgr->saveKeyToFile("gridColor");
         settingsMgr->saveKeyToFile("gridMajorColor");
         settingsMgr->saveKeyToFile("gridDrawOnTop");
@@ -274,6 +301,7 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
         settingsMgr->saveKeyToFile("gridSnapAnchorPivot");
         settingsMgr->saveKeyToFile("gridSnapAnchorBounds");
         settingsMgr->saveKeyToFile("gridSnapAnchorNodes");
+        settingsMgr->saveKeyToFile("gridSnappingActive");
     }
     saveGridSettingsToSettings(sanitized);
 }

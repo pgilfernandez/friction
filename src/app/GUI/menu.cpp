@@ -566,9 +566,18 @@ void MainWindow::setupMenuBar()
             });
     cmdAddAction(mResetZoomAction);
 
-    // TODO: custom icon for Grid menu
     mGridMenu = mViewMenu->addMenu(QIcon::fromTheme("grid"),
                                   tr("Grid && Snapping", "MenuBar_View"));
+
+    mSnappingAct = mGridMenu->addAction(tr("Snapping"));
+    mSnappingAct->setCheckable(true);
+    mSnappingAct->setChecked(mDocument.isSnappingActive());
+    connect(mSnappingAct, &QAction::toggled, this, [this](bool checked) {
+        mDocument.setSnappingActive(checked);
+    });
+    cmdAddAction(mSnappingAct);
+
+    mGridMenu->addSeparator();
 
     mSnapToCanvasAct = mGridMenu->addAction(tr("Snap to Canvas"));
     mSnapToCanvasAct->setCheckable(true);

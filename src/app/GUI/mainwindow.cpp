@@ -120,6 +120,7 @@ MainWindow::MainWindow(Document& document,
     , mClearSelAct(nullptr)
     , mAddKeyAct(nullptr)
     , mShowGridAct(nullptr)
+    , mSnappingAct(nullptr)
     , mSnapToGridAct(nullptr)
     , mSnapToCanvasAct(nullptr)
     , mSnapToBoxesAct(nullptr)
@@ -177,6 +178,8 @@ MainWindow::MainWindow(Document& document,
             this, &MainWindow::onGridSettingsChanged);
     connect(&mDocument, &Document::gridSnapEnabledChanged,
             this, &MainWindow::onGridSnapEnabledChanged);
+    connect(&mDocument, &Document::snappingActiveChanged,
+            this, &MainWindow::onSnappingActiveChanged);
 
     setWindowIcon(QIcon::fromTheme(AppSupport::getAppID()));
     setContextMenuPolicy(Qt::NoContextMenu);
@@ -317,6 +320,15 @@ void MainWindow::onGridSnapEnabledChanged(bool enabled)
     QSignalBlocker blocker(mSnapToGridAct);
     if (mSnapToGridAct->isChecked() != enabled) {
         mSnapToGridAct->setChecked(enabled);
+    }
+}
+
+void MainWindow::onSnappingActiveChanged(bool active)
+{
+    if (!mSnappingAct) { return; }
+    QSignalBlocker blocker(mSnappingAct);
+    if (mSnappingAct->isChecked() != active) {
+        mSnappingAct->setChecked(active);
     }
 }
 

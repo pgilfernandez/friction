@@ -202,6 +202,7 @@ private:
     void openGridSettingsDialog();
     void onGridSettingsChanged(const Friction::Core::GridSettings& settings);
     void onGridSnapEnabledChanged(bool enabled);
+    void onSnappingActiveChanged(bool active);
 
     eKeyFilter* mNumericFilter = eKeyFilter::sCreateNumberFilter(this);
     eKeyFilter* mLineFilter = eKeyFilter::sCreateLineFilter(this);
@@ -260,6 +261,7 @@ private:
     QAction *mZoomOutAction;
     QAction *mFitViewAction;
     QAction *mShowGridAct;
+    QAction *mSnappingAct;
     QAction *mSnapToGridAct;
     QAction *mSnapToCanvasAct;
     QAction *mSnapToBoxesAct;

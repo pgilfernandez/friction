@@ -76,6 +76,8 @@ public:
 
     void setGridSnapEnabled(bool enabled);
     void setGridVisible(bool visible);
+    void setSnappingActive(bool active);
+    bool isSnappingActive() const;
     void setGridSettings(const Friction::Core::GridSettings& settings);
     void saveGridSettingsAsDefault(const Friction::Core::GridSettings& settings);
 
@@ -222,6 +224,7 @@ private:
 signals:
     void gridSettingsChanged(const Friction::Core::GridSettings& settings);
     void gridSnapEnabledChanged(bool enabled);
+    void snappingActiveChanged(bool active);
     void canvasModeSet(CanvasMode);
 
     void gizmoVisibilityChanged(const Friction::Core::Gizmos::Interact &ti,
@@ -258,6 +261,8 @@ signals:
     void openApplyExpressionDialog(QrealAnimator* const target);
     void newVideo(const VideoBox::VideoSpecs specs);
     void currentPixelColor(const QColor &color);
+private:
+    bool mSnappingActive = false;
 };
 
 #endif // DOCUMENT_H
