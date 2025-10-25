@@ -611,7 +611,9 @@ void MainWindow::setupMenuBar()
     });
     cmdAddAction(mSnapToNodesAct);
 
-    mSnapAnchorPivotAct = mGridMenu->addAction(tr("Pivot"));
+    mGridMenu->addSeparator();
+
+    mSnapAnchorPivotAct = mGridMenu->addAction(tr("Pivot anchor"));
     mSnapAnchorPivotAct->setCheckable(true);
     mSnapAnchorPivotAct->setChecked(mDocument.gridController().settings.snapAnchorPivot);
     connect(mSnapAnchorPivotAct, &QAction::toggled, this, [this](bool checked) {
@@ -622,7 +624,7 @@ void MainWindow::setupMenuBar()
     });
     cmdAddAction(mSnapAnchorPivotAct);
 
-    mSnapAnchorBoundsAct = mGridMenu->addAction(tr("Bounding box"));
+    mSnapAnchorBoundsAct = mGridMenu->addAction(tr("Bounding box anchors"));
     mSnapAnchorBoundsAct->setCheckable(true);
     mSnapAnchorBoundsAct->setChecked(mDocument.gridController().settings.snapAnchorBounds);
     connect(mSnapAnchorBoundsAct, &QAction::toggled, this, [this](bool checked) {
@@ -632,6 +634,17 @@ void MainWindow::setupMenuBar()
         mDocument.setGridSettings(settings);
     });
     cmdAddAction(mSnapAnchorBoundsAct);
+
+    mSnapAnchorNodesAct = mGridMenu->addAction(tr("Nodes anchors"));
+    mSnapAnchorNodesAct->setCheckable(true);
+    mSnapAnchorNodesAct->setChecked(mDocument.gridController().settings.snapAnchorNodes);
+    connect(mSnapAnchorNodesAct, &QAction::toggled, this, [this](bool checked) {
+        auto settings = mDocument.gridController().settings;
+        if (settings.snapAnchorNodes == checked) { return; }
+        settings.snapAnchorNodes = checked;
+        mDocument.setGridSettings(settings);
+    });
+    cmdAddAction(mSnapAnchorNodesAct);
 
     mGridMenu->addSeparator();
 

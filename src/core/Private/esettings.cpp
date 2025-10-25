@@ -303,6 +303,10 @@ eSettings::eSettings(const int cpuThreads,
                      fGridSnapAnchorBounds,
                      "gridSnapAnchorBounds",
                      true);
+    gSettings << std::make_shared<eBoolSetting>(
+                     fGridSnapAnchorNodes,
+                     "gridSnapAnchorNodes",
+                     false);
 
     gSettings << std::make_shared<eColorSetting>(
                      fObjectKeyframeColor,

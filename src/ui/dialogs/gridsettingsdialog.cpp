@@ -72,6 +72,7 @@ GridSettingsDialog::GridSettingsDialog(QWidget* parent)
     , mStoredSnapToNodes(false)
     , mStoredSnapAnchorPivot(true)
     , mStoredSnapAnchorBounds(true)
+    , mStoredSnapAnchorNodes(false)
 {
     setModal(false);
     const QColor defaultMinor = GridSettings::defaults().colorAnimator->getColor();
@@ -214,6 +215,7 @@ void GridSettingsDialog::setSettings(const GridSettings& settings)
     mStoredSnapToNodes = settings.snapToNodes;
     mStoredSnapAnchorPivot = settings.snapAnchorPivot;
     mStoredSnapAnchorBounds = settings.snapAnchorBounds;
+    mStoredSnapAnchorNodes = settings.snapAnchorNodes;
     mMajorEveryX->setValue(settings.majorEveryX);
     mMajorEveryY->setValue(settings.majorEveryY);
     mStoredShow = settings.show;
@@ -261,6 +263,7 @@ GridSettings GridSettingsDialog::settings() const
     result.snapToNodes = mStoredSnapToNodes;
     result.snapAnchorPivot = mStoredSnapAnchorPivot;
     result.snapAnchorBounds = mStoredSnapAnchorBounds;
+    result.snapAnchorNodes = mStoredSnapAnchorNodes;
     result.majorEveryX = mMajorEveryX->value();
     result.majorEveryY = mMajorEveryY->value();
     result.show = mStoredShow;

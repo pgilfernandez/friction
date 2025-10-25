@@ -162,6 +162,7 @@ public:
     bool fGridSnapToNodes = false;
     bool fGridSnapAnchorPivot = true;
     bool fGridSnapAnchorBounds = true;
+    bool fGridSnapAnchorNodes = false;
 
     QColor fObjectKeyframeColor;
     QColor fPropertyGroupKeyframeColor;

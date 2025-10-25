@@ -147,6 +147,7 @@ void Document::loadGridSettingsFromSettings()
         defaults.snapToNodes = settingsMgr->fGridSnapToNodes;
         defaults.snapAnchorPivot = settingsMgr->fGridSnapAnchorPivot;
         defaults.snapAnchorBounds = settingsMgr->fGridSnapAnchorBounds;
+        defaults.snapAnchorNodes = settingsMgr->fGridSnapAnchorNodes;
     }
     GridSettings loaded = defaults;
     loaded.sizeX = AppSupport::getSettings("grid", "sizeX", defaults.sizeX).toDouble();
@@ -162,6 +163,7 @@ void Document::loadGridSettingsFromSettings()
     loaded.snapToNodes = AppSupport::getSettings("grid", "snapToNodes", defaults.snapToNodes).toBool();
     loaded.snapAnchorPivot = AppSupport::getSettings("grid", "snapAnchorPivot", defaults.snapAnchorPivot).toBool();
     loaded.snapAnchorBounds = AppSupport::getSettings("grid", "snapAnchorBounds", defaults.snapAnchorBounds).toBool();
+    loaded.snapAnchorNodes = AppSupport::getSettings("grid", "snapAnchorNodes", defaults.snapAnchorNodes).toBool();
     auto readMajorEvery = [](const QString& key,
                              int fallback,
                              bool& found)
@@ -235,6 +237,7 @@ void Document::saveGridSettingsToSettings(const GridSettings& settings) const
     AppSupport::setSettings("grid", "snapToNodes", settings.snapToNodes);
     AppSupport::setSettings("grid", "snapAnchorPivot", settings.snapAnchorPivot);
     AppSupport::setSettings("grid", "snapAnchorBounds", settings.snapAnchorBounds);
+    AppSupport::setSettings("grid", "snapAnchorNodes", settings.snapAnchorNodes);
     AppSupport::setSettings("grid", "majorEveryX", settings.majorEveryX);
     AppSupport::setSettings("grid", "majorEveryY", settings.majorEveryY);
     AppSupport::setSettings("grid", "majorEvery", settings.majorEveryX);
@@ -256,6 +259,7 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
         settingsMgr->fGridSnapToNodes = sanitized.snapToNodes;
         settingsMgr->fGridSnapAnchorPivot = sanitized.snapAnchorPivot;
         settingsMgr->fGridSnapAnchorBounds = sanitized.snapAnchorBounds;
+        settingsMgr->fGridSnapAnchorNodes = sanitized.snapAnchorNodes;
         settingsMgr->saveKeyToFile("gridColor");
         settingsMgr->saveKeyToFile("gridMajorColor");
         settingsMgr->saveKeyToFile("gridDrawOnTop");
@@ -264,6 +268,7 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
         settingsMgr->saveKeyToFile("gridSnapToNodes");
         settingsMgr->saveKeyToFile("gridSnapAnchorPivot");
         settingsMgr->saveKeyToFile("gridSnapAnchorBounds");
+        settingsMgr->saveKeyToFile("gridSnapAnchorNodes");
     }
     saveGridSettingsToSettings(sanitized);
 }

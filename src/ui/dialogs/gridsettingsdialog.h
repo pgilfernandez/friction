@@ -82,6 +82,7 @@ private:
     bool mStoredSnapToNodes = false;
     bool mStoredSnapAnchorPivot = true;
     bool mStoredSnapAnchorBounds = true;
+    bool mStoredSnapAnchorNodes = false;
 };
 
 #endif // GRIDSETTINGSDIALOG_H

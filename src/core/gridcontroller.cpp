@@ -142,6 +142,7 @@ bool GridSettings::operator==(const GridSettings& other) const
            snapToNodes == other.snapToNodes &&
            snapAnchorPivot == other.snapAnchorPivot &&
            snapAnchorBounds == other.snapAnchorBounds &&
+           snapAnchorNodes == other.snapAnchorNodes &&
             majorEveryX == other.majorEveryX &&
             majorEveryY == other.majorEveryY &&
            thisColor == otherColor &&

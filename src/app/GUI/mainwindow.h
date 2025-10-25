@@ -266,6 +266,7 @@ private:
     QAction *mSnapToNodesAct;
     QAction *mSnapAnchorPivotAct;
     QAction *mSnapAnchorBoundsAct;
+    QAction *mSnapAnchorNodesAct;
     QAction *mGridSettingsAct;
     QAction *mGridDrawOnTopAct;
 
