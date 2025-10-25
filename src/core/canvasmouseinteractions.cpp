@@ -112,7 +112,15 @@ void Canvas::collectSnapTargets(bool includePivots,
                             addIfValid(boxTargets, rect.topRight());
                             addIfValid(boxTargets, rect.bottomLeft());
                             addIfValid(boxTargets, rect.bottomRight());
+                            const QPointF topCenter((rect.left() + rect.right()) * 0.5, rect.top());
+                            const QPointF bottomCenter((rect.left() + rect.right()) * 0.5, rect.bottom());
+                            const QPointF leftCenter(rect.left(), (rect.top() + rect.bottom()) * 0.5);
+                            const QPointF rightCenter(rect.right(), (rect.top() + rect.bottom()) * 0.5);
                             addIfValid(boxTargets, rect.center());
+                            addIfValid(boxTargets, topCenter);
+                            addIfValid(boxTargets, bottomCenter);
+                            addIfValid(boxTargets, leftCenter);
+                            addIfValid(boxTargets, rightCenter);
                         }
                     }
                     if (includeNodes) {
