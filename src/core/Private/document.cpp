@@ -145,6 +145,8 @@ void Document::loadGridSettingsFromSettings()
         defaults.snapToCanvas = settingsMgr->fGridSnapToCanvas;
         defaults.snapToBoxes = settingsMgr->fGridSnapToBoxes;
         defaults.snapToNodes = settingsMgr->fGridSnapToNodes;
+        defaults.snapAnchorPivot = settingsMgr->fGridSnapAnchorPivot;
+        defaults.snapAnchorBounds = settingsMgr->fGridSnapAnchorBounds;
     }
     GridSettings loaded = defaults;
     loaded.sizeX = AppSupport::getSettings("grid", "sizeX", defaults.sizeX).toDouble();
@@ -158,6 +160,8 @@ void Document::loadGridSettingsFromSettings()
     loaded.snapToCanvas = AppSupport::getSettings("grid", "snapToCanvas", defaults.snapToCanvas).toBool();
     loaded.snapToBoxes = AppSupport::getSettings("grid", "snapToBoxes", defaults.snapToBoxes).toBool();
     loaded.snapToNodes = AppSupport::getSettings("grid", "snapToNodes", defaults.snapToNodes).toBool();
+    loaded.snapAnchorPivot = AppSupport::getSettings("grid", "snapAnchorPivot", defaults.snapAnchorPivot).toBool();
+    loaded.snapAnchorBounds = AppSupport::getSettings("grid", "snapAnchorBounds", defaults.snapAnchorBounds).toBool();
     auto readMajorEvery = [](const QString& key,
                              int fallback,
                              bool& found)
@@ -229,6 +233,8 @@ void Document::saveGridSettingsToSettings(const GridSettings& settings) const
     AppSupport::setSettings("grid", "snapToCanvas", settings.snapToCanvas);
     AppSupport::setSettings("grid", "snapToBoxes", settings.snapToBoxes);
     AppSupport::setSettings("grid", "snapToNodes", settings.snapToNodes);
+    AppSupport::setSettings("grid", "snapAnchorPivot", settings.snapAnchorPivot);
+    AppSupport::setSettings("grid", "snapAnchorBounds", settings.snapAnchorBounds);
     AppSupport::setSettings("grid", "majorEveryX", settings.majorEveryX);
     AppSupport::setSettings("grid", "majorEveryY", settings.majorEveryY);
     AppSupport::setSettings("grid", "majorEvery", settings.majorEveryX);
@@ -248,12 +254,16 @@ void Document::saveGridSettingsAsDefault(const GridSettings& settings)
         settingsMgr->fGridSnapToCanvas = sanitized.snapToCanvas;
         settingsMgr->fGridSnapToBoxes = sanitized.snapToBoxes;
         settingsMgr->fGridSnapToNodes = sanitized.snapToNodes;
+        settingsMgr->fGridSnapAnchorPivot = sanitized.snapAnchorPivot;
+        settingsMgr->fGridSnapAnchorBounds = sanitized.snapAnchorBounds;
         settingsMgr->saveKeyToFile("gridColor");
         settingsMgr->saveKeyToFile("gridMajorColor");
         settingsMgr->saveKeyToFile("gridDrawOnTop");
         settingsMgr->saveKeyToFile("gridSnapToCanvas");
         settingsMgr->saveKeyToFile("gridSnapToBoxes");
         settingsMgr->saveKeyToFile("gridSnapToNodes");
+        settingsMgr->saveKeyToFile("gridSnapAnchorPivot");
+        settingsMgr->saveKeyToFile("gridSnapAnchorBounds");
     }
     saveGridSettingsToSettings(sanitized);
 }

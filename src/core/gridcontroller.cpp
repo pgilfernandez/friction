@@ -140,6 +140,8 @@ bool GridSettings::operator==(const GridSettings& other) const
            snapToCanvas == other.snapToCanvas &&
            snapToBoxes == other.snapToBoxes &&
            snapToNodes == other.snapToNodes &&
+           snapAnchorPivot == other.snapAnchorPivot &&
+           snapAnchorBounds == other.snapAnchorBounds &&
             majorEveryX == other.majorEveryX &&
             majorEveryY == other.majorEveryY &&
            thisColor == otherColor &&
@@ -261,13 +263,16 @@ QPointF GridController::maybeSnapPivot(const QPointF& pivotWorld,
         return pivotWorld;
     }
 
+    const std::vector<QPointF>* offsetsPtr = anchorOffsets;
     std::vector<QPointF> fallbackOffsets;
-    if (!anchorOffsets || anchorOffsets->empty()) {
+    if (!offsetsPtr) {
         fallbackOffsets.emplace_back(QPointF(0.0, 0.0));
+        offsetsPtr = &fallbackOffsets;
     }
-    const std::vector<QPointF>& offsets = (anchorOffsets && !anchorOffsets->empty())
-        ? *anchorOffsets
-        : fallbackOffsets;
+    const auto& offsets = *offsetsPtr;
+    if (offsets.empty()) {
+        return pivotWorld;
+    }
 
     struct AnchorContext {
         QPointF offset;

@@ -80,6 +80,8 @@ private:
     bool mStoredSnapToCanvas = false;
     bool mStoredSnapToBoxes = false;
     bool mStoredSnapToNodes = false;
+    bool mStoredSnapAnchorPivot = true;
+    bool mStoredSnapAnchorBounds = true;
 };
 
 #endif // GRIDSETTINGSDIALOG_H

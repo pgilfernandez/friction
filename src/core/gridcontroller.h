@@ -65,6 +65,8 @@ struct CORE_EXPORT GridSettings {
     bool snapToCanvas = false;
     bool snapToBoxes = false;
     bool snapToNodes = false;
+    bool snapAnchorPivot = true;
+    bool snapAnchorBounds = true;
     int majorEveryX = 8;
     int majorEveryY = 8;
     qsptr<ColorAnimator> colorAnimator;

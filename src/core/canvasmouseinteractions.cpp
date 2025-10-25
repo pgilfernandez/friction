@@ -1097,7 +1097,9 @@ void Canvas::handleMovePathMouseMove(const eMouseEvent& e) {
             mGridMoveStartPivot = getSelectedBoxesAbsPivotPos();
 
             mGridSnapAnchorOffsets.clear();
-            mGridSnapAnchorOffsets.emplace_back(QPointF(0.0, 0.0));
+            if (gridSettings.snapAnchorPivot) {
+                mGridSnapAnchorOffsets.emplace_back(QPointF(0.0, 0.0));
+            }
 
             QRectF combinedRect;
             bool hasRect = false;
@@ -1114,16 +1116,26 @@ void Canvas::handleMovePathMouseMove(const eMouseEvent& e) {
                 }
             }
 
-            if (hasRect) {
+            if (hasRect && gridSettings.snapAnchorBounds) {
                 const QPointF topLeft = combinedRect.topLeft();
                 const QPointF topRight = combinedRect.topRight();
                 const QPointF bottomLeft = combinedRect.bottomLeft();
                 const QPointF bottomRight = combinedRect.bottomRight();
+                const QPointF topCenter((topLeft.x() + topRight.x()) * 0.5, topLeft.y());
+                const QPointF bottomCenter((bottomLeft.x() + bottomRight.x()) * 0.5, bottomLeft.y());
+                const QPointF leftCenter(topLeft.x(), (topLeft.y() + bottomLeft.y()) * 0.5);
+                const QPointF rightCenter(topRight.x(), (topRight.y() + bottomRight.y()) * 0.5);
+                const QPointF center = combinedRect.center();
 
                 mGridSnapAnchorOffsets.emplace_back(topLeft - mGridMoveStartPivot);
                 mGridSnapAnchorOffsets.emplace_back(topRight - mGridMoveStartPivot);
                 mGridSnapAnchorOffsets.emplace_back(bottomLeft - mGridMoveStartPivot);
                 mGridSnapAnchorOffsets.emplace_back(bottomRight - mGridMoveStartPivot);
+                mGridSnapAnchorOffsets.emplace_back(topCenter - mGridMoveStartPivot);
+                mGridSnapAnchorOffsets.emplace_back(bottomCenter - mGridMoveStartPivot);
+                mGridSnapAnchorOffsets.emplace_back(leftCenter - mGridMoveStartPivot);
+                mGridSnapAnchorOffsets.emplace_back(rightCenter - mGridMoveStartPivot);
+                mGridSnapAnchorOffsets.emplace_back(center - mGridMoveStartPivot);
             }
 
             if (gridSettings.snapToNodes) {

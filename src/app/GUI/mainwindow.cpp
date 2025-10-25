@@ -124,6 +124,8 @@ MainWindow::MainWindow(Document& document,
     , mSnapToCanvasAct(nullptr)
     , mSnapToBoxesAct(nullptr)
     , mSnapToNodesAct(nullptr)
+    , mSnapAnchorPivotAct(nullptr)
+    , mSnapAnchorBoundsAct(nullptr)
     , mGridSettingsAct(nullptr)
     , mGridDrawOnTopAct(nullptr)
     , mAddToQueAct(nullptr)
@@ -273,6 +275,18 @@ void MainWindow::onGridSettingsChanged(const Friction::Core::GridSettings& setti
         QSignalBlocker blocker(mSnapToNodesAct);
         if (mSnapToNodesAct->isChecked() != settings.snapToNodes) {
             mSnapToNodesAct->setChecked(settings.snapToNodes);
+        }
+    }
+    if (mSnapAnchorPivotAct) {
+        QSignalBlocker blocker(mSnapAnchorPivotAct);
+        if (mSnapAnchorPivotAct->isChecked() != settings.snapAnchorPivot) {
+            mSnapAnchorPivotAct->setChecked(settings.snapAnchorPivot);
+        }
+    }
+    if (mSnapAnchorBoundsAct) {
+        QSignalBlocker blocker(mSnapAnchorBoundsAct);
+        if (mSnapAnchorBoundsAct->isChecked() != settings.snapAnchorBounds) {
+            mSnapAnchorBoundsAct->setChecked(settings.snapAnchorBounds);
         }
     }
     if (mGridDrawOnTopAct) {
