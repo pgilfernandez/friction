@@ -157,15 +157,16 @@ void Document::setGridSettings(const GridSettings& settings)
 void Document::loadGridSettingsFromSettings()
 {
     GridSettings defaults;
-    if (auto* settingsMgr = eSettings::sInstance) {
-        defaults.drawOnTop = settingsMgr->fGridDrawOnTop;
-        defaults.snapToCanvas = settingsMgr->fGridSnapToCanvas;
-        defaults.snapToBoxes = settingsMgr->fGridSnapToBoxes;
-        defaults.snapToNodes = settingsMgr->fGridSnapToNodes;
-        defaults.snapToPivots = settingsMgr->fGridSnapToPivots;
-        defaults.snapAnchorPivot = settingsMgr->fGridSnapAnchorPivot;
-        defaults.snapAnchorBounds = settingsMgr->fGridSnapAnchorBounds;
-        defaults.snapAnchorNodes = settingsMgr->fGridSnapAnchorNodes;
+    if (eSettings::sInstance) {
+        const auto& settingsMgr = eSettings::instance();
+        defaults.drawOnTop = settingsMgr.fGridDrawOnTop;
+        defaults.snapToCanvas = settingsMgr.fGridSnapToCanvas;
+        defaults.snapToBoxes = settingsMgr.fGridSnapToBoxes;
+        defaults.snapToNodes = settingsMgr.fGridSnapToNodes;
+        defaults.snapToPivots = settingsMgr.fGridSnapToPivots;
+        defaults.snapAnchorPivot = settingsMgr.fGridSnapAnchorPivot;
+        defaults.snapAnchorBounds = settingsMgr.fGridSnapAnchorBounds;
+        defaults.snapAnchorNodes = settingsMgr.fGridSnapAnchorNodes;
     }
     GridSettings loaded = defaults;
     loaded.sizeX = AppSupport::getSettings("grid", "sizeX", defaults.sizeX).toDouble();

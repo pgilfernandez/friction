@@ -112,17 +112,12 @@ void Document::readGridSettings(eReadStream &src)
     bool show = mGridController.settings.show;
     src >> enabled;
     src >> show;
-    const int fileVersion = src.evFileVersion();
-    if (fileVersion >= EvFormat::grids) {
-        src >> settings.majorEveryX;
-        src >> settings.majorEveryY;
-    }
+    src >> settings.majorEveryX;
+    src >> settings.majorEveryY;
     QColor color;
     src >> color;
     QColor majorColor = color;
-    if (fileVersion >= EvFormat::grids) {
-        src >> majorColor;
-    }
+    src >> majorColor;
     settings.enabled = enabled;
     settings.show = show;
     if (!settings.colorAnimator) {
@@ -264,8 +259,6 @@ void Document::writeDoxumentXEV(QDomDocument& doc) const {
     gridSettings.setAttribute("show", grid.show ? "true" : "false");
     gridSettings.setAttribute("majorEveryX", QString::number(grid.majorEveryX));
     gridSettings.setAttribute("majorEveryY", QString::number(grid.majorEveryY));
-    // Legacy attribute for older consumers expecting a unified value.
-    gridSettings.setAttribute("majorEvery", QString::number(grid.majorEveryX));
     const QColor gridColor = grid.colorAnimator ? grid.colorAnimator->getColor() : Friction::Core::GridSettings::defaults().colorAnimator->getColor();
     const QColor gridMajorColor = grid.majorColorAnimator ? grid.majorColorAnimator->getColor() : Friction::Core::GridSettings::defaults().majorColorAnimator->getColor();
     gridSettings.setAttribute("color", gridColor.name(QColor::HexArgb));

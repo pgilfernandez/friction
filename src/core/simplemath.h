@@ -196,4 +196,7 @@ extern QPointF gQPointFDisplace(const QPointF& pt, const qreal displ);
 CORE_EXPORT
 extern bool isPointZero(QPointF pos);
 
+CORE_EXPORT
+extern bool isPointFinite(const QPointF& point);
+
 #endif // SIMPLEMATH_H

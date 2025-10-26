@@ -64,13 +64,6 @@
 
 using namespace Friction::Core;
 
-namespace {
-bool pointIsFinite(const QPointF& point)
-{
-    return std::isfinite(point.x()) && std::isfinite(point.y());
-}
-}
-
 void Canvas::collectSnapTargets(bool includePivots,
                                 bool includeBounds,
                                 bool includeNodes,
@@ -88,7 +81,7 @@ void Canvas::collectSnapTargets(bool includePivots,
     }
 
     auto addIfValid = [](std::vector<QPointF>& target, const QPointF& pt) {
-        if (pointIsFinite(pt)) {
+        if (isPointFinite(pt)) {
             target.push_back(pt);
         }
     };

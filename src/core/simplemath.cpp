@@ -25,6 +25,7 @@
 
 #include "simplemath.h"
 #include "skia/skqtconversions.h"
+#include <cmath>
 
 qreal signedSquare(const qreal val) {
     return val*val*SIGN(val);
@@ -129,6 +130,10 @@ bool isZero1Dec(qreal val) {
 
 bool isPointZero(QPointF pos) {
     return pointToLen(pos) < 0.0001;
+}
+
+bool isPointFinite(const QPointF& point) {
+    return std::isfinite(point.x()) && std::isfinite(point.y());
 }
 
 bool isNonZero(const float val) {
