@@ -76,7 +76,8 @@ void Canvas::collectSnapTargets(bool includePivots,
                                 bool includeNodes,
                                 std::vector<QPointF>& pivotTargets,
                                 std::vector<QPointF>& boxTargets,
-                                std::vector<QPointF>& nodeTargets) const
+                                std::vector<QPointF>& nodeTargets,
+                                bool includeSelectedBounds) const
 {
     pivotTargets.clear();
     boxTargets.clear();
@@ -90,6 +91,30 @@ void Canvas::collectSnapTargets(bool includePivots,
         if (pointIsFinite(pt)) {
             target.push_back(pt);
         }
+    };
+
+    auto appendBoundsTargets = [&](const QRectF& rect) {
+        const QRectF normalized = rect.normalized();
+        if (normalized.isNull() || !normalized.isValid()) { return; }
+
+        const QPointF topLeft = normalized.topLeft();
+        const QPointF topRight = normalized.topRight();
+        const QPointF bottomLeft = normalized.bottomLeft();
+        const QPointF bottomRight = normalized.bottomRight();
+        const QPointF topCenter((normalized.left() + normalized.right()) * 0.5, normalized.top());
+        const QPointF bottomCenter((normalized.left() + normalized.right()) * 0.5, normalized.bottom());
+        const QPointF leftCenter(normalized.left(), (normalized.top() + normalized.bottom()) * 0.5);
+        const QPointF rightCenter(normalized.right(), (normalized.top() + normalized.bottom()) * 0.5);
+
+        addIfValid(boxTargets, normalized.center());
+        addIfValid(boxTargets, topLeft);
+        addIfValid(boxTargets, topRight);
+        addIfValid(boxTargets, bottomLeft);
+        addIfValid(boxTargets, bottomRight);
+        addIfValid(boxTargets, topCenter);
+        addIfValid(boxTargets, bottomCenter);
+        addIfValid(boxTargets, leftCenter);
+        addIfValid(boxTargets, rightCenter);
     };
 
     const std::function<void(const ContainerBox*, bool)> recurse =
@@ -106,22 +131,7 @@ void Canvas::collectSnapTargets(bool includePivots,
                         addIfValid(pivotTargets, box->getPivotAbsPos());
                     }
                     if (includeBounds) {
-                        const QRectF rect = box->getAbsBoundingRect().normalized();
-                        if (!rect.isNull() && rect.isValid()) {
-                            addIfValid(boxTargets, rect.topLeft());
-                            addIfValid(boxTargets, rect.topRight());
-                            addIfValid(boxTargets, rect.bottomLeft());
-                            addIfValid(boxTargets, rect.bottomRight());
-                            const QPointF topCenter((rect.left() + rect.right()) * 0.5, rect.top());
-                            const QPointF bottomCenter((rect.left() + rect.right()) * 0.5, rect.bottom());
-                            const QPointF leftCenter(rect.left(), (rect.top() + rect.bottom()) * 0.5);
-                            const QPointF rightCenter(rect.right(), (rect.top() + rect.bottom()) * 0.5);
-                            addIfValid(boxTargets, rect.center());
-                            addIfValid(boxTargets, topCenter);
-                            addIfValid(boxTargets, bottomCenter);
-                            addIfValid(boxTargets, leftCenter);
-                            addIfValid(boxTargets, rightCenter);
-                        }
+                        appendBoundsTargets(box->getAbsBoundingRect());
                     }
                     if (includeNodes) {
                         auto* mutableBox = const_cast<BoundingBox*>(box);
@@ -141,6 +151,13 @@ void Canvas::collectSnapTargets(bool includePivots,
         };
 
     recurse(mCurrentContainer, false);
+
+    if (includeBounds && includeSelectedBounds) {
+        for (const auto& selectedBox : mSelectedBoxes) {
+            if (!selectedBox || !selectedBox->isVisible()) { continue; }
+            appendBoundsTargets(selectedBox->getAbsBoundingRect());
+        }
+    }
 }
 
 QPointF Canvas::snapPosToGrid(const QPointF& pos,
@@ -828,9 +845,12 @@ void Canvas::handleMovePointMouseMove(const eMouseEvent &e) {
         std::vector<QPointF> pivotTargets;
         std::vector<QPointF> boxTargets;
         std::vector<QPointF> nodeTargets;
+        const bool includeSelectedBounds =
+            boxesSnapEnabled && mPressedPoint && mPressedPoint->isPivotPoint();
         if (snappingActive && (pivotsSnapEnabled || boxesSnapEnabled || nodesSnapEnabled)) {
             collectSnapTargets(pivotsSnapEnabled, boxesSnapEnabled, nodesSnapEnabled,
-                               pivotTargets, boxTargets, nodeTargets);
+                               pivotTargets, boxTargets, nodeTargets,
+                               includeSelectedBounds);
         }
         const bool hasPivotTargets = pivotsSnapEnabled && !pivotTargets.empty();
         const bool hasBoxTargets = boxesSnapEnabled && !boxTargets.empty();

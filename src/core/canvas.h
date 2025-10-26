@@ -956,7 +956,8 @@ protected:
                             bool includeNodes,
                             std::vector<QPointF>& pivotTargets,
                             std::vector<QPointF>& boxTargets,
-                            std::vector<QPointF>& nodeTargets) const;
+                            std::vector<QPointF>& nodeTargets,
+                            bool includeSelectedBounds = false) const;
 };
 
 #endif // CANVAS_H
