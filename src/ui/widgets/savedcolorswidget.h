@@ -34,7 +34,7 @@
 #include "colorhelpers.h"
 
 class SavedColorButton;
-class QToolButton;
+class QPushButton;
 
 class UI_EXPORT SavedColorsWidget : public QWidget
 {
@@ -48,13 +48,15 @@ public:
     void setColor(const QColor& color);
 
 private:
+    void setupBookmarkButton();
+    void addBookmarkButton();
+
     FlowLayout *mMainLayout = nullptr;
-    QToolButton *mAddButton = nullptr;
     QList<SavedColorButton*> mButtons;
+    QColor mCurrentColor;
 
 signals:
     void colorSet(QColor);
-    void addCurrentColorRequested();
 };
 
 #endif // SAVEDCOLORSWIDGET_H

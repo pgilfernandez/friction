@@ -27,9 +27,8 @@
 #include "widgets/savedcolorbutton.h"
 
 #include <QIcon>
-#include <QPalette>
+#include <QPushButton>
 #include <QSize>
-#include <QToolButton>
 #include <QSizePolicy>
 
 #include "colorhelpers.h"
@@ -43,31 +42,7 @@ SavedColorsWidget::SavedColorsWidget(QWidget *parent)
     setLayout(mMainLayout);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
 
-    mAddButton = new QToolButton(this);
-    mAddButton->setCursor(Qt::PointingHandCursor);
-    mAddButton->setFocusPolicy(Qt::NoFocus);
-    mAddButton->setToolTip(tr("Add bookmarked color"));
-    mAddButton->setIcon(QIcon::fromTheme("plus"));
-    mAddButton->setAutoRaise(false);
-    mAddButton->setCheckable(false);
-    eSizesUI::widget.add(mAddButton, [this](int size) {
-        mAddButton->setFixedSize(size, size);
-        const int iconSide = qMax(0, size);
-        mAddButton->setIconSize(QSize(iconSide, iconSide));
-    });
-    const QColor baseColor = ThemeSupport::getThemeButtonBaseColor();
-    const QColor baseDarkerColor = ThemeSupport::getThemeBaseDarkerColor();
-    const QColor borderColor = ThemeSupport::getThemeButtonBorderColor();
-    const QColor hoverColor = ThemeSupport::getThemeHighlightColor();
-    const QString style = QStringLiteral(
-                "QToolButton { background-color: %1; border: 1px solid %2; padding: 0; }"
-                "QToolButton:hover { background-color: %4; border: 1px solid %3; }"
-                "QToolButton:pressed { border: 2px solid %3; }")
-            .arg(baseColor.name(), borderColor.name(), hoverColor.name(), baseDarkerColor.name());
-    mAddButton->setStyleSheet(style);
-    connect(mAddButton, &QToolButton::clicked,
-            this, &SavedColorsWidget::addCurrentColorRequested);
-    mMainLayout->addWidget(mAddButton);
+    setupBookmarkButton();
 
     for(const auto& color : Document::sInstance->fColors) {
         addColor(color);
@@ -76,6 +51,31 @@ SavedColorsWidget::SavedColorsWidget(QWidget *parent)
             this, &SavedColorsWidget::addColor);
     connect(Document::sInstance, &Document::bookmarkColorRemoved,
             this, &SavedColorsWidget::removeColor);
+}
+
+void SavedColorsWidget::setupBookmarkButton() {
+    const auto button = new QPushButton(this);
+    button->setCursor(Qt::PointingHandCursor);
+    button->setFocusPolicy(Qt::NoFocus);
+    button->setToolTip(tr("Add bookmarked color"));
+    button->setIcon(QIcon::fromTheme("plus"));
+
+    eSizesUI::widget.add(button, [button](int size) {
+        button->setFixedSize(size, size);
+        const int iconSide = qMax(0, size);
+        button->setIconSize(QSize(iconSide, iconSide));
+    });
+
+    connect(button, &QPushButton::clicked,
+            this, &SavedColorsWidget::addBookmarkButton);
+    mMainLayout->addWidget(button);
+}
+
+void SavedColorsWidget::addBookmarkButton() {
+    if(!mCurrentColor.isValid()) {
+        return;
+    }
+    Document::sInstance->addBookmarkColor(mCurrentColor);
 }
 
 void SavedColorsWidget::addColor(const QColor& color) {
@@ -98,6 +98,7 @@ void SavedColorsWidget::removeColor(const QColor &color) {
 }
 
 void SavedColorsWidget::setColor(const QColor &color) {
+    mCurrentColor = color;
     for(const auto wid : mButtons) {
         wid->setSelected(wid->getColor().rgba() == color.rgba());
     }
