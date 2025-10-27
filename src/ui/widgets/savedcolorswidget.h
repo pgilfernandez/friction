@@ -48,7 +48,6 @@ public:
     void setColor(const QColor& color);
 
 private:
-    void setupBookmarkButton();
     void addBookmarkButton();
 
     FlowLayout *mMainLayout = nullptr;

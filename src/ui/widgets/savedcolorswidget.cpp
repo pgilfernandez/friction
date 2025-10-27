@@ -27,9 +27,12 @@
 #include "widgets/savedcolorbutton.h"
 
 #include <QIcon>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QPushButton>
 #include <QSize>
 #include <QSizePolicy>
+#include <QVBoxLayout>
 
 #include "colorhelpers.h"
 #include "Private/document.h"
@@ -38,11 +41,48 @@
 
 SavedColorsWidget::SavedColorsWidget(QWidget *parent)
     : QWidget(parent) {
-    mMainLayout = new FlowLayout(this);
-    setLayout(mMainLayout);
+    auto verticalLayout = new QVBoxLayout(this);
+    verticalLayout->setContentsMargins(0, 10, 0, 0);
+    verticalLayout->setSpacing(0);
     setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
 
-    setupBookmarkButton();
+    const auto bookmarksHeader = new QWidget(this);
+    const auto bookmarksLayout = new QHBoxLayout(bookmarksHeader);
+    bookmarksLayout->setContentsMargins(0, 0, 0, 0);
+    bookmarksHeader->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    const auto iconBookmark = new QLabel(bookmarksHeader);
+    const auto labelBookmark = new QLabel(tr("Bookmarks"), bookmarksHeader);
+    const int iconSize = labelBookmark->fontMetrics().height();
+    iconBookmark->setPixmap(QIcon::fromTheme("color").pixmap(ThemeSupport::getIconSize(iconSize)));
+    bookmarksLayout->addWidget(iconBookmark);
+    bookmarksLayout->addWidget(labelBookmark);
+    bookmarksLayout->addStretch();
+    verticalLayout->addWidget(bookmarksHeader);
+    verticalLayout->addSpacing(4);
+
+    const auto colorsContainer = new QWidget(this);
+    colorsContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+    mMainLayout = new FlowLayout(colorsContainer);
+    mMainLayout->setContentsMargins(0, 0, 0, 0);
+    colorsContainer->setLayout(mMainLayout);
+    verticalLayout->addWidget(colorsContainer);
+
+    const auto addButton = new QPushButton(this);
+    addButton->setCursor(Qt::PointingHandCursor);
+    addButton->setFocusPolicy(Qt::NoFocus);
+    addButton->setToolTip(tr("Add active color to Bookmarks"));
+    addButton->setIcon(QIcon::fromTheme("plus"));
+
+    eSizesUI::widget.add(addButton, [addButton](int size) {
+        addButton->setFixedSize(size, size);
+        const int iconSide = qMax(0, size);
+        addButton->setIconSize(QSize(iconSide, iconSide));
+    });
+
+    connect(addButton, &QPushButton::clicked,
+            this, &SavedColorsWidget::addBookmarkButton);
+    mMainLayout->addWidget(addButton);
 
     for(const auto& color : Document::sInstance->fColors) {
         addColor(color);
@@ -51,24 +91,6 @@ SavedColorsWidget::SavedColorsWidget(QWidget *parent)
             this, &SavedColorsWidget::addColor);
     connect(Document::sInstance, &Document::bookmarkColorRemoved,
             this, &SavedColorsWidget::removeColor);
-}
-
-void SavedColorsWidget::setupBookmarkButton() {
-    const auto button = new QPushButton(this);
-    button->setCursor(Qt::PointingHandCursor);
-    button->setFocusPolicy(Qt::NoFocus);
-    button->setToolTip(tr("Add bookmarked color"));
-    button->setIcon(QIcon::fromTheme("plus"));
-
-    eSizesUI::widget.add(button, [button](int size) {
-        button->setFixedSize(size, size);
-        const int iconSide = qMax(0, size);
-        button->setIconSize(QSize(iconSide, iconSide));
-    });
-
-    connect(button, &QPushButton::clicked,
-            this, &SavedColorsWidget::addBookmarkButton);
-    mMainLayout->addWidget(button);
 }
 
 void SavedColorsWidget::addBookmarkButton() {
