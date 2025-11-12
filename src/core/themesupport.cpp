@@ -297,9 +297,9 @@ void ThemeSupport::setToolbarButtonStyle(const QString &name,
 const QColor ThemeSupport::getLightDarkColor(const QColor &color,
                                              const int &factor)
 {
-    float lightness = color.lightnessF();
+    const float lightness = color.lightnessF();
     if (lightness < 0.5f) {
-        QColor col = color.lighter(factor);
+        const QColor col = color.lighter(factor);
         const float minLightness = 0.3f;
         if (col.lightnessF() < minLightness) {
             QColor hslColor = color.toHsl();
@@ -312,9 +312,9 @@ const QColor ThemeSupport::getLightDarkColor(const QColor &color,
         return col;
     }
 
-    QColor outline = color.darker(factor);
+    const QColor col = color.darker(factor);
     const float maxLightness = 0.7f;
-    if (outline.lightnessF() > maxLightness) {
+    if (col.lightnessF() > maxLightness) {
         QColor hslColor = color.toHsl();
         hslColor.setHslF(hslColor.hslHueF(),
                          hslColor.hslSaturationF(),
@@ -322,5 +322,5 @@ const QColor ThemeSupport::getLightDarkColor(const QColor &color,
                          hslColor.alphaF());
         return hslColor.toRgb();
     }
-    return outline;
+    return col;
 }
