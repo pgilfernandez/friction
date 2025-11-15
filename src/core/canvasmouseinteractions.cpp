@@ -852,9 +852,14 @@ void Canvas::rotateSelected(const eMouseEvent& e)
         rot = d_rot + mRotHalfCycles*180;
     }
 
-    if (!mValueInput.inputEnabled() && e.shiftMod()) {
-        constexpr qreal snapStep = 15.0;
-        rot = std::round(rot / snapStep) * snapStep;
+    if (!mValueInput.inputEnabled()) {
+        if (e.ctrlMod()) {
+            constexpr qreal snapStep = 1.0;
+            rot = std::round(rot / snapStep) * snapStep;
+        } else if (e.shiftMod()) {
+            constexpr qreal snapStep = 15.0;
+            rot = std::round(rot / snapStep) * snapStep;
+        }
     }
 
     if (mCurrentMode == CanvasMode::boxTransform) {
