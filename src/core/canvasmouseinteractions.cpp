@@ -57,6 +57,7 @@
 #include <QMenu>
 #include <QInputDialog>
 #include <QApplication>
+#include <cmath>
 
 using namespace Friction::Core;
 
@@ -828,6 +829,11 @@ void Canvas::rotateSelected(const eMouseEvent& e) {
         }
         mLastDRot = d_rot;
         rot = d_rot + mRotHalfCycles*180;
+    }
+
+    if (!mValueInput.inputEnabled() && e.shiftMod()) {
+        constexpr qreal snapStep = 15.0;
+        rot = std::round(rot / snapStep) * snapStep;
     }
 
     if(mCurrentMode == CanvasMode::boxTransform) {
