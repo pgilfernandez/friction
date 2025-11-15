@@ -61,6 +61,11 @@
 
 using namespace Friction::Core;
 
+namespace {
+constexpr qreal kDegToRad = static_cast<qreal>(0.017453292519943295769);
+constexpr qreal kRadToDeg = static_cast<qreal>(57.2957795130823208768);
+}
+
 void Canvas::handleMovePathMousePressEvent(const eMouseEvent& e) {
     mPressedBox = mCurrentContainer->getBoxAt(e.fPos);
     if(e.shiftMod()) return;
@@ -209,6 +214,7 @@ void Canvas::handleLeftButtonMousePress(const eMouseEvent& e) {
     mDoubleClick = false;
     //mMovesToSkip = 2;
     mStartTransform = true;
+    mLastPointMoveBy = QPointF();
 
     const qreal invScale = 1/e.fScale;
     const qreal invScaleUi = (qApp ? qApp->devicePixelRatio() : 1.0) * invScale;
@@ -726,14 +732,46 @@ void Canvas::handleMovePointMouseMove(const eMouseEvent &e) {
                 }
             }
 
+            const QPointF moveBy = getMoveByValueForEvent(e);
+            QPointF finalMoveBy = moveBy;
+            if((mods & Qt::ShiftModifier) && mPressedPoint->isCtrlPoint()) {
+                const auto ctrlPoint = enve_cast<SmartCtrlPoint*>(mPressedPoint.data());
+                if(ctrlPoint) {
+                    const auto parentPoint = ctrlPoint->getParentPoint();
+                    if(parentPoint) {
+                        const QPointF parentAbs = parentPoint->getAbsolutePos();
+                        const QPointF startAbs = ctrlPoint->getAbsolutePos() - mLastPointMoveBy;
+                        QPointF targetAbs = startAbs + moveBy;
+                        const QPointF dir = targetAbs - parentAbs;
+                        const qreal len = pointToLen(dir);
+                        if(len > 0.0) {
+                            constexpr qreal snapStep = 15.0;
+                            const qreal angleDeg = std::atan2(dir.y(), dir.x()) * kRadToDeg;
+                            const qreal snappedDeg = std::round(angleDeg / snapStep) * snapStep;
+                            const qreal snappedRad = snappedDeg * kDegToRad;
+                            const QPointF snappedVec(len * std::cos(snappedRad),
+                                                     len * std::sin(snappedRad));
+                            targetAbs = parentAbs + snappedVec;
+                            finalMoveBy = targetAbs - startAbs;
+                        }
+                    }
+                }
+            }
+
             if(!mPressedPoint->selectionEnabled()) {
                 if(mStartTransform) mPressedPoint->startTransform();
-                mPressedPoint->moveByAbs(getMoveByValueForEvent(e));
+                mPressedPoint->moveByAbs(finalMoveBy);
+                mLastPointMoveBy = finalMoveBy;
                 return;
             }
+            moveSelectedPointsByAbs(finalMoveBy,
+                                    mStartTransform);
+            mLastPointMoveBy = finalMoveBy;
+        } else {
+            const QPointF moveBy = getMoveByValueForEvent(e);
+            moveSelectedPointsByAbs(moveBy, mStartTransform);
+            mLastPointMoveBy = moveBy;
         }
-        moveSelectedPointsByAbs(getMoveByValueForEvent(e),
-                                mStartTransform);
     }
 }
 
@@ -872,6 +910,7 @@ bool Canvas::prepareRotation(const QPointF &startPos,
     mTransMode = TransformMode::rotate;
     mRotHalfCycles = 0;
     mLastDRot = 0;
+    mLastPointMoveBy = QPointF();
 
     mDoubleClick = false;
     mStartTransform = true;

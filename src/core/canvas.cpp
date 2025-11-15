@@ -1219,6 +1219,7 @@ bool Canvas::startScalingAction(const eKeyEvent &e)
     }
     mValueInput.clearAndDisableInput();
     mValueInput.setupScale();
+    mLastPointMoveBy = QPointF();
 
     mRotPivot->setMousePos(e.fPos);
     mTransMode = TransformMode::scale;
@@ -1234,6 +1235,7 @@ bool Canvas::startMovingAction(const eKeyEvent &e)
         mCurrentMode != CanvasMode::pointTransform) { return false; }
     mValueInput.clearAndDisableInput();
     mValueInput.setupMove();
+    mLastPointMoveBy = QPointF();
 
     mTransMode = TransformMode::move;
     mDoubleClick = false;
