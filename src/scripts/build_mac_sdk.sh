@@ -30,7 +30,7 @@ NASM_V=2.14.02
 YASM_V=1.3.0
 PKGCONF_V=1.1.0
 
-QT_V=5.15.17_20250607_0825fcb1
+QT_V=5.15.18_20251101_d8220074
 QSCINTILLA_V=2.14.1
 
 LAME_V=3.100
@@ -58,7 +58,7 @@ CWD=`pwd`
 SDK=${SDK:-"${CWD}/sdk/${CPU}"}
 SRC=${SDK}/src
 DIST=${DIST:-"${CWD}/distfiles"}
-PATCHES=${DIST}/patches
+PATCHES=${CWD}/src/scripts/patches
 MKJOBS=${MKJOBS:-10}
 SRC_SUFFIX=tar.xz
 
