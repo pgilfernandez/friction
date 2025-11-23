@@ -46,6 +46,7 @@
 #include "widgets/changewidthwidget.h"
 #include "timelinehighlightwidget.h"
 #include "themesupport.h"
+#include "ReadWrite/evformat.h"
 
 TimelineWidget::TimelineWidget(Document &document,
                                QWidget * const menu,
@@ -140,6 +141,24 @@ TimelineWidget::TimelineWidget(Document &document,
     typeActionAdder(SWT_Type::sound, "Sound");
     typeActionAdder(SWT_Type::graphics, "Graphics");
 
+    QMenu * const paramMenu = settingsMenu->addMenu(filterIcon, tr("Parameters"));
+
+    const auto paramActionAdder = [this, paramMenu](
+            const SWT_ParamRule paramRule, const QString& text) {
+        const auto slot = [this, paramRule]() { setParamRule(paramRule); };
+        const auto action = paramMenu->addAction(text, this, slot);
+        action->setCheckable(true);
+        connect(this, &TimelineWidget::paramRuleChanged,
+                action, [action, paramRule](const SWT_ParamRule setRule) {
+            action->setChecked(paramRule == setRule);
+        });
+        return action;
+    };
+
+    paramActionAdder(SWT_ParamRule::all, tr("All"))->setChecked(true);
+    paramActionAdder(SWT_ParamRule::animated, tr("Animated"));
+    paramActionAdder(SWT_ParamRule::animatedOnly, tr("Just animated"));
+
     settingsMenu->addSeparator();
 
     {
@@ -147,18 +166,21 @@ TimelineWidget::TimelineWidget(Document &document,
             setBoxRule(SWT_BoxRule::all);
             setTarget(SWT_Target::canvas);
             setType(SWT_Type::all);
+            setParamRule(SWT_ParamRule::all);
         };
         const auto act = settingsMenu->addAction("Reset", this, op);
         const auto can = [this]() {
             const auto rules = mBoxesListWidget->getRulesCollection();
             return rules.fRule != SWT_BoxRule::all ||
                    rules.fTarget != SWT_Target::canvas ||
-                   rules.fType != SWT_Type::all;
+                   rules.fType != SWT_Type::all ||
+                   rules.fParamRule != SWT_ParamRule::all;
         };
         const auto setEnabled = [act, can]() { act->setEnabled(can()); };
         connect(this, &TimelineWidget::typeChanged, act, setEnabled);
         connect(this, &TimelineWidget::targetChanged, act, setEnabled);
         connect(this, &TimelineWidget::boxRuleChanged, act, setEnabled);
+        connect(this, &TimelineWidget::paramRuleChanged, act, setEnabled);
     }
 
     //QMenu *viewMenu = mBoxesListMenuBar->addMenu("View");
@@ -391,6 +413,7 @@ void TimelineWidget::writeState(eWriteStream &dst) const {
     dst.write(&rules.fRule, sizeof(SWT_BoxRule));
     dst.write(&rules.fType, sizeof(SWT_Type));
     dst.write(&rules.fTarget, sizeof(SWT_Target));
+    dst.write(&rules.fParamRule, sizeof(SWT_ParamRule));
 }
 
 void TimelineWidget::readState(eReadStream &src) {
@@ -417,6 +440,11 @@ void TimelineWidget::readState(eReadStream &src) {
         setBoxRule(boxRule);
         setType(type);
         setTarget(target);
+        if(src.evFileVersion() >= EvFormat::timelineParamFilter) {
+            SWT_ParamRule paramRule;
+            src.read(&paramRule, sizeof(SWT_ParamRule));
+            setParamRule(paramRule);
+        }
     }
 
     src.addReadStreamDoneTask([this, sceneReadId, sceneDocumentId]
@@ -483,6 +511,12 @@ void TimelineWidget::readStateXEV(XevReadBoxesHandler& boxReadHandler,
     const auto target = XmlExportHelpers::stringToEnum<SWT_Target>(targetStr);
     setTarget(target);
 
+    const auto paramRuleStr = ele.attribute("paramRule");
+    if(!paramRuleStr.isEmpty()) {
+        const auto paramRule = XmlExportHelpers::stringToEnum<SWT_ParamRule>(paramRuleStr);
+        setParamRule(paramRule);
+    }
+
     mSearchLine->setText(search);
 
     mFrameScrollBar->setFirstViewedFrame(frame);
@@ -511,6 +545,7 @@ void TimelineWidget::writeStateXEV(QDomElement& ele, QDomDocument& doc,
     ele.setAttribute("objRule", static_cast<int>(rules.fRule));
     ele.setAttribute("objType", static_cast<int>(rules.fType));
     ele.setAttribute("objTarget", static_cast<int>(rules.fTarget));
+    ele.setAttribute("paramRule", static_cast<int>(rules.fParamRule));
 
     ele.setAttribute("search", mSearchLine->text());
 }
@@ -569,6 +604,11 @@ void TimelineWidget::setTarget(const SWT_Target target) {
 void TimelineWidget::setType(const SWT_Type type) {
     mBoxesListWidget->setCurrentType(type);
     emit typeChanged(type);
+}
+
+void TimelineWidget::setParamRule(const SWT_ParamRule rule) {
+    mBoxesListWidget->setCurrentParamRule(rule);
+    emit paramRuleChanged(rule);
 }
 
 void TimelineWidget::setSearchText(const QString &text) {
