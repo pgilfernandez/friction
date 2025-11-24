@@ -81,6 +81,11 @@ void ScrollWidget::setCurrentParamRule(const SWT_ParamRule rule) {
     mVisiblePartWidget->setCurrentParamRule(rule);
 }
 
+void ScrollWidget::setCurrentParamCategories(
+        const SWT_ParamCategories categories) {
+    mVisiblePartWidget->setCurrentParamCategories(categories);
+}
+
 SWT_RulesCollection ScrollWidget::getRulesCollection()
 { return mVisiblePartWidget->getRulesCollection(); }
 

@@ -32,6 +32,8 @@
 #include "ReadWrite/evformat.h"
 #include "canvas.h"
 #include "Animators/eboxorsound.h"
+#include "Sound/eindependentsound.h"
+#include <QRegularExpression>
 
 Property::Property(const QString& name) :
     prp_mName(name) {
@@ -45,6 +47,53 @@ Property::Property(const QString& name) :
         emit prp_pathChanged();
     });
 }
+
+namespace {
+
+const Property* firstLevelPropertyForCategory(const Property* const prop) {
+    if(!prop) return nullptr;
+
+    const Property* firstLevel = prop;
+    const Property* parent = firstLevel->getParent<Property>();
+    while(parent) {
+        if(enve_cast<const eBoxOrSound*>(parent) ||
+           enve_cast<const Canvas*>(parent) ||
+           enve_cast<const eIndependentSound*>(parent)) {
+            break;
+        }
+        firstLevel = parent;
+        parent = firstLevel->getParent<Property>();
+    }
+
+    return firstLevel;
+}
+
+SWT_ParamCategory paramCategoryForName(const QString& name) {
+    const auto lowered = name.toLower();
+    if(lowered.contains("transform")) {
+        return SWT_ParamCategory::transforms;
+    }
+
+    const auto words = lowered.split(QRegularExpression("[\\s_\-]+"),
+                                     Qt::SkipEmptyParts);
+    for(const auto& word : words) {
+        if(word.contains("effect")) {
+            return SWT_ParamCategory::effects;
+        }
+    }
+
+    return SWT_ParamCategory::others;
+}
+
+bool paramCategoryEnabled(const SWT_RulesCollection& rules,
+                          const Property* const prop) {
+    const auto firstLevel = firstLevelPropertyForCategory(prop);
+    const auto name = firstLevel ? firstLevel->prp_getName() : QString();
+    const auto category = paramCategoryForName(name);
+    return rules.fParamCategories.testFlag(category);
+}
+
+} // namespace
 
 void Property::prp_updateCanvasProps() {
     if(mParent_k) mParent_k->prp_updateCanvasProps();
@@ -197,17 +246,24 @@ bool Property::SWT_shouldBeVisible(const SWT_RulesCollection &rules,
     if(!parentSatisfies || parentMainTarget) return false;
 
     const auto paramRule = rules.fParamRule;
-    if(paramRule == SWT_ParamRule::all) return true;
+    const bool isTopLevel = enve_cast<const eBoxOrSound*>(this) ||
+                            enve_cast<const Canvas*>(this) ||
+                            enve_cast<const eIndependentSound*>(this);
 
-    if(enve_cast<const eBoxOrSound*>(this) || enve_cast<const Canvas*>(this)) {
+    if(paramRule == SWT_ParamRule::all) {
+        return isTopLevel || paramCategoryEnabled(rules, this);
+    }
+
+    if(isTopLevel) {
         return true;
     }
 
     const auto animator = enve_cast<const Animator*>(this);
     const bool animated = animator && animator->anim_isDescendantRecording();
+    const bool categoryOk = paramCategoryEnabled(rules, this);
 
     if(paramRule == SWT_ParamRule::animated) {
-        return animated;
+        return animated && categoryOk;
     }
 
     if(paramRule == SWT_ParamRule::animatedOnly) {
@@ -215,17 +271,19 @@ bool Property::SWT_shouldBeVisible(const SWT_RulesCollection &rules,
         if(const auto cAnim = enve_cast<const ComplexAnimator*>(this)) {
             if(cAnim->ca_hasChildren()) return false;
         }
-        return true;
+        return categoryOk;
     }
 
-    return true;
+    return categoryOk;
 }
 
 bool Property::SWT_shouldPassThrough(const SWT_RulesCollection &rules) const {
     if(rules.fParamRule != SWT_ParamRule::animatedOnly) return false;
-    if(enve_cast<const eBoxOrSound*>(this) || enve_cast<const Canvas*>(this)) {
+    if(enve_cast<const eBoxOrSound*>(this) || enve_cast<const Canvas*>(this) ||
+       enve_cast<const eIndependentSound*>(this)) {
         return false;
     }
+    if(!paramCategoryEnabled(rules, this)) return false;
     const auto animator = enve_cast<const Animator*>(this);
     const auto complexAnimator = enve_cast<const ComplexAnimator*>(this);
     if(!animator || !complexAnimator) return false;

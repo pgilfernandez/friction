@@ -27,6 +27,7 @@
 #define SWT_RULESCOLLECTION_H
 
 #include <QString>
+#include <QFlags>
 
 #include "core_global.h"
 
@@ -59,6 +60,15 @@ enum class SWT_ParamRule : short {
     animatedOnly
 };
 
+enum class SWT_ParamCategory : short {
+    transforms = 0x1,
+    effects = 0x2,
+    others = 0x4
+};
+
+Q_DECLARE_FLAGS(SWT_ParamCategories, SWT_ParamCategory)
+Q_DECLARE_OPERATORS_FOR_FLAGS(SWT_ParamCategories)
+
 struct CORE_EXPORT SWT_RulesCollection {
     SWT_RulesCollection();
     SWT_RulesCollection(const SWT_BoxRule rule,
@@ -66,6 +76,7 @@ struct CORE_EXPORT SWT_RulesCollection {
                         const SWT_Target target,
                         const SWT_Type type,
                         const SWT_ParamRule paramRule,
+                        const SWT_ParamCategories paramCategories,
                         const QString &searchString);
 
     SWT_BoxRule fRule = SWT_BoxRule::all;
@@ -73,6 +84,10 @@ struct CORE_EXPORT SWT_RulesCollection {
     SWT_Target fTarget = SWT_Target::canvas;
     SWT_Type fType = SWT_Type::all;
     SWT_ParamRule fParamRule = SWT_ParamRule::all;
+    SWT_ParamCategories fParamCategories =
+            SWT_ParamCategory::transforms |
+            SWT_ParamCategory::effects |
+            SWT_ParamCategory::others;
     QString fSearchString = "";
 };
 

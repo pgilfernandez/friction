@@ -36,6 +36,7 @@
 #include "framerange.h"
 #include "widgets/fakemenubar.h"
 #include "XML/runtimewriteid.h"
+#include "swt_rulescollection.h"
 
 #include "ReadWrite/ereadstream.h"
 #include "ReadWrite/ewritestream.h"
@@ -54,11 +55,6 @@ class SceneChooser;
 class StackWrapperCornerMenu;
 class BoxScroller;
 class XevReadBoxesHandler;
-
-enum class SWT_Type : short;
-enum class SWT_BoxRule : short;
-enum class SWT_Target : short;
-enum class SWT_ParamRule : short;
 
 class TimelineWidget : public QWidget {
     Q_OBJECT
@@ -98,11 +94,14 @@ signals:
     void targetChanged(const SWT_Target target);
     void boxRuleChanged(const SWT_BoxRule rule);
     void paramRuleChanged(const SWT_ParamRule rule);
+    void paramCategoriesChanged(const SWT_ParamCategories categories);
 private:
     void setType(const SWT_Type type);
     void setBoxRule(const SWT_BoxRule rule);
     void setTarget(const SWT_Target target);
     void setParamRule(const SWT_ParamRule rule);
+    void setParamCategories(const SWT_ParamCategories categories);
+    void toggleParamCategory(const SWT_ParamCategory category);
 
     Canvas* mCurrentScene = nullptr;
 

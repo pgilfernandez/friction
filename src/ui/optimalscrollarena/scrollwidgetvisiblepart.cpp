@@ -62,6 +62,13 @@ void ScrollWidgetVisiblePart::setCurrentParamRule(const SWT_ParamRule rule) {
     updateParentHeightAndContent();
 }
 
+void ScrollWidgetVisiblePart::setCurrentParamCategories(
+        const SWT_ParamCategories categories) {
+    if(mRulesCollection.fParamCategories == categories) return;
+    mRulesCollection.fParamCategories = categories;
+    updateParentHeightAndContent();
+}
+
 void ScrollWidgetVisiblePart::setupUpdateFuncs() {
     const QPointer<ScrollWidgetVisiblePart> thisQPtr = this;
     mUpdateFuncs.fContentUpdateIfIsCurrentRule =

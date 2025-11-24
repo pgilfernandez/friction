@@ -57,6 +57,7 @@ public:
     void setCurrentSearchText(const QString &text);
     void setCurrentType(const SWT_Type type);
     void setCurrentParamRule(const SWT_ParamRule rule);
+    void setCurrentParamCategories(const SWT_ParamCategories categories);
 
     void scheduleContentUpdateIfIsCurrentRule(const SWT_BoxRule rule);
     bool isCurrentRule(const SWT_BoxRule rule);

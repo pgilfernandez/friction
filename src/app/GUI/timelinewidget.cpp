@@ -143,6 +143,10 @@ TimelineWidget::TimelineWidget(Document &document,
 
     QMenu * const paramMenu = settingsMenu->addMenu(filterIcon, tr("Parameters"));
 
+    const auto allParamCategories = SWT_ParamCategory::transforms |
+                                    SWT_ParamCategory::effects |
+                                    SWT_ParamCategory::others;
+
     const auto paramActionAdder = [this, paramMenu](
             const SWT_ParamRule paramRule, const QString& text) {
         const auto slot = [this, paramRule]() { setParamRule(paramRule); };
@@ -159,28 +163,51 @@ TimelineWidget::TimelineWidget(Document &document,
     paramActionAdder(SWT_ParamRule::animated, tr("Animated"));
     paramActionAdder(SWT_ParamRule::animatedOnly, tr("Animated (plain)"));
 
+    paramMenu->addSeparator();
+
+    const auto paramCategoryActionAdder = [this, paramMenu](
+            const SWT_ParamCategory category, const QString& text) {
+        const auto slot = [this, category]() { toggleParamCategory(category); };
+        const auto action = paramMenu->addAction(text, this, slot);
+        action->setCheckable(true);
+        action->setChecked(true);
+        connect(this, &TimelineWidget::paramCategoriesChanged,
+                action, [action, category](const SWT_ParamCategories categories) {
+            action->setChecked(categories.testFlag(category));
+        });
+        return action;
+    };
+
+    paramCategoryActionAdder(SWT_ParamCategory::transforms, tr("Transforms"));
+    paramCategoryActionAdder(SWT_ParamCategory::effects, tr("Effects"));
+    paramCategoryActionAdder(SWT_ParamCategory::others, tr("Others"));
+
     settingsMenu->addSeparator();
 
     {
-        const auto op = [this]() {
+        const auto op = [this, allParamCategories]() {
             setBoxRule(SWT_BoxRule::all);
             setTarget(SWT_Target::canvas);
             setType(SWT_Type::all);
             setParamRule(SWT_ParamRule::all);
+            setParamCategories(allParamCategories);
         };
         const auto act = settingsMenu->addAction("Reset", this, op);
-        const auto can = [this]() {
+        const auto can = [this, allParamCategories]() {
             const auto rules = mBoxesListWidget->getRulesCollection();
             return rules.fRule != SWT_BoxRule::all ||
                    rules.fTarget != SWT_Target::canvas ||
                    rules.fType != SWT_Type::all ||
-                   rules.fParamRule != SWT_ParamRule::all;
+                   rules.fParamRule != SWT_ParamRule::all ||
+                   rules.fParamCategories != allParamCategories;
         };
         const auto setEnabled = [act, can]() { act->setEnabled(can()); };
         connect(this, &TimelineWidget::typeChanged, act, setEnabled);
         connect(this, &TimelineWidget::targetChanged, act, setEnabled);
         connect(this, &TimelineWidget::boxRuleChanged, act, setEnabled);
         connect(this, &TimelineWidget::paramRuleChanged, act, setEnabled);
+        connect(this, &TimelineWidget::paramCategoriesChanged,
+                act, setEnabled);
     }
 
     //QMenu *viewMenu = mBoxesListMenuBar->addMenu("View");
@@ -414,6 +441,8 @@ void TimelineWidget::writeState(eWriteStream &dst) const {
     dst.write(&rules.fType, sizeof(SWT_Type));
     dst.write(&rules.fTarget, sizeof(SWT_Target));
     dst.write(&rules.fParamRule, sizeof(SWT_ParamRule));
+    const short paramCategories = static_cast<short>(rules.fParamCategories);
+    dst.write(&paramCategories, sizeof(paramCategories));
 }
 
 void TimelineWidget::readState(eReadStream &src) {
@@ -444,6 +473,11 @@ void TimelineWidget::readState(eReadStream &src) {
             SWT_ParamRule paramRule;
             src.read(&paramRule, sizeof(SWT_ParamRule));
             setParamRule(paramRule);
+            if(src.evFileVersion() >= EvFormat::timelineParamCategories) {
+                short paramCategories;
+                src.read(&paramCategories, sizeof(paramCategories));
+                setParamCategories(SWT_ParamCategories(paramCategories));
+            }
         }
     }
 
@@ -517,6 +551,13 @@ void TimelineWidget::readStateXEV(XevReadBoxesHandler& boxReadHandler,
         setParamRule(paramRule);
     }
 
+    const auto paramCategoriesStr = ele.attribute("paramCategories");
+    if(!paramCategoriesStr.isEmpty()) {
+        const auto categories =
+                XmlExportHelpers::stringToInt(paramCategoriesStr);
+        setParamCategories(SWT_ParamCategories(categories));
+    }
+
     mSearchLine->setText(search);
 
     mFrameScrollBar->setFirstViewedFrame(frame);
@@ -546,6 +587,7 @@ void TimelineWidget::writeStateXEV(QDomElement& ele, QDomDocument& doc,
     ele.setAttribute("objType", static_cast<int>(rules.fType));
     ele.setAttribute("objTarget", static_cast<int>(rules.fTarget));
     ele.setAttribute("paramRule", static_cast<int>(rules.fParamRule));
+    ele.setAttribute("paramCategories", static_cast<int>(rules.fParamCategories));
 
     ele.setAttribute("search", mSearchLine->text());
 }
@@ -609,6 +651,17 @@ void TimelineWidget::setType(const SWT_Type type) {
 void TimelineWidget::setParamRule(const SWT_ParamRule rule) {
     mBoxesListWidget->setCurrentParamRule(rule);
     emit paramRuleChanged(rule);
+}
+
+void TimelineWidget::setParamCategories(const SWT_ParamCategories categories) {
+    mBoxesListWidget->setCurrentParamCategories(categories);
+    emit paramCategoriesChanged(categories);
+}
+
+void TimelineWidget::toggleParamCategory(const SWT_ParamCategory category) {
+    auto categories = mBoxesListWidget->getRulesCollection().fParamCategories;
+    categories ^= category;
+    setParamCategories(categories);
 }
 
 void TimelineWidget::setSearchText(const QString &text) {

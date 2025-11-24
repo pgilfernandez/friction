@@ -47,6 +47,7 @@ namespace EvFormat {
         subPathOffset = 32,
         avStretch = 33,
         timelineParamFilter = 34,
+        timelineParamCategories = 35,
 
         nextVersion
     };
