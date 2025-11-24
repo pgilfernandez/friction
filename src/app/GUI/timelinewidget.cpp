@@ -157,7 +157,7 @@ TimelineWidget::TimelineWidget(Document &document,
 
     paramActionAdder(SWT_ParamRule::all, tr("All"))->setChecked(true);
     paramActionAdder(SWT_ParamRule::animated, tr("Animated"));
-    paramActionAdder(SWT_ParamRule::animatedOnly, tr("Just animated"));
+    paramActionAdder(SWT_ParamRule::animatedOnly, tr("Animated (plain)"));
 
     settingsMenu->addSeparator();
 
