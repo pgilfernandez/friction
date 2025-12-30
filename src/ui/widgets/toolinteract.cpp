@@ -108,6 +108,9 @@ void ToolInteract::setupGizmoButton()
 void ToolInteract::setupGizmoAction(QToolButton *button,
                                     const Core::Gizmos::Interact &ti)
 {
+    if (!button) { return; }
+    if (!button->menu()) { return; }
+
     const auto mDocument = Document::sInstance;
     const bool visible = mDocument->getGizmoVisibility(ti);
     QString text;
