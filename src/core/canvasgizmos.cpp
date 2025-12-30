@@ -593,14 +593,21 @@ void Canvas::updateRotateHandleGeometry(qreal invScale)
         mGizmos.fState.xLineGeom = Gizmos::LineGeometry();
         mGizmos.fState.yLineGeom = Gizmos::LineGeometry();
 
+        const bool hadConstraint =
+                mGizmos.fState.axisConstraint != Gizmos::AxisConstraint::None ||
+                mGizmos.fState.scaleConstraint != Gizmos::ScaleHandle::None ||
+                mGizmos.fState.shearConstraint != Gizmos::ShearHandle::None;
+
         mGizmos.fState.axisConstraint = Gizmos::AxisConstraint::None;
         mGizmos.fState.scaleConstraint = Gizmos::ScaleHandle::None;
         mGizmos.fState.shearConstraint = Gizmos::ShearHandle::None;
         mGizmos.fState.axisHandleActive = false;
         mGizmos.fState.scaleHandleActive = false;
         mGizmos.fState.shearHandleActive = false;
-        mValueInput.setForce1D(false);
-        mValueInput.setXYMode();
+        if (hadConstraint) {
+            mValueInput.setForce1D(false);
+            mValueInput.setXYMode();
+        }
         mGizmos.fState.rotateHandlePolygon.clear();
         mGizmos.fState.rotateHandleHitPolygon.clear();
     };
