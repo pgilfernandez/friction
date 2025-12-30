@@ -65,11 +65,9 @@ void ParentEffect::applyEffect(const qreal relFrame,
     const qreal targetRelFrame = target->prp_absFrameToRelFrameF(absFrame);
     const auto targetTransAnim = target->getTransformAnimator();
 
-    const QMatrix targetTransform =
-            targetTransAnim->getRelativeTransformAtFrame(targetRelFrame);
+    const QMatrix targetTransform = targetTransAnim->getRelativeTransformAtFrame(targetRelFrame);
     const QPointF targetPivot = target->getPivotRelPos(targetRelFrame);
-    const auto targetValues =
-            MatrixDecomposition::decomposePivoted(targetTransform, targetPivot);
+    const auto targetValues = MatrixDecomposition::decomposePivoted(targetTransform, targetPivot);
 
     // Get influence values with reasonable bounds to prevent extreme values
     const qreal posXInfl = qBound(-10.0, mPosInfluence->getEffectiveXValue(relFrame), 10.0);
@@ -79,16 +77,23 @@ void ParentEffect::applyEffect(const qreal relFrame,
     const qreal rotInfl = qBound(-10.0, mRotInfluence->getEffectiveValue(relFrame), 10.0);
 
     // Validate influence values for safety
-    if (!validateInfluenceValues(posXInfl, posYInfl, scaleXInfl, scaleYInfl, rotInfl)) {
-        return; // Skip effect if invalid values detected
-    }
+    if (!validateInfluenceValues(posXInfl,
+                                 posYInfl,
+                                 scaleXInfl,
+                                 scaleYInfl,
+                                 rotInfl)) { return; }
 
     // Check for near-zero rotation influence
     const bool zeroRotInfluence = std::abs(rotInfl) < 1e-6;
     
     // Apply influence to transform values using helper method
     TransformValues influencedValues = targetValues;
-    applyInfluenceToTransform(influencedValues, targetValues, posXInfl, posYInfl, scaleXInfl, scaleYInfl);
+    applyInfluenceToTransform(influencedValues,
+                              targetValues,
+                              posXInfl,
+                              posYInfl,
+                              scaleXInfl,
+                              scaleYInfl);
     
     // Handle rotation influence with linear interpolation
     qreal translationRotInfl = 1.0;
@@ -105,30 +110,32 @@ void ParentEffect::applyEffect(const qreal relFrame,
         const qreal t = rotInfl;
         const qreal blendedDelta = rotDeltaZero + t * (rotDeltaFull - rotDeltaZero);
         rot += blendedDelta;
-    } else if (zeroRotInfluence) {
-        rot += rotDeltaZero;
-    } else {
-        rot += rotDeltaFull;
-    }
+    } else if (zeroRotInfluence) { rot += rotDeltaZero; }
+    else { rot += rotDeltaFull; }
 
     // Calculate final transform matrix
     postTransform = influencedValues.calculate();
 }
 
-bool ParentEffect::validateInfluenceValues(const qreal posXInfl, const qreal posYInfl,
-                                          const qreal scaleXInfl, const qreal scaleYInfl,
-                                          const qreal rotInfl) const
+bool ParentEffect::validateInfluenceValues(const qreal posXInfl,
+                                           const qreal posYInfl,
+                                           const qreal scaleXInfl,
+                                           const qreal scaleYInfl,
+                                           const qreal rotInfl) const
 {
-    // Check for NaN or infinite values
-    return std::isfinite(posXInfl) && std::isfinite(posYInfl) &&
-           std::isfinite(scaleXInfl) && std::isfinite(scaleYInfl) &&
+    return std::isfinite(posXInfl) &&
+           std::isfinite(posYInfl) &&
+           std::isfinite(scaleXInfl) &&
+           std::isfinite(scaleYInfl) &&
            std::isfinite(rotInfl);
 }
 
 void ParentEffect::applyInfluenceToTransform(TransformValues& values,
-                                            const TransformValues& targetValues,
-                                            const qreal posXInfl, const qreal posYInfl,
-                                            const qreal scaleXInfl, const qreal scaleYInfl) const
+                                             const TransformValues& targetValues,
+                                             const qreal posXInfl,
+                                             const qreal posYInfl,
+                                             const qreal scaleXInfl,
+                                             const qreal scaleYInfl) const
 {
     values.fMoveX = targetValues.fMoveX * posXInfl;
     values.fMoveY = targetValues.fMoveY * posYInfl;
