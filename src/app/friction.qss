@@ -675,10 +675,14 @@ ExpressionEditor {
     background: %6;
 }
 
-#ToolBoxButton,
-#ToolBoxGizmo {
+#ToolBoxButton {
     margin-top: .05em;
     margin-bottom: .05em;
+    margin-left: .1em;
+    margin-right: .1em;
+}
+
+#ToolBoxGizmo {
     margin-left: .1em;
     margin-right: .1em;
 }
@@ -686,4 +690,18 @@ ExpressionEditor {
 #ToolBoxButton:disabled,
 #ToolBoxGizmo:!checked {
     background: transparent;
+}
+
+QToolButton#ToolBoxGizmo[popupMode="1"] {
+    padding-right: %10px;
+}
+
+QToolButton#ToolBoxGizmo[popupMode="1"]::menu-button {
+    width: %10px;
+}
+
+QToolButton#ToolBoxGizmo[popupMode="1"]::menu-arrow {
+    image: url(:/icons/hicolor/%11x%11/actions/go-down.png);
+    width: %10px;
+    height: %10px;
 }
