@@ -512,6 +512,30 @@ void Actions::mergePointsSlot() const
     afterAction();
 }
 
+void Actions::splitPointsSlot() const
+{
+    qDebug() << "splitPointsSlot";
+    if (!mActiveScene) { return; }
+    mActiveScene->splitPoints();
+    afterAction();
+}
+
+void Actions::makeSelectedNodeFirstSlot() const
+{
+    qDebug() << "makeSelectedNodeFirstSlot";
+    if (!mActiveScene) { return; }
+    mActiveScene->makeSelectedNodeFirst();
+    afterAction();
+}
+
+void Actions::reverseNodesOrderSlot() const
+{
+    qDebug() << "reverseNodesOrderSlot";
+    if (!mActiveScene) { return; }
+    mActiveScene->reverseSelectedNodesOrder();
+    afterAction();
+}
+
 void Actions::subdivideSegments() const
 {
     qDebug() << "subdivideSegments";

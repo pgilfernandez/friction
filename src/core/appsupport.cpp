@@ -49,6 +49,7 @@
 extern "C" {
 #include <libavutil/log.h>
 #include <libavformat/avformat.h>
+#include <libavutil/avutil.h>
 }
 
 AppSupport::AppSupport(QObject *parent)
@@ -463,10 +464,29 @@ const QString AppSupport::getTimeCodeFromFrame(int frame,
     bool negative = frame < 0;
     if (negative) { frame = qAbs(frame); }
     double totalSeconds = static_cast<double>(frame) / fps;
-    int hours = static_cast<int>(totalSeconds / 3600);
-    int minutes = static_cast<int>((totalSeconds - hours * 3600) / 60);
-    int seconds = static_cast<int>(totalSeconds - hours * 3600 - minutes * 60);
-    int frames = static_cast<int>((totalSeconds - static_cast<int>(totalSeconds)) * fps);
+    int hours = static_cast<int>(totalSeconds / 3600.0);
+    totalSeconds -= hours * 3600.0;
+    int minutes = static_cast<int>(totalSeconds / 60.0);
+    totalSeconds -= minutes * 60.0;
+    int seconds = static_cast<int>(totalSeconds);
+    double fractionalSeconds = totalSeconds - seconds;
+    int frames = qRound(fractionalSeconds * fps);
+
+    int fpsInt = static_cast<int>(qRound(fps));
+    if (frames == fpsInt && fpsInt > 0)
+    {
+        frames = 0;
+        seconds++;
+        if (seconds == 60) {
+            seconds = 0;
+            minutes++;
+            if (minutes == 60) {
+                minutes = 0;
+                hours++;
+            }
+        }
+    }
+
     QString timecode = QString("%1:%2:%3:%4")
                            .arg(hours, 2, 10, QChar('0'))
                            .arg(minutes, 2, 10, QChar('0'))
@@ -482,20 +502,18 @@ int AppSupport::getFrameFromTimeCode(const QString &timecode,
 {
     const auto list = timecode.split(":");
     bool negative = timecode.startsWith("-");
+
     if (fps > 0. && list.count() == 4) {
-        int hh = negative ? QString(list.at(0)).replace("-", "").toInt() : list.at(0).toInt();
+        int hh = qAbs(list.at(0).toInt());
         int mm = list.at(1).toInt();
         int ss = list.at(2).toInt();
         int ff = list.at(3).toInt();
         double totalSeconds = hh * 3600 + mm * 60 + ss + static_cast<double>(ff) / fps;
-        int frame = static_cast<int>(totalSeconds * fps);
-        //qDebug() << timecode << "=" << negative ? -frame : frame;
+        int frame = qRound(totalSeconds * fps);
+        //qDebug() << timecode << "=" << (negative ? -frame : frame);
         return negative ? -frame : frame;
-    } else {
-        // assume it's just a frame number
-        return timecode.toInt();
     }
-    return 0;
+    return timecode.toInt();
 }
 
 HardwareSupport AppSupport::getRasterEffectHardwareSupport(const QString &effect,
@@ -1002,9 +1020,15 @@ void AppSupport::checkPerms(const bool &isRenderer)
 void AppSupport::checkFFmpeg(const bool &isRenderer)
 {
     av_log_set_level(AV_LOG_ERROR);
+    const auto version = avutil_version();
+    const QString info = av_version_info();
+    qWarning() << "Using FFmpeg" << info << version;
 #ifndef QT_DEBUG
-    const QString warning = QObject::tr("Friction is built against an unsupported FFmpeg version. Use at own risk and don't report any issues upstream.");
-    if (avformat_version() >= 3812708) {
+    if (info.contains("friction")) { return; }
+    const QString warning = QObject::tr("Friction is using an unsupported FFmpeg version, "
+                                        "video and/or image export will not work properly. "
+                                        "Use at own risk and don't report any issues upstream.");
+    if (version < 3600000 || version >= 3700000) {
         if (isRenderer) { qWarning() << warning; }
         else {
             QMessageBox::critical(nullptr,

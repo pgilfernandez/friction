@@ -77,6 +77,8 @@ public:
     static void setToolbarButtonStyle(const QString &name,
                                       QToolBar *bar,
                                       QAction *act);
+    static const QColor getLightDarkColor(const QColor &color,
+                                          const int &factor);
 };
 
 #endif // THEMESUPPORT_H

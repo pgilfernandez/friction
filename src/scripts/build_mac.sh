@@ -24,7 +24,7 @@ REL=${REL:-"OFF"}
 BRANCH=${BRANCH:-`git rev-parse --abbrev-ref HEAD`}
 COMMIT=${COMMIT:-`git rev-parse --short=8 HEAD`}
 CUSTOM=${CUSTOM:-""}
-OSX=12.7
+OSX=11.0
 CPU=`arch`
 
 if [ "${CPU}" = "i386" ]; then
@@ -64,6 +64,7 @@ cmake -G Ninja \
 -DFRICTION_OFFICIAL_RELEASE=${REL} \
 -DCUSTOM_BUILD=${CUSTOM} \
 -DBUILD_SKIA=OFF \
+-DSKIA_STATIC=ON \
 -DSKIA_LIB_PATH=${SDK}/lib \
 -DCMAKE_BUILD_TYPE=Release \
 -DQSCINTILLA_INCLUDE_DIRS=${SDK}/include \

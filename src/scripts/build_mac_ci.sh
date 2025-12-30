@@ -27,10 +27,10 @@ COMMIT=${COMMIT:-`git rev-parse --short=8 HEAD`}
 CUSTOM=${CUSTOM:-"CI"}
 
 SDK=1.0.0
-SDK_REV=r3
+SDK_REV=r5
 SDK_URL=https://github.com/friction2d/friction-sdk/releases/download/v${SDK}
 SDK_TAR=friction-sdk-${SDK}${SDK_REV}-macOS.tar.xz
-SDK_SHA256=727cb8a14d69b7f6b52c2b8ecaf6cd37602371c5a028b7293225b7fe45d4cae3
+SDK_SHA256=36a30cb68862d3cd0fe39f9c283f1a9fb9cf2ea01a9dfc65c85024b0c2171d2d
 
 if [ ! -d "${CWD}/sdk" ]; then
     curl -OL ${SDK_URL}/${SDK_TAR}
