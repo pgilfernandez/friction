@@ -64,8 +64,8 @@ void ToolInteract::setupGizmoButton()
         const auto doc = Document::sInstance;
         const bool visible = doc->getGizmoVisibility(Core::Gizmos::Interact::All);
 
-        const QString gizmosOn = tr("Gizmos in On");
-        const QString gizmosOff = tr("Gizmos is Off");
+        const QString gizmosOn = tr("Gizmos are On");
+        const QString gizmosOff = tr("Gizmos are Off");
 
         act->setCheckable(true);
         act->setChecked(visible);
