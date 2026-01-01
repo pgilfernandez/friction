@@ -281,9 +281,23 @@ const QString AppSupport::getAppTempPath()
 {
 #ifdef Q_OS_LINUX
     if (isFlatpak()) {
+        // TODO: we should check on startup if we run as flatpak, if settings 'tempDir'
+        // is empty then popup a dialog with an option to set a shared temp folder
         QString path = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
         if (!path.isEmpty()) {
             path.append("/friction-temp");
+            if (!QFile::exists(path)) {
+                QDir dir(path);
+                dir.mkpath(path);
+            }
+            if (QFile::exists(path)) { return path; }
+        }
+    } else {
+        // Allow users to set a custom folder to share temp files with sandboxed web browsers
+        // This is needed since Ubuntu snaps can't access /tmp, XDG_RUNTIME_DIR, or XDG dot folders
+        // "security" before users! ;)
+        QString path = getSettings("files", "tempDir").toString().trimmed();
+        if (!path.isEmpty()) {
             if (!QFile::exists(path)) {
                 QDir dir(path);
                 dir.mkpath(path);
