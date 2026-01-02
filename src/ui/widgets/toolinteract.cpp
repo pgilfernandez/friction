@@ -24,6 +24,7 @@
 
 #include "Private/document.h"
 #include "GUI/coloranimatorbutton.h"
+#include "widgets/persistentmenu.h"
 
 #include <QSpinBox>
 #include <QLabel>
@@ -50,7 +51,7 @@ ToolInteract::ToolInteract(QWidget *parent)
 void ToolInteract::setupGizmoButton()
 {
     const auto button = new QToolButton(this);
-    const auto menu = new QMenu(button);
+    const auto menu = new PersistentMenu(button);
 
     button->setObjectName("ToolBoxGizmo");
     button->setPopupMode(QToolButton::MenuButtonPopup);
@@ -155,7 +156,7 @@ void ToolInteract::setupSnapButton()
 {
     const auto grid = Document::sInstance->getGrid();
     const auto button = new QToolButton(this);
-    const auto menu = new QMenu(button);
+    const auto menu = new PersistentMenu(button);
 
     button->setObjectName("ToolBoxGizmo");
     button->setPopupMode(QToolButton::MenuButtonPopup);
@@ -309,7 +310,7 @@ void ToolInteract::setupGridButton()
 {
     const auto grid = Document::sInstance->getGrid();
     const auto button = new QToolButton(this);
-    const auto menu = new QMenu(button);
+    const auto menu = new PersistentMenu(button);
 
     button->setObjectName("ToolBoxGizmo");
     button->setPopupMode(QToolButton::MenuButtonPopup);
@@ -362,8 +363,8 @@ void ToolInteract::setupGridButton()
     }
 
     menu->addSeparator();
-    const auto optMenu = menu->addMenu(QIcon::fromTheme("preferences"),
-                                       tr("Settings"));
+    const auto optMenu = menu->addPersistentMenu(QIcon::fromTheme("preferences"),
+                                                 tr("Settings"));
 
     menu->addSeparator();
     setupGridAction(button, Core::Grid::Option::SizeX);

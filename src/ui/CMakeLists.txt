@@ -171,6 +171,7 @@ set(
     widgets/labeledslider.h
     widgets/markereditor.h
     widgets/performancesettingswidget.h
+    widgets/persistentmenu.h
     widgets/presetsettingswidget.h
     widgets/qdoubleslider.h
     widgets/qrealanimatorvalueslider.h
