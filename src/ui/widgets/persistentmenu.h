@@ -61,6 +61,10 @@ namespace Friction
             void mouseReleaseEvent(QMouseEvent *event) override
             {
                 QAction *action = actionAt(event->pos());
+                if (action && action->menu()) {
+                    QMenu::mouseReleaseEvent(event);
+                    return;
+                }
                 if ((action && !mOnlyCheckable) ||
                     (action && mOnlyCheckable && action->isCheckable())) {
                     action->activate(QAction::Trigger);
