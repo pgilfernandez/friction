@@ -333,7 +333,13 @@ void MainWindow::setupMenuBar()
                                                      });
     cmdAddAction(clearRecentAct);
 
+#ifndef Q_OS_MAC
+    mViewMenu = new Ui::PersistentMenu(tr("View", "MenuBar"), this);
+    mViewMenu->setOnlyCheckable(true);
+    mMenuBar->addMenu(mViewMenu);
+#else
     mViewMenu = mMenuBar->addMenu(tr("View", "MenuBar"));
+#endif
 
     mObjectMenu = mMenuBar->addMenu(tr("Object", "MenuBar"));
 
@@ -505,7 +511,13 @@ void MainWindow::setupMenuBar()
     mEffectsMenu->setEnabled(false);
     setupMenuEffects();
 
-    const auto zoomMenu = mViewMenu->addMenu(QIcon::fromTheme("zoom"), tr("Zoom","MenuBar_View"));
+#ifndef Q_OS_MAC
+    const auto zoomMenu = mViewMenu->addPersistentMenu(QIcon::fromTheme("zoom"),
+                                                       tr("Zoom","MenuBar_View"));
+#else
+    const auto zoomMenu = mViewMenu->addMenu(QIcon::fromTheme("zoom"),
+                                             tr("Zoom","MenuBar_View"));
+#endif
 
     mZoomInAction = zoomMenu->addAction(tr("Zoom In", "MenuBar_View_Zoom"));
     mZoomInAction->setIcon(QIcon::fromTheme("zoom_in"));
@@ -566,8 +578,13 @@ void MainWindow::setupMenuBar()
             });
     cmdAddAction(mResetZoomAction);
 
+#ifndef Q_OS_MAC
+    const auto filteringMenu = mViewMenu->addPersistentMenu(QIcon::fromTheme("user-desktop"),
+                                                            tr("Filtering", "MenuBar_View"));
+#else
     const auto filteringMenu = mViewMenu->addMenu(QIcon::fromTheme("user-desktop"),
                                                   tr("Filtering", "MenuBar_View"));
+#endif
 
     mNoneQuality = filteringMenu->addAction(
         tr("None", "MenuBar_View_Filtering"), [this]() {
