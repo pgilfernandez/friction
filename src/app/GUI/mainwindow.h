@@ -287,7 +287,7 @@ private:
 #ifndef Q_OS_MAC
     Friction::Ui::PersistentMenu *mViewMenu;
 #else
-    QMenu *mViewMenu
+    QMenu *mViewMenu;
 #endif
     QMenu *mPanelsMenu;
     QMenu *mRenderMenu;
