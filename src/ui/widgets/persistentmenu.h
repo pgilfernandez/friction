@@ -40,19 +40,29 @@ namespace Friction
             using QMenu::QMenu;
 
             PersistentMenu* addPersistentMenu(const QIcon &icon,
-                                              const QString &title)
+                                              const QString &title,
+                                              const bool onlyCheckable = false)
             {
                 PersistentMenu *subMenu = new PersistentMenu(title, this);
+                subMenu->setOnlyCheckable(onlyCheckable);
                 subMenu->setIcon(icon);
                 this->addMenu(subMenu);
                 return subMenu;
             }
+            void setOnlyCheckable(const bool checked)
+            {
+                mOnlyCheckable = checked;
+            }
+
+        private:
+            bool mOnlyCheckable = false;
 
         protected:
             void mouseReleaseEvent(QMouseEvent *event) override
             {
                 QAction *action = actionAt(event->pos());
-                if (action) {
+                if ((action && !mOnlyCheckable) ||
+                    (action && mOnlyCheckable && action->isCheckable())) {
                     action->activate(QAction::Trigger);
                 } else {
                     QMenu::mouseReleaseEvent(event);
