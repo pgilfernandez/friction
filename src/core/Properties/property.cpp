@@ -31,7 +31,6 @@
 #include "Private/document.h"
 #include "ReadWrite/evformat.h"
 #include "canvas.h"
-#include "Animators/eboxorsound.h"
 
 Property::Property(const QString& name) :
     prp_mName(name) {
