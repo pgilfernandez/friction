@@ -40,6 +40,8 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QGroupBox>
+#include <QDir>
+#include <QFileInfo>
 
 ExportSvgDialog::ExportSvgDialog(QWidget* const parent,
                                  const QString &warnings)
@@ -243,10 +245,26 @@ ExportSvgDialog::ExportSvgDialog(QWidget* const parent,
 
     connect(buttonExport, &QPushButton::clicked, this, [this]() {
         const QString fileType = tr("SVG Files %1", "ExportDialog_FileType");
+        const auto document = Document::sInstance;
+        const QString lastExport = AppSupport::getSettings("files",
+                                                           "recentExported",
+                                                           QDir::homePath()).toString();
+        QString defaultDir = lastExport;
+        QString defaultName;
+        if (document && !document->fEvFile.isEmpty()) {
+            defaultDir = document->projectDirectory();
+            QFileInfo projectInfo(document->fEvFile);
+            const QString projectBase = projectInfo.baseName();
+            if (!projectBase.isEmpty()) {
+                defaultName = QString("%1.svg").arg(projectBase);
+            }
+        }
+        QString initialPath = defaultDir;
+        if (!defaultName.isEmpty()) {
+            initialPath = QDir(defaultDir).filePath(defaultName);
+        }
         QString saveAs = eDialogs::saveFile(tr("Export SVG"),
-                                            AppSupport::getSettings("files",
-                                                                    "recentExported",
-                                                                    QDir::homePath()).toString(),
+                                            initialPath,
                                             fileType.arg("(*.svg)"));
         if (saveAs.isEmpty()) { return; }
         if (!saveAs.endsWith(".svg")) { saveAs.append(".svg"); }
