@@ -135,6 +135,8 @@ public:
 
     qreal getMinPossibleValue();
     qreal getMaxPossibleValue();
+    qreal getMinPossibleValue() const;
+    qreal getMaxPossibleValue() const;
 
     qreal getPrefferedValueStep();
 

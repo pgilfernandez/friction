@@ -35,6 +35,8 @@
 #include "Animators/qrealkey.h"
 #include "RasterEffects/rastereffectcollection.h"
 #include "frameremapping.h"
+#include "Properties/comboboxproperty.h"
+#include "framerange.h"
 #include "typemenu.h"
 #include "Private/Tasks/complextask.h"
 #include "Private/Tasks/taskscheduler.h"
@@ -58,12 +60,32 @@ AnimationBox::AnimationBox(const QString &name, const eBoxType type) :
 
     setDurationRectangle(enve::make_shared<FixedLenAnimationRect>(*this), true);
 
+    const QStringList remapModes{tr("manual"), tr("loop"), tr("bounce")};
+    mFrameRemappingMode = enve::make_shared<ComboBoxProperty>("frame remapping mode",
+                                                              remapModes);
     mFrameRemapping = enve::make_shared<IntFrameRemapping>();
     ca_prependChild(mRasterEffectsAnimators.get(), mFrameRemapping);
+    ca_prependChild(mFrameRemapping.get(), mFrameRemappingMode);
     mFrameRemapping->disableAction();
 
+    connect(mFrameRemappingMode.get(), &ComboBoxProperty::valueChanged,
+            this, [this](const int value) {
+        mFrameRemapping->setMode(
+                    static_cast<FrameRemappingBase::FrameRemappingMode>(value));
+        updateFrameRemappingVisibility();
+    });
     connect(mFrameRemapping.get(), &IntFrameRemapping::enabledChanged,
             this, &AnimationBox::updateAnimationRange);
+    connect(mFrameRemapping.get(), &IntFrameRemapping::enabledChanged,
+            this, &AnimationBox::updateFrameRemappingVisibility);
+    connect(mFrameRemapping.get(), &FrameRemappingBase::modeChanged,
+            this, &AnimationBox::updateAnimationRange);
+    connect(mFrameRemapping.get(), &FrameRemappingBase::modeChanged,
+            this, [this](FrameRemappingBase::FrameRemappingMode mode) {
+        mFrameRemappingMode->setCurrentValueNoUndo(static_cast<int>(mode));
+        updateFrameRemappingVisibility();
+    });
+    updateFrameRemappingVisibility();
 }
 
 FixedLenAnimationRect *AnimationBox::getAnimationDurationRect() const {
@@ -72,16 +94,26 @@ FixedLenAnimationRect *AnimationBox::getAnimationDurationRect() const {
 
 void AnimationBox::updateAnimationRange() {
     const auto durRect = getAnimationDurationRect();
-    if(mFrameRemapping->enabled()) {
-        const int nFrames = durRect->getFrameDuration();
-        durRect->setAnimationFrameDuration(0);
-        durRect->setFramesDuration(nFrames);
+    int frameCount = 0;
+    if(mSrcFramesCache) frameCount = mSrcFramesCache->getFrameCount();
+    if(frameCount < 1) frameCount = 1;
+
+    const bool remappingEnabled = mFrameRemapping->enabled();
+    if(remappingEnabled) {
+        durRect->setAnimationFrameDuration(frameCount);
+        const bool autoLoop =
+                mFrameRemapping->mode() != FrameRemappingBase::FrameRemappingMode::manual;
+        durRect->setFramesDuration(autoLoop ? FrameRange::EMAX : frameCount);
     } else {
-        int frameCount;
-        if(mSrcFramesCache) frameCount = mSrcFramesCache->getFrameCount();
-        else frameCount = 0;
         const int nFrames = qRound(frameCount*qAbs(mStretch));
         durRect->setAnimationFrameDuration(nFrames);
+    }
+}
+
+void AnimationBox::updateFrameRemappingVisibility() {
+    const bool remappingEnabled = mFrameRemapping->enabled();
+    if (mFrameRemappingMode) {
+        mFrameRemappingMode->SWT_setVisible(remappingEnabled);
     }
 }
 

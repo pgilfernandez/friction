@@ -73,3 +73,11 @@ void ComboBoxProperty::setCurrentValue(const int id)
     emit valueChanged(id);
     prp_afterWholeInfluenceRangeChanged();
 }
+
+void ComboBoxProperty::setCurrentValueNoUndo(const int id)
+{
+    if (mCurrentValue == id) { return; }
+    mCurrentValue = id;
+    emit valueChanged(id);
+    prp_afterWholeInfluenceRangeChanged();
+}

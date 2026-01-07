@@ -33,6 +33,7 @@
 
 class AnimationFrameHandler;
 class IntFrameRemapping;
+class ComboBoxProperty;
 
 class CORE_EXPORT AnimationBox : public BoundingBox {
     e_OBJECT
@@ -72,12 +73,14 @@ public:
 protected:
     void setAnimationFramesHandler(const qsptr<AnimationFrameHandler>& src);
 private:
+    void updateFrameRemappingVisibility();
     //void createPaintObject(const int firstAbsFrame,
       //                     const int lastAbsFrame,
         //                   const int increment);
 
     qreal mStretch = 1;
     qsptr<AnimationFrameHandler> mSrcFramesCache;
+    qsptr<ComboBoxProperty> mFrameRemappingMode;
     qsptr<IntFrameRemapping> mFrameRemapping;
 };
 

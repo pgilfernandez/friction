@@ -29,6 +29,8 @@
 #include "Properties/boolproperty.h"
 #include "Boxes/frameremapping.h"
 
+class ComboBoxProperty;
+
 class CORE_EXPORT InternalLinkCanvas : public InternalLinkGroupBox {
     e_OBJECT
 protected:
@@ -37,24 +39,29 @@ protected:
 public:
     void setupRenderData(const qreal relFrame, const QMatrix& parentM,
                          BoxRenderData * const data,
-                         Canvas * const scene);
+                         Canvas * const scene) override;
 
-    qsptr<BoundingBox> createLink(const bool inner);
+    qsptr<BoundingBox> createLink(const bool inner) override;
 
-    stdsptr<BoxRenderData> createRenderData();
+    stdsptr<BoxRenderData> createRenderData() override;
 
-    bool relPointInsidePath(const QPointF &relPos) const;
-    void anim_setAbsFrame(const int frame);
+    bool relPointInsidePath(const QPointF &relPos) const override;
+    void anim_setAbsFrame(const int frame) override;
 
-    void prp_setupTreeViewMenu(PropertyMenu * const menu);
+    void prp_setupTreeViewMenu(PropertyMenu * const menu) override;
 
     void enableFrameRemappingAction();
     void disableFrameRemappingAction();
 
     bool clipToCanvas();
+    bool isFrameInDurationRect(const int relFrame) const override;
+    bool isFrameFInDurationRect(const qreal relFrame) const override;
 private:
+    void updateFrameRemappingVisibility();
+    void updateDurationRangeForRemap();
     qsptr<BoolProperty> mClipToCanvas =
             enve::make_shared<BoolProperty>("clip");
+    qsptr<ComboBoxProperty> mFrameRemappingMode;
     qsptr<QrealFrameRemapping> mFrameRemapping =
             enve::make_shared<QrealFrameRemapping>();
 };

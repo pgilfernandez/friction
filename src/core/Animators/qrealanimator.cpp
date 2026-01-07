@@ -230,6 +230,14 @@ qreal QrealAnimator::getMaxPossibleValue() {
     return mClampMax;
 }
 
+qreal QrealAnimator::getMinPossibleValue() const {
+    return mClampMin;
+}
+
+qreal QrealAnimator::getMaxPossibleValue() const {
+    return mClampMax;
+}
+
 qreal QrealAnimator::getPrefferedValueStep() {
     return mPrefferedValueStep;
 }

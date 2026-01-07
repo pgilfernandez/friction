@@ -29,6 +29,13 @@
 
 class CORE_EXPORT FrameRemappingBase : public QrealAnimator {
     Q_OBJECT
+public:
+    enum class FrameRemappingMode : int {
+        manual = 0,
+        loop,
+        bounce
+    };
+    Q_ENUM(FrameRemappingMode)
 protected:
     FrameRemappingBase();
 
@@ -37,10 +44,13 @@ protected:
                                   const XevImporter& imp) override;
 public:    
     bool enabled() const { return mEnabled; }
+    FrameRemappingMode mode() const { return mMode; }
 
     void enableAction(const int minFrame, const int maxFrame,
                       const int animStartRelFrame);
     void disableAction();
+
+    void setMode(FrameRemappingMode mode);
 
     void setFrameCount(const int count);
 
@@ -48,10 +58,16 @@ public:
     void prp_writeProperty_impl(eWriteStream &dst) const override;
 signals:
     void enabledChanged(const bool enabled);
+    void modeChanged(FrameRemappingMode mode);
+protected:
+    qreal remappedFrame(const qreal relFrame) const;
+    qreal loopFrame(const qreal relFrame) const;
+    qreal bounceFrame(const qreal relFrame) const;
 private:
     void setEnabled(const bool enabled);
-
-    bool mEnabled;
+    void updateVisibility();
+    FrameRemappingMode mMode = FrameRemappingMode::manual;
+    bool mEnabled = false;
 };
 
 class CORE_EXPORT IntFrameRemapping : public FrameRemappingBase {

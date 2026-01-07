@@ -45,6 +45,7 @@ public:
     QString getCurrentValueName();
     int getCurrentValue() { return mCurrentValue; }
     void setCurrentValue(const int id);
+    void setCurrentValueNoUndo(const int id);
 signals:
     void valueChanged(int);
 private:

@@ -27,14 +27,40 @@
 #include "linkcanvasrenderdata.h"
 #include "Animators/transformanimator.h"
 #include "canvas.h"
+#include "Properties/comboboxproperty.h"
+#include "Timeline/animationrect.h"
 
 InternalLinkCanvas::InternalLinkCanvas(ContainerBox * const linkTarget,
                                        const bool innerLink) :
     InternalLinkGroupBox(linkTarget, innerLink) {
     mType = eBoxType::internalLinkCanvas;
     mFrameRemapping->disableAction();
+    const QStringList remapModes{tr("manual"), tr("loop"), tr("bounce")};
+    mFrameRemappingMode = enve::make_shared<ComboBoxProperty>("frame remapping mode",
+                                                              remapModes);
     ca_prependChild(mTransformAnimator.data(), mClipToCanvas);
     ca_prependChild(mTransformAnimator.data(), mFrameRemapping);
+    ca_prependChild(mFrameRemapping.get(), mFrameRemappingMode);
+
+    connect(mFrameRemappingMode.get(), &ComboBoxProperty::valueChanged,
+            this, [this](const int value) {
+        mFrameRemapping->setMode(
+                    static_cast<FrameRemappingBase::FrameRemappingMode>(value));
+        updateFrameRemappingVisibility();
+        updateDurationRangeForRemap();
+    });
+    connect(mFrameRemapping.get(), &QrealFrameRemapping::enabledChanged,
+            this, &InternalLinkCanvas::updateFrameRemappingVisibility);
+    connect(mFrameRemapping.get(), &FrameRemappingBase::modeChanged,
+            this, [this](FrameRemappingBase::FrameRemappingMode mode) {
+        mFrameRemappingMode->setCurrentValueNoUndo(static_cast<int>(mode));
+        updateFrameRemappingVisibility();
+        updateDurationRangeForRemap();
+    });
+    connect(mFrameRemapping.get(), &QrealFrameRemapping::enabledChanged,
+            this, &InternalLinkCanvas::updateDurationRangeForRemap);
+    updateFrameRemappingVisibility();
+    updateDurationRangeForRemap();
 }
 
 void InternalLinkCanvas::enableFrameRemappingAction() {
@@ -42,10 +68,43 @@ void InternalLinkCanvas::enableFrameRemappingAction() {
     const int minFrame = finalTarget->getMinFrame();
     const int maxFrame = finalTarget->getMaxFrame();
     mFrameRemapping->enableAction(minFrame, maxFrame, minFrame);
+    updateDurationRangeForRemap();
 }
 
 void InternalLinkCanvas::disableFrameRemappingAction() {
     mFrameRemapping->disableAction();
+    updateDurationRangeForRemap();
+}
+
+void InternalLinkCanvas::updateFrameRemappingVisibility() {
+    const bool remappingEnabled = mFrameRemapping->enabled();
+    if (mFrameRemappingMode) {
+        mFrameRemappingMode->SWT_setVisible(remappingEnabled);
+    }
+}
+
+void InternalLinkCanvas::updateDurationRangeForRemap() {
+    const auto target = static_cast<Canvas*>(getFinalTarget());
+    if (!target) { return; }
+    const bool autoLoop = mFrameRemapping->enabled() &&
+            mFrameRemapping->mode() != FrameRemappingBase::FrameRemappingMode::manual;
+
+    auto durRect = getDurationRectangle();
+    if(!durRect && !durationRectangleLocked()) {
+        createDurationRectangle();
+        durRect = getDurationRectangle();
+    }
+    if(!durRect) { return; }
+
+    const int minFrame = target->getMinFrame();
+    const int maxFrame = target->getMaxFrame();
+    const int span = qMax(1, maxFrame - minFrame + 1);
+
+    durRect->setMinRelFrame(minFrame);
+    durRect->setFramesDuration(autoLoop ? FrameRange::EMAX : span);
+    if (auto animRect = dynamic_cast<AnimationRect*>(durRect)) {
+        animRect->setAnimationFrameDuration(span);
+    }
 }
 
 void InternalLinkCanvas::prp_setupTreeViewMenu(PropertyMenu * const menu) {
@@ -92,6 +151,28 @@ void InternalLinkCanvas::setupRenderData(const qreal relFrame,
 
 bool InternalLinkCanvas::clipToCanvas() {
     return mClipToCanvas->getValue();
+}
+
+bool InternalLinkCanvas::isFrameInDurationRect(const int relFrame) const {
+    const auto target = getFinalTarget();
+    if(!target) return false;
+    const bool ownRange = InternalLinkGroupBox::isFrameInDurationRect(relFrame);
+    if(!ownRange) return false;
+    const qreal remapped = mFrameRemapping->enabled()
+            ? mFrameRemapping->frame(relFrame)
+            : relFrame;
+    return target->isFrameInDurationRect(qRound(remapped));
+}
+
+bool InternalLinkCanvas::isFrameFInDurationRect(const qreal relFrame) const {
+    const auto target = getFinalTarget();
+    if(!target) return false;
+    const bool ownRange = InternalLinkGroupBox::isFrameFInDurationRect(relFrame);
+    if(!ownRange) return false;
+    const qreal remapped = mFrameRemapping->enabled()
+            ? mFrameRemapping->frame(relFrame)
+            : relFrame;
+    return target->isFrameFInDurationRect(remapped);
 }
 
 qsptr<BoundingBox> InternalLinkCanvas::createLink(const bool inner) {
