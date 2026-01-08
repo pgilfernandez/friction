@@ -119,6 +119,8 @@ bool InternalLinkCanvas::clipToCanvas() {
 qsptr<BoundingBox> InternalLinkCanvas::createLink(const bool inner) {
     auto linkBox = enve::make_shared<InternalLinkCanvas>(this, inner);
     copyTransformationTo(linkBox.get());
+    sWriteReadMember(this, linkBox.get(), &InternalLinkCanvas::mClipToCanvas);
+    sWriteReadMember(this, linkBox.get(), &InternalLinkCanvas::mFrameRemapping);
     return std::move(linkBox);
 }
 
