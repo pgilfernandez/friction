@@ -27,6 +27,7 @@
 #include "linkcanvasrenderdata.h"
 #include "Animators/transformanimator.h"
 #include "canvas.h"
+#include "svgexporter.h"
 
 InternalLinkCanvas::InternalLinkCanvas(ContainerBox * const linkTarget,
                                        const bool innerLink) :
@@ -88,6 +89,27 @@ void InternalLinkCanvas::setupRenderData(const qreal relFrame,
     } else {
         canvasData->fClipToCanvas = mClipToCanvas->getValue();
     }
+}
+
+void InternalLinkCanvas::saveSVG(SvgExporter& exp, DomEleTask* const task) const {
+    const auto linkTarget = getLinkTarget();
+    if(!linkTarget) return;
+    if(!mFrameRemapping->enabled()) {
+        linkTarget->saveSVG(exp, task);
+        return;
+    }
+
+    SvgExporter::FrameMapping mapping;
+    const QPointer<const QrealFrameRemapping> remap = mFrameRemapping.get();
+    mapping.active = true;
+    mapping.discrete = true;
+    mapping.mapper = [remap](const qreal frame) -> qreal {
+        if(!remap) return frame;
+        return remap->frame(frame);
+    };
+
+    const SvgExporter::FrameMappingScope scope(exp, mapping);
+    linkTarget->saveSVG(exp, task);
 }
 
 bool InternalLinkCanvas::clipToCanvas() {
