@@ -297,7 +297,11 @@ static AVFrame *getVideoFrame(OutputStream * const ost,
     image->peekPixels(&pixmap);
 
     // check if we need to convert to "unpremultiplied"
-    const bool unpremul = c->codec_id == AV_CODEC_ID_PNG; // for now only check for PNG
+    const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(c->pix_fmt);
+    const bool hasAlpha = desc && (desc->flags & AV_PIX_FMT_FLAG_ALPHA);
+    const bool unpremul = hasAlpha && (c->codec_id == AV_CODEC_ID_PNG ||
+                                       c->codec_id == AV_CODEC_ID_VP9 ||
+                                       c->codec_id == AV_CODEC_ID_VP8);
     if (unpremul) {
         SkImageInfo unpremulInfo = SkImageInfo::Make(pixmap.width(),
                                                      pixmap.height(),
