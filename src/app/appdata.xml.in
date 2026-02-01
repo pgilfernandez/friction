@@ -89,7 +89,7 @@
   </releases>
   <screenshots>
     <screenshot type="default">
-      <image>https://friction.graphics/assets/screenshots/100/friction-100b2-screenshot.png</image>
+      <image>https://friction.graphics//assets/screenshots/100/friction-100rc3-screenshot.png</image>
       <caption>Default user interface</caption>
     </screenshot>
   </screenshots>
@@ -107,21 +107,17 @@
     <control>pointing</control>
   </supports>
   <categories>
-    <category>AudioVideo</category>
     <category>Graphics</category>
+    <category>AudioVideo</category>
   </categories>
   <keywords>
-    <keyword>2d</keyword>
     <keyword>graphics</keyword>
     <keyword>motion graphics</keyword>
-    <keyword>mograph</keyword>
     <keyword>animation</keyword>
     <keyword>web animation</keyword>
     <keyword>video</keyword>
     <keyword>svg</keyword>
     <keyword>vector</keyword>
-    <keyword>raster</keyword>
     <keyword>vfx</keyword>
-    <keyword>editing</keyword>
   </keywords>
 </component>
