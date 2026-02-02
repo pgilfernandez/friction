@@ -1030,10 +1030,11 @@ void AppSupport::initEnv(const bool &isRenderer)
                        QSettings::NativeFormat);
     if (registry.value("AppsUseLightTheme", 0).toInt() == 0) { qputenv("QT_QPA_PLATFORM", "windows:darkmode=1"); }
 #endif
-#elif defined(Q_OS_LINUX)
-#ifndef FRICTION_EGL
-    qputenv("QT_QPA_PLATFORM", "xcb");
 #endif
+
+#if defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)
+    // GLX not supported!
+    qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
 #endif
 }
 
