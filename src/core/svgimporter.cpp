@@ -644,14 +644,31 @@ bool extractScale(const QString& str, QMatrix& target) {
     return false;
 }
 
-bool extractRotate(const QString& str, QMatrix& target) {
-    const QRegExp rx5(RGXS "rotate\\(" REGEX_SINGLE_FLOAT "\\)" RGXS,
-                      Qt::CaseInsensitive);
-    if(rx5.exactMatch(str)) {
-        rx5.indexIn(str);
-        const QStringList capturedTxt = rx5.capturedTexts();
-        target.rotate(capturedTxt.at(1).toDouble());
-        return true;
+bool extractRotate(const QString& str,
+                   QMatrix& target)
+{
+    const QRegExp rxRotate("rotate\\s*\\(\\s*([^\\s,)]+)(?:[\\s,]+([^\\s,)]+)[\\s,]+([^\\s,)]+))?\\s*\\)",
+                           Qt::CaseInsensitive);
+
+    int pos = rxRotate.indexIn(str);
+    if (pos != -1) {
+        const QStringList captured = rxRotate.capturedTexts();
+        bool ok;
+        double angle = captured.at(1).toDouble(&ok);
+
+        if (ok) {
+            if (!captured.at(2).isEmpty() && !captured.at(3).isEmpty()) {
+                double cx = captured.at(2).toDouble();
+                double cy = captured.at(3).toDouble();
+
+                target.translate(cx, cy);
+                target.rotate(angle);
+                target.translate(-cx, -cy);
+            } else {
+                target.rotate(angle);
+            }
+            return true;
+        }
     }
     return false;
 }
@@ -778,19 +795,10 @@ void loadElement(const QDomElement &element, ContainerBox *parentGroup,
             }
         }
 
-        double x1;
-        double x2;
-        double y1;
-        double y2;
         switch(type) {
         case GradientType::LINEAR:
+        case GradientType::RADIAL:
         {
-            const QString x1s = element.attribute("x1");
-            const QString y1s = element.attribute("y1");
-            const QString x2s = element.attribute("x2");
-            const QString y2s = element.attribute("y2");
-
-            // get viewbox w/h
             QDomElement svgRoot = element.ownerDocument().documentElement();
             QStringList viewBox = svgRoot.attribute("viewBox").split(QRegularExpression("\\s+"),
                                                                      Qt::SkipEmptyParts);
@@ -800,42 +808,51 @@ void loadElement(const QDomElement &element, ContainerBox *parentGroup,
             if (viewBox.size() >= 4) {
                 viewW = viewBox.at(2).toDouble();
                 viewH = viewBox.at(3).toDouble();
-            } else { // fallback
+            } else {
                 viewW = svgRoot.attribute("width", "1").toDouble();
                 viewH = svgRoot.attribute("height", "1").toDouble();
             }
+            if (viewW <= 0) { viewW = 1.0; }
+            if (viewH <= 0) { viewH = 1.0; }
 
-            x1 = parseSvgUnit(x1s, viewW);
-            y1 = parseSvgUnit(y1s, viewH);
-            x2 = parseSvgUnit(x2s, viewW);
-            y2 = parseSvgUnit(y2s, viewH);
+            QPointF p1, p2;
+            if (type == GradientType::LINEAR) {
+                p1 = QPointF(parseSvgUnit(element.attribute("x1"), viewW),
+                             parseSvgUnit(element.attribute("y1"), viewH));
+                p2 = QPointF(parseSvgUnit(element.attribute("x2"), viewW),
+                             parseSvgUnit(element.attribute("y2"), viewH));
+            } else {
+                const qreal cx = parseSvgUnit(element.attribute("cx"), viewW);
+                const qreal cy = parseSvgUnit(element.attribute("cy"), viewH);
+                const qreal r = parseSvgUnit(element.attribute("r"), (viewW + viewH) * 0.5);
+                p1 = QPointF(cx, cy);
+                p2 = QPointF(cx + r, cy + r);
+            }
 
+            const QString gradTrans = element.attribute("gradientTransform");
+            QMatrix trans = getMatrixFromString(gradTrans);
+            QString units = element.attribute("gradientUnits");
+
+            if (!gradTrans.isEmpty()) {
+                if (units == "objectBoundingBox" || units.isEmpty()) {
+                    p1 = QPointF(p1.x() / viewW, p1.y() / viewH);
+                    p2 = QPointF(p2.x() / viewW, p2.y() / viewH);
+
+                    p1 = trans.map(p1);
+                    p2 = trans.map(p2);
+
+                    p1 = QPointF(p1.x() * viewW, p1.y() * viewH);
+                    p2 = QPointF(p2.x() * viewW, p2.y() * viewH);
+                } else {
+                    p1 = trans.map(p1);
+                    p2 = trans.map(p2);
+                }
+            }
+
+            gGradients.insert(id, {gradient, p1.x(), p1.y(), p2.x(), p2.y(), QMatrix(), type});
             break;
         }
-        case GradientType::RADIAL:
-        {
-            const QString cxs = element.attribute("cx");
-            const QString cys = element.attribute("cy");
-            const QString rs = element.attribute("r");
-
-            const double cx = toDouble(cxs);
-            const double cy = toDouble(cys);
-            const double r = toDouble(rs);
-
-            x1 = cx;
-            y1 = cy;
-            x2 = cx + r;
-            y2 = cy + r;
-            break;
         }
-        }
-
-        const QString gradTrans = element.attribute("gradientTransform");
-        const QMatrix trans = getMatrixFromString(gradTrans);
-        gGradients.insert(id, {gradient,
-                               x1, y1,
-                               x2, y2,
-                               trans, type});
     } else if(tagName == "path" || tagName == "polyline" || tagName == "polygon" || tagName == "line") {
         VectorPathSvgAttributes attributes;
         attributes.setParent(parentGroupAttributes);
