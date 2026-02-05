@@ -712,6 +712,54 @@ QMatrix getMatrixFromString(const QString &str) {
 static QMap<QString, SvgGradient> gGradients;
 //            to       from
 static QMap<QString, QStringList> gUnresolvedGradientLinks;
+
+void applyGradientToAttributes(const QDomElement &element,
+                               BoxSvgAttributes &attributes,
+                               const GradientCreator& gradientCreator)
+{
+    QString fillAttr = element.attribute("fill").trimmed();
+    if (!fillAttr.startsWith("url(#")) { return; }
+
+    int start = fillAttr.indexOf('#') + 1;
+    int end = fillAttr.lastIndexOf(')');
+    if (fillAttr.at(end-1) == '\'' || fillAttr.at(end-1) == '\"') { end--; }
+    QString gradId = fillAttr.mid(start, end - start);
+
+    if (gGradients.contains(gradId)) {
+        const SvgGradient &templateGrad = gGradients[gradId];
+
+        qreal opacity = 1.0;
+        if (element.hasAttribute("fill-opacity")) {
+            opacity = element.attribute("fill-opacity").toDouble();
+        } else if (element.hasAttribute("opacity")) {
+            opacity = element.attribute("opacity").toDouble();
+        }
+
+        Gradient* newGradInstance = gradientCreator();
+
+        const QGradientStops stops = templateGrad.fGradient->getQGradientStops();
+        for (const QGradientStop &stop : stops) {
+            QColor c = stop.second;
+            c.setAlphaF(c.alphaF() * opacity);
+            newGradInstance->addColor(c);
+        }
+
+        newGradInstance->updateQGradientStops();
+
+        SvgGradient instance = {
+            newGradInstance,
+            templateGrad.fX1, templateGrad.fY1,
+            templateGrad.fX2, templateGrad.fY2,
+            templateGrad.fTrans,
+            templateGrad.fType
+        };
+
+        auto& fill = const_cast<FillSvgAttributes&>(attributes.getFillAttributes());
+        fill.setGradient(instance);
+        fill.setPaintType(GRADIENTPAINT);
+    }
+}
+
 void loadElement(const QDomElement &element, ContainerBox *parentGroup,
                  const BoxSvgAttributes &parentGroupAttributes,
                  const GradientCreator& gradientCreator) {
@@ -857,6 +905,7 @@ void loadElement(const QDomElement &element, ContainerBox *parentGroup,
         VectorPathSvgAttributes attributes;
         attributes.setParent(parentGroupAttributes);
         attributes.loadBoundingBoxAttributes(element);
+        applyGradientToAttributes(element, attributes, gradientCreator);
         if(tagName == "path") {
             loadVectorPath(element, parentGroup, attributes);
         } else if(tagName == "polyline") {
@@ -872,6 +921,7 @@ void loadElement(const QDomElement &element, ContainerBox *parentGroup,
         BoxSvgAttributes attributes;
         attributes.setParent(parentGroupAttributes);
         attributes.loadBoundingBoxAttributes(element);
+        applyGradientToAttributes(element, attributes, gradientCreator);
         if(tagName == "g" || tagName == "text") {
             const auto group = loadBoxesGroup(element, parentGroup,
                                               attributes, gradientCreator);
