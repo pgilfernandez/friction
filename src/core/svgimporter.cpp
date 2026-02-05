@@ -47,6 +47,17 @@
 
 #define RGXS REGEX_SPACES
 
+static qreal parseSvgUnit(const QString &str,
+                          qreal relativeTo)
+{
+    QString trimmed = str.trimmed();
+    if (trimmed.endsWith("%")) {
+        trimmed.remove("%");
+        return (trimmed.toDouble() / 100.0) * relativeTo;
+    }
+    return trimmed.toDouble();
+}
+
 class TextSvgAttributes {
 public:
     TextSvgAttributes() {}
@@ -779,10 +790,26 @@ void loadElement(const QDomElement &element, ContainerBox *parentGroup,
             const QString x2s = element.attribute("x2");
             const QString y2s = element.attribute("y2");
 
-            x1 = toDouble(x1s);
-            y1 = toDouble(y1s),
-            x2 = toDouble(x2s);
-            y2 = toDouble(y2s);
+            // get viewbox w/h
+            QDomElement svgRoot = element.ownerDocument().documentElement();
+            QStringList viewBox = svgRoot.attribute("viewBox").split(QRegularExpression("\\s+"),
+                                                                     Qt::SkipEmptyParts);
+            qreal viewW = 1.0;
+            qreal viewH = 1.0;
+
+            if (viewBox.size() >= 4) {
+                viewW = viewBox.at(2).toDouble();
+                viewH = viewBox.at(3).toDouble();
+            } else { // fallback
+                viewW = svgRoot.attribute("width", "1").toDouble();
+                viewH = svgRoot.attribute("height", "1").toDouble();
+            }
+
+            x1 = parseSvgUnit(x1s, viewW);
+            y1 = parseSvgUnit(y1s, viewH);
+            x2 = parseSvgUnit(x2s, viewW);
+            y2 = parseSvgUnit(y2s, viewH);
+
             break;
         }
         case GradientType::RADIAL:
