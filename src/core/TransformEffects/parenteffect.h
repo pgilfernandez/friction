@@ -48,6 +48,22 @@ public:
                      BoundingBox* const parent) override;
 
 private:
+    void captureBindState(const qreal relFrame);
+    bool ensureBindState(const qreal relFrame);
+
+    bool computeEffectTransform(const qreal relFrame,
+                                const TransformValues& baseValues,
+                                const qreal posXInfl,
+                                const qreal posYInfl,
+                                const qreal scaleXInfl,
+                                const qreal scaleYInfl,
+                                const qreal rotInfl,
+                                QMatrix& outPostTransform,
+                                const bool updateState);
+
+    void handleInfluenceChanged();
+    void updatePrevInfluences(const qreal relFrame);
+
     bool validateInfluenceValues(const qreal posXInfl,
                                  const qreal posYInfl,
                                  const qreal scaleXInfl,
@@ -60,6 +76,22 @@ private:
                                    const qreal posYInfl,
                                    const qreal scaleXInfl,
                                    const qreal scaleYInfl) const;
+
+    QPointF mPrevPosInfluence;
+    QPointF mPrevScaleInfluence;
+    qreal mPrevRotInfluence = 0.0;
+    bool mPrevInfluenceValid = false;
+    QPointF mBindTargetPivotInParent;
+    QPointF mBindObjectPivotInParent;
+    QMatrix mBindTargetLinearInParent;
+    bool mBindStateValid = false;
+    qreal mAccumDeltaAngleRad = 0.0;
+    bool mDeltaAngleStateValid = false;
+    QPointF mNoFollowPivotState;
+    QMatrix mNoFollowLinearState;
+    bool mNoFollowStateValid = false;
+    QPointF mLastBaseMove;
+    bool mLastBaseMoveValid = false;
 };
 
 #endif // PARENTEFFECT_H
