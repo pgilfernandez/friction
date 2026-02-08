@@ -28,17 +28,46 @@ include(friction-common)
 #include(friction-quazip)
 include(friction-ffmpeg)
 
-message("-- git commit: ${GIT_COMMIT}")
-message("-- git branch: ${GIT_BRANCH}")
 message("-- ffmpeg include: ${FFMPEG_INCLUDE_DIRS}")
 message("-- ffmpeg libraries: ${FFMPEG_LIBRARIES_DIRS} ${FFMPEG_LIBRARIES}")
 message("-- skia libraries: ${SKIA_LIBRARIES_DIRS} ${SKIA_LIBRARIES}")
 
 add_definitions(-DPROJECT_VERSION="${PROJECT_VERSION}")
-add_definitions(-DPROJECT_COMMIT="${GIT_COMMIT}")
-add_definitions(-DPROJECT_BRANCH="${GIT_BRANCH}")
-
 add_definitions(-DCORE_LIBRARY)
+
+set(GIT_BRANCH "" CACHE STRING "Git branch")
+set(GIT_COMMIT "" CACHE STRING "Git commit")
+
+if(NOT GIT_COMMIT OR NOT GIT_BRANCH)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+        find_package(Git QUIET)
+        if(GIT_FOUND)
+            if(NOT GIT_COMMIT)
+                execute_process(
+                    COMMAND ${GIT_EXECUTABLE} rev-parse --short=8 HEAD
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                    OUTPUT_VARIABLE GIT_COMMIT_AUTO
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET
+                )
+                set(GIT_COMMIT ${GIT_COMMIT_AUTO})
+            endif()
+            if(NOT GIT_BRANCH)
+                execute_process(
+                    COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                    OUTPUT_VARIABLE GIT_BRANCH_AUTO
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET
+                )
+                set(GIT_BRANCH ${GIT_BRANCH_AUTO})
+            endif()
+        endif()
+    endif()
+endif()
+
+message("-- git commit: ${GIT_COMMIT}")
+message("-- git branch: ${GIT_BRANCH}")
 
 include_directories(
     #${QUAZIP_INCLUDE_DIRS}
@@ -703,6 +732,11 @@ if(NOT WIN32)
 else()
     add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES} coreresources.qrc)
 endif()
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    PROJECT_COMMIT="${GIT_COMMIT}"
+    PROJECT_BRANCH="${GIT_BRANCH}"
+)
 
 set_target_properties(
     ${PROJECT_NAME}
