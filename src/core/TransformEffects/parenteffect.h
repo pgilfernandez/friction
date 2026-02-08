@@ -34,6 +34,11 @@ class ParentEffect : public FollowObjectEffectBase
 public:
     ParentEffect();
 
+    void prp_drawCanvasControls(SkCanvas * const canvas,
+                                const CanvasMode mode,
+                                const float invScale,
+                                const bool ctrlPressed) override;
+
     void applyEffect(const qreal relFrame,
                      qreal &pivotX,
                      qreal &pivotY,

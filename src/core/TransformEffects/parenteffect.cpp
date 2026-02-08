@@ -29,6 +29,7 @@
 #include "Animators/transformanimator.h"
 #include "Animators/qrealanimator.h"
 #include "matrixdecomposition.h"
+#include "skia/skiahelpers.h"
 #include "simplemath.h"
 #include <cmath>
 
@@ -58,6 +59,8 @@ TransformValues currentBaseValues(BoxTransformAnimator* const transform,
 
 ParentEffect::ParentEffect() :
     FollowObjectEffectBase("parent", TransformEffectType::parent) {
+    prp_enabledDrawingOnCanvas();
+
     auto connectInfluence = [this](QrealAnimator* const animator) {
         connect(animator, &QrealAnimator::effectiveValueChanged,
                 this, [this]() { handleInfluenceChanged(); });
@@ -81,6 +84,31 @@ ParentEffect::ParentEffect() :
             }
         }
     });
+}
+
+void ParentEffect::prp_drawCanvasControls(SkCanvas * const canvas,
+                                          const CanvasMode mode,
+                                          const float invScale,
+                                          const bool ctrlPressed) {
+    Q_UNUSED(mode)
+    Q_UNUSED(ctrlPressed)
+
+    if(!isVisible()) { return; }
+
+    const auto parent = getFirstAncestor<BoundingBox>();
+    const auto target = targetProperty()->getTarget();
+    if(!parent || !target) { return; }
+
+    const qreal relFrame = parent->anim_getCurrentRelFrame();
+    const qreal absFrame = prp_relFrameToAbsFrameF(relFrame);
+    const qreal targetRelFrame = target->prp_absFrameToRelFrameF(absFrame);
+    const QPointF childPivotAbs = parent->getPivotAbsPos(relFrame);
+    const QPointF targetPivotAbs = target->getPivotAbsPos(targetRelFrame);
+
+    SkPath pivotLink;
+    pivotLink.moveTo(toSkScalar(childPivotAbs.x()), toSkScalar(childPivotAbs.y()));
+    pivotLink.lineTo(toSkScalar(targetPivotAbs.x()), toSkScalar(targetPivotAbs.y()));
+    SkiaHelpers::drawOutlineOverlay(canvas, pivotLink, invScale, true, 6.0f, SK_ColorWHITE);
 }
 
 void ParentEffect::applyEffect(const qreal relFrame,
