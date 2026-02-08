@@ -30,8 +30,6 @@ else()
     set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 endif()
 
-set(GIT_BRANCH "" CACHE STRING "Git branch")
-set(GIT_COMMIT "" CACHE STRING "Git commit")
 set(CUSTOM_BUILD "" CACHE STRING "Custom build")
 if (NOT CUSTOM_BUILD STREQUAL "")
     add_definitions(-DCUSTOM_BUILD="${CUSTOM_BUILD}")
@@ -39,32 +37,4 @@ endif()
 option(FRICTION_OFFICIAL_RELEASE "" OFF)
 if (${FRICTION_OFFICIAL_RELEASE})
     add_definitions(-DPROJECT_OFFICIAL)
-endif()
-
-if(NOT GIT_COMMIT OR NOT GIT_BRANCH)
-    if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
-        find_package(Git QUIET)
-        if(GIT_FOUND)
-            if(NOT GIT_COMMIT)
-                execute_process(
-                    COMMAND ${GIT_EXECUTABLE} rev-parse --short=8 HEAD
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                    OUTPUT_VARIABLE GIT_COMMIT_AUTO
-                    OUTPUT_STRIP_TRAILING_WHITESPACE
-                    ERROR_QUIET
-                )
-                set(GIT_COMMIT ${GIT_COMMIT_AUTO})
-            endif()
-            if(NOT GIT_BRANCH)
-                execute_process(
-                    COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
-                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                    OUTPUT_VARIABLE GIT_BRANCH_AUTO
-                    OUTPUT_STRIP_TRAILING_WHITESPACE
-                    ERROR_QUIET
-                )
-                set(GIT_BRANCH ${GIT_BRANCH_AUTO})
-            endif()
-        endif()
-    endif()
 endif()
