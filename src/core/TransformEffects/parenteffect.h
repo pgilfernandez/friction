@@ -88,6 +88,7 @@ private:
     bool mPrevInfluenceValid = false;
     QPointF mBindTargetPivotInParent;
     QPointF mBindObjectPivotInParent;
+    QMatrix mBindTargetParentToParentSpace;
     QMatrix mBindTargetLinearInParent;
     bool mBindStateValid = false;
     qreal mAccumDeltaAngleRad = 0.0;

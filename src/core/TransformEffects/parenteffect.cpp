@@ -197,21 +197,16 @@ bool ParentEffect::computeEffectTransform(const qreal relFrame,
     const qreal absFrame = prp_relFrameToAbsFrameF(relFrame);
     const qreal targetRelFrame = target->prp_absFrameToRelFrameF(absFrame);
 
-    const QMatrix inherited = parent->getInheritedTransformAtFrame(relFrame);
-    bool inheritedInvertible = false;
-    const QMatrix inheritedInv = inherited.inverted(&inheritedInvertible);
-    if(!inheritedInvertible) { return false; }
+    if(!ensureBindState(relFrame)) { return false; }
 
-    const QMatrix targetTotal = target->getTotalTransformAtFrame(targetRelFrame);
-    const QMatrix targetInParentSpace = targetTotal*inheritedInv;
+    const QMatrix targetRel = target->getRelativeTransformAtFrame(targetRelFrame);
+    const QMatrix targetInParentSpace = targetRel*mBindTargetParentToParentSpace;
     const QMatrix targetLinear(targetInParentSpace.m11(), targetInParentSpace.m12(),
                                targetInParentSpace.m21(), targetInParentSpace.m22(),
                                0.0, 0.0);
 
-    const QPointF targetPivotAbs = target->getPivotAbsPos(targetRelFrame);
-    const QPointF targetPivotInParent = inheritedInv.map(targetPivotAbs);
-
-    if(!ensureBindState(relFrame)) { return false; }
+    const QPointF targetPivotRel = target->getPivotRelPos(targetRelFrame);
+    const QPointF targetPivotInParent = targetInParentSpace.map(targetPivotRel);
 
     bool bindLinearInvertible = false;
     const QMatrix bindLinearInv = mBindTargetLinearInParent.inverted(&bindLinearInvertible);
@@ -345,15 +340,17 @@ void ParentEffect::captureBindState(const qreal relFrame) {
         return;
     }
 
-    const QMatrix targetTotal = target->getTotalTransformAtFrame(targetRelFrame);
-    const QMatrix targetInParentSpace = targetTotal*inheritedInv;
+    const QMatrix targetInherited = target->getInheritedTransformAtFrame(targetRelFrame);
+    mBindTargetParentToParentSpace = targetInherited*inheritedInv;
+    const QMatrix targetRel = target->getRelativeTransformAtFrame(targetRelFrame);
+    const QMatrix targetInParentSpace = targetRel*mBindTargetParentToParentSpace;
     const QMatrix targetLinear(targetInParentSpace.m11(), targetInParentSpace.m12(),
                                targetInParentSpace.m21(), targetInParentSpace.m22(),
                                0.0, 0.0);
     const QPointF objectPivotAbs = parent->getPivotAbsPos(relFrame);
-    const QPointF targetPivotAbs = target->getPivotAbsPos(targetRelFrame);
     const QPointF objectPivotInParent = inheritedInv.map(objectPivotAbs);
-    const QPointF targetPivotInParent = inheritedInv.map(targetPivotAbs);
+    const QPointF targetPivotRel = target->getPivotRelPos(targetRelFrame);
+    const QPointF targetPivotInParent = targetInParentSpace.map(targetPivotRel);
     mBindTargetPivotInParent = targetPivotInParent;
     mBindObjectPivotInParent = objectPivotInParent;
     mBindTargetLinearInParent = targetLinear;
