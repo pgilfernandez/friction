@@ -234,8 +234,28 @@ void MainWindow::setupMenuBar()
                                  if (clipboard) {
                                      const auto mime = clipboard->mimeData();
                                      qDebug() << mime->formats() << mime->text();
+                                     QString svg;
                                      if (mime->hasText() && mime->text().contains("<svg")) {
-                                         const QString svg = mime->text();
+                                         svg = mime->text();
+                                     } else {
+                                         static const QStringList svgFormats = {
+                                             "image/svg+xml",
+                                             "public.svg-image",
+                                             "com.adobe.svg",
+                                             "com.adobe.illustrator.svg",
+                                             "com.adobe.illustrator.svgm"
+                                         };
+                                         for (const auto &fmt : svgFormats) {
+                                             if (mime->hasFormat(fmt)) {
+                                                 const QByteArray data = mime->data(fmt);
+                                                 if (data.contains("<svg")) {
+                                                     svg = QString::fromUtf8(data);
+                                                     break;
+                                                 }
+                                             }
+                                         }
+                                     }
+                                     if (!svg.isEmpty()) {
                                          try { mActions.importClipboard(svg); }
                                          catch (const std::exception& e) { gPrintExceptionCritical(e); }
                                      }
