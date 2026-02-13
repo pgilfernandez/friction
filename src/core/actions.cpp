@@ -30,6 +30,7 @@
 #include "paintsettingsapplier.h"
 #include "Sound/eindependentsound.h"
 #include "Boxes/externallinkboxt.h"
+#include "Boxes/containerbox.h"
 #include "GUI/dialogsinterface.h"
 #include "svgimporter.h"
 
@@ -848,6 +849,7 @@ eBoxOrSound *Actions::importClipboard(const QString &content,
         gPrintExceptionCritical(e);
     }
 
+    bool flattenedContainer = false;
     if (result) {
         if (frame) { result->shiftAll(frame); }
         block.reset();
@@ -859,9 +861,18 @@ eBoxOrSound *Actions::importClipboard(const QString &content,
             importedBox->moveByAbs(relDropPos);
             importedBox->finishTransform();
         }
+
+        // Clipboard SVG imports may be wrapped in an extra root group/layer.
+        // Flatten it into the target to avoid adding an unnecessary extra layer.
+        if (const auto importedGroup = enve_cast<ContainerBox*>(result.get())) {
+            if (!importedGroup->isLink() && importedGroup->getContainedBoxesCount() > 0) {
+                importedGroup->ungroupKeepTransform_k();
+                flattenedContainer = true;
+            }
+        }
     }
     afterAction();
-    return result.get();
+    return flattenedContainer ? nullptr : result.get();
 }
 
 #include "Boxes/internallinkbox.h"
