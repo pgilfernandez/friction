@@ -24,6 +24,7 @@
 // Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
 
 #include "mainwindow.h"
+#include "svganimationimporter.h"
 #include "GUI/Expressions/expressiondialog.h"
 #include "canvas.h"
 #include <QKeyEvent>
@@ -111,6 +112,7 @@ MainWindow::MainWindow(Document& document,
     , mLinkedAct(nullptr)
     , mImportAct(nullptr)
     , mImportSeqAct(nullptr)
+    , mImportSVGAnimationAct(nullptr)
     , mRevertAct(nullptr)
     , mSelectAllAct(nullptr)
     , mInvertSelAct(nullptr)
@@ -390,6 +392,7 @@ void MainWindow::updateSettingsForCurrentCanvas(Canvas* const scene)
     if (mLinkedAct) { mLinkedAct->setEnabled(scene); }
     if (mImportAct) { mImportAct->setEnabled(scene); }
     if (mImportSeqAct) { mImportSeqAct->setEnabled(scene); }
+    if (mImportSVGAnimationAct) { mImportSVGAnimationAct->setEnabled(scene); }
     if (mRevertAct) { mRevertAct->setEnabled(scene); }
     if (mSelectAllAct) { mSelectAllAct->setEnabled(scene); }
     if (mInvertSelAct) { mInvertSelAct->setEnabled(scene); }
@@ -1285,6 +1288,37 @@ void MainWindow::importImageSequence()
                                                      defPath);
     enableEventFilter();
     if (!folder.isEmpty()) { mActions.importFile(folder); }
+}
+
+void MainWindow::importSVGAnimation()
+{
+    if (!mDocument.fActiveScene) { return; }
+    disableEventFilter();
+    const QString recentDir = AppSupport::getSettings("files",
+                                                       "recentImportDir",
+                                                       QDir::homePath()).toString();
+    const QString title = tr("Import SVG Animation",
+                             "ImportSVGAnimationDialog_Title");
+    const QString path = eDialogs::openFile(title, recentDir,
+                                            tr("SVG Files (*.svg)"));
+    enableEventFilter();
+    if (path.isEmpty()) { return; }
+
+    try {
+        Canvas* const scene = mDocument.fActiveScene;
+        ContainerBox* const target = scene->getCurrentGroup();
+        auto block = scene->blockUndoRedo();
+        const auto imported = ImportSVGAnimation::loadSVGFile(path, scene);
+        if (!imported) { return; }
+        block.reset();
+        target->prp_pushUndoRedoName(tr("Import SVG Animation"));
+        target->insertContained(0, imported);
+        imported->planCenterPivotPosition();
+        AppSupport::setSettings("files", "recentImportDir",
+                                QFileInfo(path).absoluteDir().absolutePath());
+    } catch (const std::exception& e) {
+        gPrintExceptionCritical(e);
+    }
 }
 
 void MainWindow::revert()
