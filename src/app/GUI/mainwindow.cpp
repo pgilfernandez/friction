@@ -1313,7 +1313,11 @@ void MainWindow::importSVGAnimation()
         block.reset();
         target->prp_pushUndoRedoName(tr("Import SVG Animation"));
         target->insertContained(0, imported);
+        imported->prp_setName(QFileInfo(path).completeBaseName());
         imported->planCenterPivotPosition();
+        imported->updateAllBoxes(UpdateReason::userChange);
+        scene->requestUpdate();
+        mDocument.actionFinished();
         AppSupport::setSettings("files", "recentImportDir",
                                 QFileInfo(path).absoluteDir().absolutePath());
     } catch (const std::exception& e) {

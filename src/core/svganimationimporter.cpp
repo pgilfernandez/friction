@@ -20,6 +20,9 @@
 #include "Animators/qpointfanimator.h"
 #include "Animators/qrealanimator.h"
 #include "Animators/qrealkey.h"
+#include "Animators/coloranimator.h"
+#include "Animators/outlinesettingsanimator.h"
+#include "Animators/paintsettingsanimator.h"
 #include "Animators/SmartPath/smartpathanimator.h"
 #include "Animators/transformanimator.h"
 #include "Boxes/boundingbox.h"
@@ -45,6 +48,10 @@ struct AnimationTrack {
     qreal begin = 0;
     qreal duration = 0;
 };
+
+const AnimationTrack* findTrack(const QList<AnimationTrack>& tracks,
+                                const QString& targetId,
+                                const QString& attribute);
 
 qreal parseClock(const QString& value, bool* ok = nullptr)
 {
@@ -84,6 +91,38 @@ QList<qreal> parseSemicolonNumbers(const QString& value)
         if (ok) { result.append(number); }
     }
     return result;
+}
+
+bool parseColor(const QString& value, QColor& color)
+{
+    const QString text = value.trimmed();
+    color = QColor(text);
+    if (color.isValid()) { return true; }
+
+    static const QRegularExpression function(
+                "^rgba?\\s*\\(([^)]*)\\)$",
+                QRegularExpression::CaseInsensitiveOption);
+    const auto match = function.match(text);
+    if (!match.hasMatch()) { return false; }
+    const auto parts = match.captured(1).split(QRegularExpression("[,\\s]+"),
+                                                Qt::SkipEmptyParts);
+    if (parts.size() < 3) { return false; }
+    bool rOk = false;
+    bool gOk = false;
+    bool bOk = false;
+    const int r = parts.at(0).toInt(&rOk);
+    const int g = parts.at(1).toInt(&gOk);
+    const int b = parts.at(2).toInt(&bOk);
+    if (!rOk || !gOk || !bOk) { return false; }
+    qreal alpha = 1;
+    if (parts.size() > 3) {
+        bool alphaOk = false;
+        alpha = parts.at(3).toDouble(&alphaOk);
+        if (!alphaOk) { return false; }
+    }
+    color.setRgb(r, g, b);
+    color.setAlphaF(qBound(0., alpha, 1.));
+    return true;
 }
 
 BoundingBox* findBox(BoundingBox* box, const QString& name)
@@ -203,14 +242,73 @@ void applyScalarTrack(QrealAnimator* animator,
         if (!ok) { return; }
         const int frame = qRound((track.begin + track.times.at(i) *
                                   track.duration) * fps);
-        animator->saveValueToKey(frame, value);
         frames.append(frame);
         values.append(value);
+    }
+    for (int i = 0; i < frames.size(); ++i) {
+        if (track.calcMode == "discrete" && i > 0 &&
+            frames.at(i) - 1 > frames.at(i - 1)) {
+            animator->saveValueToKey(frames.at(i) - 1, values.at(i - 1));
+        }
+        animator->saveValueToKey(frames.at(i), values.at(i));
     }
     if (track.calcMode != "spline") { return; }
     for (int i = 0; i + 1 < frames.size() && i < track.splines.size(); ++i) {
         applySpline(animator, frames.at(i), frames.at(i + 1),
                     values.at(i), values.at(i + 1), track.splines.at(i));
+    }
+}
+
+void applyColorTrack(ColorAnimator* animator, const AnimationTrack& track,
+                     const QList<AnimationTrack>& tracks, const qreal fps,
+                     const QString& opacityAttribute)
+{
+    if (!animator) { return; }
+    AnimationTrack red = track;
+    AnimationTrack green = track;
+    AnimationTrack blue = track;
+    AnimationTrack alpha = track;
+    red.values.clear();
+    green.values.clear();
+    blue.values.clear();
+    alpha.values.clear();
+    const bool separateOpacity =
+            findTrack(tracks, track.targetId, opacityAttribute);
+    for (const QString& value : track.values) {
+        QColor color;
+        if (!parseColor(value, color)) { return; }
+        red.values.append(QString::number(color.redF()));
+        green.values.append(QString::number(color.greenF()));
+        blue.values.append(QString::number(color.blueF()));
+        alpha.values.append(QString::number(color.alphaF()));
+    }
+    animator->setColorMode(ColorMode::rgb);
+    applyScalarTrack(animator->getVal1Animator(), red, fps);
+    applyScalarTrack(animator->getVal2Animator(), green, fps);
+    applyScalarTrack(animator->getVal3Animator(), blue, fps);
+    if (!separateOpacity) {
+        applyScalarTrack(animator->getAlphaAnimator(), alpha, fps);
+    }
+}
+
+void applyPaintTrack(PaintSettingsAnimator* paint,
+                     const AnimationTrack& track,
+                     const QList<AnimationTrack>& tracks,
+                     const qreal fps,
+                     const QString& colorAttribute,
+                     const QString& opacityAttribute)
+{
+    if (!paint) { return; }
+    if (track.attribute == colorAttribute) {
+        for (const QString& value : track.values) {
+            if (value.trimmed() == "none") { return; }
+        }
+        paint->setPaintType(PaintType::FLATPAINT);
+        applyColorTrack(paint->getColorAnimator(), track, tracks, fps,
+                        opacityAttribute);
+    } else if (track.attribute == opacityAttribute) {
+        applyScalarTrack(paint->getColorAnimator()->getAlphaAnimator(),
+                         track, fps);
     }
 }
 
@@ -347,16 +445,26 @@ void applyPathTrack(SmartVectorPath* vectorPath, const AnimationTrack& track,
     if (!collection || collection->ca_getNumberOfChildren() != 1) { return; }
     const auto animator = collection->getChild(0);
     QList<SmartPathKey*> keys;
+    SmartPath previousPath;
+    int previousFrame = 0;
     for (int i = 0; i < track.values.size(); ++i) {
         SkPath path;
         const auto pathString = track.values.at(i).trimmed().toStdString();
         if (!SkParsePath::FromSVGString(pathString.c_str(), &path)) { return; }
         const int frame = qRound((track.begin + track.times.at(i) *
                                   track.duration) * fps);
+        if (track.calcMode == "discrete" && i > 0 &&
+            frame - 1 > previousFrame) {
+            const auto holdKey = enve::make_shared<SmartPathKey>(
+                        previousPath, frame - 1, animator);
+            animator->anim_appendKey(holdKey);
+        }
         const auto key = enve::make_shared<SmartPathKey>(SmartPath(path),
                                                          frame, animator);
         animator->anim_appendKey(key);
         keys.append(key.get());
+        previousPath = SmartPath(path);
+        previousFrame = frame;
     }
     if (track.calcMode != "spline") { return; }
     for (int i = 0; i + 1 < keys.size() && i < track.splines.size(); ++i) {
@@ -386,6 +494,16 @@ void applyTrack(BoundingBox* box, const AnimationTrack& track,
     }
     if (const auto vectorPath = enve_cast<SmartVectorPath*>(box)) {
         applyPathTrack(vectorPath, track, fps);
+    }
+    if (const auto pathBox = enve_cast<PathBox*>(box)) {
+        applyPaintTrack(pathBox->getFillSettings(), track, tracks, fps,
+                        "fill", "fill-opacity");
+        applyPaintTrack(pathBox->getStrokeSettings(), track, tracks, fps,
+                        "stroke", "stroke-opacity");
+        if (track.attribute == "stroke-width") {
+            applyScalarTrack(pathBox->getStrokeSettings()->getLineWidthAnimator(),
+                             track, fps);
+        }
     }
 
     const auto transform = box->getBoxTransformAnimator();
