@@ -21,7 +21,8 @@ class Canvas;
 
 namespace ImportSVGAnimation {
     CORE_EXPORT qsptr<BoundingBox> loadSVGFile(const QString& filename,
-                                               Canvas* scene);
+                                               Canvas* scene,
+                                               bool extendSceneTime = true);
 }
 
 #endif // SVGANIMATIONIMPORTER_H

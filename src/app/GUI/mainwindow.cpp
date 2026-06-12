@@ -25,8 +25,10 @@
 
 #include "mainwindow.h"
 #include "svganimationimporter.h"
+#include "GUI/Dialogs/svganimationimportdialog.h"
 #include "GUI/Expressions/expressiondialog.h"
 #include "canvas.h"
+#include "Animators/transformanimator.h"
 #include <QKeyEvent>
 #include <QApplication>
 #include <QDebug>
@@ -1306,16 +1308,40 @@ void MainWindow::importSVGAnimation()
 
     try {
         Canvas* const scene = mDocument.fActiveScene;
+        QSizeF svgSize;
+        SVGAnimationImportDialog::ScaleMode scaleMode;
+        bool extendSceneTime = true;
+        if (!SVGAnimationImportDialog::sExec(
+                    path, QSize(scene->getCanvasWidth(), scene->getCanvasHeight()),
+                    svgSize, scaleMode, extendSceneTime, this)) {
+            return;
+        }
+
+        qreal scaleX = 1;
+        qreal scaleY = 1;
+        if (scaleMode == SVGAnimationImportDialog::ScaleMode::fitWidth) {
+            scaleX = scaleY = scene->getCanvasWidth()/svgSize.width();
+        } else if (scaleMode == SVGAnimationImportDialog::ScaleMode::fitHeight) {
+            scaleX = scaleY = scene->getCanvasHeight()/svgSize.height();
+        } else if (scaleMode == SVGAnimationImportDialog::ScaleMode::stretch) {
+            scaleX = scene->getCanvasWidth()/svgSize.width();
+            scaleY = scene->getCanvasHeight()/svgSize.height();
+        }
+
         ContainerBox* const target = scene->getCurrentGroup();
         auto block = scene->blockUndoRedo();
-        const auto imported = ImportSVGAnimation::loadSVGFile(path, scene);
+        const auto imported = ImportSVGAnimation::loadSVGFile(
+                    path, scene, extendSceneTime);
         if (!imported) { return; }
+        const auto wrapper = enve::make_shared<ContainerBox>(
+                    QFileInfo(path).completeBaseName(), eBoxType::group);
+        wrapper->addContained(imported);
+        wrapper->getBoxTransformAnimator()->setScale(scaleX, scaleY);
         block.reset();
         target->prp_pushUndoRedoName(tr("Import SVG Animation"));
-        target->insertContained(0, imported);
-        imported->prp_setName(QFileInfo(path).completeBaseName());
-        imported->planCenterPivotPosition();
-        imported->updateAllBoxes(UpdateReason::userChange);
+        target->insertContained(0, wrapper);
+        wrapper->planCenterPivotPosition();
+        wrapper->updateAllBoxes(UpdateReason::userChange);
         scene->requestUpdate();
         mDocument.actionFinished();
         AppSupport::setSettings("files", "recentImportDir",

@@ -252,10 +252,14 @@ void applyScalarTrack(QrealAnimator* animator,
         }
         animator->saveValueToKey(frames.at(i), values.at(i));
     }
-    if (track.calcMode != "spline") { return; }
-    for (int i = 0; i + 1 < frames.size() && i < track.splines.size(); ++i) {
+    if (track.calcMode == "discrete") { return; }
+    const QList<qreal> linearSpline{1./3, 1./3, 2./3, 2./3};
+    for (int i = 0; i + 1 < frames.size(); ++i) {
+        const QList<qreal> spline =
+                track.calcMode == "spline" && i < track.splines.size() ?
+                    track.splines.at(i) : linearSpline;
         applySpline(animator, frames.at(i), frames.at(i + 1),
-                    values.at(i), values.at(i + 1), track.splines.at(i));
+                    values.at(i), values.at(i + 1), spline);
     }
 }
 
@@ -372,6 +376,8 @@ AnimationTrack sumTracks(const AnimationTrack& primary,
     }
     AnimationTrack result = primary;
     result.values.clear();
+    QList<qreal> primaryValues;
+    QList<qreal> secondaryValues;
     for (int i = 0; i < primary.values.size(); ++i) {
         bool primaryOk = false;
         bool secondaryOk = false;
@@ -379,7 +385,56 @@ AnimationTrack sumTracks(const AnimationTrack& primary,
         const qreal secondaryValue =
                 secondary->values.at(i).trimmed().toDouble(&secondaryOk);
         if (!primaryOk || !secondaryOk) { return AnimationTrack(); }
+        primaryValues.append(primaryValue);
+        secondaryValues.append(secondaryValue);
         result.values.append(QString::number(primaryValue + secondaryValue));
+    }
+
+    const QList<qreal> linearSpline{1./3, 1./3, 2./3, 2./3};
+    result.calcMode = "spline";
+    result.splines.clear();
+    for (int i = 0; i + 1 < result.values.size(); ++i) {
+        const auto primarySpline =
+                primary.calcMode == "spline" && i < primary.splines.size() ?
+                    primary.splines.at(i) : linearSpline;
+        const auto secondarySpline =
+                secondary->calcMode == "spline" && i < secondary->splines.size() ?
+                    secondary->splines.at(i) : linearSpline;
+        if (primarySpline.size() != 4 || secondarySpline.size() != 4) {
+            result.splines.append(linearSpline);
+            continue;
+        }
+
+        const qreal primarySpan = primaryValues.at(i + 1) - primaryValues.at(i);
+        const qreal secondarySpan =
+                secondaryValues.at(i + 1) - secondaryValues.at(i);
+        const qreal resultSpan = primarySpan + secondarySpan;
+        if (qFuzzyIsNull(resultSpan)) {
+            result.splines.append(linearSpline);
+            continue;
+        }
+
+        QList<qreal> spline = primarySpline;
+        if (primary.calcMode != "spline" && secondary->calcMode == "spline") {
+            spline[0] = secondarySpline.at(0);
+            spline[2] = secondarySpline.at(2);
+            spline[1] = (primarySpan * spline.at(0) +
+                         secondarySpan * secondarySpline.at(1)) / resultSpan;
+            spline[3] = (primarySpan * spline.at(2) +
+                         secondarySpan * secondarySpline.at(3)) / resultSpan;
+        } else if (primary.calcMode == "spline" &&
+                   secondary->calcMode != "spline") {
+            spline[1] = (primarySpan * primarySpline.at(1) +
+                         secondarySpan * spline.at(0)) / resultSpan;
+            spline[3] = (primarySpan * primarySpline.at(3) +
+                         secondarySpan * spline.at(2)) / resultSpan;
+        } else {
+            spline[1] = (primarySpan * primarySpline.at(1) +
+                         secondarySpan * secondarySpline.at(1)) / resultSpan;
+            spline[3] = (primarySpan * primarySpline.at(3) +
+                         secondarySpan * secondarySpline.at(3)) / resultSpan;
+        }
+        result.splines.append(spline);
     }
     return result;
 }
@@ -535,7 +590,8 @@ void applyTrack(BoundingBox* box, const AnimationTrack& track,
 } // namespace
 
 qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
-                                                   Canvas* scene)
+                                                   Canvas* scene,
+                                                   const bool extendSceneTime)
 {
     if (!scene) { RuntimeThrow("SVG animation import requires an active scene"); }
     QFile file(filename);
@@ -569,9 +625,10 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
     int lastFrame = scene->getMaxFrame();
     for (const AnimationTrack& track : tracks) {
         lastFrame = qMax(lastFrame,
-                         qRound((track.begin + track.duration) * scene->getFps()));
+                         qCeil((track.begin + track.duration) *
+                               scene->getFps() - 0.000001));
     }
-    if (lastFrame > scene->getMaxFrame()) {
+    if (extendSceneTime && lastFrame > scene->getMaxFrame()) {
         scene->setFrameRange({scene->getMinFrame(), lastFrame});
     }
     return result;
