@@ -15,7 +15,10 @@
 
 #include <QDomDocument>
 #include <QFile>
+#include <QMatrix>
 #include <QRegularExpression>
+#include <QSet>
+#include <QtMath>
 
 #include "Animators/qpointfanimator.h"
 #include "Animators/qrealanimator.h"
@@ -26,6 +29,7 @@
 #include "Animators/SmartPath/smartpathanimator.h"
 #include "Animators/transformanimator.h"
 #include "Boxes/boundingbox.h"
+#include "Boxes/boxrenderdata.h"
 #include "Boxes/circle.h"
 #include "Boxes/containerbox.h"
 #include "Boxes/rectangle.h"
@@ -182,6 +186,76 @@ QList<qreal> parseSemicolonNumbers(const QString& value)
     return result;
 }
 
+bool parseTransformList(const QString& value, QMatrix& result)
+{
+    static const QRegularExpression function(
+                QStringLiteral("([A-Za-z]+)\\s*\\(([^)]*)\\)"));
+    auto match = function.globalMatch(value);
+    int parsedEnd = 0;
+    bool parsedAny = false;
+    while (match.hasNext()) {
+        const auto current = match.next();
+        if (!value.mid(parsedEnd, current.capturedStart() - parsedEnd)
+                .trimmed().isEmpty()) {
+            return false;
+        }
+        parsedEnd = current.capturedEnd();
+        parsedAny = true;
+
+        const QString name = current.captured(1);
+        const QList<qreal> values = parseNumbers(current.captured(2));
+        if (name.compare("translate", Qt::CaseInsensitive) == 0 &&
+            (values.size() == 1 || values.size() == 2)) {
+            result.translate(values.at(0),
+                             values.size() == 2 ? values.at(1) : 0);
+        } else if (name.compare("scale", Qt::CaseInsensitive) == 0 &&
+                   (values.size() == 1 || values.size() == 2)) {
+            result.scale(values.at(0),
+                         values.size() == 2 ? values.at(1) : values.at(0));
+        } else if (name.compare("rotate", Qt::CaseInsensitive) == 0 &&
+                   (values.size() == 1 || values.size() == 3)) {
+            if (values.size() == 3) {
+                result.translate(values.at(1), values.at(2));
+            }
+            result.rotate(values.at(0));
+            if (values.size() == 3) {
+                result.translate(-values.at(1), -values.at(2));
+            }
+        } else if (name.compare("skewX", Qt::CaseInsensitive) == 0 &&
+                   values.size() == 1) {
+            result.shear(qTan(qDegreesToRadians(values.at(0))), 0);
+        } else if (name.compare("skewY", Qt::CaseInsensitive) == 0 &&
+                   values.size() == 1) {
+            result.shear(0, qTan(qDegreesToRadians(values.at(0))));
+        } else {
+            return false;
+        }
+    }
+    return parsedAny && value.mid(parsedEnd).trimmed().isEmpty();
+}
+
+void normalizeStaticTransforms(QDomElement element)
+{
+    if (element.hasAttribute("transform")) {
+        QMatrix matrix;
+        if (parseTransformList(element.attribute("transform"), matrix)) {
+            element.setAttribute(
+                        "transform",
+                        QStringLiteral("matrix(%1 %2 %3 %4 %5 %6)")
+                        .arg(matrix.m11(), 0, 'g', 15)
+                        .arg(matrix.m12(), 0, 'g', 15)
+                        .arg(matrix.m21(), 0, 'g', 15)
+                        .arg(matrix.m22(), 0, 'g', 15)
+                        .arg(matrix.dx(), 0, 'g', 15)
+                        .arg(matrix.dy(), 0, 'g', 15));
+        }
+    }
+    for (QDomElement child = element.firstChildElement(); !child.isNull();
+         child = child.nextSiblingElement()) {
+        normalizeStaticTransforms(child);
+    }
+}
+
 bool parseColor(const QString& value, QColor& color)
 {
     const QString text = value.trimmed();
@@ -224,6 +298,22 @@ BoundingBox* findBox(BoundingBox* box, const QString& name)
         if (const auto found = findBox(child, name)) { return found; }
     }
     return nullptr;
+}
+
+void keepSVGTransformOrigin(BoundingBox* const box)
+{
+    if (!box) { return; }
+
+    // ImportSVG plans centered pivots for imported boxes. SVG transforms use
+    // the coordinate-system origin unless an explicit center is provided.
+    // Consume the pending centering before adding animated transforms.
+    const auto renderData = box->createRenderData(0);
+    if (renderData) {
+        renderData->fRelBoundingRectSet = true;
+        renderData->fRelBoundingRect = box->getRelBoundingRect();
+        box->updateCurrentPreviewDataFromRenderData(renderData.get());
+    }
+    box->setPivotRelPos(QPointF());
 }
 
 QString ensureTargetId(QDomElement& target, int& nextId)
@@ -733,6 +823,7 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
         RuntimeThrow("Cannot parse SVG animation file " + filename);
     }
     const bool documentHasTechnicalRoot = hasTechnicalRoot(document);
+    normalizeStaticTransforms(document.documentElement());
 
     const auto tracks = collectTracks(document);
     const auto gradientCreator = [scene]() { return scene->createNewGradient(); };
@@ -744,9 +835,16 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
     }
 
     QHash<QString, BoundingBox*> targets;
+    QSet<QString> preparedTransformTargets;
     for (const AnimationTrack& track : tracks) {
         if (!targets.contains(track.targetId)) {
-            targets.insert(track.targetId, findBox(result.get(), track.targetId));
+            BoundingBox* const target = findBox(result.get(), track.targetId);
+            targets.insert(track.targetId, target);
+        }
+        if (track.attribute == "transform" &&
+            !preparedTransformTargets.contains(track.targetId)) {
+            keepSVGTransformOrigin(targets.value(track.targetId));
+            preparedTransformTargets.insert(track.targetId);
         }
         applyTrack(targets.value(track.targetId), track, tracks, scene->getFps());
     }
