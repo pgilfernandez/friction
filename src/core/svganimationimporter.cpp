@@ -52,8 +52,97 @@ struct AnimationTrack {
 const AnimationTrack* findTrack(const QList<AnimationTrack>& tracks,
                                 const QString& targetId,
                                 const QString& attribute);
+qreal parseClock(const QString& value, bool* ok = nullptr);
 
-qreal parseClock(const QString& value, bool* ok = nullptr)
+bool hasAnimationValues(const QDomElement& animation)
+{
+    const int valuesCount = animation.attribute("values")
+            .split(';', Qt::SkipEmptyParts).size();
+    return valuesCount >= 2 ||
+            (!animation.attribute("from").isEmpty() &&
+             !animation.attribute("to").isEmpty());
+}
+
+bool supportsAnimation(const QDomElement& animation)
+{
+    if (animation.tagName() != "animate" &&
+        animation.tagName() != "animateTransform") {
+        return false;
+    }
+
+    bool durationOk = false;
+    parseClock(animation.attribute("dur"), &durationOk);
+    if (!durationOk || !hasAnimationValues(animation)) { return false; }
+
+    const QDomElement target = animation.parentNode().toElement();
+    const QString tag = target.tagName().toLower();
+    const QString attribute = animation.attribute("attributeName");
+    if (attribute == "opacity") { return true; }
+    if (attribute == "transform") {
+        const QString type = animation.attribute("type");
+        return type == "translate" || type == "scale" || type == "rotate" ||
+                type == "skewX" || type == "skewY";
+    }
+
+    const QStringList paintedTags{
+        "circle", "ellipse", "rect", "path", "polygon", "polyline", "line"
+    };
+    if (paintedTags.contains(tag) &&
+        (attribute == "fill" || attribute == "fill-opacity" ||
+         attribute == "stroke" || attribute == "stroke-opacity" ||
+         attribute == "stroke-width")) {
+        return true;
+    }
+    if ((tag == "circle" || tag == "ellipse") &&
+        (attribute == "cx" || attribute == "cy" || attribute == "rx" ||
+         attribute == "ry" || attribute == "r")) {
+        return true;
+    }
+    if (tag == "rect" &&
+        (attribute == "x" || attribute == "y" || attribute == "width" ||
+         attribute == "height" || attribute == "rx" || attribute == "ry")) {
+        return true;
+    }
+    return tag == "path" && attribute == "d";
+}
+
+QString unsupportedDescription(const QDomElement& animation)
+{
+    const QString attribute = animation.attribute("attributeName");
+    if (attribute.isEmpty()) { return animation.tagName(); }
+    if (animation.tagName() == "animateTransform") {
+        return attribute + ":" + animation.attribute("type");
+    }
+    return attribute;
+}
+
+bool isImportedRootElement(const QDomElement& element)
+{
+    const QString tag = element.tagName().toLower();
+    return tag == "g" || tag == "text" || tag == "circle" ||
+            tag == "ellipse" || tag == "rect" || tag == "path" ||
+            tag == "polyline" || tag == "polygon" || tag == "line";
+}
+
+bool hasTechnicalRoot(const QDomDocument& document)
+{
+    int importedChildren = 0;
+    const QDomElement root = document.firstChildElement("svg");
+    if (root.hasAttribute("transform")) { return false; }
+    for (QDomElement child = root.firstChildElement(); !child.isNull();
+         child = child.nextSiblingElement()) {
+        if (child.tagName() == "animate" ||
+            child.tagName() == "animateTransform") {
+            return false;
+        }
+        if (isImportedRootElement(child) && ++importedChildren > 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+qreal parseClock(const QString& value, bool* ok)
 {
     QString text = value.trimmed();
     qreal multiplier = 1;
@@ -589,9 +678,50 @@ void applyTrack(BoundingBox* box, const AnimationTrack& track,
 
 } // namespace
 
+ImportSVGAnimation::Analysis ImportSVGAnimation::analyzeSVGFile(
+        const QString& filename)
+{
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        RuntimeThrow("Cannot open file " + filename);
+    }
+    QDomDocument document;
+    if (!document.setContent(&file)) {
+        RuntimeThrow("Cannot parse SVG animation file " + filename);
+    }
+
+    Analysis result;
+    const QStringList tags{"animate", "animateTransform", "animateMotion", "set"};
+    for (const QString& tag : tags) {
+        const QDomNodeList nodes = document.elementsByTagName(tag);
+        for (int i = 0; i < nodes.count(); ++i) {
+            const QDomElement animation = nodes.at(i).toElement();
+            ++result.totalTracks;
+            if (supportsAnimation(animation)) {
+                ++result.supportedTracks;
+            } else {
+                result.unsupported.append(unsupportedDescription(animation));
+            }
+            bool durationOk = false;
+            const qreal duration = parseClock(animation.attribute("dur"),
+                                              &durationOk);
+            bool beginOk = false;
+            const qreal begin = parseClock(animation.attribute("begin", "0s"),
+                                           &beginOk);
+            if (durationOk) {
+                result.duration = qMax(result.duration,
+                                       duration + (beginOk ? begin : 0));
+            }
+        }
+    }
+    result.unsupported.removeDuplicates();
+    return result;
+}
+
 qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
                                                    Canvas* scene,
-                                                   const bool extendSceneTime)
+                                                   const bool extendSceneTime,
+                                                   bool* const technicalRoot)
 {
     if (!scene) { RuntimeThrow("SVG animation import requires an active scene"); }
     QFile file(filename);
@@ -602,11 +732,16 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
     if (!document.setContent(&file)) {
         RuntimeThrow("Cannot parse SVG animation file " + filename);
     }
+    const bool documentHasTechnicalRoot = hasTechnicalRoot(document);
 
     const auto tracks = collectTracks(document);
     const auto gradientCreator = [scene]() { return scene->createNewGradient(); };
     const auto result = ImportSVG::loadSVGFile(document, gradientCreator);
     if (!result) { return nullptr; }
+    if (technicalRoot) {
+        *technicalRoot = documentHasTechnicalRoot &&
+                enve_cast<ContainerBox*>(result.get());
+    }
 
     QHash<QString, BoundingBox*> targets;
     for (const AnimationTrack& track : tracks) {

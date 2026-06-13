@@ -18,10 +18,13 @@
 #include <QDialogButtonBox>
 #include <QDomDocument>
 #include <QFile>
-#include <QFormLayout>
+#include <QGroupBox>
+#include <QHeaderView>
 #include <QLabel>
 #include <QRadioButton>
 #include <QRegularExpression>
+#include <QStandardItemModel>
+#include <QTableWidget>
 #include <QVBoxLayout>
 
 namespace {
@@ -45,47 +48,107 @@ QString sizeText(const QSizeF& size) {
             .arg(size.height(), 0, 'g', 8);
 }
 
+QString durationText(const qreal seconds) {
+    return SVGAnimationImportDialog::tr("%1 seconds").arg(seconds, 0, 'g', 8);
+}
+
+QTableWidgetItem* tableItem(const QString& text) {
+    return new QTableWidgetItem(text);
+}
+
 }
 
 SVGAnimationImportDialog::SVGAnimationImportDialog(
-        const QSizeF& svgSize, const QSize& sceneSize, QWidget* const parent) :
+        const QSizeF& svgSize, const SceneInfo& scene,
+        const ImportSVGAnimation::Analysis& analysis, QWidget* const parent) :
     QDialog(parent) {
     setWindowTitle(tr("Import SVG Animation"));
 
     const auto mainLayout = new QVBoxLayout(this);
-    const auto dimensions = new QFormLayout();
-    dimensions->addRow(tr("Original SVG dimensions:"), new QLabel(sizeText(svgSize)));
-    dimensions->addRow(tr("Active scene dimensions:"),
-                       new QLabel(sizeText(sceneSize)));
-    mainLayout->addLayout(dimensions);
+    const int sceneFrameCount = scene.lastFrame - scene.firstFrame + 1;
+    const qreal sceneDuration = scene.fps > 0 ? sceneFrameCount / scene.fps : 0;
+    const int svgFrames = qRound(analysis.duration * scene.fps);
 
-    mOriginal = new QRadioButton(tr("Import at original scale"), this);
-    mProportional = new QRadioButton(
-                tr("Scale proportionally to the active scene"), this);
-    mStretch = new QRadioButton(
-                tr("Scale to the active scene and deform the original"), this);
-    mFitDimension = new QComboBox(this);
-    mFitDimension->addItem(tr("Fit width"));
-    mFitDimension->addItem(tr("Fit height"));
+    const auto comparison = new QTableWidget(4, 3, this);
+    comparison->setHorizontalHeaderLabels(
+                {tr("Property"), tr("SVG"), tr("Active scene")});
+    comparison->verticalHeader()->hide();
+    comparison->horizontalHeader()->setSectionResizeMode(
+                0, QHeaderView::ResizeToContents);
+    comparison->horizontalHeader()->setSectionResizeMode(
+                1, QHeaderView::Stretch);
+    comparison->horizontalHeader()->setSectionResizeMode(
+                2, QHeaderView::Stretch);
+    comparison->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    comparison->setSelectionMode(QAbstractItemView::NoSelection);
+    comparison->setFocusPolicy(Qt::NoFocus);
+    comparison->setShowGrid(false);
 
-    mOriginal->setChecked(true);
-    mFitDimension->setEnabled(false);
-    connect(mProportional, &QRadioButton::toggled,
-            mFitDimension, &QComboBox::setEnabled);
+    comparison->setItem(0, 0, tableItem(tr("Dimensions")));
+    comparison->setItem(0, 1, tableItem(sizeText(svgSize)));
+    comparison->setItem(0, 2, tableItem(sizeText(scene.size)));
+    comparison->setItem(1, 0, tableItem(tr("Duration")));
+    comparison->setItem(1, 1, tableItem(durationText(analysis.duration)));
+    comparison->setItem(1, 2, tableItem(durationText(sceneDuration)));
+    comparison->setItem(2, 0, tableItem(tr("Frames")));
+    comparison->setItem(2, 1, tableItem(tr("%1 at scene FPS").arg(svgFrames)));
+    comparison->setItem(2, 2, tableItem(tr("%1 to %2 (%3 total)")
+                                        .arg(scene.firstFrame)
+                                        .arg(scene.lastFrame)
+                                        .arg(sceneFrameCount)));
+    comparison->setItem(3, 0, tableItem(tr("Animation tracks")));
+    comparison->setItem(3, 1, tableItem(tr("%1 supported of %2")
+                                        .arg(analysis.supportedTracks)
+                                        .arg(analysis.totalTracks)));
+    comparison->setItem(3, 2, tableItem(tr("Not applicable")));
+    comparison->resizeRowsToContents();
+    comparison->setMinimumWidth(460);
+    comparison->setFixedHeight(comparison->horizontalHeader()->height() +
+                               comparison->verticalHeader()->length() + 2);
+    mainLayout->addWidget(comparison);
+
+    if (!analysis.unsupported.isEmpty()) {
+        const auto warning = new QLabel(
+                    tr("Unsupported animations will be skipped: %1")
+                    .arg(analysis.unsupported.join(", ")), this);
+        warning->setWordWrap(true);
+        mainLayout->addWidget(warning);
+    }
+
+    const auto scaleGroup = new QGroupBox(tr("Scale mode"), this);
+    const auto scaleLayout = new QVBoxLayout(scaleGroup);
+    mScaleMode = new QComboBox(scaleGroup);
+    mScaleMode->addItem(tr("Don't scale"));
+    mScaleMode->addItem(tr("Scale proportionally (width fit)"));
+    mScaleMode->addItem(tr("Scale proportionally (height fit)"));
+    mScaleMode->addItem(tr("Deform (fit to scene)"));
 
     const bool validSize = svgSize.width() > 0 && svgSize.height() > 0 &&
-            sceneSize.width() > 0 && sceneSize.height() > 0;
-    mProportional->setEnabled(validSize);
-    mStretch->setEnabled(validSize);
+            scene.size.width() > 0 && scene.size.height() > 0;
+    if (!validSize) {
+        const auto model = qobject_cast<QStandardItemModel*>(mScaleMode->model());
+        for (int i = 1; model && i < mScaleMode->count(); ++i) {
+            model->item(i)->setEnabled(false);
+        }
+    }
 
-    mainLayout->addWidget(mOriginal);
-    mainLayout->addWidget(mProportional);
-    mainLayout->addWidget(mFitDimension);
-    mainLayout->addWidget(mStretch);
+    scaleLayout->addWidget(mScaleMode);
+    mainLayout->addWidget(scaleGroup);
+
+    const auto structureGroup = new QGroupBox(tr("Import structure"), this);
+    const auto structureLayout = new QVBoxLayout(structureGroup);
+    mNamedGroup = new QRadioButton(tr("Grouped"), structureGroup);
+    mDirectObjects = new QRadioButton(tr("Ungrouped"), structureGroup);
+    mNamedGroup->setChecked(true);
+    structureLayout->addWidget(mNamedGroup);
+    structureLayout->addWidget(mDirectObjects);
+    mainLayout->addWidget(structureGroup);
 
     mExtendSceneTime = new QCheckBox(
                 tr("Extend scene time if necessary"), this);
-    mExtendSceneTime->setChecked(true);
+    const bool extensionNeeded = analysis.duration > sceneDuration;
+    mExtendSceneTime->setChecked(extensionNeeded);
+    mExtendSceneTime->setEnabled(extensionNeeded);
     mainLayout->addWidget(mExtendSceneTime);
 
     const auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok |
@@ -96,12 +159,13 @@ SVGAnimationImportDialog::SVGAnimationImportDialog(
 }
 
 SVGAnimationImportDialog::ScaleMode SVGAnimationImportDialog::scaleMode() const {
-    if (mStretch->isChecked()) { return ScaleMode::stretch; }
-    if (mProportional->isChecked()) {
-        return mFitDimension->currentIndex() == 0 ?
-                    ScaleMode::fitWidth : ScaleMode::fitHeight;
-    }
-    return ScaleMode::original;
+    return static_cast<ScaleMode>(mScaleMode->currentIndex());
+}
+
+SVGAnimationImportDialog::StructureMode
+SVGAnimationImportDialog::structureMode() const {
+    return mDirectObjects->isChecked() ?
+                StructureMode::directObjects : StructureMode::namedGroup;
 }
 
 bool SVGAnimationImportDialog::extendSceneTime() const {
@@ -109,12 +173,15 @@ bool SVGAnimationImportDialog::extendSceneTime() const {
 }
 
 bool SVGAnimationImportDialog::sExec(
-        const QString& path, const QSize& sceneSize, QSizeF& svgSize,
-        ScaleMode& scaleMode, bool& extendSceneTime, QWidget* const parent) {
+        const QString& path, const SceneInfo& scene, QSizeF& svgSize,
+        ScaleMode& scaleMode, StructureMode& structureMode,
+        bool& extendSceneTime, QWidget* const parent) {
     svgSize = readSVGSize(path);
-    SVGAnimationImportDialog dialog(svgSize, sceneSize, parent);
+    const auto analysis = ImportSVGAnimation::analyzeSVGFile(path);
+    SVGAnimationImportDialog dialog(svgSize, scene, analysis, parent);
     if (dialog.exec() != QDialog::Accepted) { return false; }
     scaleMode = dialog.scaleMode();
+    structureMode = dialog.structureMode();
     extendSceneTime = dialog.extendSceneTime();
     return true;
 }

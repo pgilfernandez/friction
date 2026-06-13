@@ -1310,10 +1310,15 @@ void MainWindow::importSVGAnimation()
         Canvas* const scene = mDocument.fActiveScene;
         QSizeF svgSize;
         SVGAnimationImportDialog::ScaleMode scaleMode;
+        SVGAnimationImportDialog::StructureMode structureMode;
         bool extendSceneTime = true;
+        const SVGAnimationImportDialog::SceneInfo sceneInfo{
+            QSize(scene->getCanvasWidth(), scene->getCanvasHeight()),
+            scene->getMinFrame(), scene->getMaxFrame(), scene->getFps()
+        };
         if (!SVGAnimationImportDialog::sExec(
-                    path, QSize(scene->getCanvasWidth(), scene->getCanvasHeight()),
-                    svgSize, scaleMode, extendSceneTime, this)) {
+                    path, sceneInfo, svgSize, scaleMode, structureMode,
+                    extendSceneTime, this)) {
             return;
         }
 
@@ -1330,18 +1335,33 @@ void MainWindow::importSVGAnimation()
 
         ContainerBox* const target = scene->getCurrentGroup();
         auto block = scene->blockUndoRedo();
+        bool technicalRoot = false;
         const auto imported = ImportSVGAnimation::loadSVGFile(
-                    path, scene, extendSceneTime);
+                    path, scene, extendSceneTime, &technicalRoot);
         if (!imported) { return; }
-        const auto wrapper = enve::make_shared<ContainerBox>(
-                    QFileInfo(path).completeBaseName(), eBoxType::group);
-        wrapper->addContained(imported);
-        wrapper->getBoxTransformAnimator()->setScale(scaleX, scaleY);
+        const QString importName = QFileInfo(path).completeBaseName();
         block.reset();
         target->prp_pushUndoRedoName(tr("Import SVG Animation"));
+
+        const bool directObjects = structureMode ==
+                SVGAnimationImportDialog::StructureMode::directObjects;
+        qsptr<ContainerBox> wrapper;
+        if (technicalRoot) {
+            wrapper = qSharedPointerCast<ContainerBox>(imported);
+            wrapper->prp_setName(importName);
+        } else {
+            wrapper = enve::make_shared<ContainerBox>(importName,
+                                                       eBoxType::group);
+            wrapper->addContained(imported);
+        }
+        wrapper->getBoxTransformAnimator()->setScale(scaleX, scaleY);
         target->insertContained(0, wrapper);
-        wrapper->planCenterPivotPosition();
-        wrapper->updateAllBoxes(UpdateReason::userChange);
+        if (directObjects) {
+            wrapper->ungroupKeepTransform_k();
+        } else {
+            wrapper->planCenterPivotPosition();
+            wrapper->updateAllBoxes(UpdateReason::userChange);
+        }
         scene->requestUpdate();
         mDocument.actionFinished();
         AppSupport::setSettings("files", "recentImportDir",

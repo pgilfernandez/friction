@@ -16,13 +16,25 @@
 
 #include "smartPointers/selfref.h"
 
+#include <QStringList>
+
 class BoundingBox;
 class Canvas;
 
 namespace ImportSVGAnimation {
+    struct CORE_EXPORT Analysis {
+        int totalTracks = 0;
+        int supportedTracks = 0;
+        qreal duration = 0;
+        QStringList unsupported;
+    };
+
+    CORE_EXPORT Analysis analyzeSVGFile(const QString& filename);
+
     CORE_EXPORT qsptr<BoundingBox> loadSVGFile(const QString& filename,
                                                Canvas* scene,
-                                               bool extendSceneTime = true);
+                                               bool extendSceneTime = true,
+                                               bool* technicalRoot = nullptr);
 }
 
 #endif // SVGANIMATIONIMPORTER_H

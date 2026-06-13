@@ -17,12 +17,21 @@
 #include <QDialog>
 #include <QSizeF>
 
+#include "svganimationimporter.h"
+
 class QComboBox;
 class QCheckBox;
 class QRadioButton;
 
 class SVGAnimationImportDialog : public QDialog {
 public:
+    struct SceneInfo {
+        QSize size;
+        int firstFrame;
+        int lastFrame;
+        qreal fps;
+    };
+
     enum class ScaleMode {
         original,
         fitWidth,
@@ -30,24 +39,31 @@ public:
         stretch
     };
 
-    SVGAnimationImportDialog(const QSizeF& svgSize, const QSize& sceneSize,
+    enum class StructureMode {
+        namedGroup,
+        directObjects
+    };
+
+    SVGAnimationImportDialog(const QSizeF& svgSize, const SceneInfo& scene,
+                             const ImportSVGAnimation::Analysis& analysis,
                              QWidget* const parent);
 
     ScaleMode scaleMode() const;
+    StructureMode structureMode() const;
     bool extendSceneTime() const;
 
-    static bool sExec(const QString& path, const QSize& sceneSize,
+    static bool sExec(const QString& path, const SceneInfo& scene,
                       QSizeF& svgSize, ScaleMode& scaleMode,
+                      StructureMode& structureMode,
                       bool& extendSceneTime,
                       QWidget* const parent);
 
 private:
     static QSizeF readSVGSize(const QString& path);
 
-    QRadioButton* mOriginal;
-    QRadioButton* mProportional;
-    QRadioButton* mStretch;
-    QComboBox* mFitDimension;
+    QComboBox* mScaleMode;
+    QRadioButton* mNamedGroup;
+    QRadioButton* mDirectObjects;
     QCheckBox* mExtendSceneTime;
 };
 
