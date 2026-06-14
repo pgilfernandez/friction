@@ -34,6 +34,7 @@
 #include "Boxes/containerbox.h"
 #include "Boxes/rectangle.h"
 #include "Boxes/smartvectorpath.h"
+#include "PathEffects/dashpatheffect.h"
 #include "canvas.h"
 #include "exceptions.h"
 #include "svgimporter.h"
@@ -56,6 +57,12 @@ struct AnimationTrack {
 struct LayerCandidate {
     QString targetId;
     QString targetName;
+};
+
+struct DashCandidate {
+    QString targetId;
+    QString targetName;
+    qreal size;
 };
 
 const AnimationTrack* findTrack(const QList<AnimationTrack>& tracks,
@@ -372,6 +379,124 @@ QString styleProperty(const QDomElement& element, const QString& property)
         }
     }
     return QString();
+}
+
+QString presentationProperty(const QDomElement& element,
+                             const QString& property)
+{
+    const QString styled = styleProperty(element, property);
+    return styled.isEmpty() ? element.attribute(property) : styled;
+}
+
+bool parseAbsoluteSVGLength(const QString& value, qreal& result)
+{
+    static const QRegularExpression length(
+                QStringLiteral("^\\s*"
+                               "([+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)"
+                               "(?:[eE][+-]?\\d+)?)"
+                               "\\s*(px|pt|pc|mm|cm|in)?\\s*$"),
+                QRegularExpression::CaseInsensitiveOption);
+    const auto match = length.match(value);
+    if (!match.hasMatch()) { return false; }
+
+    bool ok = false;
+    result = match.captured(1).toDouble(&ok);
+    if (!ok || result < 0) { return false; }
+
+    const QString unit = match.captured(2).toLower();
+    if (unit == "pt") {
+        result *= 96. / 72.;
+    } else if (unit == "pc") {
+        result *= 16.;
+    } else if (unit == "mm") {
+        result *= 96. / 25.4;
+    } else if (unit == "cm") {
+        result *= 96. / 2.54;
+    } else if (unit == "in") {
+        result *= 96.;
+    }
+    return true;
+}
+
+bool equivalentDashSize(const QString& value, qreal& result)
+{
+    const QString text = value.trimmed();
+    if (text.isEmpty() || text.compare("none", Qt::CaseInsensitive) == 0) {
+        return false;
+    }
+
+    qreal total = 0;
+    int count = 0;
+    for (const QString& part :
+         text.split(QRegularExpression("[,\\s]+"), Qt::SkipEmptyParts)) {
+        qreal interval = 0;
+        if (!parseAbsoluteSVGLength(part, interval)) { return false; }
+        total += interval;
+        ++count;
+    }
+    if (!count || qFuzzyIsNull(total)) { return false; }
+
+    // Friction's Dash effect uses one equal dash/gap size. The average SVG
+    // interval preserves exact symmetric patterns and approximates the period
+    // of patterns that Friction cannot represent directly.
+    result = total / count;
+    return result >= 0.1;
+}
+
+bool isDashTarget(const QDomElement& element)
+{
+    static const QStringList pathTags{
+        "circle", "ellipse", "rect", "path", "polygon", "polyline", "line",
+        "text"
+    };
+    return pathTags.contains(element.tagName().toLower());
+}
+
+void collectDashCandidates(QDomElement element,
+                           const QString& inheritedDashArray,
+                           int& nextId,
+                           QList<DashCandidate>& result)
+{
+    QString dashArray = presentationProperty(element, "stroke-dasharray");
+    if (dashArray.isEmpty() ||
+        dashArray.compare("inherit", Qt::CaseInsensitive) == 0) {
+        dashArray = inheritedDashArray;
+    } else if (dashArray.compare("none", Qt::CaseInsensitive) == 0) {
+        dashArray.clear();
+    }
+
+    qreal dashSize = 0;
+    if (isDashTarget(element) && equivalentDashSize(dashArray, dashSize)) {
+        DashCandidate candidate;
+        candidate.targetId =
+                element.attribute("data-friction-animation-target");
+        candidate.targetName =
+                element.attribute("data-friction-animation-name");
+        if (candidate.targetId.isEmpty()) {
+            candidate.targetId =
+                    QString("__friction_svg_dash_%1").arg(nextId++);
+            candidate.targetName =
+                    element.attribute("inkscape:label",
+                                      element.attribute("id",
+                                                        element.tagName()));
+            element.setAttribute("inkscape:label", candidate.targetId);
+        }
+        candidate.size = dashSize;
+        result.append(candidate);
+    }
+
+    for (QDomElement child = element.firstChildElement(); !child.isNull();
+         child = child.nextSiblingElement()) {
+        collectDashCandidates(child, dashArray, nextId, result);
+    }
+}
+
+QList<DashCandidate> collectDashCandidates(QDomDocument& document)
+{
+    QList<DashCandidate> result;
+    int nextId = 0;
+    collectDashCandidates(document.documentElement(), QString(), nextId, result);
+    return result;
 }
 
 bool groupNeedsLayer(const QDomElement& group)
@@ -930,6 +1055,7 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
 
     const auto tracks = collectTracks(document);
     const auto layerCandidates = collectLayerCandidates(document);
+    const auto dashCandidates = collectDashCandidates(document);
     const auto gradientCreator = [scene]() { return scene->createNewGradient(); };
     const auto result = ImportSVG::loadSVGFile(document, gradientCreator);
     if (!result) { return nullptr; }
@@ -951,6 +1077,21 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
             preparedTransformTargets.insert(track.targetId);
         }
         applyTrack(targets.value(track.targetId), track, tracks, scene->getFps());
+    }
+    for (const DashCandidate& candidate : dashCandidates) {
+        const auto path = enve_cast<PathBox*>(
+                    findBox(result.get(), candidate.targetId));
+        if (!path) { continue; }
+        const auto effect = enve::make_shared<DashPathEffect>();
+        const auto size =
+                effect->ca_getFirstDescendantWithName<QrealAnimator>("size");
+        if (!size) { continue; }
+        size->setCurrentBaseValue(candidate.size);
+        path->addOutlineBasePathEffect(effect);
+        path->setOutlineBaseEffectsEnabled(true);
+        if (!candidate.targetName.isEmpty()) {
+            path->prp_setName(candidate.targetName);
+        }
     }
     for (const LayerCandidate& candidate : layerCandidates) {
         const auto group = enve_cast<ContainerBox*>(
