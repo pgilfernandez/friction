@@ -53,6 +53,11 @@ struct AnimationTrack {
     qreal duration = 0;
 };
 
+struct LayerCandidate {
+    QString targetId;
+    QString targetName;
+};
+
 const AnimationTrack* findTrack(const QList<AnimationTrack>& tracks,
                                 const QString& targetId,
                                 const QString& attribute);
@@ -256,13 +261,14 @@ void normalizeStaticTransforms(QDomElement element)
     }
 }
 
-void normalizeTextPresentationAttributes(QDomElement element)
+void normalizePresentationAttributes(QDomElement element)
 {
-    static const QStringList textAttributes{
-        "font-family", "font-size", "font-style", "font-weight", "text-anchor"
+    static const QStringList presentationAttributes{
+        "font-family", "font-size", "font-style", "font-weight", "text-anchor",
+        "opacity"
     };
     QStringList presentationStyles;
-    for (const QString& attribute : textAttributes) {
+    for (const QString& attribute : presentationAttributes) {
         if (element.hasAttribute(attribute)) {
             presentationStyles.append(attribute + ':' +
                                       element.attribute(attribute));
@@ -277,7 +283,7 @@ void normalizeTextPresentationAttributes(QDomElement element)
     }
     for (QDomElement child = element.firstChildElement(); !child.isNull();
          child = child.nextSiblingElement()) {
-        normalizeTextPresentationAttributes(child);
+        normalizePresentationAttributes(child);
     }
 }
 
@@ -353,6 +359,77 @@ QString ensureTargetId(QDomElement& target, int& nextId)
     target.setAttribute("data-friction-animation-name", name);
     target.setAttribute("inkscape:label", id);
     return id;
+}
+
+QString styleProperty(const QDomElement& element, const QString& property)
+{
+    for (const QString& declaration :
+         element.attribute("style").split(';', Qt::SkipEmptyParts)) {
+        const int separator = declaration.indexOf(':');
+        if (separator < 0) { continue; }
+        if (declaration.left(separator).trimmed() == property) {
+            return declaration.mid(separator + 1).trimmed();
+        }
+    }
+    return QString();
+}
+
+bool groupNeedsLayer(const QDomElement& group)
+{
+    for (QDomElement child = group.firstChildElement(); !child.isNull();
+         child = child.nextSiblingElement()) {
+        const QString tag = child.tagName();
+        if (tag == "animate" || tag == "animateTransform" ||
+            tag == "animateMotion" || tag == "set") {
+            return true;
+        }
+    }
+
+    QString opacity = group.attribute("opacity");
+    if (opacity.isEmpty()) { opacity = styleProperty(group, "opacity"); }
+    bool opacityOk = false;
+    const qreal opacityValue = opacity.toDouble(&opacityOk);
+    if (opacityOk && !qFuzzyCompare(opacityValue + 1., 2.)) { return true; }
+
+    static const QStringList rasterProperties{
+        "filter", "mask", "clip-path", "mix-blend-mode", "isolation"
+    };
+    for (const QString& property : rasterProperties) {
+        QString value = group.attribute(property);
+        if (value.isEmpty()) { value = styleProperty(group, property); }
+        if (!value.isEmpty() && value != "none" && value != "normal" &&
+            value != "auto") {
+            return true;
+        }
+    }
+    return false;
+}
+
+QList<LayerCandidate> collectLayerCandidates(QDomDocument& document)
+{
+    QList<LayerCandidate> result;
+    int nextId = 0;
+    const QDomNodeList groups = document.elementsByTagName("g");
+    for (int i = 0; i < groups.count(); ++i) {
+        QDomElement group = groups.at(i).toElement();
+        if (!groupNeedsLayer(group)) { continue; }
+
+        LayerCandidate candidate;
+        candidate.targetId =
+                group.attribute("data-friction-animation-target");
+        candidate.targetName =
+                group.attribute("data-friction-animation-name");
+        if (candidate.targetId.isEmpty()) {
+            candidate.targetId =
+                    QString("__friction_svg_layer_%1").arg(nextId++);
+            candidate.targetName =
+                    group.attribute("inkscape:label",
+                                    group.attribute("id", "Group"));
+            group.setAttribute("inkscape:label", candidate.targetId);
+        }
+        result.append(candidate);
+    }
+    return result;
 }
 
 QList<AnimationTrack> collectTracks(QDomDocument& document)
@@ -848,10 +925,11 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
         RuntimeThrow("Cannot parse SVG animation file " + filename);
     }
     const bool documentHasTechnicalRoot = hasTechnicalRoot(document);
-    normalizeTextPresentationAttributes(document.documentElement());
+    normalizePresentationAttributes(document.documentElement());
     normalizeStaticTransforms(document.documentElement());
 
     const auto tracks = collectTracks(document);
+    const auto layerCandidates = collectLayerCandidates(document);
     const auto gradientCreator = [scene]() { return scene->createNewGradient(); };
     const auto result = ImportSVG::loadSVGFile(document, gradientCreator);
     if (!result) { return nullptr; }
@@ -873,6 +951,15 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
             preparedTransformTargets.insert(track.targetId);
         }
         applyTrack(targets.value(track.targetId), track, tracks, scene->getFps());
+    }
+    for (const LayerCandidate& candidate : layerCandidates) {
+        const auto group = enve_cast<ContainerBox*>(
+                    findBox(result.get(), candidate.targetId));
+        if (!group) { continue; }
+        group->promoteToLayer();
+        if (!candidate.targetName.isEmpty()) {
+            group->prp_setName(candidate.targetName);
+        }
     }
     for (const AnimationTrack& track : tracks) {
         BoundingBox* const target = targets.value(track.targetId);
