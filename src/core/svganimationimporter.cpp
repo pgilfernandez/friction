@@ -52,6 +52,7 @@ struct AnimationTrack {
     QList<QList<qreal>> splines;
     qreal begin = 0;
     qreal duration = 0;
+    bool repeatIndefinitely = false;
 };
 
 struct LayerCandidate {
@@ -575,6 +576,9 @@ QList<AnimationTrack> collectTracks(QDomDocument& document)
             track.attribute = animation.attribute("attributeName");
             track.type = animation.attribute("type");
             track.calcMode = animation.attribute("calcMode", "linear");
+            track.repeatIndefinitely =
+                    animation.attribute("repeatCount")
+                    .compare("indefinite", Qt::CaseInsensitive) == 0;
 
             bool durationOk = false;
             track.duration = parseClock(animation.attribute("dur"), &durationOk);
@@ -610,6 +614,73 @@ QList<AnimationTrack> collectTracks(QDomDocument& document)
             }
             result.append(track);
         }
+    }
+    return result;
+}
+
+AnimationTrack repeatedTrack(const AnimationTrack& source,
+                             const int repetitions)
+{
+    if (!source.repeatIndefinitely || repetitions <= 1) { return source; }
+
+    AnimationTrack result = source;
+    result.duration *= repetitions;
+    result.times.clear();
+    result.values.clear();
+    result.splines.clear();
+    result.repeatIndefinitely = false;
+
+    qreal rotationCycle = 0;
+    if (source.attribute == "transform" && source.type == "rotate") {
+        const auto first = parseNumbers(source.values.first());
+        const auto last = parseNumbers(source.values.last());
+        if (!first.isEmpty() && !last.isEmpty()) {
+            rotationCycle = last.first() - first.first();
+        }
+    }
+
+    for (int repetition = 0; repetition < repetitions; ++repetition) {
+        for (int valueId = 0; valueId < source.values.size(); ++valueId) {
+            if (repetition > 0 && valueId == 0) { continue; }
+
+            result.times.append((repetition + source.times.at(valueId)) /
+                                repetitions);
+            if (!qFuzzyIsNull(rotationCycle)) {
+                const auto numbers = parseNumbers(source.values.at(valueId));
+                if (numbers.isEmpty()) { return source; }
+                QStringList shifted;
+                shifted.append(QString::number(
+                                   numbers.first() +
+                                   repetition * rotationCycle));
+                for (int numberId = 1; numberId < numbers.size(); ++numberId) {
+                    shifted.append(QString::number(numbers.at(numberId)));
+                }
+                result.values.append(shifted.join(' '));
+            } else {
+                result.values.append(source.values.at(valueId));
+            }
+        }
+        result.splines.append(source.splines);
+    }
+    return result;
+}
+
+QList<AnimationTrack> expandIndefiniteTracks(
+        const QList<AnimationTrack>& tracks)
+{
+    qreal end = 0;
+    for (const AnimationTrack& track : tracks) {
+        end = qMax(end, track.begin + track.duration);
+    }
+
+    QList<AnimationTrack> result;
+    result.reserve(tracks.size());
+    for (const AnimationTrack& track : tracks) {
+        const qreal available = end - track.begin;
+        const int repetitions = qMax(1, qFloor(
+                                         available / track.duration +
+                                         0.000001));
+        result.append(repeatedTrack(track, repetitions));
     }
     return result;
 }
@@ -1053,7 +1124,7 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
     normalizePresentationAttributes(document.documentElement());
     normalizeStaticTransforms(document.documentElement());
 
-    const auto tracks = collectTracks(document);
+    const auto tracks = expandIndefiniteTracks(collectTracks(document));
     const auto layerCandidates = collectLayerCandidates(document);
     const auto dashCandidates = collectDashCandidates(document);
     const auto gradientCreator = [scene]() { return scene->createNewGradient(); };
