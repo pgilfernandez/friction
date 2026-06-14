@@ -256,6 +256,31 @@ void normalizeStaticTransforms(QDomElement element)
     }
 }
 
+void normalizeTextPresentationAttributes(QDomElement element)
+{
+    static const QStringList textAttributes{
+        "font-family", "font-size", "font-style", "font-weight", "text-anchor"
+    };
+    QStringList presentationStyles;
+    for (const QString& attribute : textAttributes) {
+        if (element.hasAttribute(attribute)) {
+            presentationStyles.append(attribute + ':' +
+                                      element.attribute(attribute));
+        }
+    }
+    if (!presentationStyles.isEmpty()) {
+        QString style = element.attribute("style").trimmed();
+        if (!style.isEmpty() && !style.startsWith(';')) {
+            style.prepend(';');
+        }
+        element.setAttribute("style", presentationStyles.join(';') + style);
+    }
+    for (QDomElement child = element.firstChildElement(); !child.isNull();
+         child = child.nextSiblingElement()) {
+        normalizeTextPresentationAttributes(child);
+    }
+}
+
 bool parseColor(const QString& value, QColor& color)
 {
     const QString text = value.trimmed();
@@ -823,6 +848,7 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
         RuntimeThrow("Cannot parse SVG animation file " + filename);
     }
     const bool documentHasTechnicalRoot = hasTechnicalRoot(document);
+    normalizeTextPresentationAttributes(document.documentElement());
     normalizeStaticTransforms(document.documentElement());
 
     const auto tracks = collectTracks(document);
