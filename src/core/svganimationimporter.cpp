@@ -58,6 +58,7 @@ struct AnimationTrack {
 struct LayerCandidate {
     QString targetId;
     QString targetName;
+    SkBlendMode blendMode = SkBlendMode::kSrcOver;
 };
 
 struct DashCandidate {
@@ -531,6 +532,31 @@ bool groupNeedsLayer(const QDomElement& group)
     return false;
 }
 
+SkBlendMode svgBlendMode(const QDomElement& element)
+{
+    const QString value =
+            presentationProperty(element, "mix-blend-mode").trimmed().toLower();
+    if (value == "multiply") { return SkBlendMode::kMultiply; }
+    if (value == "screen") { return SkBlendMode::kScreen; }
+    if (value == "overlay") { return SkBlendMode::kOverlay; }
+    if (value == "darken") { return SkBlendMode::kDarken; }
+    if (value == "lighten") { return SkBlendMode::kLighten; }
+    if (value == "color-dodge") { return SkBlendMode::kColorDodge; }
+    if (value == "color-burn") { return SkBlendMode::kColorBurn; }
+    if (value == "hard-light") { return SkBlendMode::kHardLight; }
+    if (value == "soft-light") { return SkBlendMode::kSoftLight; }
+    if (value == "difference") { return SkBlendMode::kDifference; }
+    if (value == "exclusion") { return SkBlendMode::kExclusion; }
+    if (value == "hue") { return SkBlendMode::kHue; }
+    if (value == "saturation") { return SkBlendMode::kSaturation; }
+    if (value == "color") { return SkBlendMode::kColor; }
+    if (value == "luminosity") { return SkBlendMode::kLuminosity; }
+    if (value == "plus-lighter" || value == "plus") {
+        return SkBlendMode::kPlus;
+    }
+    return SkBlendMode::kSrcOver;
+}
+
 QList<LayerCandidate> collectLayerCandidates(QDomDocument& document)
 {
     QList<LayerCandidate> result;
@@ -553,6 +579,7 @@ QList<LayerCandidate> collectLayerCandidates(QDomDocument& document)
                                     group.attribute("id", "Group"));
             group.setAttribute("inkscape:label", candidate.targetId);
         }
+        candidate.blendMode = svgBlendMode(group);
         result.append(candidate);
     }
     return result;
@@ -1169,6 +1196,7 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
                     findBox(result.get(), candidate.targetId));
         if (!group) { continue; }
         group->promoteToLayer();
+        group->setBlendModeSk(candidate.blendMode);
         if (!candidate.targetName.isEmpty()) {
             group->prp_setName(candidate.targetName);
         }
