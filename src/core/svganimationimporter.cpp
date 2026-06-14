@@ -1158,8 +1158,8 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
                 effect->ca_getFirstDescendantWithName<QrealAnimator>("size");
         if (!size) { continue; }
         size->setCurrentBaseValue(candidate.size);
-        path->addOutlineBasePathEffect(effect);
-        path->setOutlineBaseEffectsEnabled(true);
+        path->addPathEffect(effect);
+        path->setPathEffectsEnabled(true);
         if (!candidate.targetName.isEmpty()) {
             path->prp_setName(candidate.targetName);
         }
