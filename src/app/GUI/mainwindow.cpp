@@ -1311,14 +1311,14 @@ void MainWindow::importSVGAnimation()
         QSizeF svgSize;
         SVGAnimationImportDialog::ScaleMode scaleMode;
         SVGAnimationImportDialog::StructureMode structureMode;
-        bool extendSceneTime = true;
+        SVGAnimationImportDialog::SceneDurationMode durationMode;
         const SVGAnimationImportDialog::SceneInfo sceneInfo{
             QSize(scene->getCanvasWidth(), scene->getCanvasHeight()),
             scene->getMinFrame(), scene->getMaxFrame(), scene->getFps()
         };
         if (!SVGAnimationImportDialog::sExec(
                     path, sceneInfo, svgSize, scaleMode, structureMode,
-                    extendSceneTime, this)) {
+                    durationMode, this)) {
             return;
         }
 
@@ -1337,7 +1337,7 @@ void MainWindow::importSVGAnimation()
         auto block = scene->blockUndoRedo();
         bool technicalRoot = false;
         const auto imported = ImportSVGAnimation::loadSVGFile(
-                    path, scene, extendSceneTime, &technicalRoot);
+                    path, scene, durationMode, &technicalRoot);
         if (!imported) { return; }
         const QString importName = QFileInfo(path).completeBaseName();
         block.reset();

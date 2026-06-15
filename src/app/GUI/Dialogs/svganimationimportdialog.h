@@ -20,8 +20,6 @@
 #include "svganimationimporter.h"
 
 class QComboBox;
-class QCheckBox;
-class QRadioButton;
 
 class SVGAnimationImportDialog : public QDialog {
 public:
@@ -44,27 +42,28 @@ public:
         directObjects
     };
 
+    using SceneDurationMode = ImportSVGAnimation::SceneDurationMode;
+
     SVGAnimationImportDialog(const QSizeF& svgSize, const SceneInfo& scene,
                              const ImportSVGAnimation::Analysis& analysis,
                              QWidget* const parent);
 
     ScaleMode scaleMode() const;
     StructureMode structureMode() const;
-    bool extendSceneTime() const;
+    SceneDurationMode sceneDurationMode() const;
 
     static bool sExec(const QString& path, const SceneInfo& scene,
                       QSizeF& svgSize, ScaleMode& scaleMode,
                       StructureMode& structureMode,
-                      bool& extendSceneTime,
+                      SceneDurationMode& durationMode,
                       QWidget* const parent);
 
 private:
     static QSizeF readSVGSize(const QString& path);
 
     QComboBox* mScaleMode;
-    QRadioButton* mNamedGroup;
-    QRadioButton* mDirectObjects;
-    QCheckBox* mExtendSceneTime;
+    QComboBox* mStructureMode;
+    QComboBox* mSceneDurationMode;
 };
 
 #endif // SVGANIMATIONIMPORTDIALOG_H

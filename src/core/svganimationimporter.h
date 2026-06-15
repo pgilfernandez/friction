@@ -22,6 +22,12 @@ class BoundingBox;
 class Canvas;
 
 namespace ImportSVGAnimation {
+    enum class SceneDurationMode {
+        dontModify,
+        extendIfNeeded,
+        fitImportedSVG
+    };
+
     struct CORE_EXPORT Analysis {
         int totalTracks = 0;
         int supportedTracks = 0;
@@ -33,7 +39,8 @@ namespace ImportSVGAnimation {
 
     CORE_EXPORT qsptr<BoundingBox> loadSVGFile(const QString& filename,
                                                Canvas* scene,
-                                               bool extendSceneTime = true,
+                                               SceneDurationMode durationMode =
+                                                   SceneDurationMode::extendIfNeeded,
                                                bool* technicalRoot = nullptr);
 }
 

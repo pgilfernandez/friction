@@ -182,6 +182,58 @@ qreal parseClock(const QString& value, bool* ok)
     return parsed ? result : 0;
 }
 
+qint64 greatestCommonDivisor(qint64 first, qint64 second)
+{
+    while (second != 0) {
+        const qint64 remainder = first % second;
+        first = second;
+        second = remainder;
+    }
+    return first;
+}
+
+qreal animationDuration(const QDomDocument& document)
+{
+    qreal maximumEnd = 0;
+    qint64 commonCycleMs = 0;
+    constexpr qint64 maximumCommonCycleMs = 60 * 60 * 1000;
+    const QStringList tags{"animate", "animateTransform", "animateMotion", "set"};
+    for (const QString& tag : tags) {
+        const QDomNodeList nodes = document.elementsByTagName(tag);
+        for (int i = 0; i < nodes.count(); ++i) {
+            const QDomElement animation = nodes.at(i).toElement();
+            bool durationOk = false;
+            const qreal duration = parseClock(animation.attribute("dur"),
+                                              &durationOk);
+            bool beginOk = false;
+            const qreal begin = parseClock(animation.attribute("begin", "0s"),
+                                           &beginOk);
+            if (durationOk) {
+                const qreal actualBegin = beginOk ? begin : 0;
+                maximumEnd = qMax(maximumEnd, duration + actualBegin);
+                if (qFuzzyIsNull(actualBegin) &&
+                    animation.attribute("repeatCount").trimmed() ==
+                    "indefinite") {
+                    const qint64 durationMs = qMax<qint64>(
+                                1, qRound64(duration * 1000));
+                    if (commonCycleMs == 0) {
+                        commonCycleMs = durationMs;
+                        continue;
+                    }
+                    const qint64 divisor = greatestCommonDivisor(
+                                commonCycleMs, durationMs);
+                    const qint64 multiplier = commonCycleMs / divisor;
+                    if (multiplier <=
+                        maximumCommonCycleMs / durationMs) {
+                        commonCycleMs = multiplier * durationMs;
+                    }
+                }
+            }
+        }
+    }
+    return qMax(maximumEnd, commonCycleMs / 1000.);
+}
+
 QList<qreal> parseNumbers(const QString& value)
 {
     QList<qreal> result;
@@ -771,9 +823,9 @@ AnimationTrack repeatedTrack(const AnimationTrack& source,
 }
 
 QList<AnimationTrack> expandIndefiniteTracks(
-        const QList<AnimationTrack>& tracks)
+        const QList<AnimationTrack>& tracks, const qreal targetDuration)
 {
-    qreal end = 0;
+    qreal end = targetDuration;
     for (const AnimationTrack& track : tracks) {
         end = qMax(end, track.begin + track.duration);
     }
@@ -782,8 +834,8 @@ QList<AnimationTrack> expandIndefiniteTracks(
     result.reserve(tracks.size());
     for (const AnimationTrack& track : tracks) {
         const qreal available = end - track.begin;
-        const int repetitions = qMax(1, qFloor(
-                                         available / track.duration +
+        const int repetitions = qMax(1, qCeil(
+                                         available / track.duration -
                                          0.000001));
         result.append(repeatedTrack(track, repetitions));
     }
@@ -1195,25 +1247,16 @@ ImportSVGAnimation::Analysis ImportSVGAnimation::analyzeSVGFile(
             } else {
                 result.unsupported.append(unsupportedDescription(animation));
             }
-            bool durationOk = false;
-            const qreal duration = parseClock(animation.attribute("dur"),
-                                              &durationOk);
-            bool beginOk = false;
-            const qreal begin = parseClock(animation.attribute("begin", "0s"),
-                                           &beginOk);
-            if (durationOk) {
-                result.duration = qMax(result.duration,
-                                       duration + (beginOk ? begin : 0));
-            }
         }
     }
+    result.duration = animationDuration(document);
     result.unsupported.removeDuplicates();
     return result;
 }
 
 qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
                                                    Canvas* scene,
-                                                   const bool extendSceneTime,
+                                                   const SceneDurationMode durationMode,
                                                    bool* const technicalRoot)
 {
     if (!scene) { RuntimeThrow("SVG animation import requires an active scene"); }
@@ -1225,12 +1268,14 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
     if (!document.setContent(&file)) {
         RuntimeThrow("Cannot parse SVG animation file " + filename);
     }
+    const qreal importedDuration = animationDuration(document);
     const bool documentHasTechnicalRoot = hasTechnicalRoot(document);
     normalizePresentationAttributes(document.documentElement());
     normalizeStaticTransforms(document.documentElement());
 
     const auto maskCandidates = materializeMasks(document);
-    const auto tracks = expandIndefiniteTracks(collectTracks(document));
+    const auto tracks = expandIndefiniteTracks(collectTracks(document),
+                                               importedDuration);
     const auto layerCandidates = collectLayerCandidates(document);
     const auto dashCandidates = collectDashCandidates(document);
     const auto gradientCreator = [scene]() { return scene->createNewGradient(); };
@@ -1295,14 +1340,15 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
             target->prp_setName(track.targetName);
         }
     }
-    int lastFrame = scene->getMaxFrame();
-    for (const AnimationTrack& track : tracks) {
-        lastFrame = qMax(lastFrame,
-                         qCeil((track.begin + track.duration) *
-                               scene->getFps() - 0.000001));
-    }
-    if (extendSceneTime && lastFrame > scene->getMaxFrame()) {
-        scene->setFrameRange({scene->getMinFrame(), lastFrame});
+    const int importedLastFrame =
+            scene->getMinFrame() +
+            qMax(1, qRound(importedDuration * scene->getFps()));
+    if (durationMode == SceneDurationMode::fitImportedSVG &&
+        importedDuration > 0) {
+        scene->setFrameRange({scene->getMinFrame(), importedLastFrame});
+    } else if (durationMode == SceneDurationMode::extendIfNeeded &&
+               importedLastFrame > scene->getMaxFrame()) {
+        scene->setFrameRange({scene->getMinFrame(), importedLastFrame});
     }
     return result;
 }

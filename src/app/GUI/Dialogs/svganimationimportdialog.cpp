@@ -13,15 +13,13 @@
 
 #include "svganimationimportdialog.h"
 
-#include <QCheckBox>
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QDomDocument>
 #include <QFile>
-#include <QGroupBox>
+#include <QFormLayout>
 #include <QHeaderView>
 #include <QLabel>
-#include <QRadioButton>
 #include <QRegularExpression>
 #include <QStandardItemModel>
 #include <QTableWidget>
@@ -66,10 +64,11 @@ SVGAnimationImportDialog::SVGAnimationImportDialog(
 
     const auto mainLayout = new QVBoxLayout(this);
     const int sceneFrameCount = scene.lastFrame - scene.firstFrame + 1;
-    const qreal sceneDuration = scene.fps > 0 ? sceneFrameCount / scene.fps : 0;
+    const qreal sceneDuration = scene.fps > 0 ?
+                (scene.lastFrame - scene.firstFrame) / scene.fps : 0;
     const int svgFrames = qRound(analysis.duration * scene.fps);
 
-    const auto comparison = new QTableWidget(4, 3, this);
+    const auto comparison = new QTableWidget(3, 3, this);
     comparison->setHorizontalHeaderLabels(
                 {tr("Property"), tr("SVG"), tr("Active scene")});
     comparison->verticalHeader()->hide();
@@ -96,12 +95,12 @@ SVGAnimationImportDialog::SVGAnimationImportDialog(
                                         .arg(scene.firstFrame)
                                         .arg(scene.lastFrame)
                                         .arg(sceneFrameCount)));
-    comparison->setItem(3, 0, tableItem(tr("Animation tracks")));
-    comparison->setItem(3, 1, tableItem(tr("%1 supported of %2")
-                                        .arg(analysis.supportedTracks)
-                                        .arg(analysis.totalTracks)));
-    comparison->setItem(3, 2, tableItem(tr("Not applicable")));
-    comparison->resizeRowsToContents();
+    const int compactRowHeight = comparison->fontMetrics().height() + 4;
+    comparison->verticalHeader()->setMinimumSectionSize(compactRowHeight);
+    comparison->verticalHeader()->setDefaultSectionSize(compactRowHeight);
+    for (int row = 0; row < comparison->rowCount(); ++row) {
+        comparison->setRowHeight(row, compactRowHeight);
+    }
     comparison->setMinimumWidth(460);
     comparison->setFixedHeight(comparison->horizontalHeader()->height() +
                                comparison->verticalHeader()->length() + 2);
@@ -115,9 +114,8 @@ SVGAnimationImportDialog::SVGAnimationImportDialog(
         mainLayout->addWidget(warning);
     }
 
-    const auto scaleGroup = new QGroupBox(tr("Scale mode"), this);
-    const auto scaleLayout = new QVBoxLayout(scaleGroup);
-    mScaleMode = new QComboBox(scaleGroup);
+    const auto optionsLayout = new QFormLayout();
+    mScaleMode = new QComboBox(this);
     mScaleMode->addItem(tr("Don't scale"));
     mScaleMode->addItem(tr("Scale proportionally (width fit)"));
     mScaleMode->addItem(tr("Scale proportionally (height fit)"));
@@ -132,24 +130,32 @@ SVGAnimationImportDialog::SVGAnimationImportDialog(
         }
     }
 
-    scaleLayout->addWidget(mScaleMode);
-    mainLayout->addWidget(scaleGroup);
+    optionsLayout->addRow(tr("Scale mode"), mScaleMode);
 
-    const auto structureGroup = new QGroupBox(tr("Import structure"), this);
-    const auto structureLayout = new QVBoxLayout(structureGroup);
-    mNamedGroup = new QRadioButton(tr("Grouped"), structureGroup);
-    mDirectObjects = new QRadioButton(tr("Ungrouped"), structureGroup);
-    mNamedGroup->setChecked(true);
-    structureLayout->addWidget(mNamedGroup);
-    structureLayout->addWidget(mDirectObjects);
-    mainLayout->addWidget(structureGroup);
+    mStructureMode = new QComboBox(this);
+    mStructureMode->addItem(tr("Grouped"));
+    mStructureMode->addItem(tr("Ungrouped"));
+    mStructureMode->setCurrentIndex(
+                static_cast<int>(StructureMode::directObjects));
+    optionsLayout->addRow(tr("Import structure"), mStructureMode);
 
-    mExtendSceneTime = new QCheckBox(
-                tr("Extend scene time if necessary"), this);
-    const bool extensionNeeded = analysis.duration > sceneDuration;
-    mExtendSceneTime->setChecked(extensionNeeded);
-    mExtendSceneTime->setEnabled(extensionNeeded);
-    mainLayout->addWidget(mExtendSceneTime);
+    mSceneDurationMode = new QComboBox(this);
+    mSceneDurationMode->addItem(tr("Don't modify"));
+    mSceneDurationMode->addItem(tr("Extend if needed"));
+    mSceneDurationMode->addItem(tr("Fit to imported SVG"));
+    mSceneDurationMode->setCurrentIndex(
+                analysis.duration > sceneDuration ?
+                    static_cast<int>(SceneDurationMode::extendIfNeeded) :
+                    static_cast<int>(SceneDurationMode::dontModify));
+    if (analysis.duration <= 0) {
+        const auto model = qobject_cast<QStandardItemModel*>(
+                    mSceneDurationMode->model());
+        for (int i = 1; model && i < mSceneDurationMode->count(); ++i) {
+            model->item(i)->setEnabled(false);
+        }
+    }
+    optionsLayout->addRow(tr("Scene duration"), mSceneDurationMode);
+    mainLayout->addLayout(optionsLayout);
 
     const auto buttons = new QDialogButtonBox(QDialogButtonBox::Ok |
                                               QDialogButtonBox::Cancel);
@@ -164,25 +170,25 @@ SVGAnimationImportDialog::ScaleMode SVGAnimationImportDialog::scaleMode() const 
 
 SVGAnimationImportDialog::StructureMode
 SVGAnimationImportDialog::structureMode() const {
-    return mDirectObjects->isChecked() ?
-                StructureMode::directObjects : StructureMode::namedGroup;
+    return static_cast<StructureMode>(mStructureMode->currentIndex());
 }
 
-bool SVGAnimationImportDialog::extendSceneTime() const {
-    return mExtendSceneTime->isChecked();
+SVGAnimationImportDialog::SceneDurationMode
+SVGAnimationImportDialog::sceneDurationMode() const {
+    return static_cast<SceneDurationMode>(mSceneDurationMode->currentIndex());
 }
 
 bool SVGAnimationImportDialog::sExec(
         const QString& path, const SceneInfo& scene, QSizeF& svgSize,
         ScaleMode& scaleMode, StructureMode& structureMode,
-        bool& extendSceneTime, QWidget* const parent) {
+        SceneDurationMode& durationMode, QWidget* const parent) {
     svgSize = readSVGSize(path);
     const auto analysis = ImportSVGAnimation::analyzeSVGFile(path);
     SVGAnimationImportDialog dialog(svgSize, scene, analysis, parent);
     if (dialog.exec() != QDialog::Accepted) { return false; }
     scaleMode = dialog.scaleMode();
     structureMode = dialog.structureMode();
-    extendSceneTime = dialog.extendSceneTime();
+    durationMode = dialog.sceneDurationMode();
     return true;
 }
 
