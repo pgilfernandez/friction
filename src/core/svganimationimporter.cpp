@@ -67,6 +67,12 @@ struct DashCandidate {
     qreal size;
 };
 
+struct MaskCandidate {
+    QString targetId;
+    QString targetName;
+    SkBlendMode blendMode;
+};
+
 const AnimationTrack* findTrack(const QList<AnimationTrack>& tracks,
                                 const QString& targetId,
                                 const QString& attribute);
@@ -388,6 +394,78 @@ QString presentationProperty(const QDomElement& element,
 {
     const QString styled = styleProperty(element, property);
     return styled.isEmpty() ? element.attribute(property) : styled;
+}
+
+QString urlReferenceId(const QString& value)
+{
+    static const QRegularExpression url(
+                QStringLiteral("^\\s*url\\(\\s*#([^\\s)]+)\\s*\\)\\s*$"),
+                QRegularExpression::CaseInsensitiveOption);
+    const auto match = url.match(value);
+    return match.hasMatch() ? match.captured(1) : QString();
+}
+
+bool isFullMaskBackground(const QDomElement& element)
+{
+    if (element.tagName().toLower() != "rect") { return false; }
+    return element.attribute("width").trimmed() == "100%" &&
+            element.attribute("height").trimmed() == "100%";
+}
+
+QList<MaskCandidate> materializeMasks(QDomDocument& document)
+{
+    QList<MaskCandidate> result;
+    QHash<QString, QDomElement> masks;
+    const QDomNodeList maskNodes = document.elementsByTagName("mask");
+    for (int i = 0; i < maskNodes.count(); ++i) {
+        const QDomElement mask = maskNodes.at(i).toElement();
+        if (!mask.attribute("id").isEmpty()) {
+            masks.insert(mask.attribute("id"), mask);
+        }
+    }
+
+    int nextId = 0;
+    const QDomNodeList groups = document.elementsByTagName("g");
+    for (int i = 0; i < groups.count(); ++i) {
+        QDomElement group = groups.at(i).toElement();
+        QString maskValue = presentationProperty(group, "mask");
+        const QString maskId = urlReferenceId(maskValue);
+        if (maskId.isEmpty() || !masks.contains(maskId)) { continue; }
+
+        const QDomElement mask = masks.value(maskId);
+        QList<QDomElement> content;
+        bool hasFullBackground = false;
+        for (QDomElement child = mask.firstChildElement(); !child.isNull();
+             child = child.nextSiblingElement()) {
+            if (isFullMaskBackground(child)) {
+                hasFullBackground = true;
+            } else {
+                content.append(child);
+            }
+        }
+        if (content.isEmpty()) { continue; }
+
+        const QString targetId =
+                QString("__friction_svg_mask_%1").arg(nextId++);
+        const QString targetName = maskId;
+        QDomElement importedMask = document.createElement("g");
+        for (const QDomElement& child : content) {
+            importedMask.appendChild(child.cloneNode(true));
+        }
+        // ImportSVG flattens single-child groups. A non-element node preserves
+        // the container without creating an extra visible object.
+        importedMask.appendChild(document.createComment("friction-mask-layer"));
+        importedMask.setAttribute("inkscape:label", targetId);
+        group.appendChild(importedMask);
+
+        MaskCandidate candidate;
+        candidate.targetId = targetId;
+        candidate.targetName = targetName;
+        candidate.blendMode = hasFullBackground ?
+                    SkBlendMode::kDstOut : SkBlendMode::kDstIn;
+        result.append(candidate);
+    }
+    return result;
 }
 
 bool parseAbsoluteSVGLength(const QString& value, qreal& result)
@@ -1151,6 +1229,7 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
     normalizePresentationAttributes(document.documentElement());
     normalizeStaticTransforms(document.documentElement());
 
+    const auto maskCandidates = materializeMasks(document);
     const auto tracks = expandIndefiniteTracks(collectTracks(document));
     const auto layerCandidates = collectLayerCandidates(document);
     const auto dashCandidates = collectDashCandidates(document);
@@ -1200,6 +1279,14 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
         if (!candidate.targetName.isEmpty()) {
             group->prp_setName(candidate.targetName);
         }
+    }
+    for (const MaskCandidate& candidate : maskCandidates) {
+        const auto maskLayer = enve_cast<ContainerBox*>(
+                    findBox(result.get(), candidate.targetId));
+        if (!maskLayer) { continue; }
+        maskLayer->promoteToLayer();
+        maskLayer->setBlendModeSk(candidate.blendMode);
+        maskLayer->prp_setName(candidate.targetName);
     }
     for (const AnimationTrack& track : tracks) {
         BoundingBox* const target = targets.value(track.targetId);
