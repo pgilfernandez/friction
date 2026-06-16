@@ -815,6 +815,14 @@ QJsonObject firstItemOfType(const QJsonArray& items, const QString& type)
     return {};
 }
 
+bool transformOpacityNeedsLayer(const QJsonObject& transform)
+{
+    const QJsonObject opacity = transform.value(QStringLiteral("o")).toObject();
+    if (opacity.isEmpty()) { return false; }
+    if (opacity.value(QStringLiteral("a")).toInt() != 0) { return true; }
+    return qAbs(scalarValue(propertyValue(opacity), 100) - 100) > 0.0001;
+}
+
 void applyGradientColorKeys(SceneBoundGradient* const gradient,
                             const QJsonObject& property,
                             Canvas* const scene,
@@ -1015,12 +1023,13 @@ qsptr<ContainerBox> createGroup(const QJsonObject& group,
                                 Canvas* const scene,
                                 const int inPoint)
 {
+    const QJsonArray items = group.value(QStringLiteral("it")).toArray();
+    const QJsonObject transform = firstItemOfType(items, QStringLiteral("tr"));
     const auto box = enve::make_shared<ContainerBox>(
                 group.value(QStringLiteral("nm")).toString(QStringLiteral("Group")),
-                eBoxType::group);
-    const QJsonArray items = group.value(QStringLiteral("it")).toArray();
+                transformOpacityNeedsLayer(transform) ?
+                    eBoxType::layer : eBoxType::group);
     importShapeItems(items, box.get(), scene, inPoint);
-    const QJsonObject transform = firstItemOfType(items, QStringLiteral("tr"));
     if (!transform.isEmpty()) { applyTransform(box.get(), transform, scene, inPoint); }
     return box;
 }
