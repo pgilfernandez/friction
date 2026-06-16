@@ -16,6 +16,7 @@
 #include "Animators/SmartPath/smartpathanimator.h"
 #include "Animators/SmartPath/smartpathcollection.h"
 #include "Animators/coloranimator.h"
+#include "Animators/gradientpoints.h"
 #include "Animators/paintsettingsanimator.h"
 #include "Animators/qpointfanimator.h"
 #include "Animators/qrealanimator.h"
@@ -54,8 +55,10 @@ struct KeyValue {
 struct PaintStyle {
     bool hasFill = false;
     QColor fill = Qt::black;
+    bool hasFillGradient = false;
     bool hasStroke = false;
     QColor stroke = Qt::black;
+    bool hasStrokeGradient = false;
     qreal strokeWidth = 1;
 };
 
@@ -319,6 +322,52 @@ QColor colorValue(const QJsonValue& value, const QColor& fallback = Qt::black)
     return color;
 }
 
+QList<QColor> gradientColors(const QJsonObject& gradient)
+{
+    const int pointCount = qMax(0, gradient.value(QStringLiteral("p")).toInt());
+    const QJsonArray values = propertyValue(
+                gradient.value(QStringLiteral("k")).toObject()).toArray();
+    QList<QColor> colors;
+    for (int i = 0; i < pointCount; ++i) {
+        const int offset = i*4;
+        if (offset + 3 >= values.size()) { break; }
+        QColor color;
+        color.setRgbF(qBound(0., values.at(offset + 1).toDouble(), 1.),
+                      qBound(0., values.at(offset + 2).toDouble(), 1.),
+                      qBound(0., values.at(offset + 3).toDouble(), 1.),
+                      1.);
+        colors.append(color);
+    }
+    return colors;
+}
+
+QColor firstGradientColor(const QJsonObject& gradient,
+                          const QColor& fallback = Qt::black)
+{
+    const QList<QColor> colors = gradientColors(gradient);
+    return colors.isEmpty() ? fallback : colors.first();
+}
+
+QColor gradientColorAt(const QJsonValue& value,
+                       const int pointIndex,
+                       const QColor& fallback = Qt::black)
+{
+    QJsonArray values;
+    if (value.isArray()) {
+        values = value.toArray();
+    } else if (value.isObject()) {
+        values = propertyValue(value.toObject()).toArray();
+    }
+    const int offset = pointIndex*4;
+    if (offset + 3 >= values.size()) { return fallback; }
+    QColor color;
+    color.setRgbF(qBound(0., values.at(offset + 1).toDouble(), 1.),
+                  qBound(0., values.at(offset + 2).toDouble(), 1.),
+                  qBound(0., values.at(offset + 3).toDouble(), 1.),
+                  fallback.alphaF());
+    return color;
+}
+
 int importFrame(const int lottieFrame, const int inPoint, Canvas* const scene)
 {
     return scene->getMinFrame() + lottieFrame - inPoint;
@@ -520,27 +569,39 @@ void applyPathKeys(SmartVectorPath* const box,
     }
 }
 
+void applyGradient(PaintSettingsAnimator* const settings,
+                   const QJsonObject& gradientStyle,
+                   Canvas* const scene,
+                   const int inPoint);
+
 void applyPaint(PathBox* const box,
                 const PaintStyle& style,
                 Canvas* const scene,
                 const int inPoint,
                 const QJsonObject& fill = {},
-                const QJsonObject& stroke = {})
+                const QJsonObject& stroke = {},
+                const QJsonObject& gradientFill = {},
+                const QJsonObject& gradientStroke = {})
 {
     if (!box) { return; }
     const auto fillSettings = box->getFillSettings();
     if (fillSettings) {
         if (style.hasFill) {
-            fillSettings->setPaintType(PaintType::FLATPAINT);
             fillSettings->setCurrentColor(style.fill);
+            if (style.hasFillGradient && !gradientFill.isEmpty()) {
+                applyGradient(fillSettings, gradientFill, scene, inPoint);
+            } else {
+                fillSettings->setPaintType(PaintType::FLATPAINT);
+            }
             if (!fill.isEmpty()) {
                 applyColorKeys(fillSettings->getColorAnimator(),
                                fill.value(QStringLiteral("c")).toObject(),
                                scene, inPoint);
-                applyScalarKeys(fillSettings->getColorAnimator()->getAlphaAnimator(),
-                                fill.value(QStringLiteral("o")).toObject(),
-                                scene, inPoint, 0.01);
             }
+            const QJsonObject opacitySource = fill.isEmpty() ? gradientFill : fill;
+            applyScalarKeys(fillSettings->getColorAnimator()->getAlphaAnimator(),
+                            opacitySource.value(QStringLiteral("o")).toObject(),
+                            scene, inPoint, 0.01);
         } else {
             fillSettings->setPaintType(PaintType::NOPAINT);
         }
@@ -549,21 +610,27 @@ void applyPaint(PathBox* const box,
     const auto strokeSettings = box->getStrokeSettings();
     if (strokeSettings) {
         if (style.hasStroke) {
-            strokeSettings->setPaintType(PaintType::FLATPAINT);
             strokeSettings->setCurrentColor(style.stroke);
             strokeSettings->getLineWidthAnimator()->setCurrentBaseValue(
                         style.strokeWidth);
+            if (style.hasStrokeGradient && !gradientStroke.isEmpty()) {
+                applyGradient(strokeSettings, gradientStroke, scene, inPoint);
+            } else {
+                strokeSettings->setPaintType(PaintType::FLATPAINT);
+            }
             if (!stroke.isEmpty()) {
                 applyColorKeys(strokeSettings->getColorAnimator(),
                                stroke.value(QStringLiteral("c")).toObject(),
                                scene, inPoint);
-                applyScalarKeys(strokeSettings->getColorAnimator()->getAlphaAnimator(),
-                                stroke.value(QStringLiteral("o")).toObject(),
-                                scene, inPoint, 0.01);
-                applyScalarKeys(strokeSettings->getLineWidthAnimator(),
-                                stroke.value(QStringLiteral("w")).toObject(),
-                                scene, inPoint);
             }
+            const QJsonObject strokeSource = stroke.isEmpty() ?
+                        gradientStroke : stroke;
+            applyScalarKeys(strokeSettings->getColorAnimator()->getAlphaAnimator(),
+                            strokeSource.value(QStringLiteral("o")).toObject(),
+                            scene, inPoint, 0.01);
+            applyScalarKeys(strokeSettings->getLineWidthAnimator(),
+                            strokeSource.value(QStringLiteral("w")).toObject(),
+                            scene, inPoint);
         } else {
             strokeSettings->setPaintType(PaintType::NOPAINT);
         }
@@ -579,6 +646,71 @@ QJsonObject firstItemOfType(const QJsonArray& items, const QString& type)
     return {};
 }
 
+void applyGradientColorKeys(SceneBoundGradient* const gradient,
+                            const QJsonObject& property,
+                            Canvas* const scene,
+                            const int inPoint)
+{
+    if (!gradient) { return; }
+    const QList<KeyValue> keys = propertyKeys(property);
+    if (keys.size() <= 1) { return; }
+
+    const int colorCount = gradient->ca_getNumberOfChildren();
+    for (const KeyValue& key : keys) {
+        const int frame = importFrame(key.frame, inPoint, scene);
+        for (int i = 0; i < colorCount; ++i) {
+            const QColor color = gradientColorAt(key.value, i,
+                                                 gradient->getColorAt(i));
+            const auto colorAnimator = gradient->getChild(i);
+            colorAnimator->getVal1Animator()->saveValueToKey(frame, color.redF());
+            colorAnimator->getVal2Animator()->saveValueToKey(frame, color.greenF());
+            colorAnimator->getVal3Animator()->saveValueToKey(frame, color.blueF());
+            colorAnimator->getAlphaAnimator()->saveValueToKey(frame, color.alphaF());
+        }
+    }
+}
+
+void applyGradient(PaintSettingsAnimator* const settings,
+                   const QJsonObject& gradientStyle,
+                   Canvas* const scene,
+                   const int inPoint)
+{
+    if (!settings || !scene || gradientStyle.isEmpty()) { return; }
+    const QJsonObject gradientProperty =
+            gradientStyle.value(QStringLiteral("g")).toObject();
+    const QList<QColor> colors = gradientColors(gradientProperty);
+    if (colors.isEmpty()) { return; }
+
+    SceneBoundGradient* const gradient = scene->createNewGradient();
+    if (!gradient) { return; }
+    for (const QColor& color : colors) {
+        gradient->addColor(color);
+    }
+
+    applyGradientColorKeys(gradient,
+                           gradientProperty.value(QStringLiteral("k")).toObject(),
+                           scene, inPoint);
+
+    const int gradientType = gradientStyle.value(QStringLiteral("t")).toInt(1);
+    settings->setPaintType(PaintType::GRADIENTPAINT);
+    settings->setGradientType(gradientType == 2 ?
+                              GradientType::RADIAL :
+                              GradientType::LINEAR);
+    settings->setGradient(gradient);
+    settings->setGradientPointsPos(
+                pointValue(propertyValue(gradientStyle.value(QStringLiteral("s")).toObject())),
+                pointValue(propertyValue(gradientStyle.value(QStringLiteral("e")).toObject())));
+    const auto points = settings->getGradientPoints();
+    if (points) {
+        applyPointKeys(points->startAnimator(),
+                       gradientStyle.value(QStringLiteral("s")).toObject(),
+                       scene, inPoint);
+        applyPointKeys(points->endAnimator(),
+                       gradientStyle.value(QStringLiteral("e")).toObject(),
+                       scene, inPoint);
+    }
+}
+
 PaintStyle paintStyleForItems(const QJsonArray& items)
 {
     PaintStyle style;
@@ -589,6 +721,14 @@ PaintStyle paintStyleForItems(const QJsonArray& items)
         style.fill.setAlphaF(qBound(0., scalarValue(propertyValue(
                                       fill.value(QStringLiteral("o")).toObject()), 100.) / 100., 1.));
     }
+    const QJsonObject gradientFill = firstItemOfType(items, QStringLiteral("gf"));
+    if (!gradientFill.isEmpty()) {
+        style.hasFill = true;
+        style.hasFillGradient = true;
+        style.fill = firstGradientColor(gradientFill.value(QStringLiteral("g")).toObject());
+        style.fill.setAlphaF(qBound(0., scalarValue(propertyValue(
+                                      gradientFill.value(QStringLiteral("o")).toObject()), 100.) / 100., 1.));
+    }
     const QJsonObject stroke = firstItemOfType(items, QStringLiteral("st"));
     if (!stroke.isEmpty()) {
         style.hasStroke = true;
@@ -598,6 +738,16 @@ PaintStyle paintStyleForItems(const QJsonArray& items)
         style.strokeWidth = scalarValue(propertyValue(
                                             stroke.value(QStringLiteral("w")).toObject()), 1);
     }
+    const QJsonObject gradientStroke = firstItemOfType(items, QStringLiteral("gs"));
+    if (!gradientStroke.isEmpty()) {
+        style.hasStroke = true;
+        style.hasStrokeGradient = true;
+        style.stroke = firstGradientColor(gradientStroke.value(QStringLiteral("g")).toObject());
+        style.stroke.setAlphaF(qBound(0., scalarValue(propertyValue(
+                                        gradientStroke.value(QStringLiteral("o")).toObject()), 100.) / 100., 1.));
+        style.strokeWidth = scalarValue(propertyValue(
+                                            gradientStroke.value(QStringLiteral("w")).toObject()), 1);
+    }
     return style;
 }
 
@@ -605,6 +755,8 @@ qsptr<SmartVectorPath> createPathBox(const QJsonObject& shape,
                                      const PaintStyle& style,
                                      const QJsonObject& fill,
                                      const QJsonObject& stroke,
+                                     const QJsonObject& gradientFill,
+                                     const QJsonObject& gradientStroke,
                                      Canvas* const scene,
                                      const int inPoint)
 {
@@ -615,7 +767,8 @@ qsptr<SmartVectorPath> createPathBox(const QJsonObject& shape,
                          QStringLiteral("Path")));
     box->loadSkPath(path);
     applyPathKeys(box.get(), property, scene, inPoint);
-    applyPaint(box.get(), style, scene, inPoint, fill, stroke);
+    applyPaint(box.get(), style, scene, inPoint, fill, stroke,
+               gradientFill, gradientStroke);
     return box;
 }
 
@@ -623,6 +776,8 @@ qsptr<SmartVectorPath> createPolystarBox(const QJsonObject& shape,
                                          const PaintStyle& style,
                                          const QJsonObject& fill,
                                          const QJsonObject& stroke,
+                                         const QJsonObject& gradientFill,
+                                         const QJsonObject& gradientStroke,
                                          Canvas* const scene,
                                          const int inPoint)
 {
@@ -631,7 +786,8 @@ qsptr<SmartVectorPath> createPolystarBox(const QJsonObject& shape,
     box->prp_setName(shape.value(QStringLiteral("nm")).toString(
                          QStringLiteral("Polystar")));
     box->loadSkPath(path);
-    applyPaint(box.get(), style, scene, inPoint, fill, stroke);
+    applyPaint(box.get(), style, scene, inPoint, fill, stroke,
+               gradientFill, gradientStroke);
     return box;
 }
 
@@ -639,6 +795,8 @@ qsptr<RectangleBox> createRectangleBox(const QJsonObject& shape,
                                        const PaintStyle& style,
                                        const QJsonObject& fill,
                                        const QJsonObject& stroke,
+                                       const QJsonObject& gradientFill,
+                                       const QJsonObject& gradientStroke,
                                        Canvas* const scene,
                                        const int inPoint)
 {
@@ -660,7 +818,8 @@ qsptr<RectangleBox> createRectangleBox(const QJsonObject& shape,
     applyPointKeys(box->getTopLeftAnimator(),
                    shape.value(QStringLiteral("p")).toObject(),
                    scene, inPoint);
-    applyPaint(box.get(), style, scene, inPoint, fill, stroke);
+    applyPaint(box.get(), style, scene, inPoint, fill, stroke,
+               gradientFill, gradientStroke);
     return box;
 }
 
@@ -668,6 +827,8 @@ qsptr<Circle> createEllipseBox(const QJsonObject& shape,
                                const PaintStyle& style,
                                const QJsonObject& fill,
                                const QJsonObject& stroke,
+                               const QJsonObject& gradientFill,
+                               const QJsonObject& gradientStroke,
                                Canvas* const scene,
                                const int inPoint)
 {
@@ -684,7 +845,8 @@ qsptr<Circle> createEllipseBox(const QJsonObject& shape,
     applyPointKeys(box->getCenterAnimator(),
                    shape.value(QStringLiteral("p")).toObject(),
                    scene, inPoint);
-    applyPaint(box.get(), style, scene, inPoint, fill, stroke);
+    applyPaint(box.get(), style, scene, inPoint, fill, stroke,
+               gradientFill, gradientStroke);
     return box;
 }
 
@@ -716,6 +878,8 @@ void importShapeItems(const QJsonArray& items,
     const PaintStyle style = paintStyleForItems(items);
     const QJsonObject fill = firstItemOfType(items, QStringLiteral("fl"));
     const QJsonObject stroke = firstItemOfType(items, QStringLiteral("st"));
+    const QJsonObject gradientFill = firstItemOfType(items, QStringLiteral("gf"));
+    const QJsonObject gradientStroke = firstItemOfType(items, QStringLiteral("gs"));
 
     for (const QJsonValue& value : items) {
         const QJsonObject item = value.toObject();
@@ -724,13 +888,21 @@ void importShapeItems(const QJsonArray& items,
         if (type == QStringLiteral("gr")) {
             imported = createGroup(item, scene, inPoint);
         } else if (type == QStringLiteral("sh")) {
-            imported = createPathBox(item, style, fill, stroke, scene, inPoint);
+            imported = createPathBox(item, style, fill, stroke,
+                                     gradientFill, gradientStroke,
+                                     scene, inPoint);
         } else if (type == QStringLiteral("sr")) {
-            imported = createPolystarBox(item, style, fill, stroke, scene, inPoint);
+            imported = createPolystarBox(item, style, fill, stroke,
+                                         gradientFill, gradientStroke,
+                                         scene, inPoint);
         } else if (type == QStringLiteral("rc")) {
-            imported = createRectangleBox(item, style, fill, stroke, scene, inPoint);
+            imported = createRectangleBox(item, style, fill, stroke,
+                                          gradientFill, gradientStroke,
+                                          scene, inPoint);
         } else if (type == QStringLiteral("el")) {
-            imported = createEllipseBox(item, style, fill, stroke, scene, inPoint);
+            imported = createEllipseBox(item, style, fill, stroke,
+                                        gradientFill, gradientStroke,
+                                        scene, inPoint);
         }
         if (imported) { parent->addContained(imported); }
     }
@@ -760,7 +932,8 @@ void analyzeShapes(const QJsonArray& shapes, ImportLottie::Analysis& result)
             continue;
         }
         if (type == QStringLiteral("tr") || type == QStringLiteral("fl") ||
-            type == QStringLiteral("st")) {
+            type == QStringLiteral("gf") || type == QStringLiteral("st") ||
+            type == QStringLiteral("gs")) {
             continue;
         }
         ++result.totalShapes;
