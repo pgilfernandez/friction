@@ -563,6 +563,50 @@ void applyTransform(BoundingBox* const box,
                    scene, inPoint);
 }
 
+qreal opacityAtFrame(const QJsonObject& property, const int frame)
+{
+    const QList<KeyValue> keys = propertyKeys(property);
+    if (keys.isEmpty()) { return 100; }
+    QJsonValue value = keys.first().value;
+    for (const KeyValue& key : keys) {
+        if (key.frame > frame) { break; }
+        value = key.value;
+    }
+    return scalarValue(value, 100);
+}
+
+void applyLayerVisibilityRange(BoundingBox* const box,
+                               const QJsonObject& layer,
+                               Canvas* const scene,
+                               const int rootInPoint,
+                               const int rootOutPoint)
+{
+    if (!box || !scene) { return; }
+    const int inPoint = qRound(layer.value(QStringLiteral("ip")).toDouble(rootInPoint));
+    const int outPoint = qRound(layer.value(QStringLiteral("op")).toDouble(rootOutPoint));
+    if (inPoint <= rootInPoint && outPoint >= rootOutPoint) { return; }
+
+    const auto transform = box->getBoxTransformAnimator();
+    if (!transform || !transform->getOpacityAnimator()) { return; }
+
+    const QJsonObject opacityProperty = layer.value(QStringLiteral("ks")).toObject()
+            .value(QStringLiteral("o")).toObject();
+    const int firstVisibleFrame = importFrame(inPoint, rootInPoint, scene);
+    const int lastVisibleFrame = importFrame(outPoint, rootInPoint, scene) - 1;
+    const qreal firstOpacity = opacityAtFrame(opacityProperty, inPoint);
+    const qreal lastOpacity = opacityAtFrame(opacityProperty, qMax(inPoint, outPoint - 1));
+    const auto opacity = transform->getOpacityAnimator();
+
+    if (firstVisibleFrame > scene->getMinFrame()) {
+        opacity->saveValueToKey(firstVisibleFrame - 1, 0);
+    }
+    opacity->saveValueToKey(firstVisibleFrame, firstOpacity);
+    if (lastVisibleFrame >= firstVisibleFrame) {
+        opacity->saveValueToKey(lastVisibleFrame, lastOpacity);
+    }
+    opacity->saveValueToKey(lastVisibleFrame + 1, 0);
+}
+
 SkPath pathFromShapeValue(const QJsonValue& value)
 {
     QJsonObject object = value.toObject();
@@ -1021,15 +1065,17 @@ void importShapeItems(const QJsonArray& items,
 
 qsptr<BoundingBox> importShapeLayer(const QJsonObject& layer,
                                     Canvas* const scene,
-                                    const int inPoint)
+                                    const int inPoint,
+                                    const int outPoint)
 {
     const auto box = enve::make_shared<ContainerBox>(
                 layer.value(QStringLiteral("nm")).toString(QStringLiteral("Shape Layer")),
-                eBoxType::group);
+                eBoxType::layer);
     importShapeItems(layer.value(QStringLiteral("shapes")).toArray(),
                      box.get(), scene, inPoint);
     applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
                    scene, inPoint);
+    applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
     return box;
 }
 
@@ -1103,7 +1149,7 @@ qsptr<BoundingBox> ImportLottie::loadFile(const QString& filename,
     for (int i = layers.size() - 1; i >= 0; --i) {
         const QJsonObject layer = layers.at(i).toObject();
         if (layer.value(QStringLiteral("ty")).toInt(-1) != 4) { continue; }
-        const auto imported = importShapeLayer(layer, scene, inPoint);
+        const auto imported = importShapeLayer(layer, scene, inPoint, outPoint);
         if (imported) { result->addContained(imported); }
     }
 
