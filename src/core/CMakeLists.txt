@@ -313,6 +313,7 @@ set(
     Animators/intanimator.cpp
     Animators/key.cpp
     Animators/boolanimator.cpp
+    lottie/lottieimporter.cpp
     svgexporter.cpp
     svgexporthelpers.cpp
     svgimporter.cpp
@@ -648,6 +649,7 @@ set(
     Animators/animator.h
     Animators/intanimator.h
     Animators/boolanimator.h
+    lottie/lottieimporter.h
     svgexporter.h
     svgexporthelpers.h
     svgimporter.h
