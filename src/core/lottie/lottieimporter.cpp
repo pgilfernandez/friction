@@ -809,6 +809,7 @@ QJsonObject firstItemOfType(const QJsonArray& items, const QString& type)
 {
     for (const QJsonValue& value : items) {
         const QJsonObject item = value.toObject();
+        if (item.value(QStringLiteral("hd")).toBool(false)) { continue; }
         if (item.value(QStringLiteral("ty")).toString() == type) { return item; }
     }
     return {};
@@ -1038,6 +1039,7 @@ void importShapeItems(const QJsonArray& items,
 
     for (const QJsonValue& value : items) {
         const QJsonObject item = value.toObject();
+        if (item.value(QStringLiteral("hd")).toBool(false)) { continue; }
         const QString type = item.value(QStringLiteral("ty")).toString();
         qsptr<eBoxOrSound> imported;
         if (type == QStringLiteral("gr")) {
@@ -1083,6 +1085,7 @@ void analyzeShapes(const QJsonArray& shapes, ImportLottie::Analysis& result)
 {
     for (const QJsonValue& value : shapes) {
         const QJsonObject shape = value.toObject();
+        if (shape.value(QStringLiteral("hd")).toBool(false)) { continue; }
         const QString type = shape.value(QStringLiteral("ty")).toString();
         if (type == QStringLiteral("gr")) {
             analyzeShapes(shape.value(QStringLiteral("it")).toArray(), result);
@@ -1121,6 +1124,7 @@ ImportLottie::Analysis ImportLottie::analyzeFile(const QString& filename)
     const QJsonArray layers = root.value(QStringLiteral("layers")).toArray();
     for (const QJsonValue& value : layers) {
         const QJsonObject layer = value.toObject();
+        if (layer.value(QStringLiteral("hd")).toBool(false)) { continue; }
         ++result.totalLayers;
         const int type = layer.value(QStringLiteral("ty")).toInt(-1);
         if (type == 4) {
@@ -1148,6 +1152,7 @@ qsptr<BoundingBox> ImportLottie::loadFile(const QString& filename,
     const QJsonArray layers = root.value(QStringLiteral("layers")).toArray();
     for (int i = layers.size() - 1; i >= 0; --i) {
         const QJsonObject layer = layers.at(i).toObject();
+        if (layer.value(QStringLiteral("hd")).toBool(false)) { continue; }
         if (layer.value(QStringLiteral("ty")).toInt(-1) != 4) { continue; }
         const auto imported = importShapeLayer(layer, scene, inPoint, outPoint);
         if (imported) { result->addContained(imported); }
