@@ -487,6 +487,28 @@ void applyRectangleGeometryKeys(RectangleBox* const box,
     }
 }
 
+void applyRectangleRadiusKeys(RectangleBox* const box,
+                              const QJsonObject& radiusProperty,
+                              Canvas* const scene,
+                              const int inPoint)
+{
+    if (!box) { return; }
+    const QList<KeyValue> keys = propertyKeys(radiusProperty);
+    if (keys.size() <= 1) {
+        const qreal radius = scalarValue(propertyValue(radiusProperty));
+        box->setXRadius(radius);
+        box->setYRadius(radius);
+        return;
+    }
+
+    for (const KeyValue& key : keys) {
+        const qreal radius = scalarValue(key.value);
+        const int frame = importFrame(key.frame, inPoint, scene);
+        box->getRadiusAnimator()->getXAnimator()->saveValueToKey(frame, radius);
+        box->getRadiusAnimator()->getYAnimator()->saveValueToKey(frame, radius);
+    }
+}
+
 void applyEllipseGeometryKeys(Circle* const box,
                               const QJsonObject& positionProperty,
                               const QJsonObject& sizeProperty,
@@ -977,17 +999,16 @@ qsptr<RectangleBox> createRectangleBox(const QJsonObject& shape,
                                        Canvas* const scene,
                                        const int inPoint)
 {
-    const QPointF radius(scalarValue(propertyValue(
-                                         shape.value(QStringLiteral("r")).toObject())), 0);
     const auto box = enve::make_shared<RectangleBox>();
     box->prp_setName(shape.value(QStringLiteral("nm")).toString(
                          QStringLiteral("Rectangle")));
-    box->setXRadius(radius.x());
-    box->setYRadius(radius.x());
     applyRectangleGeometryKeys(box.get(),
                                shape.value(QStringLiteral("p")).toObject(),
                                shape.value(QStringLiteral("s")).toObject(),
                                scene, inPoint);
+    applyRectangleRadiusKeys(box.get(),
+                             shape.value(QStringLiteral("r")).toObject(),
+                             scene, inPoint);
     applyPaint(box.get(), style, scene, inPoint, fill, stroke,
                gradientFill, gradientStroke);
     return box;
