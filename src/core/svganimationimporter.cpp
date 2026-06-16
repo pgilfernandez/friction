@@ -13,11 +13,17 @@
 
 #include "svganimationimporter.h"
 
+#include <QBuffer>
+#include <QCryptographicHash>
+#include <QDir>
 #include <QDomDocument>
 #include <QFile>
+#include <QFileInfo>
+#include <QImageReader>
 #include <QMatrix>
 #include <QRegularExpression>
 #include <QSet>
+#include <QUrl>
 #include <QtMath>
 
 #include "Animators/qpointfanimator.h"
@@ -32,12 +38,15 @@
 #include "Boxes/boxrenderdata.h"
 #include "Boxes/circle.h"
 #include "Boxes/containerbox.h"
+#include "Boxes/imagebox.h"
 #include "Boxes/rectangle.h"
 #include "Boxes/smartvectorpath.h"
 #include "PathEffects/dashpatheffect.h"
 #include "canvas.h"
 #include "exceptions.h"
 #include "svgimporter.h"
+
+qsptr<ImageBox> createImageBox(const QString& path);
 
 namespace {
 
@@ -53,6 +62,12 @@ struct AnimationTrack {
     qreal begin = 0;
     qreal duration = 0;
     bool repeatIndefinitely = false;
+};
+
+struct ImageCandidate {
+    QString placeholderId;
+    QString name;
+    QString path;
 };
 
 struct LayerCandidate {
@@ -426,6 +441,181 @@ QString ensureTargetId(QDomElement& target, int& nextId)
     target.setAttribute("data-friction-animation-name", name);
     target.setAttribute("inkscape:label", id);
     return id;
+}
+
+QString imageHref(const QDomElement& image)
+{
+    return image.attribute("href", image.attribute("xlink:href"));
+}
+
+QString resolveImagePath(const QString& href, const QString& svgFilename)
+{
+    if (href.startsWith("data:", Qt::CaseInsensitive)) {
+        const int comma = href.indexOf(',');
+        if (comma < 0) { return {}; }
+        const QString metadata = href.mid(5, comma - 5);
+        const QByteArray payload = href.mid(comma + 1).toLatin1();
+        const QByteArray data = metadata.contains(";base64",
+                                                  Qt::CaseInsensitive) ?
+                    QByteArray::fromBase64(payload) :
+                    QByteArray::fromPercentEncoding(payload);
+        if (data.isEmpty()) { return {}; }
+        QBuffer buffer;
+        buffer.setData(data);
+        if (!buffer.open(QIODevice::ReadOnly)) { return {}; }
+        QImageReader reader(&buffer);
+        const QImage image = reader.read();
+        if (image.isNull() ||
+            reader.error() != QImageReader::UnknownError) {
+            return {};
+        }
+
+        const QFileInfo svgInfo(svgFilename);
+        const QString assetDirName =
+                svgInfo.completeBaseName() + "_svg_assets";
+        QDir assetDir(svgInfo.absoluteDir().filePath(assetDirName));
+        if (!assetDir.exists() && !svgInfo.absoluteDir().mkpath(assetDirName)) {
+            return {};
+        }
+        const QString digest = QString::fromLatin1(
+                    QCryptographicHash::hash(data, QCryptographicHash::Sha256)
+                    .toHex().left(16));
+        const QString path = assetDir.filePath("embedded_" + digest + ".png");
+        if (!QFileInfo::exists(path) && !image.save(path, "PNG")) {
+            return {};
+        }
+        return QFileInfo(path).absoluteFilePath();
+    }
+
+    const QUrl url(href);
+    if (url.isLocalFile()) { return QFileInfo(url.toLocalFile()).absoluteFilePath(); }
+    if (!url.scheme().isEmpty()) { return {}; }
+    return QFileInfo(QFileInfo(svgFilename).absoluteDir(), href)
+            .absoluteFilePath();
+}
+
+QString imagePlacementTransform(const QDomElement& image,
+                                const QSize& intrinsicSize)
+{
+    const qreal x = image.attribute("x").toDouble();
+    const qreal y = image.attribute("y").toDouble();
+    const qreal width = image.attribute("width").isEmpty() ?
+                intrinsicSize.width() : image.attribute("width").toDouble();
+    const qreal height = image.attribute("height").isEmpty() ?
+                intrinsicSize.height() : image.attribute("height").toDouble();
+    qreal scaleX = width / intrinsicSize.width();
+    qreal scaleY = height / intrinsicSize.height();
+    qreal offsetX = x;
+    qreal offsetY = y;
+
+    const QString aspect = image.attribute("preserveAspectRatio").simplified();
+    if (!aspect.startsWith("none", Qt::CaseInsensitive)) {
+        const bool slice = aspect.contains("slice", Qt::CaseInsensitive);
+        const qreal scale = slice ? qMax(scaleX, scaleY) : qMin(scaleX, scaleY);
+        const qreal renderedWidth = intrinsicSize.width() * scale;
+        const qreal renderedHeight = intrinsicSize.height() * scale;
+        const qreal remainingWidth = width - renderedWidth;
+        const qreal remainingHeight = height - renderedHeight;
+        if (aspect.contains("xMax", Qt::CaseInsensitive)) {
+            offsetX += remainingWidth;
+        } else if (!aspect.contains("xMin", Qt::CaseInsensitive)) {
+            offsetX += remainingWidth * 0.5;
+        }
+        if (aspect.contains("YMax", Qt::CaseInsensitive)) {
+            offsetY += remainingHeight;
+        } else if (!aspect.contains("YMin", Qt::CaseInsensitive)) {
+            offsetY += remainingHeight * 0.5;
+        }
+        scaleX = scale;
+        scaleY = scale;
+    }
+
+    return QString("translate(%1 %2) scale(%3 %4)")
+            .arg(offsetX, 0, 'g', 16)
+            .arg(offsetY, 0, 'g', 16)
+            .arg(scaleX, 0, 'g', 16)
+            .arg(scaleY, 0, 'g', 16);
+}
+
+QList<ImageCandidate> materializeImages(QDomDocument& document,
+                                        const QString& svgFilename)
+{
+    QList<ImageCandidate> result;
+    const QDomNodeList images = document.elementsByTagName("image");
+    for (int i = images.count() - 1; i >= 0; --i) {
+        const QDomElement image = images.at(i).toElement();
+        const QString path = resolveImagePath(imageHref(image), svgFilename);
+        QImageReader reader(path);
+        const QSize intrinsicSize = reader.size();
+        if (path.isEmpty() || !intrinsicSize.isValid()) { continue; }
+
+        const QString baseId = QString("__friction_svg_image_%1").arg(i);
+        const QString groupId = baseId + "_group";
+        const QString placeholderId = baseId + "_placeholder";
+        const QString name = image.attribute(
+                    "inkscape:label", image.attribute("id", "Image"));
+        QDomElement group = document.createElement("g");
+        const QDomNamedNodeMap attributes = image.attributes();
+        for (int attrId = 0; attrId < attributes.count(); ++attrId) {
+            const QDomAttr attr = attributes.item(attrId).toAttr();
+            const QString attrName = attr.name();
+            if (attrName == "x" || attrName == "y" ||
+                attrName == "width" || attrName == "height" ||
+                attrName == "href" || attrName == "xlink:href" ||
+                attrName == "preserveAspectRatio" ||
+                attrName == "id" || attrName == "inkscape:label") {
+                continue;
+            }
+            group.setAttribute(attrName, attr.value());
+        }
+        if (!group.hasAttribute("transform")) {
+            group.setAttribute("transform", "translate(0 0)");
+        }
+        group.setAttribute("id", groupId);
+        group.setAttribute("inkscape:label", name);
+
+        QDomElement placeholder = document.createElement("rect");
+        placeholder.setAttribute("x", "0");
+        placeholder.setAttribute("y", "0");
+        placeholder.setAttribute("width", intrinsicSize.width());
+        placeholder.setAttribute("height", intrinsicSize.height());
+        placeholder.setAttribute("fill", "none");
+        placeholder.setAttribute("transform",
+                                 imagePlacementTransform(image, intrinsicSize));
+        placeholder.setAttribute("id", placeholderId);
+        placeholder.setAttribute("inkscape:label", placeholderId);
+        group.appendChild(placeholder);
+        while (!image.firstChild().isNull()) {
+            group.appendChild(image.firstChild());
+        }
+        image.parentNode().replaceChild(group, image);
+        result.append({placeholderId, name, path});
+    }
+    return result;
+}
+
+void replaceImagePlaceholders(BoundingBox* const root,
+                              const QList<ImageCandidate>& candidates)
+{
+    for (const ImageCandidate& candidate : candidates) {
+        BoundingBox* const placeholder = findBox(root, candidate.placeholderId);
+        const auto group = placeholder ? placeholder->getParentGroup() : nullptr;
+        if (!group || !placeholder) { continue; }
+
+        qsptr<eBoxOrSound> placeholderRef;
+        for (const auto& child : group->getContained()) {
+            if (child.get() == placeholder) {
+                placeholderRef = child;
+                break;
+            }
+        }
+        if (!placeholderRef) { continue; }
+
+        const auto image = createImageBox(candidate.path);
+        placeholder->copyBoundingBoxDataTo(image.get());
+        image->prp_setName(candidate.name);
+        group->replaceContained(placeholderRef, image);
+    }
 }
 
 QString styleProperty(const QDomElement& element, const QString& property)
@@ -1270,6 +1460,7 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
     }
     const qreal importedDuration = animationDuration(document);
     const bool documentHasTechnicalRoot = hasTechnicalRoot(document);
+    const auto imageCandidates = materializeImages(document, filename);
     normalizePresentationAttributes(document.documentElement());
     normalizeStaticTransforms(document.documentElement());
 
@@ -1281,6 +1472,7 @@ qsptr<BoundingBox> ImportSVGAnimation::loadSVGFile(const QString& filename,
     const auto gradientCreator = [scene]() { return scene->createNewGradient(); };
     const auto result = ImportSVG::loadSVGFile(document, gradientCreator);
     if (!result) { return nullptr; }
+    replaceImagePlaceholders(result.get(), imageCandidates);
     if (technicalRoot) {
         *technicalRoot = documentHasTechnicalRoot &&
                 enve_cast<ContainerBox*>(result.get());
