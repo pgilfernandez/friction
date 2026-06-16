@@ -574,6 +574,34 @@ void applyGradient(PaintSettingsAnimator* const settings,
                    Canvas* const scene,
                    const int inPoint);
 
+SkPaint::Cap strokeCapFromLottie(const int cap)
+{
+    if (cap == 2) { return SkPaint::kRound_Cap; }
+    if (cap == 3) { return SkPaint::kSquare_Cap; }
+    return SkPaint::kButt_Cap;
+}
+
+SkPaint::Join strokeJoinFromLottie(const int join)
+{
+    if (join == 2) { return SkPaint::kRound_Join; }
+    if (join == 3) { return SkPaint::kBevel_Join; }
+    return SkPaint::kMiter_Join;
+}
+
+void applyStrokeStyle(OutlineSettingsAnimator* const strokeSettings,
+                      const QJsonObject& stroke)
+{
+    if (!strokeSettings || stroke.isEmpty()) { return; }
+    if (stroke.contains(QStringLiteral("lc"))) {
+        strokeSettings->setCapStyle(strokeCapFromLottie(
+                                        stroke.value(QStringLiteral("lc")).toInt(1)));
+    }
+    if (stroke.contains(QStringLiteral("lj"))) {
+        strokeSettings->setJoinStyle(strokeJoinFromLottie(
+                                         stroke.value(QStringLiteral("lj")).toInt(1)));
+    }
+}
+
 void applyPaint(PathBox* const box,
                 const PaintStyle& style,
                 Canvas* const scene,
@@ -631,6 +659,7 @@ void applyPaint(PathBox* const box,
             applyScalarKeys(strokeSettings->getLineWidthAnimator(),
                             strokeSource.value(QStringLiteral("w")).toObject(),
                             scene, inPoint);
+            applyStrokeStyle(strokeSettings, strokeSource);
         } else {
             strokeSettings->setPaintType(PaintType::NOPAINT);
         }
