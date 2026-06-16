@@ -40,6 +40,7 @@
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QMap>
+#include <QSet>
 #include <QtEndian>
 #include <QtMath>
 
@@ -72,6 +73,8 @@ struct ZipEntry {
     quint32 uncompressedSize = 0;
     quint32 localHeaderOffset = 0;
 };
+
+using AssetMap = QMap<QString, QJsonObject>;
 
 QJsonObject firstItemOfType(const QJsonArray& items, const QString& type);
 
@@ -258,6 +261,17 @@ QJsonObject readLottieRoot(const QString& filename)
         RuntimeThrow("Cannot open Lottie file " + filename);
     }
     return jsonObjectFromBytes(file.readAll(), filename);
+}
+
+AssetMap assetMap(const QJsonArray& assets)
+{
+    AssetMap result;
+    for (const QJsonValue& value : assets) {
+        const QJsonObject asset = value.toObject();
+        const QString id = asset.value(QStringLiteral("id")).toString();
+        if (!id.isEmpty()) { result.insert(id, asset); }
+    }
+    return result;
 }
 
 QJsonValue propertyValue(const QJsonObject& property)
@@ -1606,6 +1620,129 @@ qsptr<BoundingBox> importShapeLayer(const QJsonObject& layer,
     return box;
 }
 
+QColor solidColor(const QJsonObject& layer)
+{
+    QColor color(layer.value(QStringLiteral("sc")).toString(QStringLiteral("#ffffff")));
+    return color.isValid() ? color : QColor(Qt::white);
+}
+
+qsptr<BoundingBox> importSolidLayer(const QJsonObject& layer,
+                                    Canvas* const scene,
+                                    const int inPoint,
+                                    const int outPoint)
+{
+    const qreal width = qMax<qreal>(1, layer.value(QStringLiteral("sw")).toDouble(1));
+    const qreal height = qMax<qreal>(1, layer.value(QStringLiteral("sh")).toDouble(1));
+    const auto box = enve::make_shared<RectangleBox>();
+    box->prp_setName(layer.value(QStringLiteral("nm")).toString(
+                         QStringLiteral("Solid Layer")));
+    box->setTopLeftPos(QPointF(0, 0));
+    box->setBottomRightPos(QPointF(width, height));
+
+    PaintStyle style;
+    style.hasFill = true;
+    style.fill = solidColor(layer);
+    applyPaint(box.get(), style, scene, inPoint);
+
+    applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
+                   scene, inPoint);
+    applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
+    return box;
+}
+
+qsptr<BoundingBox> importNullLayer(const QJsonObject& layer,
+                                   Canvas* const scene,
+                                   const int inPoint,
+                                   const int outPoint)
+{
+    const auto box = enve::make_shared<ContainerBox>(
+                layer.value(QStringLiteral("nm")).toString(QStringLiteral("Null Layer")),
+                eBoxType::layer);
+    applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
+                   scene, inPoint);
+    applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
+    return box;
+}
+
+void importLayersToContainer(const QJsonArray& layers,
+                             ContainerBox* const parent,
+                             Canvas* const scene,
+                             const int inPoint,
+                             const int outPoint,
+                             const AssetMap& assets,
+                             QSet<QString>& assetStack);
+
+qsptr<BoundingBox> importPrecompLayer(const QJsonObject& layer,
+                                      Canvas* const scene,
+                                      const int inPoint,
+                                      const int outPoint,
+                                      const AssetMap& assets,
+                                      QSet<QString>& assetStack)
+{
+    const QString refId = layer.value(QStringLiteral("refId")).toString();
+    if (refId.isEmpty() || !assets.contains(refId) || assetStack.contains(refId)) {
+        return {};
+    }
+
+    const QJsonObject asset = assets.value(refId);
+    const auto box = enve::make_shared<ContainerBox>(
+                layer.value(QStringLiteral("nm")).toString(
+                    asset.value(QStringLiteral("nm")).toString(QStringLiteral("Precomp"))),
+                eBoxType::layer);
+
+    assetStack.insert(refId);
+    importLayersToContainer(asset.value(QStringLiteral("layers")).toArray(),
+                            box.get(), scene, inPoint, outPoint, assets, assetStack);
+    assetStack.remove(refId);
+
+    applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
+                   scene, inPoint);
+    applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
+    return box;
+}
+
+qsptr<BoundingBox> importLayer(const QJsonObject& layer,
+                               Canvas* const scene,
+                               const int inPoint,
+                               const int outPoint,
+                               const AssetMap& assets,
+                               QSet<QString>& assetStack)
+{
+    if (layer.value(QStringLiteral("hd")).toBool(false)) { return {}; }
+    const int type = layer.value(QStringLiteral("ty")).toInt(-1);
+    if (type == 0) {
+        return importPrecompLayer(layer, scene, inPoint, outPoint,
+                                  assets, assetStack);
+    }
+    if (type == 1) {
+        return importSolidLayer(layer, scene, inPoint, outPoint);
+    }
+    if (type == 3) {
+        return importNullLayer(layer, scene, inPoint, outPoint);
+    }
+    if (type == 4) {
+        return importShapeLayer(layer, scene, inPoint, outPoint);
+    }
+    return {};
+}
+
+void importLayersToContainer(const QJsonArray& layers,
+                             ContainerBox* const parent,
+                             Canvas* const scene,
+                             const int inPoint,
+                             const int outPoint,
+                             const AssetMap& assets,
+                             QSet<QString>& assetStack)
+{
+    if (!parent) { return; }
+    for (int i = layers.size() - 1; i >= 0; --i) {
+        const auto imported = importLayer(layers.at(i).toObject(), scene,
+                                          inPoint, outPoint,
+                                          assets, assetStack);
+        if (imported) { parent->addContained(imported); }
+    }
+}
+
 void analyzeShapes(const QJsonArray& shapes, ImportLottie::Analysis& result)
 {
     for (const QJsonValue& value : shapes) {
@@ -1632,6 +1769,37 @@ void analyzeShapes(const QJsonArray& shapes, ImportLottie::Analysis& result)
     }
 }
 
+void analyzeLayers(const QJsonArray& layers,
+                   const AssetMap& assets,
+                   ImportLottie::Analysis& result,
+                   QSet<QString>& assetStack)
+{
+    for (const QJsonValue& value : layers) {
+        const QJsonObject layer = value.toObject();
+        if (layer.value(QStringLiteral("hd")).toBool(false)) { continue; }
+        ++result.totalLayers;
+        const int type = layer.value(QStringLiteral("ty")).toInt(-1);
+        if (type == 0) {
+            ++result.supportedLayers;
+            const QString refId = layer.value(QStringLiteral("refId")).toString();
+            if (!refId.isEmpty() && assets.contains(refId) &&
+                !assetStack.contains(refId)) {
+                assetStack.insert(refId);
+                analyzeLayers(assets.value(refId).value(QStringLiteral("layers")).toArray(),
+                              assets, result, assetStack);
+                assetStack.remove(refId);
+            }
+        } else if (type == 1 || type == 3) {
+            ++result.supportedLayers;
+        } else if (type == 4) {
+            ++result.supportedLayers;
+            analyzeShapes(layer.value(QStringLiteral("shapes")).toArray(), result);
+        } else {
+            result.unsupported.append(QStringLiteral("layer:%1").arg(type));
+        }
+    }
+}
+
 } // namespace
 
 ImportLottie::Analysis ImportLottie::analyzeFile(const QString& filename)
@@ -1646,19 +1814,10 @@ ImportLottie::Analysis ImportLottie::analyzeFile(const QString& filename)
     result.size = QSize(root.value(QStringLiteral("w")).toInt(),
                         root.value(QStringLiteral("h")).toInt());
 
-    const QJsonArray layers = root.value(QStringLiteral("layers")).toArray();
-    for (const QJsonValue& value : layers) {
-        const QJsonObject layer = value.toObject();
-        if (layer.value(QStringLiteral("hd")).toBool(false)) { continue; }
-        ++result.totalLayers;
-        const int type = layer.value(QStringLiteral("ty")).toInt(-1);
-        if (type == 4) {
-            ++result.supportedLayers;
-            analyzeShapes(layer.value(QStringLiteral("shapes")).toArray(), result);
-        } else {
-            result.unsupported.append(QStringLiteral("layer:%1").arg(type));
-        }
-    }
+    const AssetMap assets = assetMap(root.value(QStringLiteral("assets")).toArray());
+    QSet<QString> assetStack;
+    analyzeLayers(root.value(QStringLiteral("layers")).toArray(),
+                  assets, result, assetStack);
     result.unsupported.removeDuplicates();
     return result;
 }
@@ -1674,14 +1833,11 @@ qsptr<BoundingBox> ImportLottie::loadFile(const QString& filename,
     const auto result = enve::make_shared<ContainerBox>(
                 QFileInfo(filename).completeBaseName(), eBoxType::group);
 
-    const QJsonArray layers = root.value(QStringLiteral("layers")).toArray();
-    for (int i = layers.size() - 1; i >= 0; --i) {
-        const QJsonObject layer = layers.at(i).toObject();
-        if (layer.value(QStringLiteral("hd")).toBool(false)) { continue; }
-        if (layer.value(QStringLiteral("ty")).toInt(-1) != 4) { continue; }
-        const auto imported = importShapeLayer(layer, scene, inPoint, outPoint);
-        if (imported) { result->addContained(imported); }
-    }
+    const AssetMap assets = assetMap(root.value(QStringLiteral("assets")).toArray());
+    QSet<QString> assetStack;
+    importLayersToContainer(root.value(QStringLiteral("layers")).toArray(),
+                            result.get(), scene, inPoint, outPoint,
+                            assets, assetStack);
 
     const int importedLastFrame = scene->getMinFrame() + qMax(1, outPoint - inPoint);
     if (durationMode == SceneDurationMode::fitImportedLottie && outPoint > inPoint) {
