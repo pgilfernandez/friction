@@ -310,6 +310,36 @@ QPointF pointValue(const QJsonValue& value, const QPointF& fallback = QPointF())
                    numberAt(array, 1, fallback.y()));
 }
 
+QJsonValue keyValueAtFrame(const QList<KeyValue>& keys,
+                           const int frame,
+                           const QJsonValue& fallback)
+{
+    if (keys.isEmpty()) { return fallback; }
+    QJsonValue result = fallback;
+    for (const KeyValue& key : keys) {
+        if (key.frame > frame) { break; }
+        result = key.value;
+    }
+    return result;
+}
+
+QList<int> combinedAnimatedFrames(const QList<KeyValue>& first,
+                                  const QList<KeyValue>& second)
+{
+    QList<int> frames;
+    const auto appendFrame = [&frames](const KeyValue& key) {
+        if (!frames.contains(key.frame)) { frames.append(key.frame); }
+    };
+    if (first.size() > 1) {
+        for (const KeyValue& key : first) { appendFrame(key); }
+    }
+    if (second.size() > 1) {
+        for (const KeyValue& key : second) { appendFrame(key); }
+    }
+    std::sort(frames.begin(), frames.end());
+    return frames;
+}
+
 QColor colorValue(const QJsonValue& value, const QColor& fallback = Qt::black)
 {
     const QJsonArray array = value.toArray();
@@ -414,6 +444,71 @@ void applyPointKeys(QPointFAnimator* const animator,
         const int frame = importFrame(key.frame, inPoint, scene);
         animator->getXAnimator()->saveValueToKey(frame, value.x() * multiplier.x());
         animator->getYAnimator()->saveValueToKey(frame, value.y() * multiplier.y());
+    }
+}
+
+void applyRectangleGeometryKeys(RectangleBox* const box,
+                                const QJsonObject& positionProperty,
+                                const QJsonObject& sizeProperty,
+                                Canvas* const scene,
+                                const int inPoint)
+{
+    if (!box) { return; }
+    const QList<KeyValue> positionKeys = propertyKeys(positionProperty);
+    const QList<KeyValue> sizeKeys = propertyKeys(sizeProperty);
+    const QPointF basePosition = pointValue(propertyValue(positionProperty));
+    const QPointF baseSize = pointValue(propertyValue(sizeProperty));
+    const QList<int> frames = combinedAnimatedFrames(positionKeys, sizeKeys);
+
+    if (frames.isEmpty()) {
+        box->setTopLeftPos(QPointF(basePosition.x() - baseSize.x()*0.5,
+                                   basePosition.y() - baseSize.y()*0.5));
+        box->setBottomRightPos(QPointF(basePosition.x() + baseSize.x()*0.5,
+                                       basePosition.y() + baseSize.y()*0.5));
+        return;
+    }
+
+    for (const int frame : frames) {
+        const QPointF position = pointValue(
+                    keyValueAtFrame(positionKeys, frame, propertyValue(positionProperty)),
+                    basePosition);
+        const QPointF size = pointValue(
+                    keyValueAtFrame(sizeKeys, frame, propertyValue(sizeProperty)),
+                    baseSize);
+        const int importKeyFrame = importFrame(frame, inPoint, scene);
+        box->getTopLeftAnimator()->getXAnimator()->saveValueToKey(
+                    importKeyFrame, position.x() - size.x()*0.5);
+        box->getTopLeftAnimator()->getYAnimator()->saveValueToKey(
+                    importKeyFrame, position.y() - size.y()*0.5);
+        box->getBottomRightAnimator()->getXAnimator()->saveValueToKey(
+                    importKeyFrame, position.x() + size.x()*0.5);
+        box->getBottomRightAnimator()->getYAnimator()->saveValueToKey(
+                    importKeyFrame, position.y() + size.y()*0.5);
+    }
+}
+
+void applyEllipseGeometryKeys(Circle* const box,
+                              const QJsonObject& positionProperty,
+                              const QJsonObject& sizeProperty,
+                              Canvas* const scene,
+                              const int inPoint)
+{
+    if (!box) { return; }
+    applyPointKeys(box->getCenterAnimator(), positionProperty, scene, inPoint);
+
+    const QList<KeyValue> sizeKeys = propertyKeys(sizeProperty);
+    if (sizeKeys.size() <= 1) {
+        const QPointF size = pointValue(propertyValue(sizeProperty));
+        box->setHorizontalRadius(size.x()*0.5);
+        box->setVerticalRadius(size.y()*0.5);
+        return;
+    }
+
+    for (const KeyValue& key : sizeKeys) {
+        const QPointF size = pointValue(key.value);
+        const int frame = importFrame(key.frame, inPoint, scene);
+        box->getHRadiusAnimator()->getXAnimator()->saveValueToKey(frame, size.x()*0.5);
+        box->getVRadiusAnimator()->getYAnimator()->saveValueToKey(frame, size.y()*0.5);
     }
 }
 
@@ -829,24 +924,17 @@ qsptr<RectangleBox> createRectangleBox(const QJsonObject& shape,
                                        Canvas* const scene,
                                        const int inPoint)
 {
-    const QPointF position = pointValue(propertyValue(
-                                            shape.value(QStringLiteral("p")).toObject()));
-    const QPointF size = pointValue(propertyValue(
-                                        shape.value(QStringLiteral("s")).toObject()));
     const QPointF radius(scalarValue(propertyValue(
                                          shape.value(QStringLiteral("r")).toObject())), 0);
     const auto box = enve::make_shared<RectangleBox>();
     box->prp_setName(shape.value(QStringLiteral("nm")).toString(
                          QStringLiteral("Rectangle")));
-    box->setTopLeftPos(QPointF(position.x() - size.x()*0.5,
-                               position.y() - size.y()*0.5));
-    box->setBottomRightPos(QPointF(position.x() + size.x()*0.5,
-                                   position.y() + size.y()*0.5));
     box->setXRadius(radius.x());
     box->setYRadius(radius.x());
-    applyPointKeys(box->getTopLeftAnimator(),
-                   shape.value(QStringLiteral("p")).toObject(),
-                   scene, inPoint);
+    applyRectangleGeometryKeys(box.get(),
+                               shape.value(QStringLiteral("p")).toObject(),
+                               shape.value(QStringLiteral("s")).toObject(),
+                               scene, inPoint);
     applyPaint(box.get(), style, scene, inPoint, fill, stroke,
                gradientFill, gradientStroke);
     return box;
@@ -861,19 +949,13 @@ qsptr<Circle> createEllipseBox(const QJsonObject& shape,
                                Canvas* const scene,
                                const int inPoint)
 {
-    const QPointF position = pointValue(propertyValue(
-                                            shape.value(QStringLiteral("p")).toObject()));
-    const QPointF size = pointValue(propertyValue(
-                                        shape.value(QStringLiteral("s")).toObject()));
     const auto box = enve::make_shared<Circle>();
     box->prp_setName(shape.value(QStringLiteral("nm")).toString(
                          QStringLiteral("Ellipse")));
-    box->setCenter(position);
-    box->setHorizontalRadius(size.x()*0.5);
-    box->setVerticalRadius(size.y()*0.5);
-    applyPointKeys(box->getCenterAnimator(),
-                   shape.value(QStringLiteral("p")).toObject(),
-                   scene, inPoint);
+    applyEllipseGeometryKeys(box.get(),
+                             shape.value(QStringLiteral("p")).toObject(),
+                             shape.value(QStringLiteral("s")).toObject(),
+                             scene, inPoint);
     applyPaint(box.get(), style, scene, inPoint, fill, stroke,
                gradientFill, gradientStroke);
     return box;
