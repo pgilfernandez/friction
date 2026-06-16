@@ -27,6 +27,7 @@ include(friction-meta)
 include(friction-common)
 #include(friction-quazip)
 include(friction-ffmpeg)
+find_package(ZLIB REQUIRED)
 
 message("-- ffmpeg include: ${FFMPEG_INCLUDE_DIRS}")
 message("-- ffmpeg libraries: ${FFMPEG_LIBRARIES_DIRS} ${FFMPEG_LIBRARIES}")
@@ -767,6 +768,7 @@ target_link_libraries(
     #${QUAZIP_LIBRARIES}
     ${FFMPEG_LIBRARIES}
     ${SKIA_LIBRARIES}
+    ZLIB::ZLIB
 )
 
 if(APPLE)

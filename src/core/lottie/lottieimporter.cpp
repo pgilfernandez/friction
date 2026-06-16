@@ -35,7 +35,13 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QMap>
+#include <QtEndian>
 #include <QtMath>
+
+#include <cstring>
+
+#include <zlib.h>
 
 namespace {
 
@@ -53,22 +59,197 @@ struct PaintStyle {
     qreal strokeWidth = 1;
 };
 
+struct ZipEntry {
+    QString name;
+    quint16 method = 0;
+    quint32 compressedSize = 0;
+    quint32 uncompressedSize = 0;
+    quint32 localHeaderOffset = 0;
+};
+
+quint16 readLe16(const QByteArray& data, const int offset)
+{
+    if (offset < 0 || offset + 2 > data.size()) { RuntimeThrow("Invalid ZIP data"); }
+    return qFromLittleEndian<quint16>(
+                reinterpret_cast<const uchar*>(data.constData() + offset));
+}
+
+quint32 readLe32(const QByteArray& data, const int offset)
+{
+    if (offset < 0 || offset + 4 > data.size()) { RuntimeThrow("Invalid ZIP data"); }
+    return qFromLittleEndian<quint32>(
+                reinterpret_cast<const uchar*>(data.constData() + offset));
+}
+
+int findZipEndOfCentralDirectory(const QByteArray& data)
+{
+    const int first = qMax(0, data.size() - 65557);
+    for (int offset = data.size() - 22; offset >= first; --offset) {
+        if (readLe32(data, offset) == 0x06054b50) { return offset; }
+    }
+    RuntimeThrow("Could not find dotLottie ZIP directory");
+}
+
+QList<ZipEntry> readZipEntries(const QByteArray& data)
+{
+    const int end = findZipEndOfCentralDirectory(data);
+    const quint16 entryCount = readLe16(data, end + 10);
+    const quint32 directorySize = readLe32(data, end + 12);
+    const quint32 directoryOffset = readLe32(data, end + 16);
+    if (directoryOffset + directorySize > static_cast<quint32>(data.size())) {
+        RuntimeThrow("Invalid dotLottie ZIP directory");
+    }
+
+    QList<ZipEntry> entries;
+    int offset = directoryOffset;
+    for (int i = 0; i < entryCount; ++i) {
+        if (readLe32(data, offset) != 0x02014b50) {
+            RuntimeThrow("Invalid dotLottie ZIP entry");
+        }
+        const quint16 nameLength = readLe16(data, offset + 28);
+        const quint16 extraLength = readLe16(data, offset + 30);
+        const quint16 commentLength = readLe16(data, offset + 32);
+        const int nameOffset = offset + 46;
+        if (nameOffset + nameLength > data.size()) {
+            RuntimeThrow("Invalid dotLottie ZIP file name");
+        }
+
+        ZipEntry entry;
+        entry.method = readLe16(data, offset + 10);
+        entry.compressedSize = readLe32(data, offset + 20);
+        entry.uncompressedSize = readLe32(data, offset + 24);
+        entry.localHeaderOffset = readLe32(data, offset + 42);
+        entry.name = QString::fromUtf8(data.constData() + nameOffset, nameLength);
+        entries.append(entry);
+        offset = nameOffset + nameLength + extraLength + commentLength;
+    }
+    return entries;
+}
+
+QByteArray inflateRawDeflate(const QByteArray& input, const int outputSize)
+{
+    QByteArray output(outputSize, Qt::Uninitialized);
+    z_stream stream;
+    memset(&stream, 0, sizeof(stream));
+    stream.next_in = reinterpret_cast<Bytef*>(const_cast<char*>(input.constData()));
+    stream.avail_in = input.size();
+    stream.next_out = reinterpret_cast<Bytef*>(output.data());
+    stream.avail_out = output.size();
+
+    if (inflateInit2(&stream, -MAX_WBITS) != Z_OK) {
+        RuntimeThrow("Could not initialize dotLottie decompression");
+    }
+    const int result = inflate(&stream, Z_FINISH);
+    inflateEnd(&stream);
+    if (result != Z_STREAM_END) {
+        RuntimeThrow("Could not decompress dotLottie entry");
+    }
+    output.truncate(stream.total_out);
+    return output;
+}
+
+QByteArray readZipEntry(const QByteArray& data, const ZipEntry& entry)
+{
+    const int headerOffset = entry.localHeaderOffset;
+    if (readLe32(data, headerOffset) != 0x04034b50) {
+        RuntimeThrow("Invalid dotLottie ZIP local entry");
+    }
+    const quint16 nameLength = readLe16(data, headerOffset + 26);
+    const quint16 extraLength = readLe16(data, headerOffset + 28);
+    const int dataOffset = headerOffset + 30 + nameLength + extraLength;
+    if (dataOffset + entry.compressedSize > static_cast<quint32>(data.size())) {
+        RuntimeThrow("Invalid dotLottie ZIP entry data");
+    }
+
+    const QByteArray compressed = data.mid(dataOffset, entry.compressedSize);
+    if (entry.method == 0) { return compressed; }
+    if (entry.method == 8) {
+        return inflateRawDeflate(compressed, entry.uncompressedSize);
+    }
+    RuntimeThrow("Unsupported dotLottie ZIP compression method");
+}
+
+QJsonObject jsonObjectFromBytes(const QByteArray& bytes, const QString& filename)
+{
+    QJsonParseError error;
+    const QJsonDocument document = QJsonDocument::fromJson(bytes, &error);
+    if (error.error != QJsonParseError::NoError || !document.isObject()) {
+        RuntimeThrow("Cannot parse Lottie file " + filename);
+    }
+    return document.object();
+}
+
+QJsonObject readDotLottieRoot(const QString& filename)
+{
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly)) {
+        RuntimeThrow("Cannot open Lottie file " + filename);
+    }
+    const QByteArray zipData = file.readAll();
+    const QList<ZipEntry> entries = readZipEntries(zipData);
+
+    QMap<QString, ZipEntry> files;
+    for (const ZipEntry& entry : entries) {
+        if (!entry.name.endsWith(QLatin1Char('/'))) {
+            files.insert(entry.name, entry);
+        }
+    }
+
+    QString animationPath;
+    if (files.contains(QStringLiteral("manifest.json"))) {
+        const QJsonObject manifest = jsonObjectFromBytes(
+                    readZipEntry(zipData, files.value(QStringLiteral("manifest.json"))),
+                    filename + QStringLiteral(":manifest.json"));
+        const QJsonArray animations = manifest.value(QStringLiteral("animations")).toArray();
+        if (!animations.isEmpty()) {
+            const QJsonObject animation = animations.first().toObject();
+            animationPath = animation.value(QStringLiteral("url")).toString();
+            if (animationPath.isEmpty()) {
+                const QString id = animation.value(QStringLiteral("id")).toString();
+                if (!id.isEmpty()) {
+                    animationPath = QStringLiteral("animations/%1.json").arg(id);
+                }
+            }
+        }
+    }
+
+    if (animationPath.isEmpty() || !files.contains(animationPath)) {
+        for (const QString& path : files.keys()) {
+            if (path.startsWith(QStringLiteral("animations/")) &&
+                path.endsWith(QStringLiteral(".json"), Qt::CaseInsensitive)) {
+                animationPath = path;
+                break;
+            }
+        }
+    }
+    if (animationPath.isEmpty() || !files.contains(animationPath)) {
+        for (const QString& path : files.keys()) {
+            if (path != QStringLiteral("manifest.json") &&
+                path.endsWith(QStringLiteral(".json"), Qt::CaseInsensitive)) {
+                animationPath = path;
+                break;
+            }
+        }
+    }
+    if (animationPath.isEmpty() || !files.contains(animationPath)) {
+        RuntimeThrow("No animation JSON found in dotLottie file");
+    }
+
+    return jsonObjectFromBytes(readZipEntry(zipData, files.value(animationPath)),
+                               filename + QStringLiteral(":") + animationPath);
+}
+
 QJsonObject readLottieRoot(const QString& filename)
 {
     if (filename.endsWith(QStringLiteral(".lottie"), Qt::CaseInsensitive)) {
-        RuntimeThrow("dotLottie import is not implemented yet. Use Lottie JSON.");
+        return readDotLottieRoot(filename);
     }
 
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly)) {
         RuntimeThrow("Cannot open Lottie file " + filename);
     }
-    QJsonParseError error;
-    const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &error);
-    if (error.error != QJsonParseError::NoError || !document.isObject()) {
-        RuntimeThrow("Cannot parse Lottie file " + filename);
-    }
-    return document.object();
+    return jsonObjectFromBytes(file.readAll(), filename);
 }
 
 QJsonValue propertyValue(const QJsonObject& property)
