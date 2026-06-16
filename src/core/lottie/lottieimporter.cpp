@@ -240,7 +240,13 @@ void applyTransform(BoundingBox* const box,
 
 SkPath pathFromShapeValue(const QJsonValue& value)
 {
-    const QJsonObject object = value.toObject();
+    QJsonObject object = value.toObject();
+    if (object.isEmpty() && value.isArray()) {
+        const QJsonArray array = value.toArray();
+        if (!array.isEmpty()) {
+            object = array.first().toObject();
+        }
+    }
     const QJsonArray vertices = object.value(QStringLiteral("v")).toArray();
     const QJsonArray inTangents = object.value(QStringLiteral("i")).toArray();
     const QJsonArray outTangents = object.value(QStringLiteral("o")).toArray();
@@ -275,6 +281,40 @@ SkPath pathFromShapeValue(const QJsonValue& value)
         }
         path.close();
     }
+    return path;
+}
+
+SkPath pathFromPolystar(const QJsonObject& shape)
+{
+    const int starType = qRound(scalarValue(shape.value(QStringLiteral("sy")), 1));
+    const int pointCount = qMax(3, qRound(scalarValue(propertyValue(
+                                      shape.value(QStringLiteral("pt")).toObject()), 5)));
+    const QPointF center = pointValue(propertyValue(
+                                          shape.value(QStringLiteral("p")).toObject()));
+    const qreal rotation = qDegreesToRadians(scalarValue(propertyValue(
+                                             shape.value(QStringLiteral("r")).toObject()), 0) - 90);
+    const qreal outerRadius = scalarValue(propertyValue(
+                                shape.value(QStringLiteral("or")).toObject()), 0);
+    const qreal innerRadius = scalarValue(propertyValue(
+                                shape.value(QStringLiteral("ir")).toObject()), outerRadius);
+    const int vertexCount = starType == 1 ? pointCount*2 : pointCount;
+
+    SkPath path;
+    if (outerRadius <= 0 || vertexCount <= 0) { return path; }
+
+    for (int i = 0; i < vertexCount; ++i) {
+        const bool innerPoint = starType == 1 && i % 2 == 1;
+        const qreal radius = innerPoint ? innerRadius : outerRadius;
+        const qreal angle = rotation + 2*M_PI*i/vertexCount;
+        const qreal x = center.x() + qCos(angle)*radius;
+        const qreal y = center.y() + qSin(angle)*radius;
+        if (i == 0) {
+            path.moveTo(x, y);
+        } else {
+            path.lineTo(x, y);
+        }
+    }
+    path.close();
     return path;
 }
 
@@ -398,6 +438,22 @@ qsptr<SmartVectorPath> createPathBox(const QJsonObject& shape,
     return box;
 }
 
+qsptr<SmartVectorPath> createPolystarBox(const QJsonObject& shape,
+                                         const PaintStyle& style,
+                                         const QJsonObject& fill,
+                                         const QJsonObject& stroke,
+                                         Canvas* const scene,
+                                         const int inPoint)
+{
+    const SkPath path = pathFromPolystar(shape);
+    const auto box = enve::make_shared<SmartVectorPath>();
+    box->prp_setName(shape.value(QStringLiteral("nm")).toString(
+                         QStringLiteral("Polystar")));
+    box->loadSkPath(path);
+    applyPaint(box.get(), style, scene, inPoint, fill, stroke);
+    return box;
+}
+
 qsptr<RectangleBox> createRectangleBox(const QJsonObject& shape,
                                        const PaintStyle& style,
                                        const QJsonObject& fill,
@@ -488,6 +544,8 @@ void importShapeItems(const QJsonArray& items,
             imported = createGroup(item, scene, inPoint);
         } else if (type == QStringLiteral("sh")) {
             imported = createPathBox(item, style, fill, stroke, scene, inPoint);
+        } else if (type == QStringLiteral("sr")) {
+            imported = createPolystarBox(item, style, fill, stroke, scene, inPoint);
         } else if (type == QStringLiteral("rc")) {
             imported = createRectangleBox(item, style, fill, stroke, scene, inPoint);
         } else if (type == QStringLiteral("el")) {
@@ -525,7 +583,8 @@ void analyzeShapes(const QJsonArray& shapes, ImportLottie::Analysis& result)
             continue;
         }
         ++result.totalShapes;
-        if (type == QStringLiteral("sh") || type == QStringLiteral("rc") ||
+        if (type == QStringLiteral("sh") || type == QStringLiteral("sr") ||
+            type == QStringLiteral("rc") ||
             type == QStringLiteral("el")) {
             ++result.supportedShapes;
         } else {
