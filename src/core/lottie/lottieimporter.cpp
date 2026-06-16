@@ -17,6 +17,7 @@
 #include "Animators/SmartPath/smartpathcollection.h"
 #include "Animators/coloranimator.h"
 #include "Animators/gradientpoints.h"
+#include "Animators/intanimator.h"
 #include "Animators/paintsettingsanimator.h"
 #include "Animators/qpointfanimator.h"
 #include "Animators/qrealanimator.h"
@@ -26,6 +27,8 @@
 #include "Boxes/pathbox.h"
 #include "Boxes/rectangle.h"
 #include "Boxes/smartvectorpath.h"
+#include "PathEffects/dashpatheffect.h"
+#include "PathEffects/duplicatepatheffect.h"
 #include "canvas.h"
 #include "exceptions.h"
 #include "paintsettings.h"
@@ -69,6 +72,8 @@ struct ZipEntry {
     quint32 uncompressedSize = 0;
     quint32 localHeaderOffset = 0;
 };
+
+QJsonObject firstItemOfType(const QJsonArray& items, const QString& type);
 
 quint16 readLe16(const QByteArray& data, const int offset)
 {
@@ -417,11 +422,37 @@ void applyScalarKeys(QrealAnimator* const animator,
     }
     for (int i = 0; i < keys.size(); ++i) {
         const int frame = importFrame(keys.at(i).frame, inPoint, scene);
-        if (keys.at(i).hold && i + 1 < keys.size() && frame + 1 < keys.at(i + 1).frame) {
+        if (keys.at(i).hold && i + 1 < keys.size() &&
+            keys.at(i).frame + 1 < keys.at(i + 1).frame) {
             animator->saveValueToKey(importFrame(keys.at(i + 1).frame, inPoint, scene) - 1,
                                      scalarValue(keys.at(i).value) * multiplier);
         }
         animator->saveValueToKey(frame, scalarValue(keys.at(i).value) * multiplier);
+    }
+}
+
+void applyRepeaterCountKeys(QrealAnimator* const animator,
+                            const QJsonObject& property,
+                            Canvas* const scene,
+                            const int inPoint)
+{
+    if (!animator) { return; }
+    const QList<KeyValue> keys = propertyKeys(property);
+    auto countValue = [](const QJsonValue& value) {
+        return qMax<qreal>(0, qRound(scalarValue(value, 1)) - 1);
+    };
+    if (keys.size() == 1) {
+        animator->setCurrentBaseValue(countValue(keys.first().value));
+        return;
+    }
+    for (int i = 0; i < keys.size(); ++i) {
+        const int frame = importFrame(keys.at(i).frame, inPoint, scene);
+        if (keys.at(i).hold && i + 1 < keys.size() &&
+            keys.at(i).frame + 1 < keys.at(i + 1).frame) {
+            animator->saveValueToKey(importFrame(keys.at(i + 1).frame, inPoint, scene) - 1,
+                                     countValue(keys.at(i).value));
+        }
+        animator->saveValueToKey(frame, countValue(keys.at(i).value));
     }
 }
 
@@ -439,9 +470,16 @@ void applyPointKeys(QPointFAnimator* const animator,
                                value.y() * multiplier.y());
         return;
     }
-    for (const KeyValue& key : keys) {
+    for (int i = 0; i < keys.size(); ++i) {
+        const KeyValue& key = keys.at(i);
         const QPointF value = pointValue(key.value);
         const int frame = importFrame(key.frame, inPoint, scene);
+        if (key.hold && i + 1 < keys.size() &&
+            key.frame + 1 < keys.at(i + 1).frame) {
+            const int endFrame = importFrame(keys.at(i + 1).frame, inPoint, scene) - 1;
+            animator->getXAnimator()->saveValueToKey(endFrame, value.x() * multiplier.x());
+            animator->getYAnimator()->saveValueToKey(endFrame, value.y() * multiplier.y());
+        }
         animator->getXAnimator()->saveValueToKey(frame, value.x() * multiplier.x());
         animator->getYAnimator()->saveValueToKey(frame, value.y() * multiplier.y());
     }
@@ -546,9 +584,18 @@ void applyColorKeys(ColorAnimator* const animator,
         animator->setColor(colorValue(keys.first().value));
         return;
     }
-    for (const KeyValue& key : keys) {
+    for (int i = 0; i < keys.size(); ++i) {
+        const KeyValue& key = keys.at(i);
         const QColor color = colorValue(key.value);
         const int frame = importFrame(key.frame, inPoint, scene);
+        if (key.hold && i + 1 < keys.size() &&
+            key.frame + 1 < keys.at(i + 1).frame) {
+            const int endFrame = importFrame(keys.at(i + 1).frame, inPoint, scene) - 1;
+            animator->getVal1Animator()->saveValueToKey(endFrame, color.redF());
+            animator->getVal2Animator()->saveValueToKey(endFrame, color.greenF());
+            animator->getVal3Animator()->saveValueToKey(endFrame, color.blueF());
+            animator->getAlphaAnimator()->saveValueToKey(endFrame, color.alphaF());
+        }
         animator->getVal1Animator()->saveValueToKey(frame, color.redF());
         animator->getVal2Animator()->saveValueToKey(frame, color.greenF());
         animator->getVal3Animator()->saveValueToKey(frame, color.blueF());
@@ -709,6 +756,354 @@ SkPath pathFromPolystar(const QJsonObject& shape)
     return path;
 }
 
+SkPath pathFromRectangle(const QJsonObject& shape)
+{
+    const QPointF position = pointValue(propertyValue(
+                                            shape.value(QStringLiteral("p")).toObject()));
+    const QPointF size = pointValue(propertyValue(
+                                        shape.value(QStringLiteral("s")).toObject()));
+    const qreal radius = scalarValue(propertyValue(
+                                         shape.value(QStringLiteral("r")).toObject()));
+    SkPath path;
+    const SkRect rect = SkRect::MakeLTRB(position.x() - size.x()*0.5,
+                                         position.y() - size.y()*0.5,
+                                         position.x() + size.x()*0.5,
+                                         position.y() + size.y()*0.5);
+    path.addRoundRect(rect, radius, radius);
+    return path;
+}
+
+SkPath pathFromEllipse(const QJsonObject& shape)
+{
+    const QPointF position = pointValue(propertyValue(
+                                            shape.value(QStringLiteral("p")).toObject()));
+    const QPointF size = pointValue(propertyValue(
+                                        shape.value(QStringLiteral("s")).toObject()));
+    SkPath path;
+    const SkRect rect = SkRect::MakeLTRB(position.x() - size.x()*0.5,
+                                         position.y() - size.y()*0.5,
+                                         position.x() + size.x()*0.5,
+                                         position.y() + size.y()*0.5);
+    path.addOval(rect);
+    return path;
+}
+
+SkPath pathFromShapeItem(const QJsonObject& item)
+{
+    const QString type = item.value(QStringLiteral("ty")).toString();
+    if (type == QStringLiteral("sh")) {
+        return pathFromShapeValue(propertyValue(
+                                      item.value(QStringLiteral("ks")).toObject()));
+    }
+    if (type == QStringLiteral("sr")) { return pathFromPolystar(item); }
+    if (type == QStringLiteral("rc")) { return pathFromRectangle(item); }
+    if (type == QStringLiteral("el")) { return pathFromEllipse(item); }
+    return {};
+}
+
+bool isPathShapeType(const QString& type)
+{
+    return type == QStringLiteral("sh") || type == QStringLiteral("sr") ||
+           type == QStringLiteral("rc") || type == QStringLiteral("el");
+}
+
+qreal repeaterOpacityAt(const QJsonObject& transform, const QString& name,
+                        const qreal fallback)
+{
+    return scalarValue(propertyValue(transform.value(name).toObject()), fallback);
+}
+
+QJsonObject repeaterTransform(const QJsonObject& repeater)
+{
+    QJsonObject transform = repeater.value(QStringLiteral("tr")).toObject();
+    if (transform.isEmpty()) {
+        transform = firstItemOfType(
+                    repeater.value(QStringLiteral("it")).toArray(), QStringLiteral("tr"));
+    }
+    return transform;
+}
+
+bool propertyHasMultipleKeys(const QJsonObject& property)
+{
+    return propertyKeys(property).size() > 1;
+}
+
+bool scalarPropertyIsStaticValue(const QJsonObject& property,
+                                 const qreal expected,
+                                 const qreal fallback)
+{
+    if (propertyHasMultipleKeys(property)) { return false; }
+    return qAbs(scalarValue(propertyValue(property), fallback) - expected) < 0.0001;
+}
+
+bool pointPropertyIsStaticValue(const QJsonObject& property,
+                                const QPointF& expected,
+                                const QPointF& fallback)
+{
+    if (propertyHasMultipleKeys(property)) { return false; }
+    const QPointF value = pointValue(propertyValue(property), fallback);
+    return qAbs(value.x() - expected.x()) < 0.0001 &&
+           qAbs(value.y() - expected.y()) < 0.0001;
+}
+
+bool canUseNativeDuplicateEffect(const QJsonObject& repeater)
+{
+    const int copies = qRound(scalarValue(propertyValue(
+                             repeater.value(QStringLiteral("c")).toObject()), 1));
+    if (copies < 1 || copies > 26) { return false; }
+
+    const QJsonObject offset = repeater.value(QStringLiteral("o")).toObject();
+    if (!scalarPropertyIsStaticValue(offset, 0, 0)) { return false; }
+
+    const QJsonObject transform = repeaterTransform(repeater);
+    if (transform.isEmpty()) { return true; }
+
+    return pointPropertyIsStaticValue(transform.value(QStringLiteral("s")).toObject(),
+                                      QPointF(100, 100), QPointF(100, 100)) &&
+           scalarPropertyIsStaticValue(transform.value(QStringLiteral("r")).toObject(), 0, 0) &&
+           scalarPropertyIsStaticValue(transform.value(QStringLiteral("so")).toObject(), 100, 100) &&
+           scalarPropertyIsStaticValue(transform.value(QStringLiteral("eo")).toObject(), 100, 100);
+}
+
+void addNativeDuplicateEffect(SmartVectorPath* const box,
+                              const QJsonObject& repeater,
+                              Canvas* const scene,
+                              const int inPoint)
+{
+    if (!box) { return; }
+    const auto effect = enve::make_shared<DuplicatePathEffect>();
+    const QJsonObject transform = repeaterTransform(repeater);
+
+    if (const auto count = effect->ca_getFirstDescendantWithName<IntAnimator>(
+                QStringLiteral("count"))) {
+        applyRepeaterCountKeys(count, repeater.value(QStringLiteral("c")).toObject(),
+                               scene, inPoint);
+    }
+
+    if (const auto translation =
+            effect->ca_getFirstDescendantWithName<QPointFAnimator>(
+                QStringLiteral("translation"))) {
+        applyPointKeys(translation,
+                       transform.value(QStringLiteral("p")).toObject(),
+                       scene, inPoint);
+    }
+
+    box->addPathEffect(effect);
+}
+
+SkMatrix repeaterMatrix(const QJsonObject& transform, const int copyIndex,
+                        const qreal offset)
+{
+    const qreal amount = copyIndex + offset;
+    const QPointF anchor = pointValue(propertyValue(
+                                          transform.value(QStringLiteral("a")).toObject()));
+    const QPointF position = pointValue(propertyValue(
+                                            transform.value(QStringLiteral("p")).toObject()));
+    const QPointF scale = pointValue(propertyValue(
+                                         transform.value(QStringLiteral("s")).toObject()),
+                                     QPointF(100, 100));
+    const qreal rotation = scalarValue(propertyValue(
+                                           transform.value(QStringLiteral("r")).toObject()));
+
+    SkMatrix matrix;
+    matrix.setIdentity();
+    matrix.preTranslate(-anchor.x(), -anchor.y());
+    matrix.preScale(qPow(scale.x()*0.01, amount),
+                    qPow(scale.y()*0.01, amount));
+    matrix.preRotate(rotation*amount);
+    matrix.preTranslate(anchor.x() + position.x()*amount,
+                        anchor.y() + position.y()*amount);
+    return matrix;
+}
+
+SkPath applyRepeater(const SkPath& source, const QJsonObject& repeater)
+{
+    const int copies = qMax(1, qRound(scalarValue(propertyValue(
+                                    repeater.value(QStringLiteral("c")).toObject()), 1)));
+    const qreal offset = scalarValue(propertyValue(
+                                         repeater.value(QStringLiteral("o")).toObject()));
+    const QJsonObject transform = repeaterTransform(repeater);
+    const qreal startOpacity = repeaterOpacityAt(transform, QStringLiteral("so"), 100);
+    const qreal endOpacity = repeaterOpacityAt(transform, QStringLiteral("eo"), 100);
+    Q_UNUSED(startOpacity)
+    Q_UNUSED(endOpacity)
+
+    SkPath result;
+    result.setFillType(source.getFillType());
+    for (int i = 0; i < copies; ++i) {
+        SkPath copy = source;
+        copy.transform(repeaterMatrix(transform, i, offset));
+        result.addPath(copy);
+    }
+    return result;
+}
+
+SkPath trimPath(const SkPath& source, const QJsonObject& trim)
+{
+    qreal start = scalarValue(propertyValue(trim.value(QStringLiteral("s")).toObject()), 0);
+    qreal end = scalarValue(propertyValue(trim.value(QStringLiteral("e")).toObject()), 100);
+    const qreal offset = scalarValue(propertyValue(
+                                        trim.value(QStringLiteral("o")).toObject()), 0) / 360. * 100.;
+    start = std::fmod(start + offset + 100., 100.);
+    end = std::fmod(end + offset + 100., 100.);
+
+    SkPath result;
+    result.setFillType(source.getFillType());
+    auto addRange = [&source, &result](const qreal from, const qreal to) {
+        SkPathMeasure measure(source, false);
+        do {
+            const SkScalar length = measure.getLength();
+            if (length <= 0) { continue; }
+            SkPath segment;
+            if (measure.getSegment(length*from*0.01, length*to*0.01,
+                                   &segment, true)) {
+                result.addPath(segment);
+            }
+        } while (measure.nextContour());
+    };
+
+    if (qFuzzyCompare(start, end)) { return result; }
+    if (start < end) {
+        addRange(start, end);
+    } else {
+        addRange(start, 100);
+        addRange(0, end);
+    }
+    return result;
+}
+
+SkPath mergePaths(const QList<SkPath>& paths, const QJsonObject& merge)
+{
+    if (paths.isEmpty()) { return {}; }
+    const int mode = merge.value(QStringLiteral("mm")).toInt(1);
+    SkPath result = paths.first();
+    for (int i = 1; i < paths.size(); ++i) {
+        SkPath out;
+        SkPathOp op = kUnion_SkPathOp;
+        if (mode == 2) { op = kUnion_SkPathOp; }
+        else if (mode == 3) { op = kDifference_SkPathOp; }
+        else if (mode == 4) { op = kIntersect_SkPathOp; }
+        else if (mode == 5) { op = kXOR_SkPathOp; }
+        if (Op(result, paths.at(i), op, &out)) {
+            result = out;
+        } else {
+            result.addPath(paths.at(i));
+        }
+    }
+    return result;
+}
+
+QVector<SkScalar> dashIntervals(const QJsonObject& stroke)
+{
+    QVector<SkScalar> intervals;
+    const QJsonArray dash = stroke.value(QStringLiteral("d")).toArray();
+    for (const QJsonValue& value : dash) {
+        const QJsonObject item = value.toObject();
+        const QString name = item.value(QStringLiteral("n")).toString();
+        if (name == QStringLiteral("d") || name == QStringLiteral("g")) {
+            intervals.append(toSkScalar(qMax<qreal>(0.1, scalarValue(propertyValue(
+                                                item.value(QStringLiteral("v")).toObject())))));
+        }
+    }
+    if (intervals.size() == 1) { intervals.append(intervals.first()); }
+    if (intervals.size() % 2 == 1) {
+        const QVector<SkScalar> copy = intervals;
+        intervals += copy;
+    }
+    return intervals;
+}
+
+qreal dashOffset(const QJsonObject& stroke)
+{
+    const QJsonArray dash = stroke.value(QStringLiteral("d")).toArray();
+    for (const QJsonValue& value : dash) {
+        const QJsonObject item = value.toObject();
+        if (item.value(QStringLiteral("n")).toString() == QStringLiteral("o")) {
+            return scalarValue(propertyValue(item.value(QStringLiteral("v")).toObject()));
+        }
+    }
+    return 0;
+}
+
+QJsonObject dashEntry(const QJsonObject& stroke, const QString& name)
+{
+    const QJsonArray dash = stroke.value(QStringLiteral("d")).toArray();
+    for (const QJsonValue& value : dash) {
+        const QJsonObject item = value.toObject();
+        if (item.value(QStringLiteral("n")).toString() == name) { return item; }
+    }
+    return {};
+}
+
+bool canUseNativeDashEffect(const QJsonObject& stroke)
+{
+    const QJsonArray dash = stroke.value(QStringLiteral("d")).toArray();
+    if (dash.isEmpty()) { return false; }
+
+    int dashCount = 0;
+    int gapCount = 0;
+    int offsetCount = 0;
+    for (const QJsonValue& value : dash) {
+        const QString name = value.toObject().value(QStringLiteral("n")).toString();
+        if (name == QStringLiteral("d")) { ++dashCount; }
+        else if (name == QStringLiteral("g")) { ++gapCount; }
+        else if (name == QStringLiteral("o")) { ++offsetCount; }
+    }
+    if (dashCount != 1 || gapCount > 1 || offsetCount > 1) { return false; }
+
+    const QJsonObject offset = dashEntry(stroke, QStringLiteral("o"))
+            .value(QStringLiteral("v")).toObject();
+    if (!offset.isEmpty() && !scalarPropertyIsStaticValue(offset, 0, 0)) {
+        return false;
+    }
+
+    const QJsonObject dashValue = dashEntry(stroke, QStringLiteral("d"))
+            .value(QStringLiteral("v")).toObject();
+    const QJsonObject gapValue = dashEntry(stroke, QStringLiteral("g"))
+            .value(QStringLiteral("v")).toObject();
+    if (gapValue.isEmpty()) { return true; }
+    if (propertyHasMultipleKeys(dashValue) || propertyHasMultipleKeys(gapValue)) {
+        return false;
+    }
+
+    return qAbs(scalarValue(propertyValue(dashValue)) -
+                scalarValue(propertyValue(gapValue))) < 0.0001;
+}
+
+void addNativeDashEffect(SmartVectorPath* const box,
+                         const QJsonObject& stroke,
+                         Canvas* const scene,
+                         const int inPoint)
+{
+    if (!box) { return; }
+    const auto effect = enve::make_shared<DashPathEffect>();
+    if (const auto size = effect->ca_getFirstDescendantWithName<QrealAnimator>(
+                QStringLiteral("size"))) {
+        applyScalarKeys(size,
+                        dashEntry(stroke, QStringLiteral("d"))
+                            .value(QStringLiteral("v")).toObject(),
+                        scene, inPoint);
+    }
+    box->addPathEffect(effect);
+}
+
+SkPath applyDashPattern(const SkPath& source, const QJsonObject& stroke)
+{
+    const QVector<SkScalar> intervals = dashIntervals(stroke);
+    if (intervals.isEmpty()) { return source; }
+    SkPath result;
+    SkStrokeRec rec(SkStrokeRec::kHairline_InitStyle);
+    SkRect cullRect = source.getBounds();
+    const auto effect = SkDashPathEffect::Make(intervals.constData(),
+                                               intervals.size(),
+                                               toSkScalar(dashOffset(stroke)));
+    if (!effect || !effect->filterPath(&result, source, &rec, &cullRect)) {
+        return source;
+    }
+    result.setFillType(source.getFillType());
+    return result;
+}
+
 void applyPathKeys(SmartVectorPath* const box,
                    const QJsonObject& property,
                    Canvas* const scene,
@@ -835,6 +1230,24 @@ QJsonObject firstItemOfType(const QJsonArray& items, const QString& type)
         if (item.value(QStringLiteral("ty")).toString() == type) { return item; }
     }
     return {};
+}
+
+bool hasItemOfType(const QJsonArray& items, const QString& type)
+{
+    return !firstItemOfType(items, type).isEmpty();
+}
+
+bool hasPathModifier(const QJsonArray& items)
+{
+    if (hasItemOfType(items, QStringLiteral("tm")) ||
+        hasItemOfType(items, QStringLiteral("rp")) ||
+        hasItemOfType(items, QStringLiteral("mm"))) {
+        return true;
+    }
+    const QJsonObject stroke = firstItemOfType(items, QStringLiteral("st"));
+    const QJsonObject gradientStroke = firstItemOfType(items, QStringLiteral("gs"));
+    return !stroke.value(QStringLiteral("d")).toArray().isEmpty() ||
+           !gradientStroke.value(QStringLiteral("d")).toArray().isEmpty();
 }
 
 bool transformOpacityNeedsLayer(const QJsonObject& transform)
@@ -971,6 +1384,24 @@ qsptr<SmartVectorPath> createPathBox(const QJsonObject& shape,
     return box;
 }
 
+qsptr<SmartVectorPath> createPathBoxFromPath(const QString& name,
+                                             const SkPath& path,
+                                             const PaintStyle& style,
+                                             const QJsonObject& fill,
+                                             const QJsonObject& stroke,
+                                             const QJsonObject& gradientFill,
+                                             const QJsonObject& gradientStroke,
+                                             Canvas* const scene,
+                                             const int inPoint)
+{
+    const auto box = enve::make_shared<SmartVectorPath>();
+    box->prp_setName(name.isEmpty() ? QStringLiteral("Path") : name);
+    box->loadSkPath(path);
+    applyPaint(box.get(), style, scene, inPoint, fill, stroke,
+               gradientFill, gradientStroke);
+    return box;
+}
+
 qsptr<SmartVectorPath> createPolystarBox(const QJsonObject& shape,
                                          const PaintStyle& style,
                                          const QJsonObject& fill,
@@ -1040,6 +1471,65 @@ void importShapeItems(const QJsonArray& items,
                       Canvas* const scene,
                       const int inPoint);
 
+bool importModifiedPathItems(const QJsonArray& items,
+                             ContainerBox* const parent,
+                             Canvas* const scene,
+                             const int inPoint,
+                             const PaintStyle& style,
+                             const QJsonObject& fill,
+                             const QJsonObject& stroke,
+                             const QJsonObject& gradientFill,
+                             const QJsonObject& gradientStroke,
+                             const QString& name)
+{
+    if (!parent || !hasPathModifier(items)) { return false; }
+
+    QList<SkPath> paths;
+    for (const QJsonValue& value : items) {
+        const QJsonObject item = value.toObject();
+        if (item.value(QStringLiteral("hd")).toBool(false)) { continue; }
+        const QString type = item.value(QStringLiteral("ty")).toString();
+        if (!isPathShapeType(type)) { continue; }
+        paths.append(pathFromShapeItem(item));
+    }
+    if (paths.isEmpty()) { return false; }
+
+    SkPath path = firstItemOfType(items, QStringLiteral("mm")).isEmpty() ?
+                SkPath() : mergePaths(paths, firstItemOfType(items, QStringLiteral("mm")));
+    if (path.isEmpty()) {
+        for (const SkPath& source : paths) { path.addPath(source); }
+    }
+
+    const QJsonObject repeater = firstItemOfType(items, QStringLiteral("rp"));
+    const bool nativeRepeater = !repeater.isEmpty() &&
+            canUseNativeDuplicateEffect(repeater);
+    if (!repeater.isEmpty() && !nativeRepeater) {
+        path = applyRepeater(path, repeater);
+    }
+
+    const QJsonObject trim = firstItemOfType(items, QStringLiteral("tm"));
+    if (!trim.isEmpty()) { path = trimPath(path, trim); }
+
+    const QJsonObject dashSource = !stroke.isEmpty() ? stroke : gradientStroke;
+    const bool nativeDash = !dashSource.value(QStringLiteral("d")).toArray().isEmpty() &&
+            canUseNativeDashEffect(dashSource);
+    if (!dashSource.value(QStringLiteral("d")).toArray().isEmpty() && !nativeDash) {
+        path = applyDashPattern(path, dashSource);
+    }
+
+    const auto box = createPathBoxFromPath(name, path, style, fill, stroke,
+                                           gradientFill, gradientStroke,
+                                           scene, inPoint);
+    if (nativeRepeater) {
+        addNativeDuplicateEffect(box.get(), repeater, scene, inPoint);
+    }
+    if (nativeDash) {
+        addNativeDashEffect(box.get(), dashSource, scene, inPoint);
+    }
+    parent->addContained(box);
+    return true;
+}
+
 qsptr<ContainerBox> createGroup(const QJsonObject& group,
                                 Canvas* const scene,
                                 const int inPoint)
@@ -1066,6 +1556,11 @@ void importShapeItems(const QJsonArray& items,
     const QJsonObject stroke = firstItemOfType(items, QStringLiteral("st"));
     const QJsonObject gradientFill = firstItemOfType(items, QStringLiteral("gf"));
     const QJsonObject gradientStroke = firstItemOfType(items, QStringLiteral("gs"));
+
+    if (importModifiedPathItems(items, parent, scene, inPoint, style, fill, stroke,
+                                gradientFill, gradientStroke, parent->prp_getName())) {
+        return;
+    }
 
     for (const QJsonValue& value : items) {
         const QJsonObject item = value.toObject();
