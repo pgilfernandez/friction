@@ -24,11 +24,13 @@
 #include "Animators/transformanimator.h"
 #include "Boxes/circle.h"
 #include "Boxes/containerbox.h"
+#include "Boxes/nullobject.h"
 #include "Boxes/pathbox.h"
 #include "Boxes/rectangle.h"
 #include "Boxes/smartvectorpath.h"
 #include "PathEffects/dashpatheffect.h"
 #include "PathEffects/duplicatepatheffect.h"
+#include "TransformEffects/parenteffect.h"
 #include "canvas.h"
 #include "exceptions.h"
 #include "paintsettings.h"
@@ -75,6 +77,11 @@ struct ZipEntry {
 };
 
 using AssetMap = QMap<QString, QJsonObject>;
+
+struct ImportedLayer {
+    QJsonObject layer;
+    qsptr<BoundingBox> box;
+};
 
 QJsonObject firstItemOfType(const QJsonArray& items, const QString& type);
 
@@ -1655,9 +1662,9 @@ qsptr<BoundingBox> importNullLayer(const QJsonObject& layer,
                                    const int inPoint,
                                    const int outPoint)
 {
-    const auto box = enve::make_shared<ContainerBox>(
-                layer.value(QStringLiteral("nm")).toString(QStringLiteral("Null Layer")),
-                eBoxType::layer);
+    const auto box = enve::make_shared<NullObject>();
+    box->prp_setName(layer.value(QStringLiteral("nm")).toString(
+                         QStringLiteral("Null Layer")));
     applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
                    scene, inPoint);
     applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
@@ -1726,6 +1733,31 @@ qsptr<BoundingBox> importLayer(const QJsonObject& layer,
     return {};
 }
 
+void applyLayerParenting(const QList<ImportedLayer>& importedLayers)
+{
+    QMap<int, BoundingBox*> layerByIndex;
+    for (const ImportedLayer& imported : importedLayers) {
+        if (!imported.box) { continue; }
+        const int index = imported.layer.value(QStringLiteral("ind")).toInt(-1);
+        if (index >= 0) { layerByIndex.insert(index, imported.box.get()); }
+    }
+
+    for (const ImportedLayer& imported : importedLayers) {
+        if (!imported.box) { continue; }
+        const int parentIndex = imported.layer.value(QStringLiteral("parent")).toInt(-1);
+        BoundingBox* const target = layerByIndex.value(parentIndex, nullptr);
+        if (!target || target == imported.box.get()) { continue; }
+
+        const auto effect = enve::make_shared<ParentEffect>();
+        imported.box->addTransformEffect(effect);
+        if (const auto targetProperty =
+                effect->ca_getFirstDescendantWithName<BoxTargetProperty>(
+                    QStringLiteral("target"))) {
+            targetProperty->setTarget(target);
+        }
+    }
+}
+
 void importLayersToContainer(const QJsonArray& layers,
                              ContainerBox* const parent,
                              Canvas* const scene,
@@ -1735,12 +1767,17 @@ void importLayersToContainer(const QJsonArray& layers,
                              QSet<QString>& assetStack)
 {
     if (!parent) { return; }
+    QList<ImportedLayer> importedLayers;
     for (int i = layers.size() - 1; i >= 0; --i) {
-        const auto imported = importLayer(layers.at(i).toObject(), scene,
-                                          inPoint, outPoint,
+        const QJsonObject layer = layers.at(i).toObject();
+        const auto imported = importLayer(layer, scene, inPoint, outPoint,
                                           assets, assetStack);
-        if (imported) { parent->addContained(imported); }
+        if (imported) {
+            parent->addContained(imported);
+            importedLayers.append({layer, imported});
+        }
     }
+    applyLayerParenting(importedLayers);
 }
 
 void analyzeShapes(const QJsonArray& shapes, ImportLottie::Analysis& result)
