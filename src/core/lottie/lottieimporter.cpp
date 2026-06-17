@@ -31,6 +31,8 @@
 #include "Boxes/smartvectorpath.h"
 #include "PathEffects/dashpatheffect.h"
 #include "PathEffects/duplicatepatheffect.h"
+#include "PathEffects/subpatheffect.h"
+#include "Properties/boolproperty.h"
 #include "TransformEffects/parenteffect.h"
 #include "canvas.h"
 #include "exceptions.h"
@@ -1032,6 +1034,55 @@ SkPath trimPath(const SkPath& source, const QJsonObject& trim)
     return result;
 }
 
+bool canUseNativeSubPathEffect(const QJsonObject& trim)
+{
+    const QJsonObject startProperty = trim.value(QStringLiteral("s")).toObject();
+    const QJsonObject endProperty = trim.value(QStringLiteral("e")).toObject();
+    if (propertyHasMultipleKeys(startProperty) ||
+        propertyHasMultipleKeys(endProperty)) {
+        return true;
+    }
+
+    const qreal start = scalarValue(propertyValue(startProperty), 0);
+    const qreal end = scalarValue(propertyValue(endProperty), 100);
+    return end >= start;
+}
+
+void addNativeSubPathEffect(SmartVectorPath* const box,
+                            const QJsonObject& trim,
+                            Canvas* const scene,
+                            const int inPoint)
+{
+    if (!box) { return; }
+    const auto effect = enve::make_shared<SubPathEffect>();
+
+    if (const auto pathWise =
+            effect->ca_getFirstDescendantWithName<BoolProperty>(
+                QStringLiteral("path-wise"))) {
+        pathWise->setValue(trim.value(QStringLiteral("m")).toInt(1) == 2);
+    }
+    if (const auto minLength =
+            effect->ca_getFirstDescendantWithName<QrealAnimator>(
+                QStringLiteral("min length"))) {
+        applyScalarKeys(minLength, trim.value(QStringLiteral("s")).toObject(),
+                        scene, inPoint);
+    }
+    if (const auto maxLength =
+            effect->ca_getFirstDescendantWithName<QrealAnimator>(
+                QStringLiteral("max length"))) {
+        applyScalarKeys(maxLength, trim.value(QStringLiteral("e")).toObject(),
+                        scene, inPoint);
+    }
+    if (const auto offset =
+            effect->ca_getFirstDescendantWithName<QrealAnimator>(
+                QStringLiteral("offset"))) {
+        applyScalarKeys(offset, trim.value(QStringLiteral("o")).toObject(),
+                        scene, inPoint, 100. / 360.);
+    }
+
+    box->addPathEffect(effect);
+}
+
 SkPath mergePaths(const QList<SkPath>& paths, const QJsonObject& merge)
 {
     if (paths.isEmpty()) { return {}; }
@@ -1628,7 +1679,8 @@ bool importModifiedPathItems(const QJsonArray& items,
     }
 
     const QJsonObject trim = firstItemOfType(items, QStringLiteral("tm"));
-    if (!trim.isEmpty()) { path = trimPath(path, trim); }
+    const bool nativeTrim = !trim.isEmpty() && canUseNativeSubPathEffect(trim);
+    if (!trim.isEmpty() && !nativeTrim) { path = trimPath(path, trim); }
 
     const QJsonObject dashSource = !stroke.isEmpty() ? stroke : gradientStroke;
     const bool nativeDash = !dashSource.value(QStringLiteral("d")).toArray().isEmpty() &&
@@ -1642,6 +1694,9 @@ bool importModifiedPathItems(const QJsonArray& items,
                                            scene, inPoint);
     if (nativeRepeater) {
         addNativeDuplicateEffect(box.get(), repeater, scene, inPoint);
+    }
+    if (nativeTrim) {
+        addNativeSubPathEffect(box.get(), trim, scene, inPoint);
     }
     if (nativeDash) {
         addNativeDashEffect(box.get(), dashSource, scene, inPoint);
