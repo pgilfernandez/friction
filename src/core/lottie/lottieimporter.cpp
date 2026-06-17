@@ -534,6 +534,42 @@ void applyPointKeys(QPointFAnimator* const animator,
     }
 }
 
+QPointF skewToShear(const qreal skewDegrees, const qreal axisDegrees)
+{
+    const qreal shear = qTan(qDegreesToRadians(skewDegrees));
+    const qreal axis = qDegreesToRadians(axisDegrees);
+    return QPointF(shear*qCos(axis), shear*qSin(axis));
+}
+
+void applySkewKeys(QPointFAnimator* const animator,
+                   const QJsonObject& skewProperty,
+                   const QJsonObject& axisProperty,
+                   Canvas* const scene,
+                   const int inPoint)
+{
+    if (!animator || skewProperty.isEmpty()) { return; }
+    const QList<KeyValue> skewKeys = propertyKeys(skewProperty);
+    const QList<KeyValue> axisKeys = propertyKeys(axisProperty);
+    const QJsonValue baseSkew = propertyValue(skewProperty);
+    const QJsonValue baseAxis = propertyValue(axisProperty);
+    const QList<int> frames = combinedAnimatedFrames({skewKeys, axisKeys});
+    if (frames.isEmpty()) {
+        const QPointF shear = skewToShear(scalarValue(baseSkew),
+                                          scalarValue(baseAxis));
+        animator->setBaseValue(shear);
+        return;
+    }
+
+    for (const int frame : frames) {
+        const QPointF shear = skewToShear(
+                    scalarValue(keyValueAtFrame(skewKeys, frame, baseSkew)),
+                    scalarValue(keyValueAtFrame(axisKeys, frame, baseAxis)));
+        const int importKeyFrame = importFrame(frame, inPoint, scene);
+        animator->getXAnimator()->saveValueToKey(importKeyFrame, shear.x());
+        animator->getYAnimator()->saveValueToKey(importKeyFrame, shear.y());
+    }
+}
+
 void applyRectangleGeometryKeys(RectangleBox* const box,
                                 const QJsonObject& positionProperty,
                                 const QJsonObject& sizeProperty,
@@ -673,6 +709,10 @@ void applyTransform(BoundingBox* const box,
     applyScalarKeys(animator->getRotAnimator(),
                     transform.value(QStringLiteral("rz")).toObject(),
                     scene, inPoint);
+    applySkewKeys(animator->getShearAnimator(),
+                  transform.value(QStringLiteral("sk")).toObject(),
+                  transform.value(QStringLiteral("sa")).toObject(),
+                  scene, inPoint);
     applyScalarKeys(animator->getOpacityAnimator(),
                     transform.value(QStringLiteral("o")).toObject(),
                     scene, inPoint);
