@@ -379,6 +379,19 @@ QList<int> combinedAnimatedFrames(const QList<KeyValue>& first,
     return frames;
 }
 
+QList<int> combinedAnimatedFrames(const QList<QList<KeyValue>>& keyLists)
+{
+    QList<int> frames;
+    for (const QList<KeyValue>& keys : keyLists) {
+        if (keys.size() <= 1) { continue; }
+        for (const KeyValue& key : keys) {
+            if (!frames.contains(key.frame)) { frames.append(key.frame); }
+        }
+    }
+    std::sort(frames.begin(), frames.end());
+    return frames;
+}
+
 QColor colorValue(const QJsonValue& value, const QColor& fallback = Qt::black)
 {
     const QJsonArray array = value.toArray();
@@ -756,20 +769,16 @@ SkPath pathFromShapeValue(const QJsonValue& value)
     return path;
 }
 
-SkPath pathFromPolystar(const QJsonObject& shape)
+SkPath pathFromPolystarValues(const int starType,
+                              const int pointCount,
+                              const QPointF& center,
+                              const qreal rotationDegrees,
+                              const qreal outerRadius,
+                              const qreal innerRadius)
 {
-    const int starType = qRound(scalarValue(shape.value(QStringLiteral("sy")), 1));
-    const int pointCount = qMax(3, qRound(scalarValue(propertyValue(
-                                      shape.value(QStringLiteral("pt")).toObject()), 5)));
-    const QPointF center = pointValue(propertyValue(
-                                          shape.value(QStringLiteral("p")).toObject()));
-    const qreal rotation = qDegreesToRadians(scalarValue(propertyValue(
-                                             shape.value(QStringLiteral("r")).toObject()), 0) - 90);
-    const qreal outerRadius = scalarValue(propertyValue(
-                                shape.value(QStringLiteral("or")).toObject()), 0);
-    const qreal innerRadius = scalarValue(propertyValue(
-                                shape.value(QStringLiteral("ir")).toObject()), outerRadius);
-    const int vertexCount = starType == 1 ? pointCount*2 : pointCount;
+    const int clampedPointCount = qMax(3, pointCount);
+    const qreal rotation = qDegreesToRadians(rotationDegrees - 90);
+    const int vertexCount = starType == 1 ? clampedPointCount*2 : clampedPointCount;
 
     SkPath path;
     if (outerRadius <= 0 || vertexCount <= 0) { return path; }
@@ -788,6 +797,23 @@ SkPath pathFromPolystar(const QJsonObject& shape)
     }
     path.close();
     return path;
+}
+
+SkPath pathFromPolystar(const QJsonObject& shape)
+{
+    const int starType = qRound(scalarValue(shape.value(QStringLiteral("sy")), 1));
+    const int pointCount = qRound(scalarValue(propertyValue(
+                                 shape.value(QStringLiteral("pt")).toObject()), 5));
+    const QPointF center = pointValue(propertyValue(
+                                          shape.value(QStringLiteral("p")).toObject()));
+    const qreal rotation = scalarValue(propertyValue(
+                                           shape.value(QStringLiteral("r")).toObject()), 0);
+    const qreal outerRadius = scalarValue(propertyValue(
+                                shape.value(QStringLiteral("or")).toObject()), 0);
+    const qreal innerRadius = scalarValue(propertyValue(
+                                shape.value(QStringLiteral("ir")).toObject()), outerRadius);
+    return pathFromPolystarValues(starType, pointCount, center, rotation,
+                                  outerRadius, innerRadius);
 }
 
 SkPath pathFromRectangle(const QJsonObject& shape)
@@ -1159,6 +1185,65 @@ void applyPathKeys(SmartVectorPath* const box,
     }
 }
 
+void applyPolystarKeys(SmartVectorPath* const box,
+                       const QJsonObject& shape,
+                       Canvas* const scene,
+                       const int inPoint)
+{
+    if (!box) { return; }
+    const auto collection = box->getPathAnimator();
+    if (!collection || collection->ca_getNumberOfChildren() != 1) { return; }
+    const auto animator = collection->getChild(0);
+
+    const QJsonObject pointsProperty = shape.value(QStringLiteral("pt")).toObject();
+    const QJsonObject positionProperty = shape.value(QStringLiteral("p")).toObject();
+    const QJsonObject rotationProperty = shape.value(QStringLiteral("r")).toObject();
+    const QJsonObject outerRadiusProperty = shape.value(QStringLiteral("or")).toObject();
+    const QJsonObject innerRadiusProperty = shape.value(QStringLiteral("ir")).toObject();
+    const QList<KeyValue> pointsKeys = propertyKeys(pointsProperty);
+    const QList<KeyValue> positionKeys = propertyKeys(positionProperty);
+    const QList<KeyValue> rotationKeys = propertyKeys(rotationProperty);
+    const QList<KeyValue> outerRadiusKeys = propertyKeys(outerRadiusProperty);
+    const QList<KeyValue> innerRadiusKeys = propertyKeys(innerRadiusProperty);
+    if (pointsKeys.size() > 1) {
+        return;
+    }
+    const QList<int> frames = combinedAnimatedFrames({
+        positionKeys,
+        rotationKeys,
+        outerRadiusKeys,
+        innerRadiusKeys
+    });
+    if (frames.isEmpty()) { return; }
+
+    const int starType = qRound(scalarValue(shape.value(QStringLiteral("sy")), 1));
+    const QJsonValue basePoints = propertyValue(pointsProperty);
+    const QJsonValue basePosition = propertyValue(positionProperty);
+    const QJsonValue baseRotation = propertyValue(rotationProperty);
+    const QJsonValue baseOuterRadius = propertyValue(outerRadiusProperty);
+    const QJsonValue baseInnerRadius = propertyValue(innerRadiusProperty);
+
+    for (const int frame : frames) {
+        const int pointCount = qRound(scalarValue(
+            keyValueAtFrame(pointsKeys, frame, basePoints), 5));
+        const QPointF center = pointValue(
+            keyValueAtFrame(positionKeys, frame, basePosition));
+        const qreal rotation = scalarValue(
+            keyValueAtFrame(rotationKeys, frame, baseRotation), 0);
+        const qreal outerRadius = scalarValue(
+            keyValueAtFrame(outerRadiusKeys, frame, baseOuterRadius), 0);
+        const qreal innerRadius = scalarValue(
+            keyValueAtFrame(innerRadiusKeys, frame, baseInnerRadius), outerRadius);
+        const SkPath path = pathFromPolystarValues(starType, pointCount, center,
+                                                   rotation, outerRadius,
+                                                   innerRadius);
+        const auto pathKey = enve::make_shared<SmartPathKey>(
+                    SmartPath(path), importFrame(frame, inPoint, scene),
+                    animator);
+        animator->anim_appendKey(pathKey);
+    }
+}
+
 void applyGradient(PaintSettingsAnimator* const settings,
                    const QJsonObject& gradientStyle,
                    Canvas* const scene,
@@ -1450,6 +1535,7 @@ qsptr<SmartVectorPath> createPolystarBox(const QJsonObject& shape,
     box->prp_setName(shape.value(QStringLiteral("nm")).toString(
                          QStringLiteral("Polystar")));
     box->loadSkPath(path);
+    applyPolystarKeys(box.get(), shape, scene, inPoint);
     applyPaint(box.get(), style, scene, inPoint, fill, stroke,
                gradientFill, gradientStroke);
     return box;
