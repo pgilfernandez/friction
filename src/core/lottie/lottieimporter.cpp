@@ -2066,6 +2066,55 @@ qsptr<BoundingBox> importLayer(const QJsonObject& layer,
     return box;
 }
 
+bool layerUsesTrackMatte(const QJsonObject& layer)
+{
+    const int matteType = layer.value(QStringLiteral("tt")).toInt(0);
+    return matteType > 0 && matteType <= 4;
+}
+
+SkBlendMode trackMatteBlendMode(const int matteType)
+{
+    return (matteType == 2 || matteType == 4) ?
+                SkBlendMode::kDstOut : SkBlendMode::kDstIn;
+}
+
+QString trackMatteName(const QJsonObject& layer)
+{
+    const QString name = layer.value(QStringLiteral("nm")).toString();
+    return name.isEmpty() ?
+                QStringLiteral("Track Matte") :
+                QStringLiteral("%1 Track Matte").arg(name);
+}
+
+qsptr<BoundingBox> importTrackMatteLayer(const QJsonObject& layer,
+                                         const QJsonObject& matteLayer,
+                                         Canvas* const scene,
+                                         const int inPoint,
+                                         const int outPoint,
+                                         const AssetMap& assets,
+                                         const QString& sourceDir,
+                                         QSet<QString>& assetStack,
+                                         QList<ImportedLayer>& importedLayers)
+{
+    const auto target = importLayer(layer, scene, inPoint, outPoint,
+                                    assets, sourceDir, assetStack);
+    const auto matte = importLayer(matteLayer, scene, inPoint, outPoint,
+                                   assets, sourceDir, assetStack);
+    if (!target) { return {}; }
+    if (!matte) { return target; }
+
+    matte->setBlendModeSk(trackMatteBlendMode(
+                              layer.value(QStringLiteral("tt")).toInt(0)));
+    const auto container = enve::make_shared<ContainerBox>(
+                trackMatteName(layer), eBoxType::layer);
+    container->addContained(target);
+    container->addContained(matte);
+
+    importedLayers.append({layer, target});
+    importedLayers.append({matteLayer, matte});
+    return container;
+}
+
 void applyLayerParenting(const QList<ImportedLayer>& importedLayers)
 {
     QMap<int, BoundingBox*> layerByIndex;
@@ -2104,11 +2153,21 @@ void importLayersToContainer(const QJsonArray& layers,
     QList<ImportedLayer> importedLayers;
     for (int i = layers.size() - 1; i >= 0; --i) {
         const QJsonObject layer = layers.at(i).toObject();
-        const auto imported = importLayer(layer, scene, inPoint, outPoint,
-                                          assets, sourceDir, assetStack);
+        qsptr<BoundingBox> imported;
+        if (layerUsesTrackMatte(layer) && i > 0) {
+            const QJsonObject matteLayer = layers.at(i - 1).toObject();
+            imported = importTrackMatteLayer(layer, matteLayer, scene,
+                                             inPoint, outPoint, assets,
+                                             sourceDir, assetStack,
+                                             importedLayers);
+            --i;
+        } else {
+            imported = importLayer(layer, scene, inPoint, outPoint,
+                                   assets, sourceDir, assetStack);
+            if (imported) { importedLayers.append({layer, imported}); }
+        }
         if (imported) {
             parent->addContained(imported);
-            importedLayers.append({layer, imported});
         }
     }
     applyLayerParenting(importedLayers);
