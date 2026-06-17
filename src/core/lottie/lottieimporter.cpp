@@ -1783,6 +1783,90 @@ qsptr<ContainerBox> createGroup(const QJsonObject& group,
     return box;
 }
 
+qsptr<SmartVectorPath> createMaskPathBox(const QJsonObject& mask,
+                                         Canvas* const scene,
+                                         const int inPoint)
+{
+    const QJsonObject property = mask.value(QStringLiteral("pt")).toObject();
+    const auto box = enve::make_shared<SmartVectorPath>();
+    box->prp_setName(mask.value(QStringLiteral("nm")).toString(
+                         QStringLiteral("Mask Path")));
+    box->loadSkPath(pathFromShapeValue(propertyValue(property)));
+    applyPathKeys(box.get(), property, scene, inPoint);
+
+    if (const auto fillSettings = box->getFillSettings()) {
+        fillSettings->setCurrentColor(Qt::white);
+        fillSettings->setPaintType(PaintType::FLATPAINT);
+        applyScalarKeys(fillSettings->getColorAnimator()->getAlphaAnimator(),
+                        mask.value(QStringLiteral("o")).toObject(),
+                        scene, inPoint, 0.01);
+    }
+    if (const auto strokeSettings = box->getStrokeSettings()) {
+        strokeSettings->setPaintType(PaintType::NOPAINT);
+    }
+    return box;
+}
+
+void addMaskPathToLayer(ContainerBox* const maskLayer,
+                        const QJsonObject& mask,
+                        Canvas* const scene,
+                        const int inPoint)
+{
+    if (!maskLayer) { return; }
+    const auto path = createMaskPathBox(mask, scene, inPoint);
+    if (path) { maskLayer->addContained(path); }
+}
+
+void importLayerMasks(const QJsonArray& masks,
+                      ContainerBox* const layer,
+                      Canvas* const scene,
+                      const int inPoint)
+{
+    if (!layer || masks.isEmpty()) { return; }
+
+    qsptr<ContainerBox> addMaskLayer;
+    qsptr<ContainerBox> subtractMaskLayer;
+    auto ensureMaskLayer = [&](qsptr<ContainerBox>& maskLayer,
+                               const QString& name,
+                               const SkBlendMode blendMode) {
+        if (!maskLayer) {
+            maskLayer = enve::make_shared<ContainerBox>(name, eBoxType::layer);
+            maskLayer->setBlendModeSk(blendMode);
+        }
+        return maskLayer.get();
+    };
+
+    for (const QJsonValue& value : masks) {
+        const QJsonObject mask = value.toObject();
+        const QString mode = mask.value(QStringLiteral("mode")).toString(
+                    QStringLiteral("a"));
+        if (mode == QStringLiteral("n") || mode == QStringLiteral("i")) {
+            continue;
+        }
+
+        const bool inverted = mask.value(QStringLiteral("inv")).toBool(false);
+        const bool subtract = mode == QStringLiteral("s");
+        if (subtract != inverted) {
+            addMaskPathToLayer(ensureMaskLayer(subtractMaskLayer,
+                                               QStringLiteral("Subtract Masks"),
+                                               SkBlendMode::kDstOut),
+                               mask, scene, inPoint);
+        } else {
+            addMaskPathToLayer(ensureMaskLayer(addMaskLayer,
+                                               QStringLiteral("Add Masks"),
+                                               SkBlendMode::kDstIn),
+                               mask, scene, inPoint);
+        }
+    }
+
+    if (addMaskLayer && addMaskLayer->getContainedBoxesCount() > 0) {
+        layer->addContained(addMaskLayer);
+    }
+    if (subtractMaskLayer && subtractMaskLayer->getContainedBoxesCount() > 0) {
+        layer->addContained(subtractMaskLayer);
+    }
+}
+
 void importShapeItems(const QJsonArray& items,
                       ContainerBox* const parent,
                       Canvas* const scene,
@@ -1837,6 +1921,8 @@ qsptr<BoundingBox> importShapeLayer(const QJsonObject& layer,
                 layer.value(QStringLiteral("nm")).toString(QStringLiteral("Shape Layer")),
                 eBoxType::layer);
     importShapeItems(layer.value(QStringLiteral("shapes")).toArray(),
+                     box.get(), scene, inPoint);
+    importLayerMasks(layer.value(QStringLiteral("masksProperties")).toArray(),
                      box.get(), scene, inPoint);
     applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
                    scene, inPoint);
