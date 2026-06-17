@@ -80,6 +80,29 @@ struct ZipEntry {
     quint32 localHeaderOffset = 0;
 };
 
+SkBlendMode blendModeFromLottie(const int mode)
+{
+    switch (mode) {
+    case 1: return SkBlendMode::kMultiply;
+    case 2: return SkBlendMode::kScreen;
+    case 3: return SkBlendMode::kOverlay;
+    case 4: return SkBlendMode::kDarken;
+    case 5: return SkBlendMode::kLighten;
+    case 6: return SkBlendMode::kColorDodge;
+    case 7: return SkBlendMode::kColorBurn;
+    case 8: return SkBlendMode::kHardLight;
+    case 9: return SkBlendMode::kSoftLight;
+    case 10: return SkBlendMode::kDifference;
+    case 11: return SkBlendMode::kExclusion;
+    case 12: return SkBlendMode::kHue;
+    case 13: return SkBlendMode::kSaturation;
+    case 14: return SkBlendMode::kColor;
+    case 15: return SkBlendMode::kLuminosity;
+    case 16: return SkBlendMode::kPlus;
+    default: return SkBlendMode::kSrcOver;
+    }
+}
+
 using AssetMap = QMap<QString, QJsonObject>;
 
 struct ImportedLayer {
@@ -1936,24 +1959,25 @@ qsptr<BoundingBox> importLayer(const QJsonObject& layer,
 {
     if (layer.value(QStringLiteral("hd")).toBool(false)) { return {}; }
     const int type = layer.value(QStringLiteral("ty")).toInt(-1);
+    qsptr<BoundingBox> box;
     if (type == 0) {
-        return importPrecompLayer(layer, scene, inPoint, outPoint,
-                                  assets, sourceDir, assetStack);
+        box = importPrecompLayer(layer, scene, inPoint, outPoint,
+                                 assets, sourceDir, assetStack);
+    } else if (type == 1) {
+        box = importSolidLayer(layer, scene, inPoint, outPoint);
+    } else if (type == 2) {
+        box = importImageLayer(layer, scene, inPoint, outPoint,
+                               assets, sourceDir);
+    } else if (type == 3) {
+        box = importNullLayer(layer, scene, inPoint, outPoint);
+    } else if (type == 4) {
+        box = importShapeLayer(layer, scene, inPoint, outPoint);
     }
-    if (type == 1) {
-        return importSolidLayer(layer, scene, inPoint, outPoint);
+    if (box && layer.contains(QStringLiteral("bm"))) {
+        box->setBlendModeSk(blendModeFromLottie(
+                                layer.value(QStringLiteral("bm")).toInt(0)));
     }
-    if (type == 2) {
-        return importImageLayer(layer, scene, inPoint, outPoint,
-                                assets, sourceDir);
-    }
-    if (type == 3) {
-        return importNullLayer(layer, scene, inPoint, outPoint);
-    }
-    if (type == 4) {
-        return importShapeLayer(layer, scene, inPoint, outPoint);
-    }
-    return {};
+    return box;
 }
 
 void applyLayerParenting(const QList<ImportedLayer>& importedLayers)
