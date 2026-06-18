@@ -2088,6 +2088,68 @@ void applyTextDocumentKeys(TextBox* const box,
     }
 }
 
+qreal textTrackingValue(const QJsonObject& document)
+{
+    return document.value(QStringLiteral("tr")).toDouble(0) / 1000.;
+}
+
+qreal textLineSpacingValue(const QJsonObject& document)
+{
+    const qreal fontSize = document.value(QStringLiteral("s")).toDouble(64);
+    if (fontSize <= 0) { return 1; }
+    return document.value(QStringLiteral("lh")).toDouble(fontSize) / fontSize;
+}
+
+void applyTextSpacingKeys(TextBox* const box,
+                          const QList<KeyValue>& keys,
+                          Canvas* const scene,
+                          const int inPoint)
+{
+    if (!box || keys.isEmpty()) { return; }
+    const auto letterSpacing =
+            box->ca_getFirstDescendantWithName<QrealAnimator>(
+                QStringLiteral("letters"));
+    const auto lineSpacing =
+            box->ca_getFirstDescendantWithName<QrealAnimator>(
+                QStringLiteral("lines"));
+    if (!letterSpacing && !lineSpacing) { return; }
+
+    const QJsonObject first = keys.first().value.toObject();
+    if (letterSpacing) {
+        letterSpacing->setCurrentBaseValue(textTrackingValue(first));
+    }
+    if (lineSpacing && first.contains(QStringLiteral("lh"))) {
+        lineSpacing->setCurrentBaseValue(textLineSpacingValue(first));
+    }
+    if (keys.size() <= 1) { return; }
+
+    for (int i = 0; i < keys.size(); ++i) {
+        const KeyValue& key = keys.at(i);
+        const QJsonObject document = key.value.toObject();
+        const int frame = importFrame(key.frame, inPoint, scene);
+        const qreal tracking = textTrackingValue(document);
+        if (letterSpacing) {
+            if (key.hold && i + 1 < keys.size() &&
+                key.frame + 1 < keys.at(i + 1).frame) {
+                letterSpacing->saveValueToKey(
+                            importFrame(keys.at(i + 1).frame, inPoint, scene) - 1,
+                            tracking);
+            }
+            letterSpacing->saveValueToKey(frame, tracking);
+        }
+        if (lineSpacing && document.contains(QStringLiteral("lh"))) {
+            const qreal lineSpacingValue = textLineSpacingValue(document);
+            if (key.hold && i + 1 < keys.size() &&
+                key.frame + 1 < keys.at(i + 1).frame) {
+                lineSpacing->saveValueToKey(
+                            importFrame(keys.at(i + 1).frame, inPoint, scene) - 1,
+                            lineSpacingValue);
+            }
+            lineSpacing->saveValueToKey(frame, lineSpacingValue);
+        }
+    }
+}
+
 qsptr<BoundingBox> importTextLayer(const QJsonObject& layer,
                                    Canvas* const scene,
                                    const int inPoint,
@@ -2101,6 +2163,7 @@ qsptr<BoundingBox> importTextLayer(const QJsonObject& layer,
     box->prp_setName(layer.value(QStringLiteral("nm")).toString(
                          QStringLiteral("Text Layer")));
     applyTextDocumentKeys(box.get(), documentKeys, scene, inPoint);
+    applyTextSpacingKeys(box.get(), documentKeys, scene, inPoint);
     box->setFontSize(document.value(QStringLiteral("s")).toDouble(64));
     const QString fontFamily = document.value(QStringLiteral("f")).toString();
     if (!fontFamily.isEmpty()) {
