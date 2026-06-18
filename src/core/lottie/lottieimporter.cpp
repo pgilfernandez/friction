@@ -1416,9 +1416,11 @@ void applyPaint(PathBox* const box,
                                scene, inPoint);
             }
             const QJsonObject opacitySource = fill.isEmpty() ? gradientFill : fill;
-            applyScalarKeys(fillSettings->getColorAnimator()->getAlphaAnimator(),
-                            opacitySource.value(QStringLiteral("o")).toObject(),
-                            scene, inPoint, 0.01);
+            if (opacitySource.contains(QStringLiteral("o"))) {
+                applyScalarKeys(fillSettings->getColorAnimator()->getAlphaAnimator(),
+                                opacitySource.value(QStringLiteral("o")).toObject(),
+                                scene, inPoint, 0.01);
+            }
         } else {
             fillSettings->setPaintType(PaintType::NOPAINT);
         }
@@ -1442,12 +1444,16 @@ void applyPaint(PathBox* const box,
             }
             const QJsonObject strokeSource = stroke.isEmpty() ?
                         gradientStroke : stroke;
-            applyScalarKeys(strokeSettings->getColorAnimator()->getAlphaAnimator(),
-                            strokeSource.value(QStringLiteral("o")).toObject(),
-                            scene, inPoint, 0.01);
-            applyScalarKeys(strokeSettings->getLineWidthAnimator(),
-                            strokeSource.value(QStringLiteral("w")).toObject(),
-                            scene, inPoint);
+            if (strokeSource.contains(QStringLiteral("o"))) {
+                applyScalarKeys(strokeSettings->getColorAnimator()->getAlphaAnimator(),
+                                strokeSource.value(QStringLiteral("o")).toObject(),
+                                scene, inPoint, 0.01);
+            }
+            if (strokeSource.contains(QStringLiteral("w"))) {
+                applyScalarKeys(strokeSettings->getLineWidthAnimator(),
+                                strokeSource.value(QStringLiteral("w")).toObject(),
+                                scene, inPoint);
+            }
             applyStrokeStyle(strokeSettings, strokeSource);
         } else {
             strokeSettings->setPaintType(PaintType::NOPAINT);
@@ -1867,6 +1873,31 @@ void importLayerMasks(const QJsonArray& masks,
     }
 }
 
+bool layerHasMasks(const QJsonObject& layer)
+{
+    return !layer.value(QStringLiteral("masksProperties")).toArray().isEmpty();
+}
+
+qsptr<ContainerBox> wrapLayerContentWithMasks(const QJsonObject& layer,
+                                              const qsptr<BoundingBox>& content,
+                                              Canvas* const scene,
+                                              const int inPoint,
+                                              const int outPoint)
+{
+    if (!content) { return {}; }
+    const auto box = enve::make_shared<ContainerBox>(
+                layer.value(QStringLiteral("nm")).toString(
+                    QStringLiteral("Masked Layer")),
+                eBoxType::layer);
+    box->addContained(content);
+    importLayerMasks(layer.value(QStringLiteral("masksProperties")).toArray(),
+                     box.get(), scene, inPoint);
+    applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
+                   scene, inPoint);
+    applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
+    return box;
+}
+
 void importShapeItems(const QJsonArray& items,
                       ContainerBox* const parent,
                       Canvas* const scene,
@@ -1954,6 +1985,10 @@ qsptr<BoundingBox> importSolidLayer(const QJsonObject& layer,
     style.fill = solidColor(layer);
     applyPaint(box.get(), style, scene, inPoint);
 
+    if (layerHasMasks(layer)) {
+        return wrapLayerContentWithMasks(layer, box, scene, inPoint, outPoint);
+    }
+
     applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
                    scene, inPoint);
     applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
@@ -1975,6 +2010,10 @@ qsptr<BoundingBox> importImageLayer(const QJsonObject& layer,
     box->prp_setName(layer.value(QStringLiteral("nm")).toString(
                          QFileInfo(path).completeBaseName()));
     box->setFilePath(path);
+    if (layerHasMasks(layer)) {
+        return wrapLayerContentWithMasks(layer, box, scene, inPoint, outPoint);
+    }
+
     applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
                    scene, inPoint);
     applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
@@ -2029,6 +2068,8 @@ qsptr<BoundingBox> importPrecompLayer(const QJsonObject& layer,
                             sourceDir, assetStack);
     assetStack.remove(refId);
 
+    importLayerMasks(layer.value(QStringLiteral("masksProperties")).toArray(),
+                     box.get(), scene, inPoint);
     applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
                    scene, inPoint);
     applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
