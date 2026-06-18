@@ -32,6 +32,7 @@ public:
 
     enum class ScaleMode {
         original,
+        scaleScene,
         fitWidth,
         fitHeight,
         stretch

@@ -120,6 +120,7 @@ LottieImportDialog::LottieImportDialog(
     mScaleMode->addItem(tr("Scale proportionally (width fit)"));
     mScaleMode->addItem(tr("Scale proportionally (height fit)"));
     mScaleMode->addItem(tr("Deform (fit to scene)"));
+    mScaleMode->addItem(tr("Scale Friction active scene"));
     const bool validSize = analysis.size.width() > 0 &&
             analysis.size.height() > 0 &&
             scene.size.width() > 0 &&

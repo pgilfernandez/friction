@@ -1325,7 +1325,9 @@ void MainWindow::importLottieAnimation()
         qreal scaleX = 1;
         qreal scaleY = 1;
         if (analysis.size.width() > 0 && analysis.size.height() > 0) {
-            if (scaleMode == LottieImportDialog::ScaleMode::fitWidth) {
+            if (scaleMode == LottieImportDialog::ScaleMode::scaleScene) {
+                scene->setCanvasSize(analysis.size.width(), analysis.size.height());
+            } else if (scaleMode == LottieImportDialog::ScaleMode::fitWidth) {
                 scaleX = scaleY = scene->getCanvasWidth()/qreal(analysis.size.width());
             } else if (scaleMode == LottieImportDialog::ScaleMode::fitHeight) {
                 scaleX = scaleY = scene->getCanvasHeight()/qreal(analysis.size.height());
