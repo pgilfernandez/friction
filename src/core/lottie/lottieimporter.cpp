@@ -21,6 +21,7 @@
 #include "Animators/paintsettingsanimator.h"
 #include "Animators/qpointfanimator.h"
 #include "Animators/qrealanimator.h"
+#include "Animators/qstringanimator.h"
 #include "Animators/transformanimator.h"
 #include "Boxes/circle.h"
 #include "Boxes/containerbox.h"
@@ -2023,13 +2024,26 @@ QColor solidColor(const QJsonObject& layer)
     return color.isValid() ? color : QColor(Qt::white);
 }
 
-QJsonObject textDocumentData(const QJsonObject& layer)
+QList<KeyValue> textDocumentKeys(const QJsonObject& layer)
 {
     const QJsonObject text = layer.value(QStringLiteral("t")).toObject();
     const QJsonObject document = text.value(QStringLiteral("d")).toObject();
     const QJsonArray keys = document.value(QStringLiteral("k")).toArray();
-    if (keys.isEmpty()) { return {}; }
-    return keys.first().toObject().value(QStringLiteral("s")).toObject();
+    QList<KeyValue> result;
+    for (const QJsonValue& value : keys) {
+        const QJsonObject key = value.toObject();
+        const QJsonObject documentData = key.value(QStringLiteral("s")).toObject();
+        if (documentData.isEmpty()) { continue; }
+        result.append({qRound(key.value(QStringLiteral("t")).toDouble()),
+                       documentData,
+                       true});
+    }
+    return result;
+}
+
+QJsonObject firstTextDocumentData(const QList<KeyValue>& keys)
+{
+    return keys.isEmpty() ? QJsonObject() : keys.first().value.toObject();
 }
 
 Qt::Alignment textHAlignmentFromLottie(const int alignment)
@@ -2051,18 +2065,42 @@ PaintStyle textPaintStyle(const QJsonObject& document)
     return style;
 }
 
+void applyTextDocumentKeys(TextBox* const box,
+                           const QList<KeyValue>& keys,
+                           Canvas* const scene,
+                           const int inPoint)
+{
+    if (!box || keys.isEmpty()) { return; }
+    box->setCurrentValue(keys.first().value.toObject().value(
+                             QStringLiteral("t")).toString());
+    if (keys.size() <= 1) { return; }
+
+    const auto textAnimator =
+            box->ca_getFirstDescendantWithName<QStringAnimator>(
+                QStringLiteral("text"));
+    if (!textAnimator) { return; }
+    for (const KeyValue& key : keys) {
+        const QString text = key.value.toObject().value(
+                    QStringLiteral("t")).toString();
+        const auto stringKey = enve::make_shared<QStringKey>(
+                    text, importFrame(key.frame, inPoint, scene), textAnimator);
+        textAnimator->anim_appendKey(stringKey);
+    }
+}
+
 qsptr<BoundingBox> importTextLayer(const QJsonObject& layer,
                                    Canvas* const scene,
                                    const int inPoint,
                                    const int outPoint)
 {
-    const QJsonObject document = textDocumentData(layer);
+    const QList<KeyValue> documentKeys = textDocumentKeys(layer);
+    const QJsonObject document = firstTextDocumentData(documentKeys);
     if (document.isEmpty()) { return {}; }
 
     const auto box = enve::make_shared<TextBox>();
     box->prp_setName(layer.value(QStringLiteral("nm")).toString(
                          QStringLiteral("Text Layer")));
-    box->setCurrentValue(document.value(QStringLiteral("t")).toString());
+    applyTextDocumentKeys(box.get(), documentKeys, scene, inPoint);
     box->setFontSize(document.value(QStringLiteral("s")).toDouble(64));
     const QString fontFamily = document.value(QStringLiteral("f")).toString();
     if (!fontFamily.isEmpty()) {
