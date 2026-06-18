@@ -29,6 +29,7 @@
 #include "Boxes/pathbox.h"
 #include "Boxes/rectangle.h"
 #include "Boxes/smartvectorpath.h"
+#include "Boxes/textbox.h"
 #include "PathEffects/dashpatheffect.h"
 #include "PathEffects/duplicatepatheffect.h"
 #include "PathEffects/subpatheffect.h"
@@ -1967,6 +1968,66 @@ QColor solidColor(const QJsonObject& layer)
     return color.isValid() ? color : QColor(Qt::white);
 }
 
+QJsonObject textDocumentData(const QJsonObject& layer)
+{
+    const QJsonObject text = layer.value(QStringLiteral("t")).toObject();
+    const QJsonObject document = text.value(QStringLiteral("d")).toObject();
+    const QJsonArray keys = document.value(QStringLiteral("k")).toArray();
+    if (keys.isEmpty()) { return {}; }
+    return keys.first().toObject().value(QStringLiteral("s")).toObject();
+}
+
+Qt::Alignment textHAlignmentFromLottie(const int alignment)
+{
+    if (alignment == 1) { return Qt::AlignRight; }
+    if (alignment == 2) { return Qt::AlignCenter; }
+    return Qt::AlignLeft;
+}
+
+PaintStyle textPaintStyle(const QJsonObject& document)
+{
+    PaintStyle style;
+    style.hasFill = document.contains(QStringLiteral("fc"));
+    style.fill = colorValue(document.value(QStringLiteral("fc")), Qt::black);
+    style.hasStroke = document.contains(QStringLiteral("sc")) &&
+            document.value(QStringLiteral("sw")).toDouble(0) > 0;
+    style.stroke = colorValue(document.value(QStringLiteral("sc")), Qt::black);
+    style.strokeWidth = document.value(QStringLiteral("sw")).toDouble(1);
+    return style;
+}
+
+qsptr<BoundingBox> importTextLayer(const QJsonObject& layer,
+                                   Canvas* const scene,
+                                   const int inPoint,
+                                   const int outPoint)
+{
+    const QJsonObject document = textDocumentData(layer);
+    if (document.isEmpty()) { return {}; }
+
+    const auto box = enve::make_shared<TextBox>();
+    box->prp_setName(layer.value(QStringLiteral("nm")).toString(
+                         QStringLiteral("Text Layer")));
+    box->setCurrentValue(document.value(QStringLiteral("t")).toString());
+    box->setFontSize(document.value(QStringLiteral("s")).toDouble(64));
+    const QString fontFamily = document.value(QStringLiteral("f")).toString();
+    if (!fontFamily.isEmpty()) {
+        box->setFontFamilyAndStyle(fontFamily, SkFontStyle());
+    }
+    box->setTextHAlignment(textHAlignmentFromLottie(
+                               document.value(QStringLiteral("j")).toInt(0)));
+    box->setTextVAlignment(Qt::AlignTop);
+    applyPaint(box.get(), textPaintStyle(document), scene, inPoint);
+
+    if (layerHasMasks(layer)) {
+        return wrapLayerContentWithMasks(layer, box, scene, inPoint, outPoint);
+    }
+
+    applyTransform(box.get(), layer.value(QStringLiteral("ks")).toObject(),
+                   scene, inPoint);
+    applyLayerVisibilityRange(box.get(), layer, scene, inPoint, outPoint);
+    return box;
+}
+
 qsptr<BoundingBox> importSolidLayer(const QJsonObject& layer,
                                     Canvas* const scene,
                                     const int inPoint,
@@ -2099,6 +2160,8 @@ qsptr<BoundingBox> importLayer(const QJsonObject& layer,
         box = importNullLayer(layer, scene, inPoint, outPoint);
     } else if (type == 4) {
         box = importShapeLayer(layer, scene, inPoint, outPoint);
+    } else if (type == 5) {
+        box = importTextLayer(layer, scene, inPoint, outPoint);
     }
     if (box && layer.contains(QStringLiteral("bm"))) {
         box->setBlendModeSk(blendModeFromLottie(
