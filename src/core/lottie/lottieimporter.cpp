@@ -225,7 +225,57 @@ QJsonObject jsonObjectFromBytes(const QByteArray& bytes, const QString& filename
     return document.object();
 }
 
-QJsonObject readDotLottieRoot(const QString& filename)
+bool isSafeZipPath(const QString& path)
+{
+    if (path.isEmpty() || path.startsWith(QLatin1Char('/')) ||
+        path.contains(QLatin1Char('\\'))) {
+        return false;
+    }
+    const QString clean = QDir::cleanPath(path);
+    return clean == path && !path.startsWith(QStringLiteral("../")) &&
+            !path.contains(QStringLiteral("/../"));
+}
+
+QString dotLottieAssetDir(const QString& filename)
+{
+    const QFileInfo info(filename);
+    return QDir(info.absolutePath()).filePath(
+                QStringLiteral("%1_assets").arg(info.completeBaseName()));
+}
+
+void extractDotLottieAssets(const QByteArray& zipData,
+                            const QMap<QString, ZipEntry>& files,
+                            const QString& filename)
+{
+    const QString outputRoot = dotLottieAssetDir(filename);
+    QDir outputDir(outputRoot);
+    if (!outputDir.exists() && !QDir().mkpath(outputRoot)) {
+        RuntimeThrow("Cannot create dotLottie asset directory");
+    }
+
+    for (auto it = files.constBegin(); it != files.constEnd(); ++it) {
+        const QString path = it.key();
+        if (path == QStringLiteral("manifest.json") ||
+            path.endsWith(QStringLiteral(".json"), Qt::CaseInsensitive) ||
+            !isSafeZipPath(path)) {
+            continue;
+        }
+
+        const QFileInfo targetInfo(outputDir.filePath(path));
+        if (!QDir().mkpath(targetInfo.absolutePath())) {
+            RuntimeThrow("Cannot create dotLottie asset subdirectory");
+        }
+        QFile target(targetInfo.absoluteFilePath());
+        if (!target.open(QIODevice::WriteOnly)) {
+            RuntimeThrow("Cannot write dotLottie asset");
+        }
+        target.write(readZipEntry(zipData, it.value()));
+    }
+}
+
+QJsonObject readDotLottieRoot(const QString& filename,
+                              QString& sourceDir,
+                              const bool extractAssets)
 {
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -281,14 +331,19 @@ QJsonObject readDotLottieRoot(const QString& filename)
         RuntimeThrow("No animation JSON found in dotLottie file");
     }
 
+    sourceDir = dotLottieAssetDir(filename);
+    if (extractAssets) { extractDotLottieAssets(zipData, files, filename); }
     return jsonObjectFromBytes(readZipEntry(zipData, files.value(animationPath)),
                                filename + QStringLiteral(":") + animationPath);
 }
 
-QJsonObject readLottieRoot(const QString& filename)
+QJsonObject readLottieRoot(const QString& filename,
+                           QString& sourceDir,
+                           const bool extractAssets)
 {
+    sourceDir = QFileInfo(filename).absolutePath();
     if (filename.endsWith(QStringLiteral(".lottie"), Qt::CaseInsensitive)) {
-        return readDotLottieRoot(filename);
+        return readDotLottieRoot(filename, sourceDir, extractAssets);
     }
 
     QFile file(filename);
@@ -2323,7 +2378,7 @@ void analyzeLayers(const QJsonArray& layers,
                               assets, result, assetStack);
                 assetStack.remove(refId);
             }
-        } else if (type == 1 || type == 2 || type == 3) {
+        } else if (type == 1 || type == 2 || type == 3 || type == 5) {
             ++result.supportedLayers;
         } else if (type == 4) {
             ++result.supportedLayers;
@@ -2338,7 +2393,8 @@ void analyzeLayers(const QJsonArray& layers,
 
 ImportLottie::Analysis ImportLottie::analyzeFile(const QString& filename)
 {
-    const QJsonObject root = readLottieRoot(filename);
+    QString sourceDir;
+    const QJsonObject root = readLottieRoot(filename, sourceDir, false);
     Analysis result;
     result.fps = root.value(QStringLiteral("fr")).toDouble(0);
     result.firstFrame = qRound(root.value(QStringLiteral("ip")).toDouble(0));
@@ -2361,14 +2417,14 @@ qsptr<BoundingBox> ImportLottie::loadFile(const QString& filename,
                                           const SceneDurationMode durationMode)
 {
     if (!scene) { RuntimeThrow("Lottie import requires an active scene"); }
-    const QJsonObject root = readLottieRoot(filename);
+    QString sourceDir;
+    const QJsonObject root = readLottieRoot(filename, sourceDir, true);
     const int inPoint = qRound(root.value(QStringLiteral("ip")).toDouble(0));
     const int outPoint = qRound(root.value(QStringLiteral("op")).toDouble(0));
     const auto result = enve::make_shared<ContainerBox>(
                 QFileInfo(filename).completeBaseName(), eBoxType::group);
 
     const AssetMap assets = assetMap(root.value(QStringLiteral("assets")).toArray());
-    const QString sourceDir = QFileInfo(filename).absolutePath();
     QSet<QString> assetStack;
     importLayersToContainer(root.value(QStringLiteral("layers")).toArray(),
                             result.get(), scene, inPoint, outPoint,
