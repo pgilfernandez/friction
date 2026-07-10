@@ -27,37 +27,7 @@ include(friction-meta)
 include(friction-common)
 #include(friction-quazip)
 include(friction-ffmpeg)
-find_package(ZLIB QUIET)
-
-if(NOT TARGET ZLIB::ZLIB)
-    set(FRICTION_ZLIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../skia/third_party/externals/zlib")
-    if(NOT EXISTS "${FRICTION_ZLIB_DIR}/zlib.h")
-        message(FATAL_ERROR "Could not find ZLIB and bundled zlib is missing")
-    endif()
-
-    enable_language(C)
-    add_library(
-        friction_zlib
-        STATIC
-        ${FRICTION_ZLIB_DIR}/adler32.c
-        ${FRICTION_ZLIB_DIR}/compress.c
-        ${FRICTION_ZLIB_DIR}/crc32.c
-        ${FRICTION_ZLIB_DIR}/deflate.c
-        ${FRICTION_ZLIB_DIR}/gzclose.c
-        ${FRICTION_ZLIB_DIR}/gzlib.c
-        ${FRICTION_ZLIB_DIR}/gzread.c
-        ${FRICTION_ZLIB_DIR}/gzwrite.c
-        ${FRICTION_ZLIB_DIR}/inflate.c
-        ${FRICTION_ZLIB_DIR}/infback.c
-        ${FRICTION_ZLIB_DIR}/inftrees.c
-        ${FRICTION_ZLIB_DIR}/inffast.c
-        ${FRICTION_ZLIB_DIR}/trees.c
-        ${FRICTION_ZLIB_DIR}/uncompr.c
-        ${FRICTION_ZLIB_DIR}/zutil.c
-    )
-    target_include_directories(friction_zlib PUBLIC ${FRICTION_ZLIB_DIR})
-    add_library(ZLIB::ZLIB ALIAS friction_zlib)
-endif()
+find_package(ZLIB REQUIRED)
 
 message("-- ffmpeg include: ${FFMPEG_INCLUDE_DIRS}")
 message("-- ffmpeg libraries: ${FFMPEG_LIBRARIES_DIRS} ${FFMPEG_LIBRARIES}")
