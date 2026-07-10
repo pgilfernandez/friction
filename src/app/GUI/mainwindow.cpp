@@ -1302,8 +1302,8 @@ void MainWindow::importLottieAnimation()
                                                        QDir::homePath()).toString();
     const QString title = tr("Import Lottie Animation",
                              "ImportLottieAnimationDialog_Title");
-    const QString path = eDialogs::openFile(
-                title, recentDir, tr("Lottie Files (*.json *.lottie)"));
+    const QString path = AppSupport::getOpenFile(
+                this, title, recentDir, tr("Lottie Files (*.json *.lottie)"));
     enableEventFilter();
     if (path.isEmpty()) { return; }
 
