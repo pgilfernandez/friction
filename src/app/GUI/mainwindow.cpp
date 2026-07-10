@@ -1301,8 +1301,8 @@ void MainWindow::importSVGAnimation()
                                                        QDir::homePath()).toString();
     const QString title = tr("Import SVG Animation",
                              "ImportSVGAnimationDialog_Title");
-    const QString path = eDialogs::openFile(title, recentDir,
-                                            tr("SVG Files (*.svg)"));
+    const QString path = AppSupport::getOpenFile(this, title, recentDir,
+                                                 tr("SVG Files (*.svg)"));
     enableEventFilter();
     if (path.isEmpty()) { return; }
 
