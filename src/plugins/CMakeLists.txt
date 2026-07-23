@@ -87,4 +87,16 @@ endfunction()
 if(BUILD_BUNDLED_PLUGINS)
     add_subdirectory(bundled/lottie-export)
     add_subdirectory(bundled/lottie-import)
+    add_subdirectory(bundled/svg-import)
+endif()
+
+if(BUILD_PLUGIN_TESTING AND BUILD_BUNDLED_PLUGINS)
+    add_executable(friction_plugin_probe pluginprobe.cpp)
+    target_link_libraries(friction_plugin_probe PRIVATE
+        frictionpluginapi Qt5::Core Qt5::Gui)
+    add_test(NAME friction_bundled_plugins_load
+        COMMAND friction_plugin_probe
+            $<TARGET_FILE:friction_lottie_export>
+            $<TARGET_FILE:friction_lottie_import>
+            $<TARGET_FILE:friction_svg_import>)
 endif()
