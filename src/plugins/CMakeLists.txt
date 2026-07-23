@@ -86,4 +86,5 @@ endfunction()
 
 if(BUILD_BUNDLED_PLUGINS)
     add_subdirectory(bundled/lottie-export)
+    add_subdirectory(bundled/lottie-import)
 endif()
