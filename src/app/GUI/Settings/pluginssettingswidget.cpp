@@ -24,6 +24,7 @@
 #include "pluginssettingswidget.h"
 #include "appsupport.h"
 #include "effectsloader.h"
+#include "pluginmanager.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -32,6 +33,8 @@
 #include <QFile>
 #include <QTreeWidgetItem>
 #include <QHeaderView>
+#include <QDesktopServices>
+#include <QUrl>
 
 #include "GUI/global.h"
 #include "Private/esettings.h"
@@ -41,6 +44,31 @@ PluginsSettingsWidget::PluginsSettingsWidget(QWidget *parent)
     , mShaderPath(nullptr)
     , mShaderTree(nullptr)
 {
+    const auto nativeWidget = new QWidget(this);
+    const auto nativeLayout = new QHBoxLayout(nativeWidget);
+    nativeLayout->setContentsMargins(0, 0, 0, 0);
+    const auto nativeLabel = new QLabel(tr("Native Plugins Path"), this);
+    const auto nativePath = new QLineEdit(PluginManager::userPluginsPath(), this);
+    nativePath->setReadOnly(true);
+    const auto openNativePath = new QPushButton(QIcon::fromTheme("file_folder"),
+                                                 QString(), this);
+    openNativePath->setToolTip(tr("Open native plugins directory"));
+    connect(openNativePath, &QPushButton::clicked, this,
+            [nativePath]() {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(nativePath->text()));
+    });
+    nativeLayout->addWidget(nativeLabel);
+    nativeLayout->addWidget(nativePath);
+    nativeLayout->addWidget(openNativePath);
+    addWidget(nativeWidget);
+
+    const auto nativeInfo = new QLabel(
+                tr("Copy compiled native plugins here and restart Friction. "
+                   "Native plugins run with the same permissions as the application."),
+                this);
+    nativeInfo->setWordWrap(true);
+    addWidget(nativeInfo);
+
 #ifdef USE_GLES
     const auto label = new QLabel(tr("Shaders not supported when using OpenGL ES 3.0."), this);
     addWidget(label);

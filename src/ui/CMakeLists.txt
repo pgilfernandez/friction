@@ -212,11 +212,7 @@ set(
     wizards/quicksetuppresets.h
 )
 
-if(NOT WIN32)
-    add_library(${PROJECT_NAME} STATIC ${HEADERS} ${SOURCES})
-else()
-    add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
-endif()
+add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
 
 set_target_properties(
     ${PROJECT_NAME}
@@ -254,4 +250,17 @@ target_link_libraries(
     ${QT_LIBRARIES}
     ${SKIA_LIBRARIES}
     ${FFMPEG_LIBRARIES}
+)
+
+include(GNUInstallDirs)
+if(APPLE)
+    set(FRICTION_LIBRARY_DESTINATION "friction.app/Contents/Frameworks")
+else()
+    set(FRICTION_LIBRARY_DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+endif()
+install(
+    TARGETS ${PROJECT_NAME}
+    LIBRARY DESTINATION ${FRICTION_LIBRARY_DESTINATION}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    ARCHIVE DESTINATION ${FRICTION_LIBRARY_DESTINATION}
 )

@@ -32,6 +32,7 @@
 #include "GUI/ewidgetsimpl.h"
 #include "importhandler.h"
 #include "effectsloader.h"
+#include "pluginmanager.h"
 #include "memoryhandler.h"
 #include "ShaderEffects/shadereffectprogram.h"
 #include "videoencoder.h"
@@ -397,6 +398,8 @@ int main(int argc, char *argv[])
                  audioHandler,
                  renderHandler,
                  openProject);
+    PluginManager pluginManager(&w, &document);
+    pluginManager.loadPlugins();
     w.show();
 
     splash.finish(&w);

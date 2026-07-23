@@ -126,6 +126,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../core
     ${CMAKE_CURRENT_SOURCE_DIR}/../ui
     ${CMAKE_CURRENT_SOURCE_DIR}/../skia
+    ${CMAKE_CURRENT_SOURCE_DIR}/../plugins/api
 )
 
 if(${SKIA_USE_SYSTEM_LIBS} AND UNIX)
@@ -199,6 +200,7 @@ set(
     GUI/timelinewrappernode.cpp
     GUI/window.cpp
     effectsloader.cpp
+    pluginmanager.cpp
     eimporters.cpp
     evfileio.cpp
     renderhandler.cpp
@@ -249,6 +251,7 @@ set(
     GUI/timelinewidget.h
     GUI/timelinewrappernode.h
     effectsloader.h
+    pluginmanager.h
     eimporters.h
     renderhandler.h
     GUI/BoxesList/boxsinglewidget.h

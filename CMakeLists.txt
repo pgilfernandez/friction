@@ -20,6 +20,11 @@
 cmake_minimum_required(VERSION 3.12)
 project(friction.graphics)
 
+option(BUILD_PLUGIN_TESTING "Build Friction plugin smoke tests" ON)
+if(BUILD_PLUGIN_TESTING)
+    enable_testing()
+endif()
+
 option(BUILD_SKIA "Build skia" ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/src/cmake")
@@ -67,6 +72,9 @@ endif()
 add_subdirectory(src/core)
 add_subdirectory(src/ui)
 add_subdirectory(src/app)
+
+option(BUILD_BUNDLED_PLUGINS "Build the bundled Friction plugins" ON)
+add_subdirectory(src/plugins)
 
 if(${BUILD_SKIA})
     add_dependencies(frictioncore skialib)

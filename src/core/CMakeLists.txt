@@ -725,11 +725,7 @@ set(
     svgo.h
 )
 
-if(NOT WIN32)
-    add_library(${PROJECT_NAME} STATIC ${HEADERS} ${SOURCES} coreresources.qrc)
-else()
-    add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES} coreresources.qrc)
-endif()
+add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES} coreresources.qrc)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     PROJECT_COMMIT="${GIT_COMMIT}"
@@ -778,12 +774,15 @@ if(APPLE)
     )
 endif()
 
-#if(UNIX AND NOT APPLE)
-#    include(GNUInstallDirs)
-#    install(
-#        TARGETS
-#        ${PROJECT_NAME}
-#        DESTINATION
-#        ${CMAKE_INSTALL_LIBDIR}
-#    )
-#endif()
+include(GNUInstallDirs)
+if(APPLE)
+    set(FRICTION_LIBRARY_DESTINATION "friction.app/Contents/Frameworks")
+else()
+    set(FRICTION_LIBRARY_DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+endif()
+install(
+    TARGETS ${PROJECT_NAME}
+    LIBRARY DESTINATION ${FRICTION_LIBRARY_DESTINATION}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    ARCHIVE DESTINATION ${FRICTION_LIBRARY_DESTINATION}
+)

@@ -39,6 +39,7 @@
 #include <QComboBox>
 #include <QTimer>
 
+#include "frictionplugin.h"
 
 #include "Private/Tasks/taskscheduler.h"
 #include "Private/document.h"
@@ -179,6 +180,9 @@ public:
     void updateAutoSaveBackupState();
     void openRendererWindow();
     void cmdAddAction(QAction *act);
+    void addPluginAction(QAction *action,
+                         Friction::Plugins::MenuLocation location,
+                         bool showInToolBar);
     LayoutHandler* getLayoutHandler();
     TimelineDockWidget* getTimeLineWidget();
     void focusFontWidget(const bool focus = true);
@@ -277,6 +281,8 @@ private:
 
     QMenuBar *mMenuBar;
     QMenu *mFileMenu;
+    QMenu *mPluginImportMenu = nullptr;
+    QMenu *mPluginExportMenu = nullptr;
     QMenu *mRecentMenu;
     QMenu *mSelectSameMenu;
     QMenu *mEditMenu;
@@ -291,6 +297,7 @@ private:
 #endif
     QMenu *mPanelsMenu;
     QMenu *mRenderMenu;
+    QMenu *mHelpMenu = nullptr;
 
     FilesHandler mFilesHandler;
     Document& mDocument;

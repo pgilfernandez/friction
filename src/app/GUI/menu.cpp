@@ -87,6 +87,10 @@ void MainWindow::setupMenuBar()
     mImportSeqAct->setEnabled(false);
     cmdAddAction(mImportSeqAct);
 
+    mPluginImportMenu = mFileMenu->addMenu(QIcon::fromTheme("file_import"),
+                                           tr("Import with Plugin"));
+    mPluginImportMenu->menuAction()->setVisible(false);
+
     mRevertAct = mFileMenu->addAction(QIcon::fromTheme("loop_back"),
                                       tr("Revert", "MenuBar_File"),
                                       this, &MainWindow::revert);
@@ -143,6 +147,10 @@ void MainWindow::setupMenuBar()
     mExportSVGAct->setData(mExportSVGAct->toolTip());
     mExportSVGAct->setObjectName("ExportSVGAct");
     cmdAddAction(mExportSVGAct);
+
+    mPluginExportMenu = mFileMenu->addMenu(QIcon::fromTheme("output"),
+                                           tr("Export with Plugin"));
+    mPluginExportMenu->menuAction()->setVisible(false);
 
     mFileMenu->addSeparator();
     mCloseProjectAct = mFileMenu->addAction(QIcon::fromTheme("dialog-cancel"),
@@ -781,9 +789,9 @@ void MainWindow::setupMenuBar()
 
     setupMenuExtras();
 
-    const auto help = mMenuBar->addMenu(tr("Help", "MenuBar"));
+    mHelpMenu = mMenuBar->addMenu(tr("Help", "MenuBar"));
 
-    const auto aboutAct = help->addAction(QIcon::fromTheme(ThemeSupport::getAppIconName(true)),
+    const auto aboutAct = mHelpMenu->addAction(QIcon::fromTheme(ThemeSupport::getAppIconName(true)),
                                           tr("About", "MenuBar_Help"),
                                           this,
                                           &MainWindow::openAboutWindow);
@@ -794,7 +802,7 @@ void MainWindow::setupMenuBar()
     cmdDefKey = "Alt+Space";
 #endif
 
-    help->addAction(QIcon::fromTheme("cmd"),
+    mHelpMenu->addAction(QIcon::fromTheme("cmd"),
                     tr("Command Palette"), this, [this]() {
                         CommandPalette dialog(mDocument, this);
                         dialog.exec();
@@ -802,30 +810,30 @@ void MainWindow::setupMenuBar()
                                                          "cmdPalette",
                                                          cmdDefKey).toString()));
 
-    help->addSeparator();
-    help->addAction(QIcon::fromTheme("user-home"),
+    mHelpMenu->addSeparator();
+    mHelpMenu->addAction(QIcon::fromTheme("user-home"),
                     tr("Website"), this, []() {
                         QDesktopServices::openUrl(QUrl(AppSupport::getAppUrl()));
                     });
 
-    help->addAction(QIcon::fromTheme("dialog-information"),
+    mHelpMenu->addAction(QIcon::fromTheme("dialog-information"),
                     tr("Documentation"), this, []() {
         const QString offline = AppSupport::getOfflineDocs();
         const QString docs = offline.isEmpty() ? AppSupport::getOnlineDocs() : offline;
         QDesktopServices::openUrl(QUrl::fromUserInput(docs));
     });
 
-    help->addSeparator();
-    help->addAction(QIcon::fromTheme("renderlayers"),
+    mHelpMenu->addSeparator();
+    mHelpMenu->addAction(QIcon::fromTheme("renderlayers"),
                     tr("Install default presets"),
                     this, &MainWindow::askInstallDefaultPresets);
-    help->addAction(QIcon::fromTheme("color"),
+    mHelpMenu->addAction(QIcon::fromTheme("color"),
                     tr("Restore default fill and stroke"),
                     this, &MainWindow::askRestoreFillStrokeDefault);
-    help->addAction(QIcon::fromTheme("workspace"),
+    mHelpMenu->addAction(QIcon::fromTheme("workspace"),
                     tr("Restore default user interface"),
                     this, &MainWindow::askRestoreDefaultUi);
-    help->addAction(QIcon::fromTheme("window"),
+    mHelpMenu->addAction(QIcon::fromTheme("window"),
                     tr("Run Quick Setup on startup"),
                     this, &MainWindow::askRunQuickSetup);
 
@@ -869,6 +877,42 @@ void MainWindow::setupMenuBar()
             mColorToolBar->setMovable(false);
         });
         mViewMenu->addAction(act);
+    }
+}
+
+void MainWindow::addPluginAction(
+        QAction *action,
+        const Friction::Plugins::MenuLocation location,
+        const bool showInToolBar)
+{
+    QMenu *menu = nullptr;
+    switch (location) {
+    case Friction::Plugins::MenuLocation::Import:
+        menu = mPluginImportMenu;
+        break;
+    case Friction::Plugins::MenuLocation::Export:
+        menu = mPluginExportMenu;
+        break;
+    case Friction::Plugins::MenuLocation::Object:
+        menu = mObjectMenu;
+        break;
+    case Friction::Plugins::MenuLocation::Effects:
+        menu = mEffectsMenu;
+        break;
+    case Friction::Plugins::MenuLocation::Scene:
+        menu = mSceneMenu;
+        break;
+    case Friction::Plugins::MenuLocation::Help:
+        menu = mHelpMenu;
+        break;
+    }
+    if (!menu) { return; }
+    menu->addAction(action);
+    menu->menuAction()->setVisible(true);
+    cmdAddAction(action);
+    if (showInToolBar && mToolbar) {
+        mToolbar->addAction(action);
+        mToolbar->updateActions();
     }
 }
 
