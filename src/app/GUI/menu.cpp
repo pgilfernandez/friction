@@ -861,17 +861,17 @@ void MainWindow::setupMenuBar()
 
     help->addSeparator();
     help->addAction(QIcon::fromTheme("renderlayers"),
-                    tr("Reinstall default render profiles"),
-                    this, &MainWindow::askInstallRenderPresets);
-    help->addAction(QIcon::fromTheme("renderlayers"),
-                    tr("Reinstall default expressions presets"),
-                    this, &MainWindow::askInstallExpressionsPresets);
+                    tr("Install default presets"),
+                    this, &MainWindow::askInstallDefaultPresets);
     help->addAction(QIcon::fromTheme("color"),
                     tr("Restore default fill and stroke"),
                     this, &MainWindow::askRestoreFillStrokeDefault);
     help->addAction(QIcon::fromTheme("workspace"),
                     tr("Restore default user interface"),
                     this, &MainWindow::askRestoreDefaultUi);
+    help->addAction(QIcon::fromTheme("window"),
+                    tr("Run Quick Setup on startup"),
+                    this, &MainWindow::askRunQuickSetup);
 
     // toolbar actions
     mToolbar->addAction(newAct);
@@ -916,20 +916,6 @@ void MainWindow::setupMenuBar()
         });
         mViewMenu->addAction(act);
     }
-
-#ifndef Q_OS_MAC
-    const auto frictionButton = new QPushButton(this);
-    frictionButton->setFlat(true);
-    frictionButton->setIcon(QIcon::fromTheme(ThemeSupport::getAppIconName(true)));
-    frictionButton->setObjectName("AboutButton");
-    frictionButton->setFocusPolicy(Qt::NoFocus);
-
-    connect(frictionButton, &QPushButton::released,
-            this, &MainWindow::openAboutWindow);
-
-    mMenuBar->setCornerWidget(frictionButton,
-                              Qt::TopRightCorner);
-#endif
 }
 
 void MainWindow::setupMenuScene()

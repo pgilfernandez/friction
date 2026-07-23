@@ -44,6 +44,7 @@ set(
     SOURCES
     dialogs/adjustscenedialog.cpp
     dialogs/applyexpressiondialog.cpp
+    dialogs/askdialog.cpp
     dialogs/commandpalette.cpp
     dialogs/dialog.cpp
     dialogs/durationrectsettingsdialog.cpp
@@ -51,7 +52,6 @@ set(
     dialogs/exportsvgdialog.cpp
     dialogs/markereditordialog.cpp
     dialogs/qrealpointvaluedialog.cpp
-    dialogs/renderoutputwidget.cpp
     dialogs/scenesettingsdialog.cpp
     gradientwidgets/currentgradientwidget.cpp
     gradientwidgets/displayedgradientswidget.cpp
@@ -78,6 +78,7 @@ set(
     widgets/canvassettingswidget.cpp
     widgets/canvastoolbar.cpp
     widgets/changewidthwidget.cpp
+    widgets/checkboxes.cpp
     widgets/colortoolbar.cpp
     widgets/colortoolbutton.cpp
     widgets/colorlabel.cpp
@@ -115,6 +116,11 @@ set(
     widgets/widgetstack.cpp
     widgets/widgetwrappernode.cpp
     widgets/wrappernode.cpp
+    wizards/installpresets.cpp
+    wizards/wizardpage.cpp
+    wizards/quicksetup.cpp
+    wizards/quicksetupgeneral.cpp
+    wizards/quicksetuppresets.cpp
 )
 
 if(APPLE)
@@ -126,6 +132,7 @@ set(
     ui_global.h
     dialogs/adjustscenedialog.h
     dialogs/applyexpressiondialog.h
+    dialogs/askdialog.h
     dialogs/commandpalette.h
     dialogs/dialog.h
     dialogs/durationrectsettingsdialog.h
@@ -133,7 +140,6 @@ set(
     dialogs/exportsvgdialog.h
     dialogs/markereditordialog.h
     dialogs/qrealpointvaluedialog.h
-    dialogs/renderoutputwidget.h
     dialogs/scenesettingsdialog.h
     gradientwidgets/currentgradientwidget.h
     gradientwidgets/displayedgradientswidget.h
@@ -161,6 +167,7 @@ set(
     widgets/canvassettingswidget.h
     widgets/canvastoolbar.h
     widgets/changewidthwidget.h
+    widgets/checkboxes.h
     widgets/colortoolbar.h
     widgets/colortoolbutton.h
     widgets/colorlabel.h
@@ -200,6 +207,11 @@ set(
     widgets/widgetstack.h
     widgets/widgetwrappernode.h
     widgets/wrappernode.h
+    wizards/installpresets.h
+    wizards/wizardpage.h
+    wizards/quicksetup.h
+    wizards/quicksetupgeneral.h
+    wizards/quicksetuppresets.h
 )
 
 if(NOT WIN32)

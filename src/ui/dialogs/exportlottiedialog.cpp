@@ -23,7 +23,6 @@
 
 #include "Private/Tasks/taskscheduler.h"
 #include "Private/document.h"
-#include "GUI/edialogs.h"
 #include "appsupport.h"
 #include "canvas.h"
 #include "lottie/lottieexporter.h"
@@ -32,7 +31,6 @@
 
 #include <QCheckBox>
 #include <QComboBox>
-#include <QDesktopServices>
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QFile>
@@ -232,17 +230,15 @@ ExportLottieDialog::ExportLottieDialog(QWidget* const parent,
     connect(buttonExport, &QPushButton::clicked, this, [this]() {
         const QString fileType = tr("Lottie Files %1", "ExportDialog_FileType");
         const QString extension = mFormat->currentData().toString();
-        QString saveAs = eDialogs::saveFile(tr("Export Lottie"),
-                                            AppSupport::getSettings("files",
-                                                                    "recentExported",
-                                                                    QDir::homePath()).toString(),
-                                            fileType.arg(QStringLiteral("(*.%1)")
-                                                         .arg(extension)));
+        QString saveAs = AppSupport::getSaveFile(
+                    this,
+                    tr("Export Lottie"),
+                    AppSupport::getSettings("files",
+                                            "recentExported",
+                                            QDir::homePath()).toString(),
+                    fileType.arg(QStringLiteral("(*.%1)").arg(extension)),
+                    extension);
         if (saveAs.isEmpty()) { return; }
-        const QString suffix = QStringLiteral(".") + extension;
-        if (!saveAs.endsWith(suffix, Qt::CaseInsensitive)) {
-            saveAs.append(suffix);
-        }
         QFileInfo saveInfo(saveAs);
         AppSupport::setSettings("files",
                                 "recentExported",
@@ -282,18 +278,18 @@ void ExportLottieDialog::showPreview(const bool& closeWhenDone)
         mPreviewAnimationFile.reset();
     }
     if (!mPreviewAnimationFile) {
-        const QString templ = QString::fromUtf8("%1/%2_lottie_preview_XXXXXX.%3")
-                .arg(AppSupport::getAppTempPath(),
-                     AppSupport::getAppName(),
-                     extension);
+        const QString templ = AppSupport::getAppTempPath(
+                    QStringLiteral("%1_lottie_preview_XXXXXX.%2")
+                    .arg(AppSupport::getAppName(), extension));
         mPreviewAnimationFile = QSharedPointer<QTemporaryFile>::create(templ);
         mPreviewAnimationFile->setAutoRemove(false);
         mPreviewAnimationFile->open();
         mPreviewAnimationFile->close();
     }
     if (!mPreviewHtmlFile) {
-        const QString templ = QString::fromUtf8("%1/%2_lottie_preview_XXXXXX.html").arg(AppSupport::getAppTempPath(),
-                                                                                        AppSupport::getAppName());
+        const QString templ = AppSupport::getAppTempPath(
+                    QStringLiteral("%1_lottie_preview_XXXXXX.html")
+                    .arg(AppSupport::getAppName()));
         mPreviewHtmlFile = QSharedPointer<QTemporaryFile>::create(templ);
         mPreviewHtmlFile->setAutoRemove(false);
         mPreviewHtmlFile->open();
@@ -307,7 +303,7 @@ void ExportLottieDialog::showPreview(const bool& closeWhenDone)
         return;
     }
 
-    QDesktopServices::openUrl(QUrl::fromLocalFile(htmlFile));
+    AppSupport::openUrl(QUrl::fromLocalFile(htmlFile));
     if (closeWhenDone) { close(); }
 }
 
@@ -558,5 +554,5 @@ void ExportLottieDialog::finishedDialog(const QString& fileName)
         break;
     default:;
     }
-    if (!url.isEmpty()) { QDesktopServices::openUrl(url); }
+    if (!url.isEmpty()) { AppSupport::openUrl(url); }
 }
