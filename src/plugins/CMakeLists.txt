@@ -83,3 +83,7 @@ function(add_friction_plugin target)
             LIBRARY DESTINATION "${plugin_destination}"
             RUNTIME DESTINATION "${plugin_destination}")
 endfunction()
+
+if(BUILD_BUNDLED_PLUGINS)
+    add_subdirectory(bundled/lottie-export)
+endif()
