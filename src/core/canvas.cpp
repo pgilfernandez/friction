@@ -1194,8 +1194,31 @@ void Canvas::splitAction()
 
 void Canvas::duplicateAction()
 {
-    copyAction();
-    pasteAction();
+    if (mSelectedBoxes.isEmpty()) { return; }
+
+    const auto originals = mSelectedBoxes.getList();
+    clearBoxesSelection();
+
+    for (auto* box : originals) {
+        if (!box) continue;
+
+        ContainerBox* targetContainer = box->getParentGroup();
+        if (!targetContainer) { targetContainer = mCurrentContainer; }
+
+        const int originalZIndex = box->getZIndex();
+        const QString originalName = box->prp_getName();
+
+        QList<BoundingBox*> singleList;
+        singleList.append(box);
+
+        const auto tempClipboard = enve::make_shared<BoxesClipboard>(singleList);
+        tempClipboard->pasteTo(targetContainer);
+
+        if (mLastSelectedBox && mLastSelectedBox != box) {
+            mLastSelectedBox->moveTo(originalZIndex);
+            mLastSelectedBox->prp_setName(originalName + " Copy");
+        }
+    }
 }
 
 void Canvas::selectAllAction()
