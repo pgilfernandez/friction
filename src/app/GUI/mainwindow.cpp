@@ -499,6 +499,15 @@ void MainWindow::setupDocument()
         if (mTimeline) { mTimeline->stopPreview(); }
     });
 
+#ifdef Q_OS_MAC
+    // https://github.com/friction2d/friction/pull/736
+    connect(&mDocument, &Document::fitCanvasToSize, this, []() {
+        const auto target = KeyFocusTarget::KFT_getCurrentTarget();
+        const auto cwTarget = dynamic_cast<CanvasWindow*>(target);
+        if (cwTarget) { cwTarget->fitCanvasToSize(); }
+    });
+#endif
+
     // set defaults
     mDocument.setPath("");
     mDocument.fDrawPathManual = false;
