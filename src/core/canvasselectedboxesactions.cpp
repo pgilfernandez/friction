@@ -132,7 +132,9 @@ void Canvas::revertAllPoints() {
 void Canvas::flipSelectedBoxesHorizontally() {
     for(const auto &box : mSelectedBoxes) {
         box->startScaleTransform();
+        box->startRotTransform();
         box->scale(-1, 1);
+        box->setRotate(-box->getTransformAnimator()->rot());
         box->finishTransform();
     }
 }
@@ -140,7 +142,9 @@ void Canvas::flipSelectedBoxesHorizontally() {
 void Canvas::flipSelectedBoxesVertically() {
     for(const auto &box : mSelectedBoxes) {
         box->startScaleTransform();
+        box->startRotTransform();
         box->scale(1, -1);
+        box->setRotate(-box->getTransformAnimator()->rot());
         box->finishTransform();
     }
 }
