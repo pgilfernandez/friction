@@ -78,6 +78,8 @@ void ColorAnimatorButton::paintEvent(QPaintEvent *)
     const QColor color = mColorTarget ? mColorTarget->getColor() : mColor;
     QPainter p(this);
 
+    p.setRenderHint(QPainter::Antialiasing);
+
     const QRectF rect(0.0, 0.0, width(), height());
     const float borderWidth = 2.0;
     const QRectF innerRect = rect.adjusted(borderWidth,
@@ -85,18 +87,47 @@ void ColorAnimatorButton::paintEvent(QPaintEvent *)
                                            -borderWidth,
                                            -borderWidth);
 
+    static const QBrush checkerBrush = []() {
+        QPixmap pm(16, 16);
+        QPainter pmp(&pm);
+
+        QColor color1(51, 51, 51);
+        QColor color2(102, 102, 102);
+
+        pmp.fillRect(0, 0, 16, 16, color1);
+        pmp.fillRect(0, 0, 8, 8, color2);
+        pmp.fillRect(8, 8, 8, 8, color2);
+
+        return QBrush(pm);
+    }();
+
     if (mHover) {
         const QColor altColor = ThemeSupport::getLightDarkColor(color, 130);
+
         p.setPen(altColor);
         p.setBrush(altColor);
         p.drawRoundedRect(rect,
                           borderWidth + 2,
                           borderWidth + 2);
+
+        p.setPen(Qt::NoPen);
+        p.setBrush(checkerBrush);
+        p.drawRoundedRect(innerRect,
+                          borderWidth,
+                          borderWidth);
+
+        p.setPen(altColor);
         p.setBrush(color);
         p.drawRoundedRect(innerRect,
                           borderWidth,
                           borderWidth);
     } else {
+        p.setPen(Qt::NoPen);
+        p.setBrush(checkerBrush);
+        p.drawRoundedRect(rect,
+                          borderWidth + 2,
+                          borderWidth + 2);
+
         p.setPen(color);
         p.setBrush(color);
         p.drawRoundedRect(rect,
