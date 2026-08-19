@@ -33,6 +33,7 @@ ONLY_SDK=${ONLY_SDK:-0}
 DOWNLOAD_SDK=${DOWNLOAD_SDK:-1}
 TAR_VERSION=${TAR_VERSION:-""}
 HEAD_REPO_URL=${HEAD_REPO_URL:-""}
+GLX=${GLX:-0}
 
 SDK_VERSION=${SDK_VERSION:-"1.0.0"}
 SDK_REV=${SDK_REV:-"r14"}
@@ -83,6 +84,7 @@ if [ "${ONLY_SDK}" = 1 ]; then
 fi
 
 # Build Friction
+GLX=${GLX} \
 SDK=${SDK} \
 BUILD=${BUILD} \
 MKJOBS=${MKJOBS} \
@@ -106,6 +108,7 @@ if [ "${TAR_VERSION}" != "" ]; then
 fi
 
 # Package Friction
+GLX=${GLX} \
 SDK=${SDK} \
 DISTFILES=${DISTFILES} \
 BUILD=${BUILD} \

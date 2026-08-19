@@ -25,6 +25,7 @@ BUILD=${BUILD:-"${HOME}"}
 VERSION=${VERSION:-""}
 APPID="graphics.friction.Friction"
 FRICTION_PKG=friction-${VERSION}
+GLX=${GLX:-0}
 
 APPIMAGETOOL_V=${APPIMAGETOOL_V:-"bfe6e0c"}
 APPIMAGERUNTIME_V=${APPIMAGERUNTIME_V:-"1bb1157"}
@@ -174,6 +175,10 @@ cp -a ${HOME}/rpmbuild/RPMS/*/*.rpm ${DISTFILES}/builds/${VERSION}/
 
 # Portable
 FRICTION_PORTABLE=${FRICTION_PKG}-linux-x86_64
+if [ "${GLX}" = 1 ]; then
+    FRICTION_PORTABLE=${FRICTION_PKG}-linux-x86_64-GLX
+fi
+
 FRICTION_PORTABLE_DIR=${BUILD}/${FRICTION_PORTABLE}
 cd ${BUILD}
 rm -f ${FRICTION_PORTABLE_DIR} || true
@@ -203,6 +208,10 @@ ln -sf usr/share/icons/hicolor/256x256/apps/${APPID}.png .DirIcon
 )
 tar xf ${DISTFILES}/linux/appimagetool-${APPIMAGETOOL_V}.tar.bz2
 ARCH=x86_64 ./appimagetool/AppRun --verbose --runtime-file=${DISTFILES}/linux/runtime-x86_64-${APPIMAGERUNTIME_V}.bin ${FRICTION_PORTABLE}
+
+if [ "${GLX}" = 1 ]; then
+    mv *.AppImage Friction-${VERSION}-x86_64-GLX.AppImage
+fi
 
 cp -a *.AppImage ${DISTFILES}/builds/${VERSION}/
 
