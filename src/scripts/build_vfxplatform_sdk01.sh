@@ -82,7 +82,7 @@ if [ ! -f "${CMAKE_BIN}" ]; then
 fi # cmake
 
 # skia
-if [ ! -f "${SDK}/lib/libskia.a" ]; then
+if [ ! -f "${SDK}/lib/libskia.a" ] || [ ! -f "${SDK}/lib/libskia-GLX.a" ]; then
     cd ${SRC}
     rm -rf skia-${SKIA_V} || true
     git clone ${SKIA_URL} skia-${SKIA_V}
@@ -103,6 +103,22 @@ if [ ! -f "${SDK}/lib/libskia.a" ]; then
     ..
     cmake --build .
     cp -a libskia.a ${SDK}/lib/
+    cd ..
+    rm -rf build
+    mkdir build
+    cd build
+    cmake -G Ninja \
+    -DCMAKE_INSTALL_PREFIX=${SDK} \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_C_COMPILER=clang \
+    -DSKIA_USE_SYSTEM_LIBS=OFF \
+    -DSKIA_SYNC_EXTERNAL=ON \
+    -DSKIA_STATIC=ON \
+    -DSKIA_USE_EGL=OFF \
+    -DLINUX_DEPLOY=ON \
+    ..
+    cmake --build .
+    cp -a libskia.a ${SDK}/lib/libskia-GLX.a
 fi # skia
 
 # libunwind
