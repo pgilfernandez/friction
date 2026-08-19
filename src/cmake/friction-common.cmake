@@ -34,6 +34,13 @@ option(USE_GLES "Use OpenGL ES 3.0 (experimental)" OFF)
 
 set(SKIA_LIB_PATH "/mnt/skia" CACHE STRING "Path to prebuilt skia library")
 
+if(UNIX AND NOT APPLE)
+    option(SKIA_USE_EGL "Use EGL in skia" ON)
+    if(${SKIA_USE_EGL})
+        add_definitions(-DUSE_EGL)
+    endif()
+endif()
+
 if(${LINUX_DEPLOY})
     add_definitions(-DLINUX_DEPLOY)
 endif()

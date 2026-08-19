@@ -1412,8 +1412,11 @@ void AppSupport::initEnv(const bool &isRenderer)
 #endif
 
 #if defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)
-    // GLX not supported!
+#ifdef USE_EGL
     qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
+#else
+    qputenv("QT_XCB_GL_INTEGRATION", "xcb_glx");
+#endif
 #endif
 }
 

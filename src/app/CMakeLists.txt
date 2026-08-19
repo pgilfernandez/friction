@@ -57,8 +57,12 @@ endif()
 
 if(${SKIA_STATIC})
     if(UNIX AND NOT APPLE)
-        pkg_check_modules(EGL REQUIRED egl)
-        pkg_check_modules(GLES REQUIRED glesv2)
+        if(${SKIA_USE_EGL})
+            pkg_check_modules(EGL REQUIRED egl)
+            pkg_check_modules(GLES REQUIRED glesv2)
+        else()
+            find_package(OpenGL REQUIRED)
+        endif()
         if(NOT ${SKIA_USE_SYSTEM_LIBS})
             pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
         endif()
@@ -142,12 +146,11 @@ endif()
 
 if(${SKIA_STATIC})
     if(UNIX AND NOT APPLE)
-        include_directories(
-            ${EGL_INCLUDE_DIRS}
-            ${GLES_INCLUDE_DIRS}
-        )
+        if(${SKIA_USE_EGL})
+            include_directories(${EGL_INCLUDE_DIRS} ${GLES_INCLUDE_DIRS})
+        endif()
         if(NOT ${SKIA_USE_SYSTEM_LIBS})
-                include_directories(${FONTCONFIG_INCLUDE_DIRS})
+            include_directories(${FONTCONFIG_INCLUDE_DIRS})
         endif()
     endif()
 endif()
@@ -327,18 +330,11 @@ endif()
 
 if(${SKIA_STATIC})
     if(UNIX AND NOT APPLE)
-        target_link_directories(
-            ${PROJECT_NAME}
-            PRIVATE
-            ${EGL_LIBRARIES_DIRS}
-            ${GLES_LIBRARIES_DIRS}
-        )
+        if(${SKIA_USE_EGL})
+            target_link_directories(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES_DIRS} ${GLES_LIBRARIES_DIRS})
+        endif()
         if(NOT ${SKIA_USE_SYSTEM_LIBS})
-            target_link_directories(
-                ${PROJECT_NAME}
-                PRIVATE
-                ${FONTCONFIG_LIBRARIES_DIRS}
-            )
+            target_link_directories(${PROJECT_NAME} PRIVATE ${FONTCONFIG_LIBRARIES_DIRS})
         endif()
     endif()
 endif()
@@ -373,19 +369,13 @@ endif()
 
 if(${SKIA_STATIC})
     if(UNIX AND NOT APPLE)
-        target_link_libraries(
-            ${PROJECT_NAME}
-            PRIVATE
-            ${EGL_LIBRARIES}
-            ${GLES_LIBRARIES}
-            ${FONTCONFIG_LIBRARIES}
-        )
+        if(${SKIA_USE_EGL})
+            target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES} ${GLES_LIBRARIES} ${FONTCONFIG_LIBRARIES})
+        else()
+            target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GLX ${FONTCONFIG_LIBRARIES})
+        endif()
         if(NOT ${SKIA_USE_SYSTEM_LIBS})
-            target_link_libraries(
-                ${PROJECT_NAME}
-                PRIVATE
-                ${FONTCONFIG_LIBRARIES}
-            )
+            target_link_libraries(${PROJECT_NAME} PRIVATE ${FONTCONFIG_LIBRARIES})
         endif()
     endif()
     if(APPLE)
