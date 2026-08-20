@@ -68,6 +68,7 @@ void main(void) {
     float t = abs(sin(0.5*PI*time));
 
     float b = 0.25*(0.75 - 0.749*sharpness);
-    float c = smoothstep(t + b, t - b, noise(texCoord * .4));
+    //float c = smoothstep(t + b, t - b, noise(texCoord * .4));
+    float c = 1.0 - smoothstep(t - b, t + b, noise(texCoord * .4));
     fragColor = mix(texture(tex, texCoord), vec4(0), c);
 }

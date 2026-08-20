@@ -188,10 +188,10 @@ void NoiseFadeEffectCaller::processCpu(CpuRenderTools& renderTools,
     const qreal imgWidth = renderTools.fSrcBtmp.width();
     const qreal imgHeight = renderTools.fSrcBtmp.height();
 
-    const int xMin = data.fTexTile.left();
-    const int xMax = data.fTexTile.right();
-    const int yMin = data.fTexTile.top();
-    const int yMax = data.fTexTile.bottom();
+    const int xMin = std::max(0, data.fTexTile.left());
+    const int xMax = std::min((int)data.fTexTile.right(), (int)imgWidth - 1);
+    const int yMin = std::max(0, data.fTexTile.top());
+    const int yMax = std::min((int)data.fTexTile.bottom(), (int)imgHeight - 1);
 
     const qreal t = abs(sin(0.5*PI*mTime));
     const qreal b = 0.25*(0.75 - 0.749*mSharpness);
