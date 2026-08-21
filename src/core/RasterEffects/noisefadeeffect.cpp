@@ -184,7 +184,17 @@ qreal NoiseFadeEffectCaller::noise(const QPointF& p) const {
 }
 
 void NoiseFadeEffectCaller::processCpu(CpuRenderTools& renderTools,
-                                       const CpuRenderData& data) {
+                                       const CpuRenderData& data)
+{
+
+    const auto& srcBtmp = renderTools.fSrcBtmp;
+    const auto& dstBtmp = renderTools.fDstBtmp;
+
+    if (srcBtmp.empty() || srcBtmp.getPixels() == nullptr ||
+        dstBtmp.empty() || dstBtmp.getPixels() == nullptr) {
+        return;
+    }
+
     const qreal imgWidth = renderTools.fSrcBtmp.width();
     const qreal imgHeight = renderTools.fSrcBtmp.height();
 
