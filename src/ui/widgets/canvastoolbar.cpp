@@ -159,6 +159,8 @@ void CanvasToolBar::setupResolution()
     mComboResolution->lineEdit()->setInputMask("D00 %");
     mComboResolution->setCurrentText("100 %");
     mComboResolution->setInsertPolicy(QComboBox::NoInsert);
+    mComboResolution->setSizePolicy(QSizePolicy::Preferred,
+                                    QSizePolicy::Expanding);
 
     addSeparator();
     addAction(QIcon::fromTheme("resolution"),
