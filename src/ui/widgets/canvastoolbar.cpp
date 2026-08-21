@@ -85,15 +85,15 @@ void CanvasToolBar::setCurrentCanvas(Canvas * const target)
             setResolution(text, target);
         });
         mCanvas << connect(mSpinWidth,
-                           QOverload<int>::of(&QSpinBox::valueChanged),
+                           QOverload<qreal>::of(&QDoubleSlider::valueEdited),
                            this, [this, target]() {
-            setDimension({mSpinWidth->value(), mSpinHeight->value()},
+            setDimension({qRound(mSpinWidth->value()), qRound(mSpinHeight->value())},
                           target);
         });
         mCanvas << connect(mSpinHeight,
-                           QOverload<int>::of(&QSpinBox::valueChanged),
+                           QOverload<qreal>::of(&QDoubleSlider::valueEdited),
                            this, [this, target]() {
-            setDimension({mSpinWidth->value(), mSpinHeight->value()},
+            setDimension({qRound(mSpinWidth->value()), qRound(mSpinHeight->value())},
                          target);
         });
         mCanvas << connect(target, &Canvas::dimensionsChanged,
@@ -121,19 +121,17 @@ void CanvasToolBar::setMemoryUsage(const intMB &usage)
 
 void CanvasToolBar::setupDimensions()
 {
-    mSpinWidth = new QSpinBox(this);
+    mSpinWidth = new QDoubleSlider(1, 99999, 1, this, false);
     mSpinWidth->setFocusPolicy(Qt::ClickFocus);
+    mSpinWidth->setMinimumWidth(75);
+    mSpinWidth->setNumberDecimals(0);
     mSpinWidth->setObjectName("ComboSpinBox");
-    mSpinWidth->setMinimum(1);
-    mSpinWidth->setMaximum(99999);
-    mSpinWidth->setKeyboardTracking(false);
 
-    mSpinHeight = new QSpinBox(this);
+    mSpinHeight = new QDoubleSlider(1, 99999, 1, this, false);
     mSpinHeight->setFocusPolicy(Qt::ClickFocus);
+    mSpinHeight->setMinimumWidth(75);
+    mSpinHeight->setNumberDecimals(0);
     mSpinHeight->setObjectName("ComboSpinBox");
-    mSpinHeight->setMinimum(1);
-    mSpinHeight->setMaximum(99999);
-    mSpinHeight->setKeyboardTracking(false);
 
     addAction(QIcon::fromTheme("width"),
               tr("Width"));
@@ -196,11 +194,11 @@ void CanvasToolBar::updateWidgets(Canvas * const target)
 void CanvasToolBar::updateDimension(const QSize dim)
 {
     mSpinWidth->blockSignals(true);
-    mSpinWidth->setValue(dim.width());
+    mSpinWidth->setDisplayedValue(dim.width());
     mSpinWidth->blockSignals(false);
 
     mSpinHeight->blockSignals(true);
-    mSpinHeight->setValue(dim.height());
+    mSpinHeight->setDisplayedValue(dim.height());
     mSpinHeight->blockSignals(false);
 }
 
