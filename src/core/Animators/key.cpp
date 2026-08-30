@@ -83,12 +83,32 @@ void Key::removeFromSelection(QList<Animator*> &toRemove) {
     }
 }
 
-void Key::startFrameTransform() {
-    mSavedRelFrame = mRelFrame;
+void Key::invalidateSceneFramesCache()
+{
+    if (!mParentAnimator) { return; }
+    const auto parentScene = mParentAnimator->getParentScene();
+    if (!parentScene) { return; }
+
+    parentScene->invalidateSceneFramesCache();
 }
 
-void Key::cancelFrameTransform() {
-    mParentAnimator->anim_moveKeyToRelFrame(this, mSavedRelFrame);
+void Key::startFrameTransform()
+{
+    mSavedRelFrame = mRelFrame;
+
+#ifdef Q_OS_MAC
+    invalidateSceneFramesCache();
+#endif
+}
+
+void Key::cancelFrameTransform()
+{
+    mParentAnimator->anim_moveKeyToRelFrame(this,
+                                            mSavedRelFrame);
+
+#ifdef Q_OS_MAC
+    invalidateSceneFramesCache();
+#endif
 }
 
 void Key::scaleFrameAndUpdateParentAnimator(
