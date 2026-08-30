@@ -152,10 +152,16 @@ void Key::moveToRelFrameAction(const int frame) {
     finishFrameTransform();
 }
 
-void Key::addUndoRedo(const UndoRedo &undoRedo) {
-    if(!mParentAnimator) return;
+void Key::addUndoRedo(const UndoRedo &undoRedo)
+{
+    if (!mParentAnimator) { return; }
     const auto parentScene = mParentAnimator->getParentScene();
-    if(!parentScene) return;
+    if (!parentScene) { return; }
+
+#ifdef Q_OS_MAC
+    parentScene->invalidateSceneFramesCache();
+#endif
+
     stdptr<Key> thisPtr = this;
     auto undo = undoRedo.fUndo;
     auto redo = undoRedo.fRedo;
