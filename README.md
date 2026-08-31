@@ -12,6 +12,8 @@ We accept any contributions, big or small. Before submitting a pull request it's
 
 It's always preferred to submit pull requests against the `main` branch.
 
+**Note:** All contributions must be original work. Generated code is considered tainted and will not be accepted directly. Non-developers may submit generated code drafts strictly to illustrate features or concepts, but a maintainer or contributor must rewrite the code before it can be merged.
+
 ## Branches and versions
 
 Friction uses `X.Y.Z` version numbers and `vX.Y` branches.
