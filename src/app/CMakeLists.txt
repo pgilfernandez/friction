@@ -42,31 +42,18 @@ if(APPLE)
 endif()
 
 if(${SKIA_USE_SYSTEM_LIBS} AND UNIX)
-    pkg_check_modules(EXPAT REQUIRED expat)
-    pkg_check_modules(FREETYPE REQUIRED freetype2)
-    pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
-    pkg_check_modules(JPEG REQUIRED libjpeg)
-    pkg_check_modules(PNG REQUIRED libpng)
-    pkg_check_modules(WEBP REQUIRED libwebp)
-    pkg_check_modules(WEBPMUX REQUIRED libwebpmux)
-    pkg_check_modules(WEBPDEMUX REQUIRED libwebpdemux)
-    pkg_check_modules(ZLIB REQUIRED zlib)
+    # we don't really need these anymore
+    #pkg_check_modules(EXPAT REQUIRED expat)
+    #pkg_check_modules(FREETYPE REQUIRED freetype2)
+    #pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
+    #pkg_check_modules(JPEG REQUIRED libjpeg)
+    #pkg_check_modules(PNG REQUIRED libpng)
+    #pkg_check_modules(WEBP REQUIRED libwebp)
+    #pkg_check_modules(WEBPMUX REQUIRED libwebpmux)
+    #pkg_check_modules(WEBPDEMUX REQUIRED libwebpdemux)
+    #pkg_check_modules(ZLIB REQUIRED zlib)
 else()
     add_definitions(-DFRICTION_BUNDLE_SKIA_BUNDLE)
-endif()
-
-if(${SKIA_STATIC})
-    if(UNIX AND NOT APPLE)
-        if(${SKIA_USE_EGL})
-            pkg_check_modules(EGL REQUIRED egl)
-            pkg_check_modules(GLES REQUIRED glesv2)
-        else()
-            find_package(OpenGL REQUIRED)
-        endif()
-        if(NOT ${SKIA_USE_SYSTEM_LIBS})
-            pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
-        endif()
-    endif()
 endif()
 
 if(APPLE)
@@ -93,8 +80,8 @@ else()
     set(QSCINTILLA_INCLUDE_DIRS "/usr/include/x86_64-linux-gnu/qt5" CACHE STRING "qscintilla includes path")
 endif()
 
-message("-- qscintilla include: ${QSCINTILLA_INCLUDE_DIRS}")
-message("-- qscintilla libraries: ${QSCINTILLA_LIBRARIES_DIRS} ${QSCINTILLA_LIBRARIES}")
+message(STATUS "qscintilla include: ${QSCINTILLA_INCLUDE_DIRS}")
+message(STATUS "qscintilla libraries: ${QSCINTILLA_LIBRARIES_DIRS} ${QSCINTILLA_LIBRARIES}")
 
 if(WIN32)
     set(WINDOWS_ICON_FILE ${FRICTION_NAME}.ico)
@@ -131,29 +118,6 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../ui
     ${CMAKE_CURRENT_SOURCE_DIR}/../skia
 )
-
-if(${SKIA_USE_SYSTEM_LIBS} AND UNIX)
-    include_directories(
-        ${EXPAT_INCLUDE_DIRS}
-        ${FREETYPE_INCLUDE_DIRS}
-        ${FONTCONFIG_INCLUDE_DIRS}
-        ${JPEG_INCLUDE_DIRS}
-        ${PNG_INCLUDE_DIRS}
-        ${WEBP_INCLUDE_DIRS}
-        ${ZLIB_INCLUDE_DIRS}
-    )
-endif()
-
-if(${SKIA_STATIC})
-    if(UNIX AND NOT APPLE)
-        if(${SKIA_USE_EGL})
-            include_directories(${EGL_INCLUDE_DIRS} ${GLES_INCLUDE_DIRS})
-        endif()
-        if(NOT ${SKIA_USE_SYSTEM_LIBS})
-            include_directories(${FONTCONFIG_INCLUDE_DIRS})
-        endif()
-    endif()
-endif()
 
 if(UNIX AND NOT APPLE)
     include_directories(${GPERF_INCLUDE_DIRS})
@@ -314,31 +278,6 @@ target_link_directories(
     ${SKIA_LIBRARIES_DIRS}
 )
 
-if(${SKIA_USE_SYSTEM_LIBS} AND UNIX)
-    target_link_directories(
-        ${PROJECT_NAME}
-        PRIVATE
-        ${EXPAT_LIBRARIES_DIRS}
-        ${FREETYPE_LIBRARIES_DIRS}
-        ${FONTCONFIG_LIBRARIES_DIRS}
-        ${JPEG_LIBRARIES_DIRS}
-        ${PNG_LIBRARIES_DIRS}
-        ${WEBP_LIBRARIES_DIRS}
-        ${ZLIB_LIBRARIES_DIRS}
-    )
-endif()
-
-if(${SKIA_STATIC})
-    if(UNIX AND NOT APPLE)
-        if(${SKIA_USE_EGL})
-            target_link_directories(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES_DIRS} ${GLES_LIBRARIES_DIRS})
-        endif()
-        if(NOT ${SKIA_USE_SYSTEM_LIBS})
-            target_link_directories(${PROJECT_NAME} PRIVATE ${FONTCONFIG_LIBRARIES_DIRS})
-        endif()
-    endif()
-endif()
-
 target_link_libraries(
     ${PROJECT_NAME}
     PRIVATE
@@ -351,46 +290,6 @@ target_link_libraries(
     ${SKIA_LIBRARIES}
 )
 
-if(${SKIA_USE_SYSTEM_LIBS} AND UNIX)
-    target_link_libraries(
-        ${PROJECT_NAME}
-        PRIVATE
-        ${EXPAT_LIBRARIES}
-        ${FREETYPE_LIBRARIES}
-        ${FONTCONFIG_LIBRARIES}
-        ${JPEG_LIBRARIES}
-        ${PNG_LIBRARIES}
-        ${WEBP_LIBRARIES}
-        ${WEBPMUX_LIBRARIES}
-        ${WEBPDEMUX_LIBRARIES}
-        ${ZLIB_LIBRARIES}
-    )
-endif()
-
-if(${SKIA_STATIC})
-    if(UNIX AND NOT APPLE)
-        if(${SKIA_USE_EGL})
-            target_link_libraries(${PROJECT_NAME} PRIVATE ${EGL_LIBRARIES} ${GLES_LIBRARIES} ${FONTCONFIG_LIBRARIES})
-        else()
-            target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GLX ${FONTCONFIG_LIBRARIES})
-        endif()
-        if(NOT ${SKIA_USE_SYSTEM_LIBS})
-            target_link_libraries(${PROJECT_NAME} PRIVATE ${FONTCONFIG_LIBRARIES})
-        endif()
-    endif()
-    if(APPLE)
-        target_link_libraries(
-            ${PROJECT_NAME}
-            PRIVATE
-            "-framework CoreFoundation"
-            "-framework CoreGraphics"
-            "-framework CoreText"
-            "-framework CoreServices"
-            "-framework ImageIO"
-        )
-    endif()
-endif()
-
 if(APPLE)
     target_link_libraries(
         ${PROJECT_NAME}
@@ -400,7 +299,7 @@ if(APPLE)
 endif()
 
 if(UNIX AND NOT APPLE)
-    option(INSTALL_DOCS "Install documentation on Linux/BSD" ON)
+    option(INSTALL_DOCS "Install documentation" ON)
     #option(INSTALL_OFFLINE_DOCS "Install offline documentation on Linux/BSD" OFF)
     target_link_libraries(
         ${PROJECT_NAME}
@@ -476,7 +375,7 @@ if(UNIX AND NOT APPLE)
             ${CMAKE_CURRENT_SOURCE_DIR}/../../LICENSE.md
             ${CMAKE_CURRENT_SOURCE_DIR}/../../README.md
             DESTINATION
-            ${CMAKE_INSTALL_DOCDIR}
+            "${CMAKE_INSTALL_DOCDIR}-${PROJECT_VERSION}"
         )
         #if(${INSTALL_OFFLINE_DOCS})
         #    install(

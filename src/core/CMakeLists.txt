@@ -28,9 +28,9 @@ include(friction-common)
 #include(friction-quazip)
 include(friction-ffmpeg)
 
-message("-- ffmpeg include: ${FFMPEG_INCLUDE_DIRS}")
-message("-- ffmpeg libraries: ${FFMPEG_LIBRARIES_DIRS} ${FFMPEG_LIBRARIES}")
-message("-- skia libraries: ${SKIA_LIBRARIES_DIRS} ${SKIA_LIBRARIES}")
+message(STATUS "ffmpeg include: ${FFMPEG_INCLUDE_DIRS}")
+message(STATUS "ffmpeg libraries: ${FFMPEG_LIBRARIES_DIRS} ${FFMPEG_LIBRARIES}")
+message(STATUS "skia libraries: ${SKIA_LIBRARIES_DIRS} ${SKIA_LIBRARIES}")
 
 add_definitions(-DPROJECT_VERSION="${PROJECT_VERSION}")
 add_definitions(-DCORE_LIBRARY)
@@ -66,8 +66,8 @@ if(NOT GIT_COMMIT OR NOT GIT_BRANCH)
     endif()
 endif()
 
-message("-- git commit: ${GIT_COMMIT}")
-message("-- git branch: ${GIT_BRANCH}")
+message(STATUS "git commit: ${GIT_COMMIT}")
+message(STATUS "git branch: ${GIT_BRANCH}")
 
 include_directories(
     #${QUAZIP_INCLUDE_DIRS}
@@ -725,11 +725,7 @@ set(
     svgo.h
 )
 
-if(NOT WIN32)
-    add_library(${PROJECT_NAME} STATIC ${HEADERS} ${SOURCES} coreresources.qrc)
-else()
-    add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES} coreresources.qrc)
-endif()
+add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES} coreresources.qrc)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     PROJECT_COMMIT="${GIT_COMMIT}"
@@ -778,12 +774,12 @@ if(APPLE)
     )
 endif()
 
-#if(UNIX AND NOT APPLE)
-#    include(GNUInstallDirs)
-#    install(
-#        TARGETS
-#        ${PROJECT_NAME}
-#        DESTINATION
-#        ${CMAKE_INSTALL_LIBDIR}
-#    )
-#endif()
+if(UNIX AND NOT APPLE)
+    include(GNUInstallDirs)
+    install(
+        TARGETS
+        ${PROJECT_NAME}
+        DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()

@@ -212,11 +212,7 @@ set(
     wizards/quicksetuppresets.h
 )
 
-if(NOT WIN32)
-    add_library(${PROJECT_NAME} STATIC ${HEADERS} ${SOURCES})
-else()
-    add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
-endif()
+add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
 
 set_target_properties(
     ${PROJECT_NAME}
@@ -255,3 +251,13 @@ target_link_libraries(
     ${SKIA_LIBRARIES}
     ${FFMPEG_LIBRARIES}
 )
+
+if(UNIX AND NOT APPLE)
+    include(GNUInstallDirs)
+    install(
+        TARGETS
+        ${PROJECT_NAME}
+        DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()
