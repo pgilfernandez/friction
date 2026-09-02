@@ -19,7 +19,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: friction-ci-linux-x86_64
-        path: distfiles/builds/*/*.AppImage
+        path: distfiles/builds/*/*
   release-glx:
     runs-on: ubuntu-latest
     steps:
@@ -36,4 +36,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: friction-ci-linux-x86_64-GLX
-        path: distfiles/builds/*/*.AppImage
+        path: distfiles/builds/*/*

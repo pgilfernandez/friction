@@ -53,7 +53,7 @@ BIN_DIR=${BUILD}/${FRICTION_PKG}/opt/friction/bin
 LIB_DIR=${BUILD}/${FRICTION_PKG}/opt/friction/lib
 PLUG_DIR=${BUILD}/${FRICTION_PKG}/opt/friction/plugins
 
-APP_DEPENDS=`(cd ${BIN_DIR} ; ldd friction | awk '{print $3}' | grep ${SDK})`
+APP_DEPENDS=`(cd ${BIN_DIR} ; ldd friction | awk '{print $3}' | grep "^${SDK}")`
 
 for so in ${APP_DEPENDS}; do
     cp ${so} ${LIB_DIR}/
@@ -70,17 +70,29 @@ done
 
 mkdir -p ${PLUG_DIR}/platforms
 cp -a ${SDK}/plugins/platforms/libqxcb.so ${PLUG_DIR}/platforms/
-cp -a ${SDK}/plugins/platforms/libqwayland-generic.so ${PLUG_DIR}/platforms/
-cp -a ${SDK}/plugins/platforms/libqwayland-egl.so ${PLUG_DIR}/platforms/
+
+if [ "${GLX}" = 0 ]; then
+    cp -a ${SDK}/plugins/platforms/libqwayland-generic.so ${PLUG_DIR}/platforms/
+    cp -a ${SDK}/plugins/platforms/libqwayland-egl.so ${PLUG_DIR}/platforms/
+fi
 
 mkdir -p ${PLUG_DIR}/platformthemes
 cp -a ${SDK}/plugins/platformthemes/libqxdgdesktopportal.so ${PLUG_DIR}/platformthemes/
 
 cp -a ${SDK}/plugins/audio ${PLUG_DIR}/
-cp -a ${SDK}/plugins/xcbglintegrations ${PLUG_DIR}/
-cp -a ${SDK}/plugins/wayland-graphics-integration-client ${PLUG_DIR}/
-cp -a ${SDK}/plugins/wayland-shell-integration ${PLUG_DIR}/
-cp -a ${SDK}/plugins/wayland-decoration-client ${PLUG_DIR}/
+
+if [ "${GLX}" = 1 ]; then
+    mkdir -p ${PLUG_DIR}/xcbglintegrations
+    cp -a ${SDK}/plugins/xcbglintegrations/libqxcb-glx-integration.so ${PLUG_DIR}/xcbglintegrations/
+else
+    cp -a ${SDK}/plugins/xcbglintegrations ${PLUG_DIR}/
+fi
+
+if [ "${GLX}" = 0 ]; then
+    cp -a ${SDK}/plugins/wayland-graphics-integration-client ${PLUG_DIR}/
+    cp -a ${SDK}/plugins/wayland-shell-integration ${PLUG_DIR}/
+    cp -a ${SDK}/plugins/wayland-decoration-client ${PLUG_DIR}/
+fi
 
 for so in ${PLUG_DIR}/*/*.so; do
     DEPENDS=`ldd ${so} | awk '{print $3}'`
@@ -138,9 +150,10 @@ strip -s ${BUILD}/${FRICTION_PKG}/opt/friction/bin/friction
 strip -s ${BUILD}/${FRICTION_PKG}/opt/friction/lib/*so*
 strip -s ${BUILD}/${FRICTION_PKG}/opt/friction/plugins/*/*.so
 
-echo "[Paths]" > ${BUILD}/${FRICTION_PKG}/opt/friction/bin/qt.conf
-echo "Prefix = .." >> ${BUILD}/${FRICTION_PKG}/opt/friction/bin/qt.conf
-echo "Plugins = plugins" >> ${BUILD}/${FRICTION_PKG}/opt/friction/bin/qt.conf
+QT_CONF=${BUILD}/${FRICTION_PKG}/opt/friction/bin/qt.conf
+echo "[Paths]" > ${QT_CONF}
+echo "Prefix = .." >> ${QT_CONF}
+echo "Plugins = plugins" >> ${QT_CONF}
 
 (cd ${BUILD}/${FRICTION_PKG}/opt/friction/lib ;
 for so in *.so*; do
@@ -148,6 +161,13 @@ for so in *.so*; do
 done
 )
 
+if [ "${GLX}" = 1 ]; then
+PLUGS="
+platforms
+audio
+xcbglintegrations
+"
+else
 PLUGS="
 platforms
 audio
@@ -156,22 +176,32 @@ wayland-graphics-integration-client
 wayland-shell-integration
 wayland-decoration-client
 "
+fi
+
 for pdir in ${PLUGS}; do
     for so in ${BUILD}/${FRICTION_PKG}/opt/friction/plugins/${pdir}/*.so; do
         patchelf --set-rpath '$ORIGIN/../../lib' ${so}
     done
 done
 
+(cd ${BUILD}/${FRICTION_PKG}/opt/friction/lib;
+    chmod +x libskia-friction.so.1
+    rm -f libfrictioncore.so libfrictioncore.so.1
+    mv libfrictioncore.so.1.0.0 libfrictioncore.so.1
+    rm -f libfrictionui.so libfrictionui.so.1
+    mv libfrictionui.so.1.0.0 libfrictionui.so.1
+)
+
 # RPM
-cd ${BUILD}
-tar cvf ${FRICTION_PKG}.tar ${FRICTION_PKG}
-if [ ! -d "${HOME}/rpmbuild/SOURCES" ]; then
-    mkdir -p ${HOME}/rpmbuild/SOURCES
-fi
-mv ${FRICTION_PKG}.tar ${HOME}/rpmbuild/SOURCES/
-cat ${BUILD}/friction/src/scripts/vfxplatform.spec | sed 's/__FRICTION_PKG_VERSION__/'${PKG_VERSION}'/g;s/__FRICTION_VERSION__/'${VERSION}'/g;s/__APPID__/'${APPID}'/g' > rpm.spec
-rpmbuild -bb rpm.spec
-cp -a ${HOME}/rpmbuild/RPMS/*/*.rpm ${DISTFILES}/builds/${VERSION}/
+#cd ${BUILD}
+#tar cvf ${FRICTION_PKG}.tar ${FRICTION_PKG}
+#if [ ! -d "${HOME}/rpmbuild/SOURCES" ]; then
+#    mkdir -p ${HOME}/rpmbuild/SOURCES
+#fi
+#mv ${FRICTION_PKG}.tar ${HOME}/rpmbuild/SOURCES/
+#cat ${BUILD}/friction/src/scripts/vfxplatform.spec | sed 's/__FRICTION_PKG_VERSION__/'${PKG_VERSION}'/g;s/__FRICTION_VERSION__/'${VERSION}'/g;s/__APPID__/'${APPID}'/g' > rpm.spec
+#rpmbuild -bb rpm.spec
+#cp -a ${HOME}/rpmbuild/RPMS/*/*.rpm ${DISTFILES}/builds/${VERSION}/
 
 # Portable
 FRICTION_PORTABLE=${FRICTION_PKG}-linux-x86_64
@@ -188,7 +218,7 @@ rm -rf usr
 mv opt/friction/* .
 rm -rf opt
 ln -sf bin/friction .
-touch bin/portable.txt
+#touch bin/portable.txt
 )
 cd ${BUILD}
 tar cvf ${FRICTION_PORTABLE}.tar ${FRICTION_PORTABLE}
@@ -215,4 +245,4 @@ fi
 
 cp -a *.AppImage ${DISTFILES}/builds/${VERSION}/
 
-echo "FRICTION PACKAGE DONE"
+tree -lah ${DISTFILES}/builds/${VERSION}/

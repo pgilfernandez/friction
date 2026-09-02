@@ -53,7 +53,11 @@ AboutWidget::AboutWidget(QWidget *parent)
     QString osName = QString("%1 %2").arg(QSysInfo::prettyProductName(),
                                           QSysInfo::currentCpuArchitecture());
 #ifdef Q_OS_LINUX
-    osName.append(QString(" %1").arg(QApplication::platformName() == "xcb" ? "X11" : QApplication::platformName()));
+    QString xcbGL = qgetenv("QT_XCB_GL_INTEGRATION");
+    QString x11 = "X11";
+    if (xcbGL == "xcb_egl") { x11.append(" EGL"); }
+    else if (xcbGL == "xcb_glx") { x11.append(" GLX"); }
+    osName.append(QString(" %1").arg(QApplication::platformName() == "xcb" ? x11 : QApplication::platformName()));
 #endif
 
     QString label = QString::fromUtf8("<div style=\"margin: 0; padding: 0; text-align: center; font-weight: normal;\">"

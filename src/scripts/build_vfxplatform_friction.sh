@@ -93,12 +93,13 @@ GIT_BRANCH=`git rev-parse --abbrev-ref HEAD`
 USE_EGL=ON
 if [ "${GLX}" = 1 ]; then
     USE_EGL=OFF
-    (cd ${SDK}/lib; mv libskia-GLX.a libskia.a)
+    (cd ${SDK}/lib; mv -f ../glx/lib/libskia* . )
 fi
 
 cmake -G Ninja \
 -DCMAKE_INSTALL_PREFIX=${SDK} \
 -DCMAKE_PREFIX_PATH=${SDK} \
+-DCMAKE_INSTALL_LIBDIR=lib \
 -DCMAKE_BUILD_TYPE=Release \
 -DLINUX_DEPLOY=ON \
 -DFRICTION_OFFICIAL_RELEASE=${REL_STATUS} \
@@ -110,7 +111,6 @@ cmake -G Ninja \
 -DGIT_COMMIT=${GIT_COMMIT} \
 -DGIT_BRANCH=${GIT_BRANCH} \
 -DCUSTOM_BUILD=${CUSTOM} \
--DSKIA_STATIC=ON \
 -DBUILD_SKIA=OFF \
 -DSKIA_USE_EGL=${USE_EGL} \
 -DSKIA_LIB_PATH=${SDK}/lib \
