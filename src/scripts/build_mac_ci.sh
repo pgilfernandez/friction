@@ -36,13 +36,13 @@ fi
 
 SDK_PATH=${CWD}/sdk
 SDK_VERSION=1.0.0
-SDK_REV=r6
+SDK_REV=r7
 SDK_URL=https://github.com/friction2d/friction-sdk/releases/download/v${SDK_VERSION}
 SDK_BASE=friction-sdk-${SDK_VERSION}${SDK_REV}-macOS
 SDK_ARM_TAR=${SDK_BASE}-arm64.tar.xz
 SDK_INTEL_TAR=${SDK_BASE}-x86_64.tar.xz
-SDK_ARM_SHA256=46a6e44b5d55f681f9dbddaa321635bfbc18cd080a649e48029d6b28cb41ad85
-SDK_INTEL_SHA256=c25c2a220a6f801edde67b2ce6aca3564ff7a0f7e0c00e35bac7878f1632d560
+SDK_ARM_SHA256=e904d59c7af517573f21e0b9e42cd2edadf0f1ec7271493a5095269beaad3bcd
+SDK_INTEL_SHA256=ad68c4440021647a0981ad32cc39f80217e82a98854d0704cbdebf5b065be7e7
 
 if [ ! -d "${SDK_PATH}" ]; then
     mkdir -p "${SDK_PATH}"
