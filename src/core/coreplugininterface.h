@@ -48,6 +48,8 @@ public:
         Q_UNUSED(path);
         return nullptr;
     }
+
+    virtual void renderStateChanged() {};
 };
 
 #define FrictionCorePluginInterface_iid "graphics.friction.CorePluginInterface/1.0"

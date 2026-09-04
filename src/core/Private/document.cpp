@@ -511,6 +511,11 @@ void Document::loadCorePlugins()
                 pluginData.instance = plugin;
                 mCorePlugins.insert(pluginId, pluginData);
 
+                connect(this, &Document::renderStateChanged,
+                        this, [plugin] {
+                    plugin->renderStateChanged();
+                });
+
                 plugin->init();
             } else {
                 loader.unload();
@@ -563,4 +568,15 @@ bool Document::isCorePluginImportExtension(const QString &ext) const
     }
 
     return false;
+}
+
+PreviewState Document::getRenderState() const
+{
+    return mRenderState;
+}
+
+void Document::setRenderState(PreviewState state)
+{
+    mRenderState = state;
+    emit renderStateChanged(state);
 }
