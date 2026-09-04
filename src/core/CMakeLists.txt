@@ -723,6 +723,7 @@ set(
     videoencoder.h
     formatoptions.h
     svgo.h
+    coreplugininterface.h
 )
 
 add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES} coreresources.qrc)

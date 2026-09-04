@@ -327,6 +327,13 @@ const QString AppSupport::getAppTempPath(const QString &filename)
     return QString::fromUtf8("%1/%2").arg(cache, filename);
 }
 
+const QString AppSupport::getAppPluginsPath()
+{
+    return getSettings("settings",
+                       "CustomPluginsPath",
+                       getAppPath() + "/plugins").toString();
+}
+
 const QString AppSupport::getExistingDirectory(QWidget *parent,
                                                const QString &caption,
                                                const QString &path)

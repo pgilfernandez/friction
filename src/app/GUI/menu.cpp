@@ -844,6 +844,12 @@ void MainWindow::setupMenuBar()
 
     mToolbar->addAction(mPreviewSVGAct);
     mToolbar->addAction(mExportSVGAct);
+
+    mPluginsMenu = mMenuBar->addMenu(tr("Plugins"));
+    mPluginsMenu->setEnabled(false);
+    mPluginsMenu->setVisible(false);
+    setupMenuPlugins();
+
     mToolbar->updateActions();
 
     setMenuBar(mMenuBar);

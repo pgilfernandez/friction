@@ -51,6 +51,8 @@ Document::Document(TaskScheduler& taskScheduler)
 
     connect(&taskScheduler, &TaskScheduler::finishedAllQuedTasks,
             this, &Document::updateScenes);
+
+    loadCorePlugins();
 }
 
 Grid* Document::getGrid()
@@ -461,4 +463,104 @@ void Document::SWT_setupAbstraction(SWT_Abstraction * const abstraction,
                                                    visiblePartWidgetId);
         abstraction->addChildAbstraction(abs->ref<SWT_Abstraction>());
     }
+}
+
+void Document::loadCorePlugins()
+{
+    qDebug() << "Load Core Plugins";
+
+    QDir pluginsDir(AppSupport::getAppPluginsPath());
+    if (pluginsDir.absolutePath().trimmed().isEmpty() ||
+        !pluginsDir.exists()) { return; }
+
+    mCorePlugins.clear();
+
+    const auto entryList = pluginsDir.entryList(QDir::Files);
+    for (const QString &fileName : entryList) {
+        QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
+
+        QJsonObject root = loader.metaData();
+        QJsonObject meta = root.value("MetaData").toObject();
+
+        if (meta.value("api").toString() != FrictionCorePluginInterface_iid) {
+            // not valid api
+            continue;
+        }
+
+        QString pluginId = meta.value("id").toString().trimmed();
+        QString pluginName = meta.value("name").toString().trimmed();
+
+        if (pluginId.isEmpty() || pluginName.isEmpty()) {
+            qWarning() << "Ignoring plugin: Missing id and/or name" << fileName;
+            continue;
+        }
+
+        if (mCorePlugins.contains(pluginId)) {
+            qWarning() << "Ignoring plugin: duplicate id" << pluginId << fileName;
+            continue;
+        }
+
+        QObject *pluginObj = loader.instance();
+        if (pluginObj) {
+            auto *plugin = qobject_cast<FrictionCorePluginInterface *>(pluginObj);
+            if (plugin) {
+                qWarning() << "Loading core plugin" << meta;
+
+                CorePluginData pluginData;
+                pluginData.meta = meta;
+                pluginData.instance = plugin;
+                mCorePlugins.insert(pluginId, pluginData);
+
+                plugin->init();
+            } else {
+                loader.unload();
+            }
+        }
+    }
+}
+
+QHash<QString, CorePluginData> Document::getCorePlugins() const
+{
+    return mCorePlugins;
+}
+
+CorePluginData Document::getCorePlugin(const QString &id) const
+{
+    return mCorePlugins.value(id);
+}
+
+QStringList Document::getCorePluginsImportExtensions() const
+{
+    QStringList allExtensions;
+
+    for (const auto &pluginData : mCorePlugins) {
+        if (!pluginData.meta.contains("import_extensions")) { continue; }
+        const QJsonArray extensions = pluginData.meta.value("import_extensions").toArray();
+        for (const QJsonValue &ext : extensions) {
+            QString extStr = ext.toString().trimmed().toLower();
+            if (!extStr.isEmpty() && !allExtensions.contains(extStr)) {
+                allExtensions.append(extStr);
+            }
+        }
+    }
+
+    return allExtensions;
+}
+
+bool Document::isCorePluginImportExtension(const QString &ext) const
+{
+    QString cleanExt = ext.toLower();
+    if (cleanExt.startsWith(".")) { cleanExt.remove(0, 1); }
+
+    for (const auto &pluginData : mCorePlugins) {
+        if (!pluginData.meta.contains("import_extensions")) { continue; }
+        const QJsonArray extensions = pluginData.meta.value("import_extensions").toArray();
+        for (const QJsonValue &e : extensions) {
+            if (e.toString().trimmed().toLower() == cleanExt) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }

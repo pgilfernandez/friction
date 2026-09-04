@@ -48,6 +48,8 @@
 #include "appsupport.h"
 #include "grid.h"
 
+#include "coreplugininterface.h"
+
 class SceneBoundGradient;
 class FileDataCacheHandler;
 class Canvas;
@@ -62,6 +64,12 @@ enum class NodeVisiblity {
 enum class PaintMode {
     normal, erase, lockAlpha, colorize,
     move, crop
+};
+
+struct CorePluginData
+{
+    QJsonObject meta;
+    FrictionCorePluginInterface* instance = nullptr;
 };
 
 class CORE_EXPORT Document : public SingleWidgetTarget {
@@ -208,6 +216,12 @@ public:
     void SWT_setupAbstraction(SWT_Abstraction * const abstraction,
                               const UpdateFuncs &updateFuncs,
                               const int visiblePartWidgetId);
+
+    QHash<QString, CorePluginData> getCorePlugins() const;
+    CorePluginData getCorePlugin(const QString& id) const;
+    QStringList getCorePluginsImportExtensions() const;
+    bool isCorePluginImportExtension(const QString& ext) const;
+
 private:
     void readDocumentXEV(const QDomDocument& doc,
                          QList<Canvas*>& scenes);
@@ -218,6 +232,9 @@ private:
     void readBookmarked(eReadStream &src);
 
     void readGradients(eReadStream& src);
+
+    void loadCorePlugins();
+    QHash<QString, CorePluginData> mCorePlugins;
 
 signals:
 
