@@ -37,10 +37,4 @@ src/scripts/flatpak/remote
 *.app
 
 *.AppImage
-/src/plugins/*
-!/src/plugins/CMakeLists.txt
-!/src/plugins/pluginprobe.cpp
-!/src/plugins/bundled
-/src/plugins/bundled/*
-!/src/plugins/bundled/svg-import
-!/src/plugins/bundled/svg-import/*
+/src/plugins

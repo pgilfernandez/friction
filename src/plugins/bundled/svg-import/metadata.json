@@ -1,7 +1,0 @@
-{
-    "api": "graphics.friction.CorePluginInterface/1.0",
-    "id": "graphics.friction.svg-animation-import",
-    "name": "SVG Animation Import",
-    "version": "1.0.0",
-    "group": "Import"
-}
