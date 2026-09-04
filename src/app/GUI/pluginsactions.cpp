@@ -26,6 +26,7 @@ void MainWindow::setupMenuPlugins()
         const auto menuActs = plugin->createMenuActions(mPluginsMenu);
         for (const auto &action : menuActs) {
             if (!action) { continue; }
+            if (action->icon().isNull()) { action->setIcon(QIcon::fromTheme("plugin")); }
 
             QString groupName = meta.value("group").toString();
             QMenu *targetMenu = mPluginsMenu;
@@ -35,6 +36,7 @@ void MainWindow::setupMenuPlugins()
                     targetMenu = groupMenus.value(groupName);
                 } else {
                     QMenu *newGroupMenu = new QMenu(groupName, mPluginsMenu);
+                    newGroupMenu->setIcon(QIcon::fromTheme("group"));
                     mPluginsMenu->addMenu(newGroupMenu);
                     groupMenus.insert(groupName, newGroupMenu);
                     targetMenu = newGroupMenu;
@@ -51,6 +53,7 @@ void MainWindow::setupMenuPlugins()
         const auto toolActs = plugin->createToolbarActions(mToolbar);
         for (const auto &action : toolActs) {
             if (!action) { continue; }
+            if (action->icon().isNull()) { action->setIcon(QIcon::fromTheme("plugin")); }
             mToolbar->addAction(action);
             QObject::connect(action, &QAction::triggered,
                              this, [this, plugin, action]() {
