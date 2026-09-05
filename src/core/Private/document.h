@@ -289,6 +289,7 @@ signals:
     void fitCanvasToSize();
 
     void renderStateChanged(PreviewState state);
+    void renderProgress(int frame, int total);
 };
 
 #endif // DOCUMENT_H

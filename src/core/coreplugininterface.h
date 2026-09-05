@@ -13,6 +13,8 @@ class Document;
 class Canvas;
 class BoundingBox;
 
+enum class PreviewState;
+
 class FrictionCorePluginInterface
 {
 public:
@@ -49,7 +51,17 @@ public:
         return nullptr;
     }
 
-    virtual void renderStateChanged() {};
+    virtual void renderStateChanged(PreviewState state)
+    {
+        Q_UNUSED(state);
+    }
+
+    virtual void renderProgress(int frame,
+                                int total)
+    {
+        Q_UNUSED(frame);
+        Q_UNUSED(total);
+    }
 };
 
 #define FrictionCorePluginInterface_iid "graphics.friction.CorePluginInterface/1.0"

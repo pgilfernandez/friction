@@ -512,8 +512,12 @@ void Document::loadCorePlugins()
                 mCorePlugins.insert(pluginId, pluginData);
 
                 connect(this, &Document::renderStateChanged,
-                        this, [plugin] {
-                    plugin->renderStateChanged();
+                        this, [plugin](PreviewState state) {
+                    plugin->renderStateChanged(state);
+                });
+                connect(this, &Document::renderProgress,
+                        this, [plugin](int frame, int total) {
+                    plugin->renderProgress(frame, total);
                 });
 
                 plugin->init();
