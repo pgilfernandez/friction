@@ -473,8 +473,6 @@ void Document::loadCorePlugins()
     if (pluginsDir.absolutePath().trimmed().isEmpty() ||
         !pluginsDir.exists()) { return; }
 
-    mCorePlugins.clear();
-
     const auto entryList = pluginsDir.entryList(QDir::Files);
     for (const QString &fileName : entryList) {
         QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
@@ -515,9 +513,16 @@ void Document::loadCorePlugins()
                         this, [plugin](PreviewState state) {
                     plugin->renderStateChanged(state);
                 });
+
                 connect(this, &Document::renderProgress,
                         this, [plugin](int frame, int total) {
                     plugin->renderProgress(frame, total);
+                });
+
+                connect(this, &Document::showNotification,
+                        this, [plugin](const QString& title,
+                                       const QString& message) {
+                    plugin->showNotification(title, message);
                 });
 
                 plugin->init();

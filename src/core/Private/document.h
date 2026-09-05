@@ -290,6 +290,9 @@ signals:
 
     void renderStateChanged(PreviewState state);
     void renderProgress(int frame, int total);
+
+    void showNotification(const QString& title,
+                          const QString& message);
 };
 
 #endif // DOCUMENT_H

@@ -62,6 +62,13 @@ public:
         Q_UNUSED(frame);
         Q_UNUSED(total);
     }
+
+    virtual void showNotification(const QString& title,
+                                  const QString& message)
+    {
+        Q_UNUSED(title);
+        Q_UNUSED(message);
+    }
 };
 
 #define FrictionCorePluginInterface_iid "graphics.friction.CorePluginInterface/1.0"
