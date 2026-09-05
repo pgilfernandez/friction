@@ -89,7 +89,8 @@ public:
     static const QString getAppPath();
     static const QString getAppCachePath();
     static const QString getAppTempPath(const QString &filename);
-    static const QString getAppPluginsPath();
+    static const QStringList getAppCorePluginsPath();
+    static bool isDirectory(const QString &path);
     static const QString getExistingDirectory(QWidget *parent,
                                               const QString &caption,
                                               const QString &path);

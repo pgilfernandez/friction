@@ -327,11 +327,42 @@ const QString AppSupport::getAppTempPath(const QString &filename)
     return QString::fromUtf8("%1/%2").arg(cache, filename);
 }
 
-const QString AppSupport::getAppPluginsPath()
+const QStringList AppSupport::getAppCorePluginsPath()
 {
-    return getSettings("settings",
-                       "CustomPluginsPath",
-                       getAppPath() + "/plugins").toString();
+    QStringList paths;
+    QDir appDir(getAppPath());
+
+    auto addPathIfValid = [&paths](const QString& p) {
+        QString cleanP = QDir::cleanPath(p);
+        if (isDirectory(cleanP) && !paths.contains(cleanP)) {
+            paths.append(cleanP);
+        }
+    };
+
+    QString defaultAppPath = appDir.absoluteFilePath("plugins");
+    addPathIfValid(defaultAppPath);
+
+    QString sysPath = appDir.absoluteFilePath("../lib/friction/plugins");
+    addPathIfValid(sysPath);
+
+    QString customPath = getSettings("settings",
+                                     "CustomCorePlugins",
+                                     "").toString();
+    if (!customPath.isEmpty()) { addPathIfValid(customPath); }
+
+    QDir configDir(getAppConfigPath());
+    if (!configDir.exists("CorePlugins")) { configDir.mkpath("CorePlugins"); }
+
+    QString userPath = configDir.absoluteFilePath("CorePlugins");
+    addPathIfValid(userPath);
+
+    return paths;
+}
+
+bool AppSupport::isDirectory(const QString &path)
+{
+    QFileInfo fileInfo(path);
+    return fileInfo.exists() && fileInfo.isDir();
 }
 
 const QString AppSupport::getExistingDirectory(QWidget *parent,

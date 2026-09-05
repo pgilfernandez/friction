@@ -467,67 +467,68 @@ void Document::SWT_setupAbstraction(SWT_Abstraction * const abstraction,
 
 void Document::loadCorePlugins()
 {
-    qDebug() << "Load Core Plugins";
+    for (const QString &path : AppSupport::getAppCorePluginsPath()) {
+        QDir pluginsDir(path);
+        if (!pluginsDir.exists()) { continue; }
 
-    QDir pluginsDir(AppSupport::getAppPluginsPath());
-    if (pluginsDir.absolutePath().trimmed().isEmpty() ||
-        !pluginsDir.exists()) { return; }
+        qDebug() << "Searching for core plugins in" << path;
 
-    const auto entryList = pluginsDir.entryList(QDir::Files);
-    for (const QString &fileName : entryList) {
-        QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
+        const auto entryList = pluginsDir.entryList(QDir::Files);
+        for (const QString &fileName : entryList) {
+            QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
 
-        QJsonObject root = loader.metaData();
-        QJsonObject meta = root.value("MetaData").toObject();
+            QJsonObject root = loader.metaData();
+            QJsonObject meta = root.value("MetaData").toObject();
 
-        if (meta.value("api").toString() != FrictionCorePluginInterface_iid) {
-            // not valid api
-            continue;
-        }
+            if (meta.value("api").toString() != FrictionCorePluginInterface_iid) {
+                // not valid api
+                continue;
+            }
 
-        QString pluginId = meta.value("id").toString().trimmed();
-        QString pluginName = meta.value("name").toString().trimmed();
+            QString pluginId = meta.value("id").toString().trimmed();
+            QString pluginName = meta.value("name").toString().trimmed();
 
-        if (pluginId.isEmpty() || pluginName.isEmpty()) {
-            qWarning() << "Ignoring plugin: Missing id and/or name" << fileName;
-            continue;
-        }
+            if (pluginId.isEmpty() || pluginName.isEmpty()) {
+                qWarning() << "Ignoring plugin: Missing id and/or name" << fileName;
+                continue;
+            }
 
-        if (mCorePlugins.contains(pluginId)) {
-            qWarning() << "Ignoring plugin: duplicate id" << pluginId << fileName;
-            continue;
-        }
+            if (mCorePlugins.contains(pluginId)) {
+                qWarning() << "Ignoring plugin: duplicate id" << pluginId << fileName;
+                continue;
+            }
 
-        QObject *pluginObj = loader.instance();
-        if (pluginObj) {
-            auto *plugin = qobject_cast<FrictionCorePluginInterface *>(pluginObj);
-            if (plugin) {
-                qWarning() << "Loading core plugin" << meta;
+            QObject *pluginObj = loader.instance();
+            if (pluginObj) {
+                auto *plugin = qobject_cast<FrictionCorePluginInterface *>(pluginObj);
+                if (plugin) {
+                    qDebug() << "Loading core plugin" << meta;
 
-                CorePluginData pluginData;
-                pluginData.meta = meta;
-                pluginData.instance = plugin;
-                mCorePlugins.insert(pluginId, pluginData);
+                    CorePluginData pluginData;
+                    pluginData.meta = meta;
+                    pluginData.instance = plugin;
+                    mCorePlugins.insert(pluginId, pluginData);
 
-                connect(this, &Document::renderStateChanged,
-                        this, [plugin](PreviewState state) {
-                    plugin->renderStateChanged(state);
-                });
+                    connect(this, &Document::renderStateChanged,
+                            this, [plugin](PreviewState state) {
+                        plugin->renderStateChanged(state);
+                    });
 
-                connect(this, &Document::renderProgress,
-                        this, [plugin](int frame, int total) {
-                    plugin->renderProgress(frame, total);
-                });
+                    connect(this, &Document::renderProgress,
+                            this, [plugin](int frame, int total) {
+                        plugin->renderProgress(frame, total);
+                    });
 
-                connect(this, &Document::showNotification,
-                        this, [plugin](const QString& title,
-                                       const QString& message) {
-                    plugin->showNotification(title, message);
-                });
+                    connect(this, &Document::showNotification,
+                            this, [plugin](const QString& title,
+                                           const QString& message) {
+                        plugin->showNotification(title, message);
+                    });
 
-                plugin->init();
-            } else {
-                loader.unload();
+                    plugin->init();
+                } else {
+                    loader.unload();
+                }
             }
         }
     }
