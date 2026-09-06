@@ -345,16 +345,7 @@ const QStringList AppSupport::getAppCorePluginsPath()
     QString sysPath = appDir.absoluteFilePath("../lib/friction/plugins");
     addPathIfValid(sysPath);
 
-    QString customPath = getSettings("settings",
-                                     "CustomCorePlugins",
-                                     "").toString();
-    if (!customPath.isEmpty()) { addPathIfValid(customPath); }
-
-    QDir configDir(getAppConfigPath());
-    if (!configDir.exists("CorePlugins")) { configDir.mkpath("CorePlugins"); }
-
-    QString userPath = configDir.absoluteFilePath("CorePlugins");
-    addPathIfValid(userPath);
+    addPathIfValid(getAppUserCorePluginsPath());
 
     return paths;
 }
@@ -614,6 +605,17 @@ const QString AppSupport::getAppUserExPresetsPath()
                                def).toString();
     if (path.isEmpty()) { path = def; }
 
+    QDir dir(path);
+    if (!dir.exists()) { dir.mkpath(path); }
+    return path;
+}
+
+const QString AppSupport::getAppUserCorePluginsPath(bool restore)
+{
+    const QString def = QString::fromUtf8("%1/CorePlugins").arg(getAppConfigPath());
+    QString path = restore ? def : getSettings("settings",
+                                               "CustomCorePluginsPath",
+                                               def).toString();
     QDir dir(path);
     if (!dir.exists()) { dir.mkpath(path); }
     return path;

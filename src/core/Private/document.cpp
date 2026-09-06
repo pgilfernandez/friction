@@ -467,6 +467,9 @@ void Document::SWT_setupAbstraction(SWT_Abstraction * const abstraction,
 
 void Document::loadCorePlugins()
 {
+    const auto disabled = AppSupport::getSettings("settings",
+                                                  "DisabledCorePlugins").toStringList();
+
     for (const QString &path : AppSupport::getAppCorePluginsPath()) {
         QDir pluginsDir(path);
         if (!pluginsDir.exists()) { continue; }
@@ -490,6 +493,14 @@ void Document::loadCorePlugins()
 
             if (pluginId.isEmpty() || pluginName.isEmpty()) {
                 qWarning() << "Ignoring plugin: Missing id and/or name" << fileName;
+                continue;
+            }
+
+            if (disabled.contains(pluginId)) {
+                qDebug() << "Ignoring disabled plugin" << fileName;
+                CorePluginData pluginData;
+                pluginData.meta = meta;
+                mCorePlugins.insert(pluginId, pluginData);
                 continue;
             }
 
@@ -549,6 +560,7 @@ QStringList Document::getCorePluginsImportExtensions() const
     QStringList allExtensions;
 
     for (const auto &pluginData : mCorePlugins) {
+        if (!pluginData.instance) { continue; }
         if (!pluginData.meta.contains("import_extensions")) { continue; }
         const QJsonArray extensions = pluginData.meta.value("import_extensions").toArray();
         for (const QJsonValue &ext : extensions) {
@@ -568,6 +580,7 @@ bool Document::isCorePluginImportExtension(const QString &ext) const
     if (cleanExt.startsWith(".")) { cleanExt.remove(0, 1); }
 
     for (const auto &pluginData : mCorePlugins) {
+        if (!pluginData.instance) { continue; }
         if (!pluginData.meta.contains("import_extensions")) { continue; }
         const QJsonArray extensions = pluginData.meta.value("import_extensions").toArray();
         for (const QJsonValue &e : extensions) {
