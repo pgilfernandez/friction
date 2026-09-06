@@ -61,8 +61,4 @@ void MainWindow::setupMenuPlugins()
             });
         }
     }
-
-    if (mPluginsMenu->actions().size() > 0) {
-        mPluginsMenu->setVisible(true);
-    }
 }
