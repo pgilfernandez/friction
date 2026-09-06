@@ -67,6 +67,11 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
+
+#ifndef FRICTION_LIBDIR
+#define FRICTION_LIBDIR "lib"
+#endif
+
 using namespace Friction::Core;
 
 AppSupport::AppSupport(QObject *parent)
@@ -342,7 +347,8 @@ const QStringList AppSupport::getAppCorePluginsPath()
     QString defaultAppPath = appDir.absoluteFilePath("plugins");
     addPathIfValid(defaultAppPath);
 
-    QString sysPath = appDir.absoluteFilePath("../lib/friction/plugins");
+    QString libDir = QString("../%1/friction/plugins").arg(FRICTION_LIBDIR);
+    QString sysPath = appDir.absoluteFilePath(libDir);
     addPathIfValid(sysPath);
 
     addPathIfValid(getAppUserCorePluginsPath());
