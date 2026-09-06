@@ -72,6 +72,10 @@ struct CorePluginData
     FrictionCorePluginInterface* instance = nullptr;
 };
 
+enum class PreviewState {
+    stopped, rendering, playing, paused
+};
+
 class CORE_EXPORT Document : public SingleWidgetTarget {
     Q_OBJECT
 public:
@@ -222,6 +226,9 @@ public:
     QStringList getCorePluginsImportExtensions() const;
     bool isCorePluginImportExtension(const QString& ext) const;
 
+    PreviewState getRenderState() const;
+    void setRenderState(PreviewState state);
+
 private:
     void readDocumentXEV(const QDomDocument& doc,
                          QList<Canvas*>& scenes);
@@ -235,6 +242,8 @@ private:
 
     void loadCorePlugins();
     QHash<QString, CorePluginData> mCorePlugins;
+
+    PreviewState mRenderState = PreviewState::stopped;
 
 signals:
 
@@ -278,6 +287,12 @@ signals:
 
     // https://github.com/friction2d/friction/pull/736
     void fitCanvasToSize();
+
+    void renderStateChanged(PreviewState state);
+    void renderProgress(int frame, int total);
+
+    void showNotification(const QString& title,
+                          const QString& message);
 };
 
 #endif // DOCUMENT_H

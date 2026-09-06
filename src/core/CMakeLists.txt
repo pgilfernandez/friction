@@ -777,6 +777,9 @@ endif()
 
 if(UNIX AND NOT APPLE)
     include(GNUInstallDirs)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        FRICTION_LIBDIR=\"${CMAKE_INSTALL_LIBDIR}\"
+    )
     install(
         TARGETS
         ${PROJECT_NAME}

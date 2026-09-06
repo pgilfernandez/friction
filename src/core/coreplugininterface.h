@@ -13,6 +13,8 @@ class Document;
 class Canvas;
 class BoundingBox;
 
+enum class PreviewState;
+
 class FrictionCorePluginInterface
 {
 public:
@@ -47,6 +49,25 @@ public:
         Q_UNUSED(scene);
         Q_UNUSED(path);
         return nullptr;
+    }
+
+    virtual void renderStateChanged(PreviewState state)
+    {
+        Q_UNUSED(state);
+    }
+
+    virtual void renderProgress(int frame,
+                                int total)
+    {
+        Q_UNUSED(frame);
+        Q_UNUSED(total);
+    }
+
+    virtual void showNotification(const QString& title,
+                                  const QString& message)
+    {
+        Q_UNUSED(title);
+        Q_UNUSED(message);
     }
 };
 

@@ -52,6 +52,7 @@ qsptr<BoundingBox> ImportHandler::import(const QString &path,
 
     if (Document::sInstance->isCorePluginImportExtension(info.suffix())) {
         for (const auto& pluginData : Document::sInstance->getCorePlugins()) {
+            if (!pluginData.instance) { continue; }
             if (!pluginData.meta.contains("import_extensions")) { continue; }
             const QJsonArray extensions = pluginData.meta.value("import_extensions").toArray();
             for (const QJsonValue &ext : extensions) {

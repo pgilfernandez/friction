@@ -781,6 +781,9 @@ void MainWindow::setupMenuBar()
 
     setupMenuExtras();
 
+    mPluginsMenu = mMenuBar->addMenu(tr("Plugins"));
+    mPluginsMenu->setEnabled(false);
+
     const auto help = mMenuBar->addMenu(tr("Help", "MenuBar"));
 
     const auto aboutAct = help->addAction(QIcon::fromTheme(ThemeSupport::getAppIconName(true)),
@@ -845,9 +848,6 @@ void MainWindow::setupMenuBar()
     mToolbar->addAction(mPreviewSVGAct);
     mToolbar->addAction(mExportSVGAct);
 
-    mPluginsMenu = mMenuBar->addMenu(tr("Plugins"));
-    mPluginsMenu->setEnabled(false);
-    mPluginsMenu->setVisible(false);
     setupMenuPlugins();
 
     mToolbar->updateActions();
