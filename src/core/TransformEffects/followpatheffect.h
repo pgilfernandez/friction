@@ -34,6 +34,8 @@ class FollowPathEffect : public TargetTransformEffect {
 public:
     FollowPathEffect();
 
+    FrameRange prp_getIdenticalRelRange(const int relFrame) const override;
+
     void applyEffect(const qreal relFrame,
                      qreal &pivotX, qreal &pivotY,
                      qreal &posX, qreal &posY,
@@ -53,6 +55,7 @@ private:
                 BoundingBox* const oldTarget,
                 BoundingBox* const newTarget) override;
 
+    ConnContextQPtr<BoundingBox> mPathTargetConn;
     qsptr<BoolProperty> mRotate;
     qsptr<BoolProperty> mLengthBased;
     qsptr<QrealAnimator> mComplete;
