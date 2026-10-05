@@ -34,6 +34,25 @@ FollowPathEffect::FollowPathEffect() :
     TargetTransformEffect("follow path", TransformEffectType::followPath) {
     targetProperty()->setValidator<PathBox>();
 
+    // Following a path depends on its geometry as well as its transform.
+    connect(targetProperty(), &BoxTargetProperty::targetSet,
+            this, [this](BoundingBox* const target) {
+        auto& conn = mPathTargetConn.assign(target);
+        const auto parent = getFirstAncestor<BoundingBox>();
+        if(!target || !parent) return;
+        const auto parentTransform = parent->getTransformAnimator();
+        conn << connect(target, &Property::prp_absFrameRangeChanged,
+                        this, [parentTransform](const FrameRange& range,
+                                                const bool clip) {
+            parentTransform->prp_afterChangedAbsRange(range, clip);
+        });
+        conn << connect(target, &Property::prp_currentFrameChanged,
+                        this, [parentTransform, target](const UpdateReason reason) {
+            parentTransform->anim_setAbsFrame(target->anim_getCurrentAbsFrame());
+            parentTransform->prp_afterChangedCurrent(reason);
+        });
+    });
+
     mRotate = enve::make_shared<BoolProperty>("rotate");
     mLengthBased = enve::make_shared<BoolProperty>("length based");
     mComplete = enve::make_shared<QrealAnimator>(0, 0, 1, 0.01, "complete");
@@ -43,6 +62,17 @@ FollowPathEffect::FollowPathEffect() :
     ca_addChild(mLengthBased);
     ca_addChild(mComplete);
     ca_addChild(mInfluence);
+}
+
+FrameRange FollowPathEffect::prp_getIdenticalRelRange(const int relFrame) const {
+    const auto thisIdent = TargetTransformEffect::prp_getIdenticalRelRange(relFrame);
+    const auto target = targetProperty()->getTarget();
+    if(!target) return thisIdent;
+
+    const int absFrame = prp_relFrameToAbsFrame(relFrame);
+    const int targetRelFrame = target->prp_absFrameToRelFrame(absFrame);
+    const auto targetIdent = target->prp_getIdenticalRelRange(targetRelFrame);
+    return thisIdent*prp_absRangeToRelRange(target->prp_relRangeToAbsRange(targetIdent));
 }
 
 void calculateFollowRotPosChange(
